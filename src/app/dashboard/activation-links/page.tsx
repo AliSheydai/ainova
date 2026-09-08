@@ -463,7 +463,7 @@ export default function AdminActivationLinksPage() {
                             </Select>
                           </td>
 
-                          <td className='py-3 font-mono text-muted-foreground'>
+                          <td className='py-3 font-sans tabular-nums text-muted-foreground'>
                             {link.orderId ? (
                               <span className='font-bold text-foreground'>
                                 {link.orderId.slice(-6)}

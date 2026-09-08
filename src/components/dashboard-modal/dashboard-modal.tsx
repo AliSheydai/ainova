@@ -154,7 +154,7 @@ export function DashboardModal({
                 <SheetTitle className="text-xs font-bold text-foreground truncate">
                   {displayName}
                 </SheetTitle>
-                <p dir="ltr" className="text-[10px] text-muted-foreground font-mono truncate text-right">
+                <p dir="ltr" className="text-[10px] text-muted-foreground font-sans tabular-nums truncate text-right">
                   {user.phone}
                 </p>
               </div>
@@ -253,7 +253,7 @@ export function DashboardModal({
               <h4 className="text-xs font-bold text-foreground truncate">
                 {displayName}
               </h4>
-              <p dir="ltr" className="text-[11px] text-muted-foreground font-mono truncate text-right mt-0.5">
+              <p dir="ltr" className="text-[11px] text-muted-foreground font-sans tabular-nums truncate text-right mt-0.5">
                 {user.phone}
               </p>
             </div>

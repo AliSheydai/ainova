@@ -91,11 +91,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className='min-h-screen bg-background text-foreground flex flex-col'>
+    <div className='relative min-h-screen bg-background text-foreground flex flex-col font-sans' dir='rtl'>
+      {/* Background Ambient Glow */}
+      <div aria-hidden className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
+        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/6 blur-3xl' />
+      </div>
+
       {/* Header */}
       <header className='border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50'>
         <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
-          <Link href='/' className='flex items-center gap-2.5'>
+          <Link href='/' className='flex items-center gap-2.5 select-none'>
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>
@@ -118,11 +123,11 @@ export default function CheckoutPage() {
       <main className='flex-1 container mx-auto px-4 py-8 max-w-2xl'>
         {/* Title */}
         <div className='text-center mb-8'>
-          <Badge variant='outline' className='mb-3 px-3 py-1 text-xs border-primary/30 text-primary'>
+          <Badge variant='outline' className='mb-3 px-3 py-1 text-xs border-primary/30 text-primary rounded-full'>
             تکمیل فرآیند خرید
           </Badge>
-          <h1 className='text-2xl sm:text-3xl font-bold tracking-tight'>
-            خرید اشتراک اختصاصی Google AI Pro
+          <h1 className='text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground'>
+            خرید اشتراک اختصاصی جمینای
           </h1>
           <p className='text-sm text-muted-foreground mt-2'>
             دسترسی سریع و آنی روی جیمیل شخصی بدون نیاز به پسورد
@@ -134,14 +139,14 @@ export default function CheckoutPage() {
             <Loader2 className='size-8 animate-spin text-primary' />
           </div>
         ) : !plan ? (
-          <Card className='p-8 text-center'>
+          <Card className='p-8 text-center border-border/70'>
             <p className='text-muted-foreground mb-4'>محصول یا پلنی برای خرید در دسترس نیست.</p>
             <Link href='/'>
               <Button variant='outline'>بازگشت به صفحه اصلی</Button>
             </Link>
           </Card>
         ) : (
-          <Card className='relative overflow-hidden border-primary/30 shadow-xl'>
+          <Card className='relative overflow-hidden border border-primary/30 shadow-2xl shadow-primary/5 bg-card/95 backdrop-blur-xl rounded-2xl'>
             <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40' />
 
             <CardHeader className='pb-4 pt-7 text-center'>
@@ -156,11 +161,11 @@ export default function CheckoutPage() {
                 {product.description || 'اشتراک ویژه هوش مصنوعی جمینای'}
               </CardDescription>
 
-              <div className='mt-6 rounded-xl bg-primary/5 border border-primary/15 py-4'>
-                <span className='text-3xl sm:text-4xl font-extrabold text-foreground'>
+              <div className='mt-6 rounded-2xl bg-primary/5 border border-primary/15 py-5 px-4'>
+                <span className='text-3xl sm:text-4xl font-extrabold text-foreground font-sans'>
                   {formatPrice(plan.price)}
                 </span>
-                <p className='mt-1 text-xs text-muted-foreground'>
+                <p className='mt-1.5 text-xs text-muted-foreground'>
                   پرداخت امن از طریق درگاه شتاب / زرین‌پال ({plan.duration} ماهه)
                 </p>
               </div>
@@ -194,7 +199,7 @@ export default function CheckoutPage() {
               </Button>
 
               <div className='mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground'>
-                <ShieldCheck className='size-4 text-emerald-500' />
+                <ShieldCheck className='size-4 text-primary' />
                 <span>ضمانت فعال‌سازی کامل و تحویل آنی پس از پرداخت</span>
               </div>
             </CardContent>

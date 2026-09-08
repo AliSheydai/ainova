@@ -192,7 +192,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                           </h4>
                           <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                             <span>شماره سفارش:</span>
-                            <span className="font-mono">{order.id.slice(0, 8)}</span>
+                            <span className="font-sans font-medium">{order.id.slice(0, 8)}</span>
                             <span>•</span>
                             <span className="tabular-nums">
                               {new Date(order.createdAt).toLocaleDateString('fa-IR')}
@@ -222,7 +222,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       {order.payment?.refId && (
                         <div className="text-[11px] text-muted-foreground">
                           کد پیگیری:{' '}
-                          <span className="font-mono text-foreground">{order.payment.refId}</span>
+                          <span className="font-sans font-medium text-foreground">{order.payment.refId}</span>
                         </div>
                       )}
                     </div>
@@ -243,7 +243,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <div
                             dir="ltr"
-                            className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-lg border border-border/80 bg-background/80 px-3 py-2 text-xs font-mono text-foreground select-all"
+                            className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-lg border border-border/80 bg-background/80 px-3 py-2 text-xs font-sans text-foreground select-all"
                           >
                             {order.activationLink!.url}
                           </div>

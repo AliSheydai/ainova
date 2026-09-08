@@ -40,7 +40,7 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
 `.trim()
 
     const keyboard = new InlineKeyboard()
-      .url('🔗 فعال‌سازی Google AI Pro', order.activationLink.url)
+      .url('🔗 فعال‌سازی جمینای', order.activationLink.url)
       .row()
       .text('📖 راهنمای فعال‌سازی', 'show_activation_guide')
 

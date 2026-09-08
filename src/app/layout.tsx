@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang='fa' dir='rtl' className={cn(vazirmatn.variable, 'font-sans')} suppressHydrationWarning>
-      <body className='min-h-svh w-full bg-background font-sans text-foreground antialiased'>
+    <html lang='fa' dir='rtl' className={cn(vazirmatn.variable, vazirmatn.className, 'font-sans')} suppressHydrationWarning>
+      <body className={cn(vazirmatn.className, 'min-h-svh w-full bg-background font-sans text-foreground antialiased')}>
         <Providers>{children}</Providers>
       </body>
     </html>

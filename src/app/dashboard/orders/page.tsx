@@ -275,7 +275,7 @@ export default function AdminOrdersPage() {
                   <tbody className='divide-y divide-border/40'>
                     {orders.map((ord) => (
                       <tr key={ord.id} className='hover:bg-muted/30 transition-colors'>
-                        <td className='py-3 font-mono font-bold text-foreground'>
+                        <td className='py-3 font-sans font-bold text-foreground'>
                           {ord.id.slice(-8)}
                         </td>
                         <td className='py-3'>
@@ -283,7 +283,7 @@ export default function AdminOrdersPage() {
                             {ord.user?.name || ord.user?.phone || 'کاربر'}
                           </span>
                           {ord.user?.phone && ord.user?.name && (
-                            <span className='text-[10px] text-muted-foreground font-mono'>
+                            <span className='text-[10px] text-muted-foreground font-sans tabular-nums'>
                               {ord.user.phone}
                             </span>
                           )}
@@ -338,7 +338,7 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className='py-3'>
                           {ord.activationLink ? (
-                            <Badge variant='outline' className='border-primary/30 text-primary text-[10px] font-mono'>
+                            <Badge variant='outline' className='border-primary/30 text-primary text-[10px] font-sans'>
                               تخصیص یافته
                             </Badge>
                           ) : (
@@ -382,7 +382,7 @@ export default function AdminOrdersPage() {
               <Package className='size-5 text-primary' />
               <span>جزئیات کامل سفارش</span>
             </DialogTitle>
-            <DialogDescription className='text-xs font-mono'>
+            <DialogDescription className='text-xs font-sans'>
               شناسه سفارش: {selectedOrder?.id}
             </DialogDescription>
           </DialogHeader>
@@ -397,7 +397,7 @@ export default function AdminOrdersPage() {
                     {selectedOrder.user?.name || selectedOrder.user?.phone || 'کاربر'}
                   </span>
                   {selectedOrder.user?.phone && (
-                    <span className='text-muted-foreground font-mono block text-[11px] mt-0.5'>
+                    <span className='text-muted-foreground font-sans tabular-nums block text-[11px] mt-0.5'>
                       {selectedOrder.user.phone}
                     </span>
                   )}
@@ -459,13 +459,13 @@ export default function AdminOrdersPage() {
                     {selectedOrder.payment.authority && (
                       <div className='col-span-2 truncate'>
                         <span className='text-muted-foreground'>Authority:</span>{' '}
-                        <span className='font-mono text-[10px]'>{selectedOrder.payment.authority}</span>
+                        <span className='font-sans text-[10px]'>{selectedOrder.payment.authority}</span>
                       </div>
                     )}
                     {selectedOrder.payment.refId && (
                       <div className='col-span-2'>
                         <span className='text-muted-foreground'>کد پیگیری بانکی (RefId):</span>{' '}
-                        <span className='font-mono font-bold text-emerald-600 dark:text-emerald-400'>
+                        <span className='font-sans font-bold text-emerald-600 dark:text-emerald-400'>
                           {selectedOrder.payment.refId}
                         </span>
                       </div>

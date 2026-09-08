@@ -146,40 +146,40 @@ function SuccessContent() {
   const isStockWaiting = order.status === 'PAID' || statusParam === 'stock_waiting'
 
   return (
-    <div className='container mx-auto max-w-2xl px-4 py-8 sm:py-12'>
-      <Card className='relative overflow-hidden border-border/70 shadow-2xl backdrop-blur-md bg-card/95'>
+    <div className='container relative mx-auto max-w-2xl px-4 py-8 sm:py-12'>
+      {/* Background Ambient Glow */}
+      <div aria-hidden className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
+        <div className='absolute left-1/2 top-10 -translate-x-1/2 h-[400px] w-[600px] rounded-full bg-primary/8 blur-3xl' />
+        <div className='absolute bottom-10 right-10 h-[300px] w-[400px] rounded-full bg-primary/5 blur-3xl' />
+      </div>
+
+      <Card className='relative overflow-hidden border border-border/70 shadow-2xl backdrop-blur-xl bg-card/95'>
         {/* Glow Top Highlight Bar */}
-        <div
-          className={`absolute left-0 right-0 top-0 h-1.5 ${
-            isCompleted
-              ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500'
-              : isStockWaiting
-              ? 'bg-gradient-to-r from-blue-500 via-amber-400 to-blue-500'
-              : 'bg-gradient-to-r from-amber-500 to-primary'
-          }`}
-        />
+        <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-primary to-primary/70' />
 
         <CardHeader className='text-center pb-4 pt-8'>
           {/* Status Icon */}
-          <div className='mx-auto mb-4 flex size-16 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-inner'>
+          <div className='mx-auto mb-4 flex size-16 items-center justify-center rounded-3xl bg-primary/10 text-primary border border-primary/20 shadow-inner'>
             <CheckCircle2 className='size-9' />
           </div>
 
-          <Badge
-            variant='outline'
-            className='mx-auto mb-2 gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-3.5 py-1'
-          >
-            <Sparkles className='size-3.5' />
-            پرداخت با موفقیت انجام شد ✅
-          </Badge>
+          <div className='flex justify-center'>
+            <Badge
+              variant='outline'
+              className='gap-1.5 border-primary/30 bg-primary/10 text-primary text-xs font-semibold px-3.5 py-1 rounded-full'
+            >
+              <Sparkles className='size-3.5 text-primary' />
+              پرداخت با موفقیت انجام شد
+            </Badge>
+          </div>
 
-          <CardTitle className='text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mt-2'>
+          <CardTitle className='text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mt-3'>
             {isCompleted ? 'سفارش شما تکمیل شد' : 'پرداخت شما تأیید شد'}
           </CardTitle>
 
-          <CardDescription className='text-xs sm:text-sm text-muted-foreground mt-1.5'>
+          <CardDescription className='text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed'>
             {isCompleted
-              ? 'لینک اختصاصی فعال‌سازی Google AI Pro برای حساب شخصی شما آماده است.'
+              ? 'لینک اختصاصی فعال‌سازی اشتراک جمینای برای حساب شخصی شما آماده است.'
               : 'پرداخت با موفقیت در سیستم ثبت شد و سفارش در صف صدور قرار گرفت.'}
           </CardDescription>
         </CardHeader>
@@ -187,7 +187,7 @@ function SuccessContent() {
         <CardContent className='space-y-6 pt-2'>
           {/* Order Brief Summary */}
           <div className='rounded-2xl border border-border/70 bg-muted/30 p-4 sm:p-5'>
-            <div className='grid grid-cols-2 gap-3 text-xs'>
+            <div className='grid grid-cols-2 gap-3.5 text-xs'>
               <div>
                 <span className='text-muted-foreground block text-[11px]'>محصول خریداری‌شده:</span>
                 <span className='font-bold text-foreground text-sm mt-0.5 block'>
@@ -202,13 +202,13 @@ function SuccessContent() {
               </div>
               <div>
                 <span className='text-muted-foreground block text-[11px]'>شماره پیگیری سفارش:</span>
-                <span className='font-mono font-bold text-foreground text-xs mt-0.5 block select-all'>
+                <span className='font-sans font-bold text-foreground text-xs mt-0.5 block select-all'>
                   {order.id}
                 </span>
               </div>
               <div>
                 <span className='text-muted-foreground block text-[11px]'>کد پیگیری پرداخت (RefId):</span>
-                <span className='font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs mt-0.5 block select-all'>
+                <span className='font-sans font-bold text-primary text-xs mt-0.5 block select-all'>
                   {order.payment?.refId || '—'}
                 </span>
               </div>
@@ -217,13 +217,13 @@ function SuccessContent() {
 
           {/* MAIN ACTIVATION LINK SECTION */}
           {isCompleted && order.activationLink?.url ? (
-            <div className='rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent p-5 sm:p-6 shadow-sm'>
+            <div className='rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 shadow-sm'>
               <div className='flex items-center justify-between gap-2 mb-3'>
-                <div className='flex items-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400'>
-                  <Sparkles className='size-4 text-emerald-500 animate-pulse' />
+                <div className='flex items-center gap-2 text-sm font-bold text-primary'>
+                  <Sparkles className='size-4 text-primary animate-pulse' />
                   <span>لینک اختصاصی فعال‌سازی اشتراک شما:</span>
                 </div>
-                <Badge variant='outline' className='text-[10px] bg-background/70 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'>
+                <Badge variant='outline' className='text-[10px] bg-background/80 border-primary/30 text-primary'>
                   آماده استفاده
                 </Badge>
               </div>
@@ -232,7 +232,7 @@ function SuccessContent() {
               <div className='relative flex flex-col gap-3'>
                 <div
                   dir='ltr'
-                  className='w-full overflow-x-auto rounded-xl border border-emerald-500/40 bg-background/90 p-3.5 text-xs font-mono text-foreground shadow-inner select-all focus:outline-none'
+                  className='w-full overflow-x-auto rounded-xl border border-primary/30 bg-background/90 p-3.5 text-xs font-sans text-foreground shadow-inner select-all focus:outline-none'
                 >
                   {order.activationLink.url}
                 </div>
@@ -242,11 +242,11 @@ function SuccessContent() {
                   <Button
                     onClick={copyActivationLink}
                     variant='outline'
-                    className='w-full sm:w-1/2 h-11 text-xs font-semibold gap-2 border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer'
+                    className='w-full sm:w-1/2 h-11 text-xs font-semibold gap-2 border-primary/30 hover:bg-primary/10 hover:text-primary cursor-pointer rounded-xl transition-all'
                   >
                     {copied ? (
                       <>
-                        <Check className='size-4 text-emerald-500' />
+                        <Check className='size-4 text-primary' />
                         لینک با موفقیت کپی شد
                       </>
                     ) : (
@@ -263,7 +263,7 @@ function SuccessContent() {
                     rel='noopener noreferrer'
                     className='w-full sm:w-1/2'
                   >
-                    <Button className='w-full h-11 text-xs font-bold gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/20 cursor-pointer'>
+                    <Button className='w-full h-11 text-xs font-bold gap-2 shadow-md shadow-primary/20 cursor-pointer rounded-xl transition-all'>
                       <ExternalLink className='size-4' />
                       فعال‌سازی مستقیم در گوگل
                     </Button>
@@ -285,7 +285,7 @@ function SuccessContent() {
                 variant='outline'
                 size='sm'
                 onClick={fetchOrder}
-                className='text-xs gap-1.5 mt-2 border-blue-500/40 text-blue-600'
+                className='text-xs gap-1.5 mt-2 border-blue-500/40 text-blue-600 rounded-lg'
               >
                 <RefreshCw className='size-3.5' />
                 بررسی مجدد وضعیت
@@ -294,16 +294,16 @@ function SuccessContent() {
           ) : null}
 
           {/* Step-by-Step Instructions */}
-          <div className='rounded-2xl border border-border/70 bg-card p-4 sm:p-5 space-y-3'>
+          <div className='rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5 space-y-3'>
             <h4 className='text-xs font-bold text-foreground flex items-center gap-2'>
               <HelpCircle className='size-4 text-primary' />
               <span>راهنمای سریع فعال‌سازی:</span>
             </h4>
-            <ol className='space-y-2 text-xs text-muted-foreground list-decimal list-inside pr-1 leading-relaxed'>
+            <ol className='space-y-2.5 text-xs text-muted-foreground list-decimal list-inside pr-1 leading-relaxed'>
               <li>ابتدا فیلترشکن خود را با IP ترجیحاً ثابت و مطمئن (آمریکا یا اروپا) روشن نمایید.</li>
               <li>لینک فعال‌سازی بالا را باز کنید یا روی دکمه «فعال‌سازی مستقیم در گوگل» کلیک نمایید.</li>
               <li>وارد حساب شخصی جیمیل (Google) خود شوید و پیشنهاد فعال‌سازی اشتراک را تایید کنید.</li>
-              <li>اکنون هوش مصنوعی Google AI Pro و امکانات Gemini با موفقیت روی اکانت شما فعال است.</li>
+              <li>اکنون اشتراک جمینای و امکانات پیشرفته هوش مصنوعی گوگل با موفقیت روی اکانت شما فعال است.</li>
             </ol>
           </div>
 
@@ -317,7 +317,7 @@ function SuccessContent() {
             </Link>
 
             <Link href='/dashboard' className='w-full sm:w-auto'>
-              <Button variant='outline' size='sm' className='w-full text-xs gap-1.5'>
+              <Button variant='outline' size='sm' className='w-full text-xs gap-1.5 rounded-xl'>
                 <Package className='size-3.5' />
                 <span>مشاهده در تاریخچه سفارش‌ها</span>
               </Button>
@@ -331,11 +331,16 @@ function SuccessContent() {
 
 export default function CheckoutSuccessPage() {
   return (
-    <div className='min-h-screen bg-background text-foreground flex flex-col font-sans' dir='rtl'>
+    <div className='relative min-h-screen bg-background text-foreground flex flex-col font-sans' dir='rtl'>
+      {/* Background Ambient Glow */}
+      <div aria-hidden className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
+        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/6 blur-3xl' />
+      </div>
+
       {/* Top Bar */}
       <header className='border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50'>
         <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
-          <Link href='/' className='flex items-center gap-2.5'>
+          <Link href='/' className='flex items-center gap-2.5 select-none'>
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>

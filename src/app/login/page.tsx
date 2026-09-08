@@ -205,10 +205,10 @@ function LoginForm() {
             </div>
             <div className="text-right">
               <span className="text-2xl font-black tracking-tight bg-gradient-to-l from-primary via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Google AI Pro
+                جمینای
               </span>
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
                 <span>سامانه قانونی فعال‌سازی اشتراک</span>
               </div>
             </div>
@@ -218,7 +218,7 @@ function LoginForm() {
         {/* Auth Card */}
         <Card className="relative overflow-hidden border border-border/70 bg-card/85 shadow-2xl backdrop-blur-xl transition-all duration-300">
           {/* Top Subtle Gradient Accent Line */}
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-primary" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
 
           {/* Stepper Progress Bar */}
           <div className="border-b border-border/50 bg-muted/30 px-6 py-3.5">
@@ -230,7 +230,7 @@ function LoginForm() {
                     'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
                     step === 'phone'
                       ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm'
-                      : 'bg-emerald-500 text-white'
+                      : 'bg-primary text-primary-foreground'
                   )}
                 >
                   {step !== 'phone' ? <Check className="h-3.5 w-3.5" /> : '۱'}
@@ -263,7 +263,7 @@ function LoginForm() {
                     step === 'otp'
                       ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm'
                       : step === 'name'
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
                   )}
                 >
@@ -412,9 +412,9 @@ function LoginForm() {
 
                 {/* Dev Mode Banner */}
                 {devCode && (
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs text-amber-700 dark:text-amber-300">
+                  <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 text-center text-xs text-primary">
                     <span className="font-semibold">حالت تستی:</span> کد تأیید شما{' '}
-                    <span className="font-sans font-bold text-sm tracking-widest bg-amber-500/20 px-2 py-0.5 rounded-md text-amber-800 dark:text-amber-200">
+                    <span className="font-sans font-bold text-sm tracking-widest bg-primary/10 px-2 py-0.5 rounded-md text-primary">
                       {devCode}
                     </span>{' '}
                     است.
@@ -566,7 +566,7 @@ function LoginForm() {
           {/* Card Footer Security Guarantee */}
           <CardFooter className="flex flex-col gap-2 border-t border-border/50 bg-muted/20 px-6 py-4 text-xs text-muted-foreground">
             <div className="flex items-center justify-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+              <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
               <span>ورود فوق‌العاده امن بدون نیاز به ذخیره پسورد</span>
             </div>
           </CardFooter>

@@ -24,7 +24,7 @@ export function CopyButton({ text }: { text: string }) {
     >
       {copied ? (
         <>
-          <Check className="size-3.5 text-emerald-500" />
+          <Check className="size-3.5 text-primary" />
           کپی شد
         </>
       ) : (

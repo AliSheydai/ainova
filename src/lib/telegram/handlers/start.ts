@@ -53,7 +53,7 @@ export async function handleStart(ctx: Context) {
     await clearBotLoginSession(telegramId)
     await startLoginFlow(
       ctx,
-      '👋 **به ربات رسمی Google AI Pro خوش آمدید!**\n\n' +
+      '👋 **به ربات رسمی جمینای خوش آمدید!**\n\n' +
         'برای دسترسی به امکانات، پیگیری و خرید اشتراک، لطفاً با شماره موبایل خود وارد شوید:'
     )
     return

@@ -123,7 +123,7 @@ export default function AdminOverviewPage() {
     <>
       <Header>
         <div className='flex items-center gap-2'>
-          <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold gap-1'>
+          <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary font-semibold gap-1'>
             <Shield className='size-3' />
             مدیریت سیستم
           </Badge>
@@ -183,7 +183,7 @@ export default function AdminOverviewPage() {
                 <CardTitle className='text-xs font-medium text-muted-foreground'>
                   درآمد کل
                 </CardTitle>
-                <div className='size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center'>
+                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
                   <TrendingUp className='size-4' />
                 </div>
               </CardHeader>
@@ -203,7 +203,7 @@ export default function AdminOverviewPage() {
                 <CardTitle className='text-xs font-medium text-muted-foreground'>
                   سفارش‌های موفق
                 </CardTitle>
-                <div className='size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center'>
+                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
                   <CheckCircle2 className='size-4' />
                 </div>
               </CardHeader>
@@ -214,8 +214,8 @@ export default function AdminOverviewPage() {
                     از {stats.totalOrders.toLocaleString('fa-IR')} کل
                   </span>
                 </div>
-                <div className='flex items-center gap-1.5 mt-1 text-[11px] text-amber-600 dark:text-amber-400'>
-                  <Clock className='size-3' />
+                <div className='flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground'>
+                  <Clock className='size-3 text-primary' />
                   <span>{stats.pendingOrders.toLocaleString('fa-IR')} در انتظار پرداخت</span>
                 </div>
               </CardContent>
@@ -227,7 +227,7 @@ export default function AdminOverviewPage() {
                 <CardTitle className='text-xs font-medium text-muted-foreground'>
                   کل کاربران
                 </CardTitle>
-                <div className='size-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center'>
+                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
                   <Users className='size-4' />
                 </div>
               </CardHeader>
@@ -283,27 +283,27 @@ export default function AdminOverviewPage() {
             </CardHeader>
             <CardContent className='pt-0 pb-4'>
               <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                <div className='rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3'>
+                <div className='rounded-xl border border-primary/25 bg-primary/5 p-3'>
                   <span className='text-xs text-muted-foreground'>موجود (آماده تحویل)</span>
-                  <div className='text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5'>
+                  <div className='text-lg font-bold text-primary mt-0.5'>
                     {stats.availableLinks.toLocaleString('fa-IR')}
                   </div>
                 </div>
-                <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-3'>
+                <div className='rounded-xl border border-primary/15 bg-primary/5 p-3'>
                   <span className='text-xs text-muted-foreground'>رزرو شده</span>
-                  <div className='text-lg font-bold text-blue-600 dark:text-blue-400 mt-0.5'>
+                  <div className='text-lg font-bold text-primary mt-0.5'>
                     {stats.reservedLinks.toLocaleString('fa-IR')}
                   </div>
                 </div>
-                <div className='rounded-xl border border-slate-500/20 bg-slate-500/5 p-3'>
+                <div className='rounded-xl border border-border/80 bg-muted/30 p-3'>
                   <span className='text-xs text-muted-foreground'>مصرف شده (تحویل شده)</span>
-                  <div className='text-lg font-bold text-slate-700 dark:text-slate-300 mt-0.5'>
+                  <div className='text-lg font-bold text-foreground mt-0.5'>
                     {stats.usedLinks.toLocaleString('fa-IR')}
                   </div>
                 </div>
-                <div className='rounded-xl border border-rose-500/20 bg-rose-500/5 p-3'>
+                <div className='rounded-xl border border-border/60 bg-muted/20 p-3'>
                   <span className='text-xs text-muted-foreground'>نامعتبر / منقضی</span>
-                  <div className='text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5'>
+                  <div className='text-lg font-bold text-muted-foreground mt-0.5'>
                     {stats.invalidLinks.toLocaleString('fa-IR')}
                   </div>
                 </div>
@@ -350,7 +350,7 @@ export default function AdminOverviewPage() {
                     <tbody className='divide-y divide-border/40'>
                       {recentOrders.map((ord) => (
                         <tr key={ord.id} className='hover:bg-muted/30 transition-colors'>
-                          <td className='py-3 font-mono font-medium text-foreground/80'>
+                          <td className='py-3 font-sans font-medium text-foreground/80'>
                             {ord.id.slice(-6)}
                           </td>
                           <td className='py-3 font-medium'>
@@ -364,15 +364,15 @@ export default function AdminOverviewPage() {
                           </td>
                           <td className='py-3'>
                             {ord.status === 'COMPLETED' || ord.status === 'PAID' ? (
-                              <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] font-medium'>
+                              <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary text-[10px] font-medium'>
                                 موفق
                               </Badge>
                             ) : ord.status === 'PENDING_PAYMENT' ? (
-                              <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 text-[10px] font-medium'>
+                              <Badge variant='outline' className='border-border/80 bg-muted/50 text-muted-foreground text-[10px] font-medium'>
                                 در انتظار
                               </Badge>
                             ) : (
-                              <Badge variant='outline' className='border-rose-500/30 bg-rose-500/10 text-rose-600 text-[10px] font-medium'>
+                              <Badge variant='outline' className='border-border/80 bg-muted/40 text-muted-foreground text-[10px] font-medium'>
                                 ناموفق
                               </Badge>
                             )}
@@ -393,9 +393,9 @@ export default function AdminOverviewPage() {
           <Card className='border-border/60 shadow-xs'>
             <CardHeader className='flex flex-row items-center justify-between pb-3'>
               <div>
-                <CardTitle className='text-base font-bold'>آخرین کاربران</CardTitle>
+                <CardTitle className='text-base font-bold'>کاربران اخیر</CardTitle>
                 <CardDescription className='text-xs'>
-                  کاربران تازه ثبت‌نام‌شده
+                  افرادی که اخیراً در سامانه ثبت‌نام کرده‌اند
                 </CardDescription>
               </div>
               <Link href='/dashboard/users'>
@@ -426,12 +426,12 @@ export default function AdminOverviewPage() {
                               {u.name || u.phone || 'کاربر'}
                             </span>
                             {u.role === 'ADMIN' && (
-                              <Badge className='bg-amber-500/15 text-amber-600 border-amber-500/30 text-[9px] px-1 py-0'>
+                              <Badge className='bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0'>
                                 ادمین
                               </Badge>
                             )}
                           </div>
-                          <span className='text-[10px] text-muted-foreground font-mono'>
+                          <span className='text-[10px] text-muted-foreground font-sans tabular-nums'>
                             {u.phone || 'ورود تلگرام'}
                           </span>
                         </div>

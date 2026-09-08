@@ -396,7 +396,7 @@ export default function AdminProductsPage() {
                                   {(plan.availableLinks || 0).toLocaleString('fa-IR')} لینک موجود
                                 </Badge>
                               </td>
-                              <td className='py-3 text-muted-foreground font-mono'>
+                              <td className='py-3 text-muted-foreground font-sans tabular-nums'>
                                 {(plan._count?.orders || 0).toLocaleString('fa-IR')} سفارش
                               </td>
                               <td className='py-3'>

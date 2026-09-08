@@ -96,7 +96,7 @@ export function SupportTab() {
                 className="w-full gap-2 text-xs font-semibold rounded-xl border-border/80"
               >
                 <Phone className="size-3.5" />
-                <span dir="ltr" className="font-mono">
+                <span dir="ltr" className="font-sans tabular-nums">
                   {SUPPORT_PHONE}
                 </span>
               </Button>

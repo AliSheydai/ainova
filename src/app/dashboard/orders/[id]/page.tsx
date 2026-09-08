@@ -66,16 +66,16 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
 
         {/* Success Banner if just paid */}
         {isJustPaid && (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-emerald-800 dark:text-emerald-200">
+          <div className="rounded-2xl border border-primary/25 bg-primary/5 p-5 text-foreground">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <CheckCircle2 className="size-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-100">
+                <h3 className="text-base font-bold text-foreground">
                   پرداخت با موفقیت انجام شد!
                 </h3>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                <p className="text-xs text-muted-foreground">
                   لینک اختصاصی فعال‌سازی جمینای برای شما صادر گردید.
                 </p>
               </div>
@@ -91,7 +91,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                 {order.plan.product.name} ({order.plan.name})
               </h1>
               {isCompleted ? (
-                <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                   <CheckCircle2 className="me-1 h-3.5 w-3.5" />
                   فعال شده
                 </Badge>
@@ -117,11 +117,11 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
 
         {/* ACTIVATION LINK SECTION (The Hero of this page) */}
         {isCompleted && order.activationLink?.url ? (
-          <Card className="border-emerald-500/40 bg-gradient-to-b from-emerald-500/5 to-transparent shadow-lg overflow-hidden">
-            <CardHeader className="pb-3 border-b border-emerald-500/15">
+          <Card className="border-primary/30 bg-gradient-to-b from-primary/5 to-transparent shadow-lg overflow-hidden">
+            <CardHeader className="pb-3 border-b border-primary/15">
               <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-emerald-500" />
-                <CardTitle className="text-lg text-emerald-800 dark:text-emerald-300">
+                <Sparkles className="size-5 text-primary" />
+                <CardTitle className="text-lg text-foreground font-bold">
                   لینک اختصاصی فعال‌سازی
                 </CardTitle>
               </div>
@@ -137,14 +137,14 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                   type="text"
                   readOnly
                   value={order.activationLink.url}
-                  className="flex-1 bg-transparent px-3 text-xs font-mono text-foreground outline-none truncate"
+                  className="flex-1 bg-transparent px-3 text-xs font-sans text-foreground outline-none truncate"
                   dir="ltr"
                 />
 
                 <div className="flex items-center gap-2 shrink-0">
                   <CopyButton text={order.activationLink.url} />
 
-                  <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 text-xs">
+                  <Button asChild size="sm" className="gap-1.5 text-xs">
                     <a href={order.activationLink.url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="size-3.5" />
                       باز کردن و فعال‌سازی
@@ -206,7 +206,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
             <CardContent className="space-y-2 text-xs">
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">شناسه سفارش:</span>
-                <span className="font-mono text-foreground">{order.id}</span>
+                <span className="font-sans font-medium text-foreground">{order.id}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">محصول:</span>
@@ -242,7 +242,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">شناسه پیگیری (RefId):</span>
-                <span className="font-mono text-foreground">{order.payment?.refId || '-'}</span>
+                <span className="font-sans font-medium text-foreground">{order.payment?.refId || '-'}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">مبلغ پرداختی:</span>

@@ -97,7 +97,7 @@ export function NavUser({ user }: NavUserProps) {
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>{displayName}</span>
                     {subText && (
-                      <span className='truncate text-xs text-muted-foreground font-mono'>
+                      <span className='truncate text-xs text-muted-foreground font-sans tabular-nums'>
                         {subText}
                       </span>
                     )}

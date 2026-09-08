@@ -1,7 +1,7 @@
 import { Keyboard, InlineKeyboard } from 'grammy'
 
 export const BUTTONS = {
-  BUY: '🛒 خرید Google AI Pro',
+  BUY: '🛒 خرید اشتراک جمینای',
   ORDERS: '📦 سفارش‌های من',
   GUIDE: '📖 راهنمای فعال‌سازی',
   SUPPORT: '🎧 پشتیبانی',

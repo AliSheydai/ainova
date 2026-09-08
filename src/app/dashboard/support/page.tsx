@@ -356,7 +356,7 @@ export default function AdminSupportPage() {
                 </div>
                 <div>
                   <span className='text-muted-foreground'>تماس:</span>{' '}
-                  <span className='font-mono font-bold text-foreground'>
+                  <span className='font-sans font-bold text-foreground tabular-nums'>
                     {selectedTicket.contactInfo || selectedTicket.user?.phone || '—'}
                   </span>
                 </div>

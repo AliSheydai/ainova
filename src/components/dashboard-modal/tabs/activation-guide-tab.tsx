@@ -159,7 +159,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <h5 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                        <span className="text-primary font-mono font-black">{step.number}.</span>
+                        <span className="text-primary font-sans font-black">{step.number}.</span>
                         {step.title}
                       </h5>
                       <span className="text-[11px] text-muted-foreground font-medium">

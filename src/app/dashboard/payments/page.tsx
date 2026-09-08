@@ -215,7 +215,7 @@ export default function AdminPaymentsPage() {
                           <span className='font-bold block text-foreground'>
                             {p.order?.user?.name || p.order?.user?.phone || 'کاربر'}
                           </span>
-                          <span className='text-[10px] text-muted-foreground font-mono'>
+                          <span className='text-[10px] text-muted-foreground font-sans'>
                             سفارش: {p.orderId.slice(-6)}
                           </span>
                         </td>
@@ -243,10 +243,10 @@ export default function AdminPaymentsPage() {
                             </Badge>
                           )}
                         </td>
-                        <td className='py-3 font-mono text-[11px] text-muted-foreground max-w-[140px] truncate' title={p.authority || ''}>
+                        <td className='py-3 font-sans text-[11px] text-muted-foreground max-w-[140px] truncate' title={p.authority || ''}>
                           {p.authority || '—'}
                         </td>
-                        <td className='py-3 font-mono font-bold text-emerald-600 dark:text-emerald-400'>
+                        <td className='py-3 font-sans font-bold text-emerald-600 dark:text-emerald-400'>
                           {p.refId || '—'}
                         </td>
                         <td className='py-3 text-muted-foreground text-[11px]'>

@@ -164,7 +164,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             شماره موبایل:{' '}
-            <span dir="ltr" className="font-mono text-foreground">
+            <span dir="ltr" className="font-sans text-foreground font-medium">
               {user.phone}
             </span>
           </p>
@@ -210,7 +210,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                   value={user.phone}
                   readOnly
                   dir="ltr"
-                  className="bg-muted/50 font-mono text-left h-11 pr-10 rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
+                  className="bg-muted/50 font-sans tabular-nums text-left h-11 pr-10 rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
                 />
                 <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <Phone className="h-4 w-4" />
@@ -285,7 +285,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
             <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
               <div className="text-xs text-muted-foreground">
                 شناسه متصل:{' '}
-                <strong className="text-foreground font-mono">
+                <strong className="text-foreground font-sans font-medium">
                   {user.telegramUsername ? `@${user.telegramUsername}` : user.telegramId}
                 </strong>
               </div>

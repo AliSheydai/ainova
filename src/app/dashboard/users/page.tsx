@@ -297,7 +297,7 @@ export default function AdminUsersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className='py-3 font-mono text-muted-foreground'>
+                        <td className='py-3 font-sans tabular-nums text-muted-foreground'>
                           {u.phone || '—'}
                         </td>
                         <td className='py-3'>
@@ -376,7 +376,7 @@ export default function AdminUsersPage() {
                     <h3 className='text-base font-bold text-foreground'>
                       {userDetail.name || 'کاربر بدون نام'}
                     </h3>
-                    <p className='text-xs text-muted-foreground font-mono mt-0.5'>
+                    <p className='text-xs text-muted-foreground font-sans tabular-nums mt-0.5'>
                       {userDetail.phone || 'ورود از طریق تلگرام'}
                     </p>
                   </div>
@@ -436,12 +436,12 @@ export default function AdminUsersPage() {
                           <span className='font-bold text-foreground'>
                             {ord.plan?.product?.name} ({ord.plan?.name})
                           </span>
-                          <span className='font-mono font-semibold text-primary'>
+                          <span className='font-sans font-semibold text-primary tabular-nums'>
                             {formatPrice(ord.amount)}
                           </span>
                         </div>
                         <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
-                          <span className='font-mono'>شناسه: {ord.id}</span>
+                          <span className='font-sans'>شناسه: {ord.id}</span>
                           <span>{formatDate(ord.createdAt)}</span>
                         </div>
                         <div className='flex items-center justify-between pt-1 border-t border-border/40 text-[11px]'>
@@ -452,7 +452,7 @@ export default function AdminUsersPage() {
                             </Badge>
                           </div>
                           {ord.payment?.refId && (
-                            <span className='font-mono text-muted-foreground'>
+                            <span className='font-sans text-muted-foreground'>
                               کد پیگیری: {ord.payment.refId}
                             </span>
                           )}
