@@ -2,7 +2,18 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, HeadphonesIcon, Package, ShoppingCart, Sparkles, CheckCircle2, ArrowLeft, ExternalLink, ShieldCheck, Loader2 } from 'lucide-react'
+import {
+  BookOpen,
+  HeadphonesIcon,
+  Package,
+  ShoppingCart,
+  Sparkles,
+  CheckCircle2,
+  ArrowLeft,
+  ShieldCheck,
+  Loader2,
+  User,
+} from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -86,7 +97,9 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const displayName = data.user?.name || data.user?.phone || 'کاربر گرامی'
+  const hasName = Boolean(data.user?.name && data.user.name.trim().length > 0)
+  const displayName = hasName ? data.user!.name!.trim() : 'کاربر گرامی'
+  const initial = displayName.charAt(0) || 'ک'
 
   return (
     <>
@@ -97,20 +110,50 @@ export default function DashboardPage() {
       </Header>
 
       <Main className="flex flex-col gap-6 p-4 sm:p-6">
-        {/* Welcome */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              سلام، {displayName} 👋
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              به پنل کاربری Google AI Pro خوش آمدید.
-            </p>
+        {/* Welcome Section - Showing user name instead of phone number */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-l from-primary/5 via-card to-card p-5 shadow-xs">
+          <div className="flex items-center gap-4">
+            {/* Modern Avatar with Gradient Ring */}
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-2xl shadow-lg shadow-primary/25 ring-2 ring-primary/20">
+              {initial}
+              <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-foreground">
+                  سلام، {displayName} عزیز 👋
+                </h1>
+                <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-primary/20 text-xs gap-1 font-medium">
+                  <Sparkles className="h-3 w-3 text-amber-500" />
+                  حساب کاربری فعال
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                به سامانه فعال‌سازی و مدیریت اشتراک Google AI Pro خوش آمدید.
+              </p>
+            </div>
           </div>
 
-          <Badge variant="outline" className="w-fit text-xs font-mono">
-            {data.user?.phone}
-          </Badge>
+          {/* User Name Badge or CTA */}
+          <div className="flex items-center gap-2">
+            {hasName ? (
+              <div className="flex items-center gap-2.5 rounded-xl border border-border/70 bg-card px-4 py-2 shadow-xs">
+                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                <div className="flex flex-col text-xs text-start">
+                  <span className="text-[10px] text-muted-foreground">نام حساب کاربری:</span>
+                  <span className="font-bold text-foreground text-sm">{displayName}</span>
+                </div>
+              </div>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="rounded-xl text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+                <Link href="/dashboard/profile">
+                  <User className="h-3.5 w-3.5" />
+                  تکمیل نام و نام خانوادگی
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         <Separator />

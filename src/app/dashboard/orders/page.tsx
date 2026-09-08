@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Package, CheckCircle2, XCircle, AlertCircle, ExternalLink, Copy, Check, ShoppingBag, ArrowLeft, Loader2 } from 'lucide-react'
@@ -36,7 +36,7 @@ interface OrderItem {
   } | null
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const searchParams = useSearchParams()
   const paymentStatus = searchParams.get('payment')
 
@@ -272,5 +272,19 @@ export default function OrdersPage() {
         )}
       </Main>
     </>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <OrdersContent />
+    </Suspense>
   )
 }

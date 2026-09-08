@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { CreditCard, CheckCircle2, XCircle, ShieldCheck, ArrowRight, Building2, AlertTriangle } from 'lucide-react'
+import { CreditCard, CheckCircle2, XCircle, ShieldCheck, ArrowRight, Building2, AlertTriangle, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default function MockBankPage() {
+function MockBankContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -93,5 +93,19 @@ export default function MockBankPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function MockBankPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      }
+    >
+      <MockBankContent />
+    </Suspense>
   )
 }
