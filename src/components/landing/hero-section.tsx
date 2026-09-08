@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 const trustItems = [
-  { icon: ShieldCheck, text: 'فعال‌سازی روی حساب شخصی شما' },
-  { icon: ShieldCheck, text: 'بدون دریافت رمز عبور' },
-  { icon: Zap, text: 'تحویل سریع پس از پرداخت' },
+  { icon: ShieldCheck, text: 'فعال‌سازی روی حساب شخصی گوگل شما' },
+  { icon: ShieldCheck, text: 'کاملاً امن و بدون نیاز به رمز عبور' },
+  { icon: Zap, text: 'تحویل فوری بلافاصله پس از پرداخت' },
 ]
 
 interface HeroSectionProps {
@@ -35,27 +35,27 @@ export function HeroSection({ price }: HeroSectionProps) {
               className='rounded-full px-4 py-1.5 text-sm font-medium'
             >
               <Sparkles className='me-1.5 size-3.5 text-primary' />
-              Google AI Pro — ۱۸ ماهه
+              پیشنهاد ویژه لانچ — اشتراک ۱۸ ماهه جمینای
             </Badge>
           </div>
 
           {/* Headline */}
           <h1 className='mb-5 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl'>
-            قدرت بیشتر با{' '}
-            <span className='text-primary'>Google AI Pro</span>
+            کارهایتان را با قدرت{' '}
+            <span className='text-primary'>جمینای</span> متحول کنید
           </h1>
 
           {/* Subtitle */}
           <p className='mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg'>
-            Google AI Pro را روی حساب Google خودتان فعال کنید و از
-            قابلیت‌های پیشرفته هوش مصنوعی Google استفاده کنید.
+            دسترسی ۱۸ ماهه به قوی‌ترین هوش مصنوعی گوگل، مستقیم روی حساب شخصی
+            خودتان؛ بدون نیاز به رمز عبور، با بیشترین سرعت و تحویل آنی.
           </p>
 
           {/* CTAs */}
           <div className='mb-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
             <Link href='/dashboard/buy'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md'>
-                خرید Google AI Pro
+                خرید و فعال‌سازی جمینای
                 {price && (
                   <span className='opacity-80 text-sm font-normal'>
                     — {price}
@@ -70,7 +70,7 @@ export function HeroSection({ price }: HeroSectionProps) {
                 className='h-12 gap-2 px-6 text-base'
               >
                 <BookOpen className='size-4' />
-                نحوه فعال‌سازی
+                مراحل فعال‌سازی
                 <ArrowLeft className='size-4 rtl:rotate-180' />
               </Button>
             </Link>

@@ -19,10 +19,10 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
             </div>
           </div>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
-            آماده استفاده از Google AI Pro هستید؟
+            آماده‌اید سرعت کارهایتان را چند برابر کنید؟
           </h2>
           <p className='mb-2 text-sm text-muted-foreground sm:text-base'>
-            Google AI Pro — ۱۸ ماهه
+            دسترسی کامل ۱۸ ماهه به هوش مصنوعی جمینای
           </p>
           {price && (
             <p className='mb-8 text-2xl font-bold text-primary'>{price}</p>
@@ -30,13 +30,13 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
           <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
             <Link href='/dashboard/buy'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md'>
-                خرید Google AI Pro
+                خرید و شروع با جمینای
               </Button>
             </Link>
           </div>
           <div className='mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground'>
             <ShieldCheck className='size-3.5 text-primary' />
-            <span>بدون نیاز به ارسال رمز عبور</span>
+            <span>فعال‌سازی آنی • کاملاً امن و بدون نیاز به رمز عبور</span>
           </div>
         </div>
       </div>

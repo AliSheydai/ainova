@@ -10,9 +10,9 @@ import { FinalCtaSection } from '@/components/landing/final-cta-section'
 import { LandingFooter } from '@/components/landing/landing-footer'
 
 export const metadata: Metadata = {
-  title: 'Google AI Pro — خرید و فعال‌سازی | ۱۸ ماهه',
+  title: 'جمینای — اشتراک اختصاصی ۱۸ ماهه هوش مصنوعی گوگل',
   description:
-    'Google AI Pro را روی حساب Google خودتان فعال کنید. تحویل سریع پس از پرداخت، بدون نیاز به ارسال رمز عبور.',
+    'اشتراک پیشرفته جمینای را روی حساب گوگل شخصی خودتان فعال کنید. دسترسی ۱۸ ماهه، تحویل فوری پس از پرداخت، کاملاً امن و بدون نیاز به رمز عبور.',
 }
 
 // Fetch product price from API (server component)

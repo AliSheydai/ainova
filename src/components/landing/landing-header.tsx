@@ -30,7 +30,7 @@ export function LandingHeader() {
           <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
             <Sparkles className='size-4' />
           </div>
-          <span className='text-base font-bold text-foreground'>Google AI Pro</span>
+          <span className='text-base font-bold text-foreground'>جمینای</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -56,7 +56,7 @@ export function LandingHeader() {
           </Link>
           <Link href='/dashboard/buy'>
             <Button size='sm' className='hidden text-sm md:flex'>
-              خرید Google AI Pro
+              خرید اشتراک جمینای
             </Button>
           </Link>
 
@@ -85,7 +85,7 @@ export function LandingHeader() {
                       <Sparkles className='size-4' />
                     </div>
                     <SheetTitle className='text-base font-bold text-foreground'>
-                      Google AI Pro
+                      جمینای
                     </SheetTitle>
                   </div>
                 </SheetHeader>
@@ -114,7 +114,7 @@ export function LandingHeader() {
                 </Link>
                 <Link href='/dashboard/buy' onClick={() => setOpen(false)}>
                   <Button className='w-full justify-center text-sm'>
-                    خرید Google AI Pro
+                    خرید اشتراک جمینای
                   </Button>
                 </Link>
               </div>

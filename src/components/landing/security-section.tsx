@@ -5,18 +5,18 @@ import { Lock, ShieldCheck, UserCheck } from 'lucide-react'
 const securityPoints = [
   {
     icon: Lock,
-    title: 'بدون دریافت رمز عبور',
-    description: 'هیچ‌گاه رمز عبور حساب Google شما را درخواست نمی‌کنیم.',
+    title: 'بدون نیاز به رمز عبور',
+    description: 'رمز عبور شما کاملاً محرمانه است و ما هیچ‌گاه آن را از شما درخواست نخواهیم کرد.',
   },
   {
     icon: UserCheck,
     title: 'فعال‌سازی روی حساب خودتان',
-    description: 'شما مستقیماً روی حساب شخصی Google خود مراحل فعال‌سازی را انجام می‌دهید.',
+    description: 'اشتراک جمینای مستقیماً روی جیمیل شخصی خودتان فعال می‌شود و تمام داده‌هایتان محفوظ می‌ماند.',
   },
   {
     icon: ShieldCheck,
-    title: 'عدم نیاز به اطلاعات ورود',
-    description: 'برای فعال‌سازی نیازی به ارسال Cookie یا Session Token نیست.',
+    title: 'بدون نیاز به اطلاعات ورود',
+    description: 'هیچ‌گونه کد نشست، اطلاعات ورود یا دسترسی به حساب شخصی شما دریافت نمی‌شود.',
   },
 ]
 
@@ -31,12 +31,12 @@ export function SecuritySection() {
             </div>
           </div>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
-            حساب Google شما، نزد خودتان می‌ماند
+            حساب گوگل شما در امنیت کامل می‌ماند
           </h2>
           <p className='mb-10 text-sm leading-relaxed text-muted-foreground sm:text-base'>
-            برای فعال‌سازی Google AI Pro نیازی به ارسال رمز عبور، Cookie یا
-            اطلاعات ورود حساب Google خود ندارید. شما مستقیماً از طریق لینک
-            فعال‌سازی وارد فرآیند Google می‌شوید.
+            برای فعال‌سازی جمینای نیازی به ارسال رمز عبور، اطلاعات ورود یا دسترسی به
+            حسابتان ندارید. شما مستقیماً از طریق لینک رسمی فعال‌سازی، اشتراک را روی
+            گوگل فعال می‌کنید.
           </p>
         </div>
 

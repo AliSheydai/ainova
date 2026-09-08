@@ -24,11 +24,11 @@ export function LandingFooter() {
               <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
                 <Sparkles className='size-4' />
               </div>
-              <span className='text-sm font-bold text-foreground'>Google AI Pro</span>
+              <span className='text-sm font-bold text-foreground'>جمینای</span>
             </Link>
             <p className='max-w-xs text-xs leading-relaxed text-muted-foreground'>
-              فروش و فعال‌سازی Google AI Pro روی حساب Google شخصی شما،
-              بدون نیاز به ارسال رمز عبور.
+              فعال‌سازی سریع و امن اشتراک ۱۸ ماهه هوش مصنوعی جمینای روی حساب شخصی گوگل شما،
+              کاملاً مطمئن و بدون نیاز به ارسال رمز عبور.
             </p>
           </div>
 
@@ -64,11 +64,10 @@ export function LandingFooter() {
         {/* Bottom */}
         <div className='flex flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row'>
           <p>
-            © {new Date().getFullYear()} Google AI Pro — تمامی حقوق محفوظ است
+            © {new Date().getFullYear()} جمینای — تمامی حقوق محفوظ است
           </p>
           <p className='text-center text-xs text-muted-foreground/70'>
-            این سایت ارتباطی با شرکت Google ندارد و محصولات Google را از طریق
-            لینک‌های فعال‌سازی رسمی ارائه می‌دهد.
+            این سرویس بستری امن و آسان برای فعال‌سازی اشتراک رسمی هوش مصنوعی روی حساب‌های کاربری گوگل است.
           </p>
         </div>
       </div>

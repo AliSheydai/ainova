@@ -12,10 +12,10 @@ const vazirmatn = Vazirmatn({
 })
 
 export const metadata: Metadata = {
-  title: 'Google AI Pro — خرید و فعال‌سازی',
+  title: 'جمینای — خرید و فعال‌سازی اشتراک هوش مصنوعی گوگل',
   description:
-    'Google AI Pro را روی حساب Google خودتان فعال کنید. تحویل سریع پس از پرداخت، بدون نیاز به ارسال رمز عبور.',
-  keywords: ['Google AI Pro', 'Gemini', 'هوش مصنوعی گوگل', 'خرید Google AI'],
+    'اشتراک جمینای را روی حساب گوگل خودتان فعال کنید. دسترسی ۱۸ ماهه، تحویل فوری پس از پرداخت، بدون نیاز به ارسال رمز عبور.',
+  keywords: ['جمینای', 'هوش مصنوعی گوگل', 'خرید جمینای', 'اشتراک جمینای', 'گوگل وان'],
 }
 
 export default function RootLayout({

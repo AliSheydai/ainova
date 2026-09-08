@@ -8,12 +8,13 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
 const planFeatures = [
-  'فعال‌سازی روی حساب شخصی Google',
-  'Google AI Pro — دسترسی کامل مطابق پلن',
-  'دسترسی به قابلیت‌های پیشرفته AI',
-  'تحویل لینک فعال‌سازی پس از پرداخت',
-  'پشتیبانی در صورت بروز مشکل',
-  'بدون نیاز به ارسال رمز عبور',
+  'فعال‌سازی روی حساب شخصی گوگل شما (جیمیل)',
+  'اشتراک کامل جمینای با دسترسی ۱۸ ماهه',
+  'فضای ابری ۲ ترابایتی گوگل وان',
+  'دسترسی به ابزارهای پیشرفته هوش مصنوعی',
+  'دریافت فوری لینک فعال‌سازی پس از پرداخت',
+  'پشتیبانی و راهنمایی کامل در تمامی مراحل',
+  'کاملاً امن و بدون نیاز به ارسال رمز عبور',
 ]
 
 interface PricingSectionProps {
@@ -26,10 +27,10 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
       <div className='container mx-auto px-4 sm:px-6'>
         <div className='mb-12 text-center'>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
-            قیمت و شرایط خرید
+            قیمت شفاف و بدون هزینه پنهان
           </h2>
           <p className='text-sm text-muted-foreground sm:text-base'>
-            شفاف، بدون هزینه پنهان
+            یک‌بار پرداخت برای ۱۸ ماه استفاده نامحدود از جمینای
           </p>
         </div>
 
@@ -42,17 +43,17 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
               <div className='mb-2 flex justify-center'>
                 <Badge className='rounded-full px-3 py-0.5 text-xs'>
                   <Sparkles className='me-1 size-3' />
-                  ۱۸ ماهه
+                  پیشنهاد ویژه لانچ — ۱۸ ماهه
                 </Badge>
               </div>
-              <h3 className='text-xl font-bold text-foreground'>Google AI Pro</h3>
+              <h3 className='text-xl font-bold text-foreground'>اشتراک ۱۸ ماهه جمینای</h3>
 
               <div className='mt-4'>
                 <span className='text-4xl font-extrabold text-foreground'>
                   {price}
                 </span>
               </div>
-              <p className='mt-1 text-xs text-muted-foreground'>یک‌بار پرداخت — ۱۸ ماه دسترسی</p>
+              <p className='mt-1 text-xs text-muted-foreground'>یک‌بار پرداخت — ۱۸ ماه دسترسی کامل</p>
             </CardHeader>
 
             <Separator className='mx-6' />
@@ -69,12 +70,12 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
 
               <Link href='/dashboard/buy' className='block'>
                 <Button className='w-full py-5 text-base font-semibold shadow-md'>
-                  خرید و فعال‌سازی
+                  خرید و فعال‌سازی فوری
                 </Button>
               </Link>
 
               <p className='mt-3 text-center text-xs text-muted-foreground'>
-                پس از پرداخت، لینک فعال‌سازی بلافاصله در اختیار شما قرار می‌گیرد
+                لینک فعال‌سازی بلافاصله پس از پرداخت در اختیارتان قرار می‌گیرد
               </p>
             </CardContent>
           </Card>
