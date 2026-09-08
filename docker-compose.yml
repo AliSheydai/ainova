@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  # ─── PostgreSQL Database ─────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: google_ai_pro_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: google_ai_pro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Next.js App ─────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: google_ai_pro_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/google_ai_pro
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET}
+      KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
+      KAVENEGAR_SENDER: ${KAVENEGAR_SENDER}
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID}
+      ZARINPAL_SANDBOX: ${ZARINPAL_SANDBOX:-true}
+      NEXT_PUBLIC_ZARINPAL_CALLBACK_URL: ${NEXT_PUBLIC_ZARINPAL_CALLBACK_URL}
+      NEXT_PUBLIC_SUPPORT_PHONE: ${NEXT_PUBLIC_SUPPORT_PHONE}
+      NEXT_PUBLIC_SUPPORT_TELEGRAM: ${NEXT_PUBLIC_SUPPORT_TELEGRAM}
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres_data:

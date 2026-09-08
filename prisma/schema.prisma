@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// User
+// =====================
+model User {
+  id               String   @id @default(cuid())
+  phone            String?  @unique
+  telegramId       String?  @unique
+  telegramUsername String?
+  name             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orders      Order[]
+
+  @@map("users")
+}
+
+// OTP Login tokens
+model OtpToken {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("otp_tokens")
+}
+
+// =====================
+// Product & Plan
+// =====================
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  plans       Plan[]
+
+  @@map("products")
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  duration    Int      // duration in months
+  price       Int      // price in Toman (Rials / 10)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product         Product          @relation(fields: [productId], references: [id])
+  orders          Order[]
+  activationLinks ActivationLink[]
+
+  @@map("plans")
+}
+
+// =====================
+// Order
+// =====================
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  userId         String
+  planId         String
+  amount         Int         // in Toman
+  status         OrderStatus @default(PENDING_PAYMENT)
+  source         String?     @default("web") // "web" | "telegram"
+  telegramChatId String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id])
+  plan            Plan            @relation(fields: [planId], references: [id])
+  payment         Payment?
+  activationLink  ActivationLink?
+
+  @@map("orders")
+}
+
+// =====================
+// Payment
+// =====================
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  gatewayName     String        @default("zarinpal")
+  authority       String?       @unique  // Zarinpal authority
+  refId           String?       // Zarinpal refId after success
+  gatewayResponse Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order           Order         @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+// =====================
+// Activation Links
+// =====================
+enum LinkStatus {
+  AVAILABLE
+  RESERVED
+  USED
+  INVALID
+}
+
+model ActivationLink {
+  id          String     @id @default(cuid())
+  planId      String
+  url         String
+  status      LinkStatus @default(AVAILABLE)
+  orderId     String?    @unique
+  createdAt   DateTime   @default(now())
+  assignedAt  DateTime?
+  usedAt      DateTime?
+
+  plan        Plan       @relation(fields: [planId], references: [id])
+  order       Order?     @relation(fields: [orderId], references: [id])
+
+  @@map("activation_links")
+}

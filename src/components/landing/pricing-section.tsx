@@ -1,0 +1,85 @@
+'use client'
+
+import Link from 'next/link'
+import { Check, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+
+const planFeatures = [
+  'فعال‌سازی روی حساب شخصی Google',
+  'Google AI Pro — دسترسی کامل مطابق پلن',
+  'دسترسی به قابلیت‌های پیشرفته AI',
+  'تحویل لینک فعال‌سازی پس از پرداخت',
+  'پشتیبانی در صورت بروز مشکل',
+  'بدون نیاز به ارسال رمز عبور',
+]
+
+interface PricingSectionProps {
+  price?: string
+}
+
+export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingSectionProps) {
+  return (
+    <section id='pricing' className='py-20 md:py-24'>
+      <div className='container mx-auto px-4 sm:px-6'>
+        <div className='mb-12 text-center'>
+          <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
+            قیمت و شرایط خرید
+          </h2>
+          <p className='text-sm text-muted-foreground sm:text-base'>
+            شفاف، بدون هزینه پنهان
+          </p>
+        </div>
+
+        <div className='mx-auto max-w-sm'>
+          <Card className='relative overflow-hidden border-primary/30 shadow-lg shadow-primary/10'>
+            {/* Popular badge */}
+            <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-primary to-primary/70' />
+
+            <CardHeader className='pb-4 pt-7 text-center'>
+              <div className='mb-2 flex justify-center'>
+                <Badge className='rounded-full px-3 py-0.5 text-xs'>
+                  <Sparkles className='me-1 size-3' />
+                  ۱۸ ماهه
+                </Badge>
+              </div>
+              <h3 className='text-xl font-bold text-foreground'>Google AI Pro</h3>
+
+              <div className='mt-4'>
+                <span className='text-4xl font-extrabold text-foreground'>
+                  {price}
+                </span>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>یک‌بار پرداخت — ۱۸ ماه دسترسی</p>
+            </CardHeader>
+
+            <Separator className='mx-6' />
+
+            <CardContent className='pt-5'>
+              <ul className='mb-6 space-y-3'>
+                {planFeatures.map((feature) => (
+                  <li key={feature} className='flex items-start gap-2.5 text-sm'>
+                    <Check className='mt-0.5 size-4 shrink-0 text-primary' />
+                    <span className='text-foreground'>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href='/dashboard/buy' className='block'>
+                <Button className='w-full py-5 text-base font-semibold shadow-md'>
+                  خرید و فعال‌سازی
+                </Button>
+              </Link>
+
+              <p className='mt-3 text-center text-xs text-muted-foreground'>
+                پس از پرداخت، لینک فعال‌سازی بلافاصله در اختیار شما قرار می‌گیرد
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
+  )
+}
