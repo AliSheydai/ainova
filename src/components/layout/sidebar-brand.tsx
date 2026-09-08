@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { PanelLeft, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/components/ui/sidebar'
@@ -16,20 +17,24 @@ export function SidebarBrand() {
 
   return (
     <div className='flex h-14 w-full items-center justify-between px-2 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0'>
-      {/* باز بودن سایدبار: لوگو + نام */}
-      <div className='flex items-center gap-2.5 overflow-hidden group-data-[collapsible=icon]:hidden'>
-        <div className='flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md'>
+      {/* باز بودن سایدبار: لوگو + نام (لینک به صفحه اصلی) */}
+      <Link
+        href='/'
+        className='group/brand flex items-center gap-2.5 overflow-hidden rounded-lg p-1 -m-1 transition-colors hover:bg-sidebar-accent/70 group-data-[collapsible=icon]:hidden'
+        title='مشاهده صفحه اصلی'
+      >
+        <div className='flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md transition-transform duration-200 group-hover/brand:scale-105'>
           <Sparkles className='size-4' />
         </div>
         <div className='flex flex-col overflow-hidden text-start leading-none'>
-          <span className='truncate text-sm font-bold text-foreground'>
-            Google AI Pro
+          <span className='truncate text-sm font-bold text-foreground transition-colors group-hover/brand:text-primary'>
+            جمینای
           </span>
           <span className='mt-0.5 truncate text-xs text-muted-foreground'>
             پنل کاربری
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* دکمه بستن — حالت باز */}
       <div className='group-data-[collapsible=icon]:hidden'>

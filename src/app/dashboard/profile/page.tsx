@@ -110,7 +110,7 @@ export default function ProfilePage() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              مدیریت مشخصات فردی و اطلاعات حساب کاربری Google AI Pro
+              مدیریت مشخصات فردی و اطلاعات حساب کاربری جمینای
             </p>
           </div>
         </div>

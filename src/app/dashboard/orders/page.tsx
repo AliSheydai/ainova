@@ -164,7 +164,7 @@ function OrdersContent() {
               هنوز سفارشی ثبت نکرده‌اید
             </p>
             <p className="mb-6 max-w-sm text-xs text-muted-foreground">
-              با خرید اشتراک Google AI Pro، لینک فعال‌سازی حساب کاربری‌تان بلافاصله در اینجا قرار می‌گیرد.
+              با خرید اشتراک جمینای، لینک فعال‌سازی حساب کاربری‌تان بلافاصله در اینجا قرار می‌گیرد.
             </p>
             <Button asChild>
               <Link href="/dashboard/buy">

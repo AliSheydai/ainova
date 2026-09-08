@@ -35,7 +35,7 @@ interface Product {
 
 const planFeatures = [
   'فعال‌سازی روی حساب شخصی Google',
-  'Google AI Pro — دسترسی مطابق پلن',
+  'اشتراک جمینای — دسترسی مطابق پلن',
   'دسترسی به Gemini و قابلیت‌های پیشرفته AI',
   'تحویل لینک فعال‌سازی پس از پرداخت',
   'پشتیبانی در صورت بروز مشکل',
@@ -105,7 +105,7 @@ export default function BuyPage() {
           </div>
           <div>
             <h1 className='text-xl font-bold text-foreground'>
-              خرید Google AI Pro
+              خرید اشتراک جمینای
             </h1>
             <p className='text-sm text-muted-foreground'>
               یک مرحله تا دسترسی به هوش مصنوعی پیشرفته Google
@@ -136,7 +136,7 @@ export default function BuyPage() {
                     {plan.name}
                   </Badge>
                 </div>
-                <CardTitle className='text-xl'>Google AI Pro</CardTitle>
+                <CardTitle className='text-xl'>جمینای</CardTitle>
                 <CardDescription className='text-sm'>
                   {product.description}
                 </CardDescription>

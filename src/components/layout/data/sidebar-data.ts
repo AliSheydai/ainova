@@ -3,7 +3,6 @@ import {
   HeadphonesIcon,
   Home,
   Package,
-  ShoppingCart,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -15,7 +14,7 @@ export const sidebarData: SidebarData = {
   },
   teams: [
     {
-      name: 'Google AI Pro',
+      name: 'جمینای',
       logo: () => null, // Will use custom brand
       plan: 'پنل کاربری',
     },
@@ -28,11 +27,6 @@ export const sidebarData: SidebarData = {
           title: 'داشبورد',
           url: '/dashboard',
           icon: Home,
-        },
-        {
-          title: 'خرید Google AI Pro',
-          url: '/dashboard/buy',
-          icon: ShoppingCart,
         },
         {
           title: 'سفارش‌های من',

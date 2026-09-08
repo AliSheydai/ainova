@@ -75,7 +75,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                   پرداخت با موفقیت انجام شد!
                 </h3>
                 <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                  لینک اختصاصی فعال‌سازی Google AI Pro برای شما صادر گردید.
+                  لینک اختصاصی فعال‌سازی جمینای برای شما صادر گردید.
                 </p>
               </div>
             </div>
@@ -172,7 +172,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                     <strong className="text-foreground">تایید پیشنهاد:</strong> در صفحه باز شده، روی دکمه Agree / Accept / Continue کلیک کنید.
                   </li>
                   <li>
-                    <strong className="text-foreground">پایان:</strong> اشتراک Google AI Pro با موفقیت روی حساب شما فعال شد و نیازی به هیچ اقدام دیگری نیست!
+                    <strong className="text-foreground">پایان:</strong> اشتراک جمینای با موفقیت روی حساب شما فعال شد و نیازی به هیچ اقدام دیگری نیست!
                   </li>
                 </ol>
               </div>

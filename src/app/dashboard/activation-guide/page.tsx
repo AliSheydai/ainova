@@ -3,20 +3,17 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import {
-  BookOpen,
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
   Sparkles,
   AlertTriangle,
   HelpCircle,
-  ArrowRight,
   Globe,
   Lock,
   ChevronDown,
   Info,
   Clock,
-  Check,
   Cloud,
   Bot,
   MessageCircle,
@@ -28,39 +25,10 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-
-// Pre-activation checklist items
-const initialChecklist = [
-  {
-    id: 'vpn',
-    label: 'اتصال ابزار تغییر آی‌پی (VPN)',
-    desc: 'لوکیشن با پایداری مناسب (ترجیحاً آمریکا، آلمان یا کشورهای بدون تحریم گوگل)',
-    checked: false,
-  },
-  {
-    id: 'incognito',
-    label: 'باز کردن مرورگر در حالت ناشناس (Incognito / Private)',
-    desc: 'جهت جلوگیری از تداخل حساب‌های جیمیل لاگین‌شده در سیستم',
-    checked: false,
-  },
-  {
-    id: 'order_link',
-    label: 'کپی کردن لینک فعال‌سازی از پنل سفارش‌ها',
-    desc: 'لینک اختصاصی سفارش خود را از بخش «سفارش‌های من» آماده داشته باشید',
-    checked: false,
-  },
-  {
-    id: 'login_confirm',
-    label: 'لاگین در اکانت گوگل و تایید اشتراک',
-    desc: 'ورود مستقیم و تایید پیشنهاد فمیلی در دامنه رسمی accounts.google.com',
-    checked: false,
-  },
-]
 
 // Step-by-step activation guide
 const steps = [
@@ -102,7 +70,7 @@ const steps = [
     title: 'پذیرش دعوت و تایید نهایی اشتراک',
     subtitle: 'تایید عضویت با یک کلیک',
     description:
-      'در صفحه اختصاصی Google One که باز می‌شود، خلاصه طرح Google AI Pro (شامل هوش مصنوعی پیشرفته Gemini و ۲ ترابایت فضای ابری) نمایش داده می‌شود. کافیست روی دکمه Accept / Join Family / ادامه کلیک کنید تا اکانت شما بلافاصله عضو شود.',
+      'در صفحه اختصاصی Google One که باز می‌شود، خلاصه طرح جمینای (شامل هوش مصنوعی پیشرفته Gemini و ۲ ترابایت فضای ابری) نمایش داده می‌شود. کافیست روی دکمه Accept / Join Family / ادامه کلیک کنید تا اکانت شما بلافاصله عضو شود.',
     badge: 'تایید نهایی',
     tip: 'در صورتی که پیام خوش‌آمدگویی گوگل وان را مشاهده کردید، اشتراک با موفقیت اعمال شده است.',
     icon: CheckCircle2,
@@ -113,7 +81,7 @@ const steps = [
     title: 'بررسی و بهره‌مندی از امکانات اکانت',
     subtitle: 'تست هوش مصنوعی Gemini Advanced و فضای ۲ ترابایت',
     description:
-      'بلافاصله به آدرس gemini.google.com بروید؛ نشان Google AI Pro یا Gemini Advanced را در بالای صفحه مشاهده خواهید کرد. همچنین در Google Drive و Google Photos ظرفیت ۲ ترابایت به سهمیه حساب شما افزوده شده است.',
+      'بلافاصله به آدرس gemini.google.com بروید؛ نشان جمینای یا Gemini Advanced را در بالای صفحه مشاهده خواهید کرد. همچنین در Google Drive و Google Photos ظرفیت ۲ ترابایت به سهمیه حساب شما افزوده شده است.',
     badge: 'اتمام مراحل',
     tip: 'از برترین امکانات هوش مصنوعی روز دنیا با سرعت و سقف توکن فوق‌العاده لذت ببرید!',
     icon: Bot,
@@ -150,17 +118,7 @@ const faqs = [
 ]
 
 export default function ActivationGuidePage() {
-  const [checklist, setChecklist] = useState(initialChecklist)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
-
-  const toggleCheck = (id: string) => {
-    setChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-    )
-  }
-
-  const completedCount = checklist.filter((i) => i.checked).length
-  const progressPercent = Math.round((completedCount / checklist.length) * 100)
 
   return (
     <>
@@ -190,10 +148,10 @@ export default function ActivationGuidePage() {
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                راهنمای فعال‌سازی <span className="text-primary">Google AI Pro</span>
+                راهنمای فعال‌سازی <span className="text-primary">جمینای</span>
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
-                تمام مراحل و نکات لازم برای فعال‌سازی آنی اشتراک ۱۸ ماهه Google AI Pro و ۲ ترابایت فضای ابری روی جیمیل شخصی خودتان، با حفظ کامل امنیت و حریم خصوصی.
+                تمام مراحل و نکات لازم برای فعال‌سازی آنی اشتراک ۱۸ ماهه جمینای و ۲ ترابایت فضای ابری روی جیمیل شخصی خودتان، با حفظ کامل امنیت و حریم خصوصی.
               </p>
 
               {/* Status chips */}
@@ -236,87 +194,6 @@ export default function ActivationGuidePage() {
           </div>
         </div>
 
-        {/* Interactive Pre-Activation Checklist */}
-        <Card className="border-border/80 bg-card shadow-xs overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-muted/20 pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2">
-                  <CheckCircle2 className="size-5 text-emerald-500" />
-                  چک‌لیست آماده‌سازی پیش از فعال‌سازی
-                </CardTitle>
-                <CardDescription className="text-xs sm:text-sm mt-1">
-                  پیش از کلیک روی لینک، این ۴ مورد را تیک بزنید تا مطمئن شوید بدون خطا فعال‌سازی انجام می‌شود:
-                </CardDescription>
-              </div>
-
-              {/* Progress metric */}
-              <div className="flex items-center gap-3">
-                <div className="text-end">
-                  <div className="text-xs font-semibold text-foreground">
-                    پیشرفت: {progressPercent}٪
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {completedCount} از {checklist.length} مرحله
-                  </div>
-                </div>
-                <div className="w-24 sm:w-32 h-2.5 bg-muted rounded-full overflow-hidden border border-border/50">
-                  <div
-                    className={`h-full transition-all duration-500 rounded-full ${
-                      progressPercent === 100
-                        ? 'bg-emerald-500'
-                        : 'bg-primary'
-                    }`}
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-4 sm:p-6 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {checklist.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id)}
-                  className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
-                    item.checked
-                      ? 'border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10'
-                      : 'border-border/70 hover:border-border hover:bg-muted/40'
-                  }`}
-                >
-                  <Checkbox
-                    id={item.id}
-                    checked={item.checked}
-                    onCheckedChange={() => toggleCheck(item.id)}
-                    className="mt-0.5"
-                  />
-                  <div className="space-y-0.5">
-                    <label
-                      htmlFor={item.id}
-                      className={`text-sm font-semibold cursor-pointer block ${
-                        item.checked ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'
-                      }`}
-                    >
-                      {item.label}
-                    </label>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {progressPercent === 100 && (
-              <div className="mt-2 flex items-center gap-2 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-semibold animate-in fade-in slide-in-from-top-1">
-                <Check className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>عالی است! تمام پیش‌نیازها رعایت شده‌اند؛ اکنون می‌توانید با خیال راحت لینک فعال‌سازی را باز کنید.</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Step-by-Step Visual Timeline */}
         <div className="space-y-4">

@@ -6,10 +6,8 @@ import {
   BookOpen,
   HeadphonesIcon,
   Package,
-  ShoppingCart,
   Sparkles,
   CheckCircle2,
-  ArrowLeft,
   ShieldCheck,
   Loader2,
   User,
@@ -23,12 +21,6 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 
 const quickLinks = [
-  {
-    icon: ShoppingCart,
-    title: 'خرید Google AI Pro',
-    description: 'دریافت اشتراک ۱۸ ماهه',
-    href: '/dashboard/buy',
-  },
   {
     icon: Package,
     title: 'سفارش‌های من',
@@ -130,7 +122,7 @@ export default function DashboardPage() {
                 </Badge>
               </div>
               <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                به سامانه فعال‌سازی و مدیریت اشتراک Google AI Pro خوش آمدید.
+                به سامانه فعال‌سازی و مدیریت اشتراک جمینای خوش آمدید.
               </p>
             </div>
           </div>
@@ -164,8 +156,8 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Active Subscription Banner OR Purchase CTA */}
-            {data.activeOrder ? (
+            {/* Active Subscription Banner */}
+            {data.activeOrder && (
               <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
                 <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
                   <div className="flex items-center gap-3">
@@ -195,30 +187,6 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
-            ) : (
-              <Card className="border-primary/20 bg-primary/5 shadow-sm">
-                <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0 shadow-md shadow-primary/25">
-                      <Sparkles className="size-6" />
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-foreground">
-                        خرید اشتراک قانونی Google AI Pro — ۱۸ ماهه
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        فعال‌سازی بدون رمز عبور، مستقیماً روی اکانت جیمیل شخصی شما با تحویل آنی
-                      </p>
-                    </div>
-                  </div>
-                  <Button asChild className="shrink-0">
-                    <Link href="/dashboard/buy">
-                      <ShoppingCart className="me-2 size-4" />
-                      خرید اشتراک (۳۹۰,۰۰۰ ت)
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
             )}
 
             {/* Quick links grid */}
@@ -226,7 +194,7 @@ export default function DashboardPage() {
               <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
                 دسترسی سریع
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {quickLinks.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <Card className="h-full cursor-pointer border-border/60 transition-all duration-200 hover:border-primary/40 hover:shadow-sm">
