@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Package,
   BookOpen,
@@ -8,7 +8,6 @@ import {
   User,
   Sparkles,
   ShoppingBag,
-  LogOut,
   ChevronLeft,
   X,
 } from 'lucide-react'
@@ -17,7 +16,13 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { AuthUserData } from '@/components/auth/auth-modal'
 import { OrdersTab } from './tabs/orders-tab'
 import { ActivationGuideTab } from './tabs/activation-guide-tab'
@@ -39,30 +44,35 @@ type TabKey = 'orders' | 'guide' | 'support' | 'profile'
 const menuItems: {
   id: TabKey
   title: string
+  shortTitle: string
   subtitle: string
   icon: React.ComponentType<{ className?: string }>
 }[] = [
   {
     id: 'orders',
     title: 'سفارش‌های من',
+    shortTitle: 'سفارش‌ها',
     subtitle: 'تاریخچه، وضعیت و لینک‌ها',
     icon: Package,
   },
   {
     id: 'guide',
     title: 'راهنمای فعال‌سازی',
+    shortTitle: 'راهنما',
     subtitle: 'آموزش گام‌به‌گام',
     icon: BookOpen,
   },
   {
     id: 'support',
     title: 'پشتیبانی',
+    shortTitle: 'پشتیبانی',
     subtitle: 'ارتباط تلگرام و تماس',
     icon: HeadphonesIcon,
   },
   {
     id: 'profile',
     title: 'حساب کاربری',
+    shortTitle: 'حساب من',
     subtitle: 'ویرایش مشخصات و خروج',
     icon: User,
   },
@@ -77,10 +87,141 @@ export function DashboardModal({
   defaultTab = 'orders',
 }: DashboardModalProps) {
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab)
+  const isMobile = useIsMobile()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const displayName = user.name?.trim() || user.phone
-  const initial = displayName.charAt(0) || 'ک'
 
+  // Render tab contents
+  const renderTabContent = () => {
+    return (
+      <>
+        {activeTab === 'orders' && (
+          <OrdersTab
+            onGoToBuy={() => {
+              onOpenChange(false)
+              window.location.href = '/dashboard/buy'
+            }}
+          />
+        )}
+
+        {activeTab === 'guide' && (
+          <ActivationGuideTab onGoToOrders={() => setActiveTab('orders')} />
+        )}
+
+        {activeTab === 'support' && <SupportTab />}
+
+        {activeTab === 'profile' && (
+          <ProfileTab
+            user={user}
+            onUserUpdate={onUserUpdate}
+            onLogout={() => {
+              onLogout()
+              onOpenChange(false)
+            }}
+          />
+        )}
+      </>
+    )
+  }
+
+  // ================= MOBILE BOTTOM SHEET =================
+  if (mounted && isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          dir="rtl"
+          className="h-[88vh] max-h-[92vh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl overflow-hidden shadow-2xl gap-0"
+        >
+          {/* Pull Handle Indicator */}
+          <div className="flex justify-center pt-2.5 pb-1 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+          </div>
+
+          {/* Header Bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 shrink-0 bg-background/50">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
+                <Sparkles className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <SheetTitle className="text-xs font-bold text-foreground truncate">
+                  {displayName}
+                </SheetTitle>
+                <p dir="ltr" className="text-[10px] text-muted-foreground font-mono truncate text-right">
+                  {user.phone}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false)
+                  window.location.href = '/dashboard/buy'
+                }}
+                className="h-8 text-[11px] gap-1 px-2.5 rounded-xl bg-primary text-primary-foreground shadow-xs"
+              >
+                <ShoppingBag className="size-3" />
+                خرید اشتراک
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="size-8 rounded-xl text-muted-foreground hover:text-foreground"
+                aria-label="بستن"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Navigation Bar (Tabs) */}
+          <div className="px-3 py-2 border-b border-border/50 shrink-0 bg-muted/25">
+            <div className="grid grid-cols-4 gap-1 p-1 bg-muted/60 rounded-xl">
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                const isActive = activeTab === item.id
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={cn(
+                      'flex flex-col items-center justify-center py-2 px-1 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer select-none',
+                      isActive
+                        ? 'bg-background text-foreground font-bold shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <Icon className={cn('size-4 mb-0.5', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                    <span className="truncate max-w-full">{item.shortTitle}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto p-4 pb-12">
+            {renderTabContent()}
+          </div>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // ================= DESKTOP MODAL WITH RIGHT SIDEBAR =================
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -108,19 +249,13 @@ export function DashboardModal({
             </div>
 
             {/* User Mini Card */}
-            <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/70 p-3 shadow-xs">
-              <div className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-bold text-sm shadow-xs ring-1 ring-primary/20">
-                {initial}
-                <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-xs font-bold text-foreground truncate">
-                  {displayName}
-                </h4>
-                <p dir="ltr" className="text-[11px] text-muted-foreground font-mono truncate">
-                  {user.phone}
-                </p>
-              </div>
+            <div className="rounded-xl border border-border/60 bg-background/70 px-3.5 py-2.5 shadow-xs">
+              <h4 className="text-xs font-bold text-foreground truncate">
+                {displayName}
+              </h4>
+              <p dir="ltr" className="text-[11px] text-muted-foreground font-mono truncate text-right mt-0.5">
+                {user.phone}
+              </p>
             </div>
 
             {/* Vertical Menu Navigation (از بالا به پایین) */}
@@ -227,31 +362,7 @@ export function DashboardModal({
 
           {/* Content Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-            {activeTab === 'orders' && (
-              <OrdersTab
-                onGoToBuy={() => {
-                  onOpenChange(false)
-                  window.location.href = '/dashboard/buy'
-                }}
-              />
-            )}
-
-            {activeTab === 'guide' && (
-              <ActivationGuideTab onGoToOrders={() => setActiveTab('orders')} />
-            )}
-
-            {activeTab === 'support' && <SupportTab />}
-
-            {activeTab === 'profile' && (
-              <ProfileTab
-                user={user}
-                onUserUpdate={onUserUpdate}
-                onLogout={() => {
-                  onLogout()
-                  onOpenChange(false)
-                }}
-              />
-            )}
+            {renderTabContent()}
           </div>
         </main>
       </DialogContent>

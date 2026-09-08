@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Menu, Sparkles, User } from 'lucide-react'
+import { LogIn, Menu, Sparkles, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -107,7 +107,7 @@ export function LandingHeader() {
             </Link>
 
             {/* Mobile User Quick Icon */}
-            {user && (
+            {user ? (
               <Button
                 variant='ghost'
                 size='icon'
@@ -119,6 +119,16 @@ export function LandingHeader() {
                 <div className='flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
                   {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3.5' />}
                 </div>
+              </Button>
+            ) : (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setAuthModalOpen(true)}
+                className='md:hidden h-8 gap-1.5 px-3 text-xs font-medium rounded-lg border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer'
+              >
+                <LogIn className='size-3.5' />
+                <span>ورود</span>
               </Button>
             )}
 

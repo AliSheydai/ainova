@@ -23,10 +23,18 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
+import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 export interface AuthUserData {
@@ -45,6 +53,8 @@ interface AuthModalProps {
 type AuthStep = 'phone' | 'otp' | 'name'
 
 export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
+  const isMobile = useIsMobile()
+  const [mounted, setMounted] = useState(false)
   const [step, setStep] = useState<AuthStep>('phone')
   const [phone, setPhone] = useState('')
   const [otpCode, setOtpCode] = useState('')
@@ -53,6 +63,10 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
   const [cooldown, setCooldown] = useState(0)
   const [devCode, setDevCode] = useState<string | null>(null)
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUserData | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Reset state when modal is closed
   useEffect(() => {
@@ -208,6 +222,388 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
     onOpenChange(false)
   }
 
+  const stepTitle =
+    step === 'phone'
+      ? 'ورود یا ثبت‌نام با موبایل'
+      : step === 'otp'
+      ? 'تأیید شماره موبایل'
+      : 'تکمیل مشخصات حساب'
+
+  const stepDescription =
+    step === 'phone'
+      ? 'برای مشاهده وضعیت سفارش‌ها و پنل اشتراک، شماره موبایل خود را وارد کنید.'
+      : step === 'otp'
+      ? `کد تأیید ۵ رقمی پیامک شده به شماره ${phone} را وارد فرمایید.`
+      : 'برای نمایش نام در رسید سفارش‌ها و پشتیبانی، نام خود را وارد کنید.'
+
+  const renderStepper = () => (
+    <div className="border-b border-border/50 bg-muted/30 px-4 sm:px-6 py-2.5 sm:py-3 shrink-0">
+      <div className="flex items-center justify-between">
+        {/* Step 1: Phone */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div
+            className={cn(
+              'flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
+              step === 'phone'
+                ? 'bg-primary text-primary-foreground ring-3 sm:ring-4 ring-primary/20 shadow-sm'
+                : 'bg-emerald-500 text-white'
+            )}
+          >
+            {step !== 'phone' ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : '۱'}
+          </div>
+          <span
+            className={cn(
+              'text-[11px] sm:text-xs font-medium',
+              step === 'phone'
+                ? 'text-foreground font-semibold'
+                : 'text-muted-foreground'
+            )}
+          >
+            شماره موبایل
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            'h-0.5 flex-1 mx-2 sm:mx-3 transition-colors duration-300',
+            step === 'otp' || step === 'name' ? 'bg-primary' : 'bg-border'
+          )}
+        />
+
+        {/* Step 2: OTP */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div
+            className={cn(
+              'flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
+              step === 'otp'
+                ? 'bg-primary text-primary-foreground ring-3 sm:ring-4 ring-primary/20 shadow-sm'
+                : step === 'name'
+                ? 'bg-emerald-500 text-white'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {step === 'name' ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : '۲'}
+          </div>
+          <span
+            className={cn(
+              'text-[11px] sm:text-xs font-medium',
+              step === 'otp'
+                ? 'text-foreground font-semibold'
+                : 'text-muted-foreground'
+            )}
+          >
+            کد پیامکی
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            'h-0.5 flex-1 mx-2 sm:mx-3 transition-colors duration-300',
+            step === 'name' ? 'bg-primary' : 'bg-border'
+          )}
+        />
+
+        {/* Step 3: Name */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div
+            className={cn(
+              'flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
+              step === 'name'
+                ? 'bg-primary text-primary-foreground ring-3 sm:ring-4 ring-primary/20 shadow-sm'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            ۳
+          </div>
+          <span
+            className={cn(
+              'text-[11px] sm:text-xs font-medium',
+              step === 'name'
+                ? 'text-foreground font-semibold'
+                : 'text-muted-foreground'
+            )}
+          >
+            نام شما
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderStepForms = () => (
+    <>
+      {/* ================= STEP 1: PHONE ================= */}
+      {step === 'phone' && (
+        <form onSubmit={handleSendOtp} className="space-y-4 pt-1">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="modal-phone" className="text-xs font-medium">
+                شماره تلفن همراه
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                پیش‌شماره ایران (۹۸+)
+              </span>
+            </div>
+
+            <div className="relative group">
+              <Input
+                id="modal-phone"
+                type="tel"
+                placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                dir="ltr"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={loading}
+                className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50"
+                autoFocus
+              />
+              <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                <Phone className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              کد یک‌بارمصرف امن فوراً به این شماره پیامک خواهد شد.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                در حال ارسال کد تأیید...
+              </>
+            ) : (
+              <>
+                دریافت کد تأیید پیامکی
+                <ArrowLeft className="mr-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      )}
+
+      {/* ================= STEP 2: OTP ================= */}
+      {step === 'otp' && (
+        <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
+          {/* Phone banner */}
+          <div className="flex items-center justify-between rounded-xl bg-muted/60 border border-border/60 px-3.5 py-2 text-xs">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Phone className="h-3.5 w-3.5 text-primary" />
+              <span className="font-sans font-medium text-foreground" dir="ltr">
+                {phone}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setStep('phone')
+                setOtpCode('')
+                setDevCode(null)
+              }}
+              className="font-medium text-primary hover:underline transition-colors text-xs"
+            >
+              ویرایش شماره
+            </button>
+          </div>
+
+          {/* Dev Mode Banner */}
+          {devCode && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs text-amber-700 dark:text-amber-300">
+              <span className="font-semibold">کد تستی:</span>{' '}
+              <span className="font-sans font-bold text-sm tracking-widest bg-amber-500/20 px-2 py-0.5 rounded-md text-amber-800 dark:text-amber-200">
+                {devCode}
+              </span>
+            </div>
+          )}
+
+          {/* OTP Slots */}
+          <div className="flex flex-col items-center justify-center space-y-2.5 py-1">
+            <Label htmlFor="modal-otp" className="text-xs text-muted-foreground">
+              کد ۵ رقمی ارسال‌شده را وارد نمایید
+            </Label>
+            <div dir="ltr">
+              <InputOTP
+                maxLength={5}
+                value={otpCode}
+                onChange={(val) => setOtpCode(val)}
+                disabled={loading}
+                autoFocus
+              >
+                <InputOTPGroup className="gap-2">
+                  <InputOTPSlot
+                    index={0}
+                    className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
+                  />
+                  <InputOTPSlot
+                    index={1}
+                    className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
+                  />
+                  <InputOTPSlot
+                    index={2}
+                    className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
+                  />
+                  <InputOTPSlot
+                    index={3}
+                    className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
+                  />
+                  <InputOTPSlot
+                    index={4}
+                    className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
+                  />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+          </div>
+
+          {/* Resend Cooldown */}
+          <div className="text-center">
+            {cooldown > 0 ? (
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 px-3 py-1 rounded-full">
+                <span>ارسال مجدد کد پس از</span>
+                <span className="font-sans font-bold text-primary tabular-nums">
+                  {cooldown}
+                </span>
+                <span>ثانیه</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleSendOtp()}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                ارسال مجدد کد پیامکی
+              </button>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
+            disabled={loading || otpCode.length < 5}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                در حال اعتبارسنجی...
+              </>
+            ) : (
+              <>
+                تأیید و ورود
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      )}
+
+      {/* ================= STEP 3: NAME ONBOARDING ================= */}
+      {step === 'name' && (
+        <form onSubmit={handleSaveName} className="space-y-4 pt-1">
+          <div className="space-y-2">
+            <Label htmlFor="modal-name" className="text-xs font-medium">
+              نام و نام خانوادگی
+            </Label>
+            <div className="relative group">
+              <Input
+                id="modal-name"
+                type="text"
+                placeholder="مثال: علی رضایی"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={loading}
+                className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 font-sans text-sm"
+                autoFocus
+              />
+              <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                <User className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              این نام در بالای داشبورد و در رسید سفارش‌های شما نمایش داده می‌شود.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <Button
+              type="submit"
+              className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
+              disabled={loading || !fullName.trim()}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  در حال ذخیره...
+                </>
+              ) : (
+                <>
+                  ثبت نام و ورود به حساب
+                  <Check className="mr-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleSkipName}
+              disabled={loading}
+              className="w-full text-xs text-muted-foreground hover:text-foreground"
+            >
+              بعداً مشخص می‌کنم
+            </Button>
+          </div>
+        </form>
+      )}
+    </>
+  )
+
+  // ================= MOBILE BOTTOM SHEET =================
+  if (mounted && isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          dir="rtl"
+          className="max-h-[92vh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
+        >
+          {/* Pull Handle Indicator */}
+          <div className="flex justify-center pt-3 pb-1 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+          </div>
+
+          {/* Stepper Progress Bar */}
+          {renderStepper()}
+
+          {/* Scrollable Form Body */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
+            <SheetHeader className="text-center pb-3 space-y-1 p-0">
+              <div className="flex justify-center mb-1">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Sparkles className="size-5" />
+                </div>
+              </div>
+              <SheetTitle className="text-lg font-bold text-foreground">
+                {stepTitle}
+              </SheetTitle>
+              <SheetDescription className="text-xs text-muted-foreground leading-relaxed">
+                {stepDescription}
+              </SheetDescription>
+            </SheetHeader>
+
+            {renderStepForms()}
+          </div>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // ================= DESKTOP DIALOG =================
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -218,97 +614,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-primary" />
 
         {/* Stepper Progress Bar */}
-        <div className="border-b border-border/50 bg-muted/30 px-6 py-3">
-          <div className="flex items-center justify-between">
-            {/* Step 1: Phone */}
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
-                  step === 'phone'
-                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm'
-                    : 'bg-emerald-500 text-white'
-                )}
-              >
-                {step !== 'phone' ? <Check className="h-3.5 w-3.5" /> : '۱'}
-              </div>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  step === 'phone'
-                    ? 'text-foreground font-semibold'
-                    : 'text-muted-foreground'
-                )}
-              >
-                شماره موبایل
-              </span>
-            </div>
-
-            <div
-              className={cn(
-                'h-0.5 flex-1 mx-3 transition-colors duration-300',
-                step === 'otp' || step === 'name' ? 'bg-primary' : 'bg-border'
-              )}
-            />
-
-            {/* Step 2: OTP */}
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
-                  step === 'otp'
-                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm'
-                    : step === 'name'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {step === 'name' ? <Check className="h-3.5 w-3.5" /> : '۲'}
-              </div>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  step === 'otp'
-                    ? 'text-foreground font-semibold'
-                    : 'text-muted-foreground'
-                )}
-              >
-                کد پیامکی
-              </span>
-            </div>
-
-            <div
-              className={cn(
-                'h-0.5 flex-1 mx-3 transition-colors duration-300',
-                step === 'name' ? 'bg-primary' : 'bg-border'
-              )}
-            />
-
-            {/* Step 3: Name */}
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
-                  step === 'name'
-                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                ۳
-              </div>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  step === 'name'
-                    ? 'text-foreground font-semibold'
-                    : 'text-muted-foreground'
-                )}
-              >
-                نام شما
-              </span>
-            </div>
-          </div>
-        </div>
+        {renderStepper()}
 
         <div className="p-6 pt-4">
           <DialogHeader className="text-center pb-3 space-y-1">
@@ -317,249 +623,15 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                 <Sparkles className="size-5" />
               </div>
             </div>
-            <DialogTitle className="text-lg font-bold">
-              {step === 'phone' && 'ورود یا ثبت‌نام با موبایل'}
-              {step === 'otp' && 'تأیید شماره موبایل'}
-              {step === 'name' && 'تکمیل مشخصات حساب'}
+            <DialogTitle className="text-lg font-bold text-foreground">
+              {stepTitle}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              {step === 'phone' &&
-                'برای مشاهده وضعیت سفارش‌ها و پنل اشتراک، شماره موبایل خود را وارد کنید.'}
-              {step === 'otp' &&
-                `کد تأیید ۵ رقمی پیامک شده به شماره ${phone} را وارد فرمایید.`}
-              {step === 'name' &&
-                'برای نمایش نام در رسید سفارش‌ها و پشتیبانی، نام خود را وارد کنید.'}
+              {stepDescription}
             </DialogDescription>
           </DialogHeader>
 
-          {/* ================= STEP 1: PHONE ================= */}
-          {step === 'phone' && (
-            <form onSubmit={handleSendOtp} className="space-y-4 pt-1">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="modal-phone" className="text-xs font-medium">
-                    شماره تلفن همراه
-                  </Label>
-                  <span className="text-[11px] text-muted-foreground">
-                    پیش‌شماره ایران (۹۸+)
-                  </span>
-                </div>
-
-                <div className="relative group">
-                  <Input
-                    id="modal-phone"
-                    type="tel"
-                    placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                    dir="ltr"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={loading}
-                    className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50"
-                    autoFocus
-                  />
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                    <Phone className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  کد یک‌بارمصرف امن فوراً به این شماره پیامک خواهد شد.
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    در حال ارسال کد تأیید...
-                  </>
-                ) : (
-                  <>
-                    دریافت کد تأیید پیامکی
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-          )}
-
-          {/* ================= STEP 2: OTP ================= */}
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
-              {/* Phone banner */}
-              <div className="flex items-center justify-between rounded-xl bg-muted/60 border border-border/60 px-3.5 py-2 text-xs">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5 text-primary" />
-                  <span className="font-sans font-medium text-foreground" dir="ltr">
-                    {phone}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('phone')
-                    setOtpCode('')
-                    setDevCode(null)
-                  }}
-                  className="font-medium text-primary hover:underline transition-colors text-xs"
-                >
-                  ویرایش شماره
-                </button>
-              </div>
-
-              {/* Dev Mode Banner */}
-              {devCode && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs text-amber-700 dark:text-amber-300">
-                  <span className="font-semibold">کد تستی:</span>{' '}
-                  <span className="font-sans font-bold text-sm tracking-widest bg-amber-500/20 px-2 py-0.5 rounded-md text-amber-800 dark:text-amber-200">
-                    {devCode}
-                  </span>
-                </div>
-              )}
-
-              {/* OTP Slots */}
-              <div className="flex flex-col items-center justify-center space-y-2.5 py-1">
-                <Label htmlFor="modal-otp" className="text-xs text-muted-foreground">
-                  کد ۵ رقمی ارسال‌شده را وارد نمایید
-                </Label>
-                <div dir="ltr">
-                  <InputOTP
-                    maxLength={5}
-                    value={otpCode}
-                    onChange={(val) => setOtpCode(val)}
-                    disabled={loading}
-                    autoFocus
-                  >
-                    <InputOTPGroup className="gap-2">
-                      <InputOTPSlot
-                        index={0}
-                        className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
-                      />
-                      <InputOTPSlot
-                        index={1}
-                        className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
-                      />
-                      <InputOTPSlot
-                        index={2}
-                        className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
-                      />
-                      <InputOTPSlot
-                        index={3}
-                        className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
-                      />
-                      <InputOTPSlot
-                        index={4}
-                        className="h-12 w-10 sm:w-11 text-lg font-bold font-sans rounded-xl border-border/80"
-                      />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-
-              {/* Resend Cooldown */}
-              <div className="text-center">
-                {cooldown > 0 ? (
-                  <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 px-3 py-1 rounded-full">
-                    <span>ارسال مجدد کد پس از</span>
-                    <span className="font-sans font-bold text-primary tabular-nums">
-                      {cooldown}
-                    </span>
-                    <span>ثانیه</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleSendOtp()}
-                    disabled={loading}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    ارسال مجدد کد پیامکی
-                  </button>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
-                disabled={loading || otpCode.length < 5}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    در حال اعتبارسنجی...
-                  </>
-                ) : (
-                  <>
-                    تأیید و ورود
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-          )}
-
-          {/* ================= STEP 3: NAME ONBOARDING ================= */}
-          {step === 'name' && (
-            <form onSubmit={handleSaveName} className="space-y-4 pt-1">
-              <div className="space-y-2">
-                <Label htmlFor="modal-name" className="text-xs font-medium">
-                  نام و نام خانوادگی
-                </Label>
-                <div className="relative group">
-                  <Input
-                    id="modal-name"
-                    type="text"
-                    placeholder="مثال: علی رضایی"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={loading}
-                    className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 font-sans text-sm"
-                    autoFocus
-                  />
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                    <User className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  این نام در بالای داشبورد و در رسید سفارش‌های شما نمایش داده می‌شود.
-                </p>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <Button
-                  type="submit"
-                  className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
-                  disabled={loading || !fullName.trim()}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                      در حال ذخیره...
-                    </>
-                  ) : (
-                    <>
-                      ثبت نام و ورود به حساب
-                      <Check className="mr-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleSkipName}
-                  disabled={loading}
-                  className="w-full text-xs text-muted-foreground hover:text-foreground"
-                >
-                  بعداً مشخص می‌کنم
-                </Button>
-              </div>
-            </form>
-          )}
+          {renderStepForms()}
         </div>
       </DialogContent>
     </Dialog>
