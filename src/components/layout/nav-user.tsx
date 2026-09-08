@@ -60,7 +60,7 @@ export function NavUser({ user }: NavUserProps) {
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size='default'
@@ -81,10 +81,10 @@ export function NavUser({ user }: NavUserProps) {
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className='w-(--radix-dropdown-menu-trigger-width) min-w-52 rounded-lg'
-              side={isMobile ? 'bottom' : 'right'}
+              className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl p-1.5 shadow-lg'
+              side='top'
               align='end'
-              sideOffset={4}
+              sideOffset={8}
             >
               <DropdownMenuLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-start text-sm'>
