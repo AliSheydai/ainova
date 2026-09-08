@@ -9,6 +9,8 @@ import {
   Check,
   Loader2,
   LogOut,
+  ExternalLink,
+  CheckCircle2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -17,6 +19,19 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AuthUserData } from '@/components/auth/auth-modal'
+
+function TelegramIcon({ className = 'size-4' }: { className?: string }) {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      className={className}
+      fill='currentColor'
+      aria-hidden='true'
+    >
+      <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z' />
+    </svg>
+  )
+}
 
 interface ProfileTabProps {
   user: AuthUserData
@@ -28,6 +43,11 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
   const [name, setName] = useState(user.name || '')
   const [saving, setSaving] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [connectingTg, setConnectingTg] = useState(false)
+  const [unlinkingTg, setUnlinkingTg] = useState(false)
+
+  const botUsername =
+    process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'arioaccountbot'
 
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +78,52 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
       toast.error('خطای ارتباط با سرور.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleConnectTelegram = async () => {
+    setConnectingTg(true)
+    try {
+      const res = await fetch('/api/telegram/link-token', { method: 'POST' })
+      const data = await res.json()
+
+      if (data.success && data.deepLinkUrl) {
+        toast.info('در حال انتقال به تلگرام... لطفاً در ربات دکمه Start را بزنید.', {
+          duration: 4000,
+        })
+        window.open(data.deepLinkUrl, '_blank')
+      } else {
+        toast.error(data.message || 'خطا در ایجاد لینک اتصال به تلگرام.')
+      }
+    } catch {
+      toast.error('خطا در برقراری ارتباط با سرور.')
+    } finally {
+      setConnectingTg(false)
+    }
+  }
+
+  const handleUnlinkTelegram = async () => {
+    if (!confirm('آیا از قطع اتصال حساب تلگرام اطمینان دارید؟')) return
+
+    setUnlinkingTg(true)
+    try {
+      const res = await fetch('/api/telegram/unlink', { method: 'POST' })
+      const data = await res.json()
+
+      if (data.success) {
+        toast.success('اتصال حساب تلگرام با موفقیت قطع شد.')
+        onUserUpdate({
+          ...user,
+          telegramId: null,
+          telegramUsername: null,
+        })
+      } else {
+        toast.error(data.message || 'خطا در قطع اتصال تلگرام.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setUnlinkingTg(false)
     }
   }
 
@@ -185,6 +251,88 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Telegram Account Linking Card */}
+      <Card className="border-sky-500/20 bg-sky-500/5 shadow-xs">
+        <CardHeader className="pb-3 pt-5 px-5">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400">
+                <TelegramIcon className="size-4" />
+              </div>
+              <CardTitle className="text-sm font-bold">یکپارچه‌سازی و اتصال به تلگرام</CardTitle>
+            </div>
+            {user.telegramId ? (
+              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-none text-[11px] gap-1 font-medium">
+                <CheckCircle2 className="size-3" />
+                متصل به تلگرام
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[11px] text-muted-foreground border-border">
+                عدم اتصال
+              </Badge>
+            )}
+          </div>
+          <CardDescription className="text-xs leading-relaxed mt-1">
+            با اتصال حساب به ربات تلگرام، کلیه سفارش‌ها و لینک‌های فعال‌سازی شما به صورت همگام و آنی در ربات نیز قابل دسترسی خواهند بود.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="px-5 pb-5 pt-0">
+          {user.telegramId ? (
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
+              <div className="text-xs text-muted-foreground">
+                شناسه متصل:{' '}
+                <strong className="text-foreground font-mono">
+                  {user.telegramUsername ? `@${user.telegramUsername}` : user.telegramId}
+                </strong>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`https://t.me/${botUsername}`, '_blank')}
+                  className="h-8 gap-1 text-xs border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/10 rounded-xl"
+                >
+                  <ExternalLink className="size-3" />
+                  ورود به ربات
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnlinkTelegram}
+                  disabled={unlinkingTg}
+                  className="h-8 text-xs text-muted-foreground hover:text-red-600 rounded-xl"
+                >
+                  {unlinkingTg ? <Loader2 className="size-3 animate-spin" /> : 'قطع اتصال'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2">
+              <Button
+                type="button"
+                onClick={handleConnectTelegram}
+                disabled={connectingTg}
+                size="sm"
+                className="h-9 px-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-sm shadow-sky-500/20"
+              >
+                {connectingTg ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    در حال تولید لینک اتصال...
+                  </>
+                ) : (
+                  <>
+                    <TelegramIcon className="size-3.5" />
+                    🤖 اتصال به ربات تلگرام
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -23,6 +23,7 @@ interface OrderItem {
   id: string
   amount: number
   status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  source?: string | null
   createdAt: string
   plan: {
     name: string
@@ -201,6 +202,11 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {order.source === 'telegram' && (
+                          <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] gap-1 font-medium">
+                            🤖 تلگرام
+                          </Badge>
+                        )}
                         {renderStatusBadge(order.status)}
                       </div>
                     </div>

@@ -6,6 +6,8 @@ import { handleShowProducts, handleBuyCallback } from './buy'
 import { handleOrders } from './orders'
 import { handleGuide } from './guide'
 import { handleSupport } from './support'
+import { handleLinkPrompt, handleContactShare } from './link'
+import { prisma } from '@/lib/prisma'
 
 export function registerHandlers(bot: Bot) {
   // Command /start
@@ -16,9 +18,36 @@ export function registerHandlers(bot: Bot) {
   bot.hears(BUTTONS.ORDERS, (ctx) => handleOrders(ctx, 1))
   bot.hears(BUTTONS.GUIDE, handleGuide)
   bot.hears(BUTTONS.SUPPORT, handleSupport)
+  bot.hears(BUTTONS.LINK_ACCOUNT, handleLinkPrompt)
+
+  // Back to main menu text handler
+  bot.hears('🔙 بازگشت به منوی اصلی', async (ctx) => {
+    let isLinked = false
+    if (ctx.from?.id) {
+      const u = await prisma.user.findUnique({
+        where: { telegramId: String(ctx.from.id) },
+      })
+      isLinked = Boolean(u?.phone)
+    }
+    await ctx.reply(MESSAGES.mainMenuPrompt, {
+      reply_markup: mainMenuKeyboard(isLinked),
+    })
+  })
+
+  // Contact message handler (for verified phone linking)
+  bot.on('message:contact', handleContactShare)
 
   // Callback query for guide
   bot.callbackQuery('guide', handleGuide)
+
+  // Callback query for support phone
+  bot.callbackQuery('support:phone', async (ctx) => {
+    const phone = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '021-91000000'
+    await ctx.answerCallbackQuery({
+      text: `📞 شماره تماس پشتیبانی:\n${phone}\n(ساعات پاسخگویی: ۹ صبح الی ۲۳)`,
+      show_alert: true,
+    }).catch(() => {})
+  })
 
   // Callback Queries: Buy action
   bot.callbackQuery(/^buy:(.+)$/, async (ctx) => {
@@ -35,8 +64,15 @@ export function registerHandlers(bot: Bot) {
   // Callback Queries: Navigation - Back to main menu
   bot.callbackQuery('nav:main', async (ctx) => {
     await ctx.answerCallbackQuery().catch(() => {})
+    let isLinked = false
+    if (ctx.from?.id) {
+      const u = await prisma.user.findUnique({
+        where: { telegramId: String(ctx.from.id) },
+      })
+      isLinked = Boolean(u?.phone)
+    }
     await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(),
+      reply_markup: mainMenuKeyboard(isLinked),
     })
   })
 
@@ -47,8 +83,15 @@ export function registerHandlers(bot: Bot) {
 
   // Fallback for unrecognized text
   bot.on('message:text', async (ctx) => {
+    let isLinked = false
+    if (ctx.from?.id) {
+      const u = await prisma.user.findUnique({
+        where: { telegramId: String(ctx.from.id) },
+      })
+      isLinked = Boolean(u?.phone)
+    }
     await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(),
+      reply_markup: mainMenuKeyboard(isLinked),
     })
   })
 }

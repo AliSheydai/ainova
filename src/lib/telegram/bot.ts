@@ -10,6 +10,11 @@ export function createTelegramBot(token?: string): Bot {
   }
 
   const bot = new Bot(botToken)
+
+  bot.catch((err) => {
+    console.error(`Error in Telegram bot update ${err.ctx.update.update_id}:`, err.error)
+  })
+
   registerHandlers(bot)
   return bot
 }

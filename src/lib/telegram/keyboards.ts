@@ -5,16 +5,39 @@ export const BUTTONS = {
   ORDERS: '📦 سفارش‌های من',
   GUIDE: '📖 راهنمای فعال‌سازی',
   SUPPORT: '🎧 پشتیبانی',
+  LINK_ACCOUNT: '🔗 اتصال به حساب سایت',
 }
 
-export function mainMenuKeyboard() {
-  return new Keyboard()
+export function mainMenuKeyboard(isLinked: boolean = false) {
+  const kb = new Keyboard()
     .text(BUTTONS.BUY)
     .text(BUTTONS.ORDERS)
     .row()
     .text(BUTTONS.GUIDE)
     .text(BUTTONS.SUPPORT)
+
+  if (!isLinked) {
+    kb.row().text(BUTTONS.LINK_ACCOUNT)
+  }
+
+  return kb.resized()
+}
+
+export function accountLinkKeyboard(webUrl: string) {
+  const keyboard = new Keyboard()
+    .requestContact('📱 ارسال شماره موبایل (اتصال خودکار)')
+    .row()
+    .text('🔙 بازگشت به منوی اصلی')
     .resized()
+
+  return keyboard
+}
+
+export function accountLinkInlineKeyboard(webUrl: string) {
+  return new InlineKeyboard()
+    .url('🌐 باز کردن وب‌سایت', webUrl)
+    .row()
+    .text('🔙 بازگشت به منوی اصلی', 'nav:main')
 }
 
 export function productBuyKeyboard(planId: string, planName: string, price: number) {
@@ -59,16 +82,14 @@ export function guideKeyboard() {
 }
 
 export function supportKeyboard(phone: string, telegramUrl: string) {
-  const cleanPhone = phone.replace(/[^0-9+]/g, '')
   const keyboard = new InlineKeyboard()
 
-  if (cleanPhone) {
-    // Note: Some Telegram desktop clients may not open tel: directly, so url or plain text is helpful
-    keyboard.url('☎️ تماس تلفنی', `tel:${cleanPhone}`)
-  }
   if (telegramUrl) {
-    keyboard.url('💬 پشتیبانی در تلگرام', telegramUrl)
+    keyboard.url('💬 پشتیبانی در تلگرام', telegramUrl).row()
   }
 
-  return keyboard.row().text('🔙 بازگشت به منوی اصلی', 'nav:main')
+  keyboard.text(`☎️ شماره تماس پشتیبانی`, 'support:phone').row()
+  keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
+
+  return keyboard
 }

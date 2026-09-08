@@ -41,6 +41,8 @@ export interface AuthUserData {
   id: string
   name: string | null
   phone: string
+  telegramId?: string | null
+  telegramUsername?: string | null
   createdAt?: string
 }
 

@@ -14,8 +14,11 @@ export default async function TelegramReturnPage({ searchParams }: PageProps) {
   const isSuccess = params.status === 'success' || params.status === 'stock_waiting'
   const isStockWaiting = params.status === 'stock_waiting'
   const orderId = params.orderId
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME || ''
-  const botUrl = botUsername ? `https://t.me/${botUsername}` : 'tg://'
+  const botUsername =
+    process.env.TELEGRAM_BOT_USERNAME ||
+    process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
+    'arioaccountbot'
+  const botUrl = botUsername ? `https://t.me/${botUsername}?start=orders` : 'tg://'
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]" dir="rtl">

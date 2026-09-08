@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     include: {
       order: {
         include: {
+          user: true,
           plan: {
             include: {
               product: true,
@@ -156,11 +157,12 @@ export async function GET(req: NextRequest) {
       })
     })
 
-    // Notify user in Telegram if this was a Telegram order
-    if (payment.order.telegramChatId && assignedLinkUrl) {
+    // Notify user in Telegram if this was a Telegram order or user has linked account
+    const targetChatId = payment.order.telegramChatId || payment.order.user?.telegramId
+    if (targetChatId && assignedLinkUrl) {
       const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
       await sendTelegramNotification(
-        payment.order.telegramChatId,
+        targetChatId,
         MESSAGES.paymentSuccess(payment.orderId, productTitle, assignedLinkUrl),
         new InlineKeyboard()
           .url('🔗 فعال‌سازی Google AI Pro', assignedLinkUrl)
@@ -195,10 +197,11 @@ export async function GET(req: NextRequest) {
         }),
       ])
 
-      if (payment.order.telegramChatId) {
+      const targetChatId = payment.order.telegramChatId || payment.order.user?.telegramId
+      if (targetChatId) {
         const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
         await sendTelegramNotification(
-          payment.order.telegramChatId,
+          targetChatId,
           MESSAGES.paymentSuccessStockWaiting(payment.orderId, productTitle)
         ).catch((err) => console.error('Telegram notification error:', err))
       }
