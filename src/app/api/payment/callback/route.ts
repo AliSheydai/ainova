@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { InlineKeyboard } from 'grammy'
 import { prisma } from '@/lib/prisma'
-import { verifyZarinpalPayment } from '@/lib/payment/zarinpal'
+import { PaymentService } from '@/lib/payment'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
 import { MESSAGES } from '@/lib/telegram/messages'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const authority = searchParams.get('Authority')
-  const status = searchParams.get('Status')
+  const authority =
+    searchParams.get('Authority') ||
+    searchParams.get('authority') ||
+    searchParams.get('transactionId')
+  const status = searchParams.get('Status') || searchParams.get('status')
   const querySource = searchParams.get('source')
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -36,7 +40,9 @@ export async function GET(req: NextRequest) {
 
   if (!payment) {
     if (querySource === 'telegram') {
-      return NextResponse.redirect(`${appUrl}/telegram-return?status=failed&msg=not_found`)
+      return NextResponse.redirect(
+        `${appUrl}/telegram-return?status=failed&msg=not_found`
+      )
     }
     return NextResponse.redirect(`${appUrl}/?payment=not_found`)
   }
@@ -46,8 +52,8 @@ export async function GET(req: NextRequest) {
     payment.order.source === 'telegram' ||
     Boolean(payment.order.telegramChatId)
 
-  // If bank status is not OK
-  if (status !== 'OK') {
+  // 1. If bank/provider returned cancelled or error status
+  if (status && status !== 'OK' && status !== 'success') {
     await prisma.$transaction([
       prisma.payment.update({
         where: { id: payment.id },
@@ -68,7 +74,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/?payment=cancelled`)
   }
 
-  // Already processed?
+  // 2. Already processed & completed?
   if (payment.status === 'SUCCESS' && payment.order.status === 'COMPLETED') {
     if (isTelegram) {
       return NextResponse.redirect(
@@ -76,14 +82,18 @@ export async function GET(req: NextRequest) {
       )
     }
     return NextResponse.redirect(
-      `${appUrl}/?orderId=${payment.orderId}&payment=already_verified`
+      `${appUrl}/checkout/success?orderId=${payment.orderId}`
     )
   }
 
-  // Verify transaction with Zarinpal
-  const verifyResult = await verifyZarinpalPayment({
-    authority,
+  // 3. Verify payment via PaymentService
+  const verifyResult = await PaymentService.verifyPayment({
+    transactionId: authority,
     amount: payment.amount,
+    providerName: payment.gatewayName,
+    extraParams: {
+      Status: status || 'OK',
+    },
   })
 
   if (!verifyResult.success) {
@@ -101,7 +111,9 @@ export async function GET(req: NextRequest) {
     const errorMsg = verifyResult.message || 'خطا در تایید تراکنش'
     if (isTelegram) {
       return NextResponse.redirect(
-        `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=${encodeURIComponent(errorMsg)}`
+        `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=${encodeURIComponent(
+          errorMsg
+        )}`
       )
     }
 
@@ -110,96 +122,21 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Transaction succeeded! Assign activation link atomically
+  // 4. Fulfill Order and assign Activation Link atomically
   try {
-    let assignedLinkUrl: string | null = null
-
-    await prisma.$transaction(async (tx) => {
-      // Find one available activation link for the plan
-      const link = await tx.activationLink.findFirst({
-        where: {
-          planId: payment.order.planId,
-          status: 'AVAILABLE',
-        },
-      })
-
-      if (!link) {
-        throw new Error('NO_AVAILABLE_LINKS')
-      }
-
-      assignedLinkUrl = link.url
-
-      // Assign link to order
-      await tx.activationLink.update({
-        where: { id: link.id },
-        data: {
-          status: 'USED',
-          orderId: payment.orderId,
-          assignedAt: new Date(),
-        },
-      })
-
-      // Update payment
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: 'SUCCESS',
-          refId: verifyResult.refId,
-        },
-      })
-
-      // Update order
-      await tx.order.update({
-        where: { id: payment.orderId },
-        data: {
-          status: 'COMPLETED',
-        },
-      })
+    const fulfillment = await FulfillmentService.fulfillOrder({
+      orderId: payment.orderId,
+      refId: verifyResult.refId,
+      rawResponse: verifyResult.rawResponse,
     })
 
-    // Notify user in Telegram if this was a Telegram order or user has linked account
-    const targetChatId = payment.order.telegramChatId || payment.order.user?.telegramId
-    if (targetChatId && assignedLinkUrl) {
-      const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
-      await sendTelegramNotification(
-        targetChatId,
-        MESSAGES.paymentSuccess(payment.orderId, productTitle, assignedLinkUrl),
-        new InlineKeyboard()
-          .url('🔗 فعال‌سازی Google AI Pro', assignedLinkUrl)
-          .row()
-          .text('📖 راهنمای فعال‌سازی', 'guide')
-      ).catch((err) => console.error('Telegram notification error:', err))
-    }
+    const targetChatId =
+      payment.order.telegramChatId || payment.order.user?.telegramId
+    const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
 
-    if (isTelegram) {
-      return NextResponse.redirect(
-        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
-      )
-    }
-
-    return NextResponse.redirect(
-      `${appUrl}/?orderId=${payment.orderId}&payment=success`
-    )
-  } catch (err: unknown) {
-    const error = err as Error
-    console.error('Error assigning activation link:', error)
-
-    if (error.message === 'NO_AVAILABLE_LINKS') {
-      // Payment succeeded but stock ran out; mark order as PAID pending manual fulfillment
-      await prisma.$transaction([
-        prisma.payment.update({
-          where: { id: payment.id },
-          data: { status: 'SUCCESS', refId: verifyResult.refId },
-        }),
-        prisma.order.update({
-          where: { id: payment.orderId },
-          data: { status: 'PAID' },
-        }),
-      ])
-
-      const targetChatId = payment.order.telegramChatId || payment.order.user?.telegramId
+    // If stock ran out:
+    if (fulfillment.status === 'STOCK_EXHAUSTED') {
       if (targetChatId) {
-        const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
         await sendTelegramNotification(
           targetChatId,
           MESSAGES.paymentSuccessStockWaiting(payment.orderId, productTitle)
@@ -213,16 +150,41 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.redirect(
-        `${appUrl}/?orderId=${payment.orderId}&payment=stock_exhausted`
+        `${appUrl}/checkout/success?orderId=${payment.orderId}&status=stock_waiting`
       )
     }
 
+    // Success with activation link assigned!
+    const assignedLinkUrl = fulfillment.activationLink?.url
+
+    if (targetChatId && assignedLinkUrl) {
+      await sendTelegramNotification(
+        targetChatId,
+        MESSAGES.paymentSuccess(payment.orderId, productTitle, assignedLinkUrl),
+        new InlineKeyboard()
+          .url('🔗 فعال‌سازی اشتراک در گوگل', assignedLinkUrl)
+          .row()
+          .text('📖 راهنمای فعال‌سازی', 'guide')
+      ).catch((err) => console.error('Telegram notification error:', err))
+    }
+
+    if (isTelegram) {
+      return NextResponse.redirect(
+        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
+      )
+    }
+
+    // Redirect user to the immediate delivery success page
+    return NextResponse.redirect(
+      `${appUrl}/checkout/success?orderId=${payment.orderId}`
+    )
+  } catch (err: unknown) {
+    console.error('Error in callback fulfillment:', err)
     if (isTelegram) {
       return NextResponse.redirect(
         `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=processing_error`
       )
     }
-
     return NextResponse.redirect(`${appUrl}/?payment=processing_error`)
   }
 }

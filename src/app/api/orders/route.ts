@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
-import { requestZarinpalPayment } from '@/lib/payment/zarinpal'
+import { PaymentService } from '@/lib/payment'
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,45 +65,30 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Request payment from Zarinpal
+    // Request payment using the active PaymentProvider via PaymentService
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const callbackUrl = process.env.NEXT_PUBLIC_ZARINPAL_CALLBACK_URL || `${appUrl}/api/payment/callback`
+    const callbackUrl = `${appUrl}/api/payment/callback?orderId=${order.id}`
 
-    const paymentResult = await requestZarinpalPayment({
+    const paymentResult = await PaymentService.createPayment({
+      orderId: order.id,
       amount: plan.price,
       description: `خرید اشتراک ${plan.product.name} (${plan.name})`,
       callbackUrl,
       mobile: session.phone,
     })
 
-    if (!paymentResult.success || !paymentResult.authority) {
-      // Mark order as failed
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: 'FAILED' },
-      })
-
+    if (!paymentResult.success || !paymentResult.paymentUrl) {
       return NextResponse.json(
         { success: false, message: paymentResult.error || 'خطا در اتصال به درگاه پرداخت.' },
         { status: 500 }
       )
     }
 
-    // Create Payment record
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        amount: plan.price,
-        authority: paymentResult.authority,
-        status: 'PENDING',
-        gatewayName: 'zarinpal',
-      },
-    })
-
     return NextResponse.json({
       success: true,
       orderId: order.id,
       paymentUrl: paymentResult.paymentUrl,
+      transactionId: paymentResult.transactionId,
     })
   } catch (error: unknown) {
     console.error('Error creating order:', error)

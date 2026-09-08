@@ -127,9 +127,10 @@ model Payment {
   amount          Int
   status          PaymentStatus @default(PENDING)
   gatewayName     String        @default("zarinpal")
-  authority       String?       @unique  // Zarinpal authority
-  refId           String?       // Zarinpal refId after success
+  authority       String?       @unique  // Zarinpal authority or Mock transaction ID
+  refId           String?       // Zarinpal refId or Mock refId after success
   gatewayResponse Json?
+  paidAt          DateTime?     // Exact timestamp when payment was verified
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

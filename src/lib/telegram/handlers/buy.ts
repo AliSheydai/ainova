@@ -1,6 +1,6 @@
 import { Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
-import { requestZarinpalPayment } from '@/lib/payment/zarinpal'
+import { PaymentService } from '@/lib/payment'
 import { MESSAGES, formatProductDetails } from '../messages'
 import { productBuyKeyboard, orderPaymentKeyboard } from '../keyboards'
 
@@ -95,38 +95,24 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
       },
     })
 
-    // Request Zarinpal Payment
+    // Request Payment via PaymentService (supports Mock & Zarinpal)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const callbackUrl = `${appUrl}/api/payment/callback?source=telegram&orderId=${order.id}`
 
-    const paymentResult = await requestZarinpalPayment({
+    const paymentResult = await PaymentService.createPayment({
+      orderId: order.id,
       amount: plan.price,
       description: `خرید تلگرام: ${plan.product.name} (${plan.name})`,
       callbackUrl,
+      mobile: user.phone,
     })
 
-    if (!paymentResult.success || !paymentResult.authority || !paymentResult.paymentUrl) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: 'FAILED' },
-      })
-
+    if (!paymentResult.success || !paymentResult.paymentUrl) {
       await ctx.reply(
         `خطا در اتصال به درگاه پرداخت: ${paymentResult.error || 'لطفاً دقایقی دیگر مجدداً تلاش نمایید.'}`
       )
       return
     }
-
-    // Create Payment record
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        amount: plan.price,
-        authority: paymentResult.authority,
-        status: 'PENDING',
-        gatewayName: 'zarinpal',
-      },
-    })
 
     // Send order confirmation and payment button
     const productFullTitle = `${plan.product.name} — ${plan.name}`
