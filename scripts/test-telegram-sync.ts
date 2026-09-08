@@ -113,7 +113,7 @@ async function runTests() {
         },
         include: { plans: true },
       })
-      plan = product.plans[0]
+      plan = { ...product.plans[0], product }
     }
 
     // Seed test activation link

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
-import { createAccountLinkingToken } from '@/lib/telegram/account-linking'
+import { prisma } from '@/lib/prisma'
+import {
+  createAccountLinkingToken,
+  generatePhoneHashDeeplinkToken,
+} from '@/lib/telegram/account-linking'
 
 export async function POST() {
   try {
@@ -13,13 +17,25 @@ export async function POST() {
       )
     }
 
-    const token = await createAccountLinkingToken(session.userId)
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+    })
+
     const botUsername =
       process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
       process.env.TELEGRAM_BOT_USERNAME ||
       'arioaccountbot'
 
-    const deepLinkUrl = `https://t.me/${botUsername}?start=link_${token}`
+    let token: string
+    let deepLinkUrl: string
+
+    if (user?.phone) {
+      token = await generatePhoneHashDeeplinkToken(user.phone)
+      deepLinkUrl = `https://t.me/${botUsername}?start=${token}`
+    } else {
+      token = await createAccountLinkingToken(session.userId)
+      deepLinkUrl = `https://t.me/${botUsername}?start=link_${token}`
+    }
 
     return NextResponse.json({
       success: true,

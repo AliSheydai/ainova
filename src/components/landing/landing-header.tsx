@@ -84,7 +84,7 @@ export function LandingHeader() {
       }
     }
 
-    window.open(`https://t.me/${botUsername}?start=web_header`, '_blank')
+    window.open(`https://t.me/${botUsername}?start=guest`, '_blank')
   }
 
   return (

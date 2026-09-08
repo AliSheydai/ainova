@@ -47,10 +47,11 @@ export async function requestZarinpalPayment({
   if (isSandbox && (!merchantId || merchantId.startsWith('00000000'))) {
     const randomSuffix = `${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`
     const dummyAuthority = `A00000000000000000000000000000000000`.slice(0, Math.max(0, 36 - randomSuffix.length)) + randomSuffix
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     return {
       success: true,
       authority: dummyAuthority,
-      paymentUrl: `/api/payment/simulate-gateway?authority=${dummyAuthority}&amount=${amount}`,
+      paymentUrl: `${appUrl}/api/payment/simulate-gateway?authority=${dummyAuthority}&amount=${amount}`,
     }
   }
 

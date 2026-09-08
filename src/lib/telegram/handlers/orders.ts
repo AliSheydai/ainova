@@ -35,8 +35,9 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       where: { telegramId },
     })
 
-    if (!user) {
-      await ctx.reply(MESSAGES.noOrders, { parse_mode: 'Markdown' })
+    if (!user || !user.phone) {
+      const { startLoginFlow } = await import('./auth')
+      await startLoginFlow(ctx, '⚠️ برای مشاهده سفارش‌های خود، لطفاً ابتدا وارد حساب کاربری شوید:')
       return
     }
 

@@ -3,7 +3,210 @@ import { prisma } from '@/lib/prisma'
 import { normalizePhone, isValidIranianPhone } from '@/lib/auth/otp'
 
 const LINK_TOKEN_PREFIX = 'tglink_'
+const PHONE_HASH_PREFIX = 'tg_hash_'
 const LINK_TOKEN_EXPIRY_MINUTES = 15
+
+export interface BotLoginSession {
+  step: 'AWAITING_PHONE' | 'AWAITING_OTP'
+  phone?: string
+  lastSentAt?: number
+}
+
+// In-memory cache for quick response in long-running processes
+const memorySessionStore = new Map<string, { session: BotLoginSession; expiresAt: number }>()
+
+export async function setBotLoginSession(telegramId: string, session: BotLoginSession): Promise<void> {
+  const expiresAt = Date.now() + 15 * 60 * 1000 // 15 minutes
+  memorySessionStore.set(telegramId, { session, expiresAt })
+
+  // Also persist to DB via otpToken for cross-instance / serverless resilience
+  try {
+    const sessionKey = `tg_sess_${telegramId}`
+    await prisma.otpToken.updateMany({
+      where: { phone: sessionKey, used: false },
+      data: { used: true },
+    })
+
+    await prisma.otpToken.create({
+      data: {
+        phone: sessionKey,
+        code: JSON.stringify(session),
+        expiresAt: new Date(expiresAt),
+        used: false,
+      },
+    })
+  } catch (err) {
+    console.error('Error saving bot session in DB:', err)
+  }
+}
+
+export async function getBotLoginSession(telegramId: string): Promise<BotLoginSession | null> {
+  // Check memory cache first
+  const cached = memorySessionStore.get(telegramId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.session
+  }
+
+  // Fallback to DB
+  try {
+    const sessionKey = `tg_sess_${telegramId}`
+    const record = await prisma.otpToken.findFirst({
+      where: {
+        phone: sessionKey,
+        used: false,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (record) {
+      const parsed = JSON.parse(record.code) as BotLoginSession
+      memorySessionStore.set(telegramId, {
+        session: parsed,
+        expiresAt: record.expiresAt.getTime(),
+      })
+      return parsed
+    }
+  } catch (err) {
+    console.error('Error retrieving bot session from DB:', err)
+  }
+
+  return null
+}
+
+export async function clearBotLoginSession(telegramId: string): Promise<void> {
+  memorySessionStore.delete(telegramId)
+  try {
+    const sessionKey = `tg_sess_${telegramId}`
+    await prisma.otpToken.updateMany({
+      where: { phone: sessionKey, used: false },
+      data: { used: true },
+    })
+  } catch (err) {
+    console.error('Error clearing bot session in DB:', err)
+  }
+}
+
+/**
+ * Generate a secure hashed phone deeplink token.
+ * Format: ph_<phone>_<timestampHex>_<hmacSignature>
+ * Total length ~48 characters (Telegram start param max is 64 chars)
+ */
+export async function generatePhoneHashDeeplinkToken(rawPhone: string): Promise<string> {
+  const phone = normalizePhone(rawPhone)
+  if (!isValidIranianPhone(phone)) {
+    throw new Error('Invalid Iranian phone number for deeplink generation')
+  }
+
+  const secret =
+    process.env.JWT_SECRET || process.env.TELEGRAM_BOT_TOKEN || 'tg_phone_hash_secret_key'
+  const timestampHex = Math.floor(Date.now() / 1000).toString(16)
+  const dataToSign = `${phone}:${timestampHex}`
+  const hmac = crypto
+    .createHmac('sha256', secret)
+    .update(dataToSign)
+    .digest('hex')
+    .slice(0, 24)
+
+  const token = `ph_${phone}_${timestampHex}_${hmac}`
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+  // Invalidate previous phone hash tokens for this phone
+  await prisma.otpToken.updateMany({
+    where: {
+      phone: `${PHONE_HASH_PREFIX}${phone}`,
+      used: false,
+    },
+    data: {
+      used: true,
+    },
+  })
+
+  // Persist to DB for replay protection and verification
+  await prisma.otpToken.create({
+    data: {
+      phone: `${PHONE_HASH_PREFIX}${phone}`,
+      code: token,
+      expiresAt,
+      used: false,
+    },
+  })
+
+  return token
+}
+
+/**
+ * Verify and consume a phone hash deeplink token.
+ * Returns the verified phone number or null.
+ */
+export async function verifyAndConsumePhoneHashToken(payload: string): Promise<string | null> {
+  if (!payload || typeof payload !== 'string') return null
+  const trimmed = payload.trim()
+
+  // Case 1: ph_<phone>_<timestampHex>_<hmac>
+  if (trimmed.startsWith('ph_')) {
+    const parts = trimmed.split('_')
+    if (parts.length !== 4) return null
+    const [, phone, timestampHex, hmac] = parts
+
+    if (!isValidIranianPhone(phone)) return null
+
+    // 1. Try finding and consuming in DB (single-use protection)
+    const dbRecord = await prisma.otpToken.findFirst({
+      where: {
+        code: trimmed,
+        phone: `${PHONE_HASH_PREFIX}${phone}`,
+        used: false,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (dbRecord) {
+      if (new Date() > dbRecord.expiresAt) return null
+      await prisma.otpToken.update({
+        where: { id: dbRecord.id },
+        data: { used: true },
+      })
+      return phone
+    }
+
+    // 2. Cryptographic signature verification fallback (e.g. within 24 hours)
+    const secret =
+      process.env.JWT_SECRET || process.env.TELEGRAM_BOT_TOKEN || 'tg_phone_hash_secret_key'
+    const timestamp = parseInt(timestampHex, 16)
+    if (isNaN(timestamp)) return null
+
+    const nowSec = Math.floor(Date.now() / 1000)
+    // Valid for up to 24 hours
+    if (nowSec - timestamp > 86400 || timestamp - nowSec > 300) {
+      return null
+    }
+
+    const expectedHmac = crypto
+      .createHmac('sha256', secret)
+      .update(`${phone}:${timestampHex}`)
+      .digest('hex')
+      .slice(0, 24)
+
+    if (hmac.length === expectedHmac.length && crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac))) {
+      return phone
+    }
+
+    return null
+  }
+
+  // Case 2: Legacy link_<token> fallback
+  if (trimmed.startsWith('link_')) {
+    const legacyToken = trimmed.slice(5)
+    const userId = await verifyAndConsumeAccountLinkingToken(legacyToken)
+    if (userId) {
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (user?.phone) return user.phone
+    }
+  }
+
+  return null
+}
 
 export async function createAccountLinkingToken(userId: string): Promise<string> {
   const token = crypto.randomBytes(16).toString('hex') // 32 chars
@@ -260,4 +463,27 @@ export async function linkUserByVerifiedPhone(
       message: 'خطا در ثبت شماره تلفن و اتصال حساب.',
     }
   }
+}
+
+export async function logoutTelegramAccount(telegramId: string): Promise<boolean> {
+  await clearBotLoginSession(telegramId)
+  try {
+    const user = await prisma.user.findUnique({
+      where: { telegramId },
+    })
+
+    if (user) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          telegramId: null,
+          telegramUsername: null,
+        },
+      })
+      return true
+    }
+  } catch (error) {
+    console.error('Error in logoutTelegramAccount:', error)
+  }
+  return false
 }

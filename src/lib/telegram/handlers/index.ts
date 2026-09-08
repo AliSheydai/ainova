@@ -6,12 +6,40 @@ import { handleShowProducts, handleBuyCallback } from './buy'
 import { handleOrders } from './orders'
 import { handleGuide } from './guide'
 import { handleSupport } from './support'
-import { handleLinkPrompt, handleContactShare } from './link'
+import { handleLinkPrompt } from './link'
+import {
+  startLoginFlow,
+  processPhoneInput,
+  processOtpInput,
+  handleAuthResend,
+  handleAuthChangePhone,
+} from './auth'
+import {
+  getBotLoginSession,
+  clearBotLoginSession,
+  logoutTelegramAccount,
+} from '../account-linking'
+import { normalizePhone, isValidIranianPhone } from '@/lib/auth/otp'
 import { prisma } from '@/lib/prisma'
 
 export function registerHandlers(bot: Bot) {
   // Command /start
   bot.command('start', handleStart)
+
+  // Command /login
+  bot.command('login', (ctx) => startLoginFlow(ctx))
+
+  // Command /logout
+  bot.command('logout', async (ctx) => {
+    const telegramId = ctx.from?.id ? String(ctx.from.id) : null
+    if (telegramId) {
+      await logoutTelegramAccount(telegramId)
+    }
+    await ctx.reply(MESSAGES.logoutSuccess, {
+      parse_mode: 'Markdown',
+      reply_markup: mainMenuKeyboard(false),
+    })
+  })
 
   // Reply Keyboard Buttons
   bot.hears(BUTTONS.BUY, handleShowProducts)
@@ -20,22 +48,50 @@ export function registerHandlers(bot: Bot) {
   bot.hears(BUTTONS.SUPPORT, handleSupport)
   bot.hears(BUTTONS.LINK_ACCOUNT, handleLinkPrompt)
 
-  // Back to main menu text handler
-  bot.hears('🔙 بازگشت به منوی اصلی', async (ctx) => {
-    let isLinked = false
-    if (ctx.from?.id) {
-      const u = await prisma.user.findUnique({
-        where: { telegramId: String(ctx.from.id) },
-      })
-      isLinked = Boolean(u?.phone)
+  // Logout Button
+  bot.hears([BUTTONS.LOGOUT, 'خروج از حساب کاربری', 'خروج از حساب'], async (ctx) => {
+    const telegramId = ctx.from?.id ? String(ctx.from.id) : null
+    if (telegramId) {
+      await logoutTelegramAccount(telegramId)
     }
-    await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(isLinked),
+    await ctx.reply(MESSAGES.logoutSuccess, {
+      parse_mode: 'Markdown',
+      reply_markup: mainMenuKeyboard(false),
     })
   })
 
-  // Contact message handler (for verified phone linking)
-  bot.on('message:contact', handleContactShare)
+  // Back to main menu or cancel handler
+  bot.hears(['🔙 بازگشت به منوی اصلی', '🔙 انصراف', 'انصراف', 'بازگشت'], async (ctx) => {
+    let isLinked = false
+    const telegramId = ctx.from?.id ? String(ctx.from.id) : null
+
+    if (telegramId) {
+      await clearBotLoginSession(telegramId)
+      const u = await prisma.user.findUnique({
+        where: { telegramId },
+      })
+      isLinked = Boolean(u?.phone)
+    }
+
+    if (isLinked) {
+      await ctx.reply(MESSAGES.mainMenuPrompt, {
+        reply_markup: mainMenuKeyboard(true),
+      })
+    } else {
+      await startLoginFlow(ctx)
+    }
+  })
+
+  // Contact message handler (for verified phone login via contact button)
+  bot.on('message:contact', async (ctx) => {
+    const contact = ctx.message?.contact
+    if (!contact) return
+    await processPhoneInput(ctx, contact.phone_number)
+  })
+
+  // Auth callback queries
+  bot.callbackQuery('auth:resend', handleAuthResend)
+  bot.callbackQuery('auth:change_phone', handleAuthChangePhone)
 
   // Callback query for guide
   bot.callbackQuery('guide', handleGuide)
@@ -65,15 +121,23 @@ export function registerHandlers(bot: Bot) {
   bot.callbackQuery('nav:main', async (ctx) => {
     await ctx.answerCallbackQuery().catch(() => {})
     let isLinked = false
-    if (ctx.from?.id) {
+    const telegramId = ctx.from?.id ? String(ctx.from.id) : null
+
+    if (telegramId) {
+      await clearBotLoginSession(telegramId)
       const u = await prisma.user.findUnique({
-        where: { telegramId: String(ctx.from.id) },
+        where: { telegramId },
       })
       isLinked = Boolean(u?.phone)
     }
-    await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(isLinked),
-    })
+
+    if (isLinked) {
+      await ctx.reply(MESSAGES.mainMenuPrompt, {
+        reply_markup: mainMenuKeyboard(true),
+      })
+    } else {
+      await startLoginFlow(ctx)
+    }
   })
 
   // Callback Queries: No-op
@@ -81,17 +145,40 @@ export function registerHandlers(bot: Bot) {
     await ctx.answerCallbackQuery().catch(() => {})
   })
 
-  // Fallback for unrecognized text
+  // Text message handler for Auth and Fallback
   bot.on('message:text', async (ctx) => {
-    let isLinked = false
-    if (ctx.from?.id) {
+    const telegramId = ctx.from?.id ? String(ctx.from.id) : null
+    const text = ctx.msg?.text?.trim() || ''
+
+    if (telegramId) {
+      const session = await getBotLoginSession(telegramId)
+
+      // 1. If currently waiting for OTP code
+      if (session?.step === 'AWAITING_OTP') {
+        const handled = await processOtpInput(ctx, text)
+        if (handled) return
+      }
+
+      // 2. If waiting for phone OR message looks like an Iranian phone number
+      const normalized = normalizePhone(text)
+      if (session?.step === 'AWAITING_PHONE' || isValidIranianPhone(normalized)) {
+        await processPhoneInput(ctx, text)
+        return
+      }
+
+      // 3. If user is not yet logged in with phone, guide to login
       const u = await prisma.user.findUnique({
-        where: { telegramId: String(ctx.from.id) },
+        where: { telegramId },
       })
-      isLinked = Boolean(u?.phone)
+
+      if (!u?.phone) {
+        await startLoginFlow(ctx)
+        return
+      }
     }
+
     await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(isLinked),
+      reply_markup: mainMenuKeyboard(true),
     })
   })
 }

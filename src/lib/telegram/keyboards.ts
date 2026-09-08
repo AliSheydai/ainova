@@ -5,7 +5,8 @@ export const BUTTONS = {
   ORDERS: '📦 سفارش‌های من',
   GUIDE: '📖 راهنمای فعال‌سازی',
   SUPPORT: '🎧 پشتیبانی',
-  LINK_ACCOUNT: '🔗 اتصال به حساب سایت',
+  LINK_ACCOUNT: '📱 ورود به حساب کاربری',
+  LOGOUT: '🚪 خروج از حساب کاربری',
 }
 
 export function mainMenuKeyboard(isLinked: boolean = false) {
@@ -16,7 +17,9 @@ export function mainMenuKeyboard(isLinked: boolean = false) {
     .text(BUTTONS.GUIDE)
     .text(BUTTONS.SUPPORT)
 
-  if (!isLinked) {
+  if (isLinked) {
+    kb.row().text(BUTTONS.LOGOUT)
+  } else {
     kb.row().text(BUTTONS.LINK_ACCOUNT)
   }
 
@@ -31,6 +34,22 @@ export function accountLinkKeyboard(webUrl: string) {
     .resized()
 
   return keyboard
+}
+
+export function phoneRequestKeyboard() {
+  return new Keyboard()
+    .requestContact('📱 ارسال شماره موبایل')
+    .row()
+    .text('🔙 بازگشت به منوی اصلی')
+    .resized()
+}
+
+export function otpInlineKeyboard() {
+  return new InlineKeyboard()
+    .text('🔄 ارسال مجدد کد', 'auth:resend')
+    .text('✏️ تغییر شماره موبایل', 'auth:change_phone')
+    .row()
+    .text('🔙 انصراف و بازگشت', 'nav:main')
 }
 
 export function accountLinkInlineKeyboard(webUrl: string) {
@@ -48,10 +67,19 @@ export function productBuyKeyboard(planId: string, planName: string, price: numb
 }
 
 export function orderPaymentKeyboard(paymentUrl: string) {
-  return new InlineKeyboard()
-    .url('💳 پرداخت آنلاین', paymentUrl)
-    .row()
-    .text('🔙 بازگشت به منوی اصلی', 'nav:main')
+  const keyboard = new InlineKeyboard()
+  const isInvalidUrl =
+    !paymentUrl ||
+    paymentUrl.startsWith('/') ||
+    paymentUrl.includes('localhost') ||
+    paymentUrl.includes('127.0.0.1')
+
+  if (!isInvalidUrl && (paymentUrl.startsWith('http://') || paymentUrl.startsWith('https://'))) {
+    keyboard.url('💳 پرداخت آنلاین', paymentUrl).row()
+  }
+
+  keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
+  return keyboard
 }
 
 export function ordersPaginationKeyboard(page: number, totalPages: number) {

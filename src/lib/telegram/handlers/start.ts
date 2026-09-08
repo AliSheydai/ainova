@@ -4,9 +4,11 @@ import { MESSAGES } from '../messages'
 import { mainMenuKeyboard } from '../keyboards'
 import { handleOrders } from './orders'
 import {
-  verifyAndConsumeAccountLinkingToken,
-  linkTelegramAccountToUser,
+  verifyAndConsumePhoneHashToken,
+  linkUserByVerifiedPhone,
+  clearBotLoginSession,
 } from '../account-linking'
+import { startLoginFlow } from './auth'
 
 export async function handleStart(ctx: Context) {
   const from = ctx.from
@@ -20,18 +22,15 @@ export async function handleStart(ctx: Context) {
   const text = ctx.msg?.text || ''
   const payload = (typeof ctx.match === 'string' && ctx.match.trim()) || text.split(/\s+/)[1] || ''
 
-  // Case 1: Account Linking Deeplink (e.g. /start link_<token>)
-  if (payload.startsWith('link_')) {
-    const token = payload.slice(5).trim()
-    const userId = await verifyAndConsumeAccountLinkingToken(token)
+  // Case 1: Phone Hash Deeplink or Account Linking Deeplink (e.g. /start ph_... or /start link_...)
+  if (payload.startsWith('ph_') || payload.startsWith('link_')) {
+    const verifiedPhone = await verifyAndConsumePhoneHashToken(payload)
 
-    if (userId) {
-      const linkResult = await linkTelegramAccountToUser(userId, telegramId, telegramUsername)
+    if (verifiedPhone) {
+      const linkResult = await linkUserByVerifiedPhone(verifiedPhone, telegramId, telegramUsername)
       if (linkResult.success && linkResult.user) {
-        const phone = linkResult.user.phone || ''
-        const displayName = linkResult.user.name || name
-
-        await ctx.reply(MESSAGES.linkSuccess(displayName, phone), {
+        await clearBotLoginSession(telegramId)
+        await ctx.reply(MESSAGES.deeplinkLoginSuccess(verifiedPhone), {
           parse_mode: 'Markdown',
           reply_markup: mainMenuKeyboard(true),
         })
@@ -47,30 +46,35 @@ export async function handleStart(ctx: Context) {
     return
   }
 
-  // Case 2: Direct navigation to orders (e.g. /start orders)
-  if (payload === 'orders') {
-    await handleOrders(ctx, 1)
+  // Case 2: Guest Deeplink (User clicked Telegram button on website while NOT logged in)
+  const isGuestDeeplink = ['guest', 'web_header', 'guest_login', 'login', 'auth'].includes(payload)
+  if (isGuestDeeplink) {
+    await clearBotLoginSession(telegramId)
+    await startLoginFlow(
+      ctx,
+      '👋 **به ربات رسمی Google AI Pro خوش آمدید!**\n\n' +
+        'برای دسترسی به امکانات، پیگیری و خرید اشتراک، لطفاً با شماره موبایل خود وارد شوید:'
+    )
     return
   }
 
-  // Case 3: Standard Start or generic deeplink (e.g. /start web_header)
-  let isLinked = false
+  // Case 3: Check if user is already linked/logged in in Telegram
+  let existingUser = null
   try {
-    const existing = await prisma.user.findUnique({
+    existingUser = await prisma.user.findUnique({
       where: { telegramId },
     })
 
-    if (existing) {
-      isLinked = Boolean(existing.phone)
+    if (existingUser) {
       await prisma.user.update({
-        where: { id: existing.id },
+        where: { id: existingUser.id },
         data: {
           telegramUsername,
-          name: existing.name || name,
+          name: existingUser.name || name,
         },
       })
     } else {
-      await prisma.user.create({
+      existingUser = await prisma.user.create({
         data: {
           telegramId,
           telegramUsername,
@@ -82,8 +86,21 @@ export async function handleStart(ctx: Context) {
     console.error('Error in handleStart user upsert:', error)
   }
 
-  await ctx.reply(MESSAGES.welcome(name), {
-    parse_mode: 'Markdown',
-    reply_markup: mainMenuKeyboard(isLinked),
-  })
+  // If user already has a verified phone number in Telegram:
+  if (existingUser?.phone) {
+    // If navigation directly to orders
+    if (payload === 'orders') {
+      await handleOrders(ctx, 1)
+      return
+    }
+
+    await ctx.reply(MESSAGES.welcome(name), {
+      parse_mode: 'Markdown',
+      reply_markup: mainMenuKeyboard(true),
+    })
+    return
+  }
+
+  // Case 4: User started the bot from inside Telegram without deeplink login -> initiate OTP login flow
+  await startLoginFlow(ctx)
 }

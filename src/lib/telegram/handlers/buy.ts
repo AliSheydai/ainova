@@ -49,20 +49,14 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
   await ctx.answerCallbackQuery({ text: 'در حال ایجاد پیش‌فاکتور...' }).catch(() => {})
 
   try {
-    // Find or create user
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { telegramId },
     })
 
-    if (!user) {
-      const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || 'کاربر گرامی'
-      user = await prisma.user.create({
-        data: {
-          telegramId,
-          telegramUsername: from.username || null,
-          name,
-        },
-      })
+    if (!user || !user.phone) {
+      const { startLoginFlow } = await import('./auth')
+      await startLoginFlow(ctx, '⚠️ برای خرید اشتراک و دریافت لینک فعال‌سازی، ابتدا باید با شماره موبایل خود وارد شوید:')
+      return
     }
 
     // Find plan
@@ -136,13 +130,23 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
 
     // Send order confirmation and payment button
     const productFullTitle = `${plan.product.name} — ${plan.name}`
-    await ctx.reply(
-      MESSAGES.orderCreated(order.id, productFullTitle, plan.price),
-      {
-        parse_mode: 'Markdown',
-        reply_markup: orderPaymentKeyboard(paymentResult.paymentUrl),
-      }
-    )
+    let messageText = MESSAGES.orderCreated(order.id, productFullTitle, plan.price)
+
+    const fullPaymentUrl = paymentResult.paymentUrl.startsWith('http')
+      ? paymentResult.paymentUrl
+      : `${appUrl}${paymentResult.paymentUrl}`
+
+    const isLocalhost =
+      fullPaymentUrl.includes('localhost') || fullPaymentUrl.includes('127.0.0.1')
+
+    if (isLocalhost) {
+      messageText += `\n\n💳 **لینک مستقیم درگاه پرداخت (توسعه):**\n\`${fullPaymentUrl}\``
+    }
+
+    await ctx.reply(messageText, {
+      parse_mode: 'Markdown',
+      reply_markup: orderPaymentKeyboard(fullPaymentUrl),
+    })
   } catch (error) {
     console.error('Error handling buy callback:', error)
     await ctx.reply('متأسفانه در پردازش سفارش شما خطایی رخ داد. لطفاً دوباره تلاش کنید.')
