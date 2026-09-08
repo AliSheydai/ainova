@@ -11,6 +11,7 @@ export interface UserJwtPayload {
   userId: string
   phone: string
   name?: string | null
+  role?: 'ADMIN' | 'USER'
 }
 
 export async function signToken(payload: UserJwtPayload): Promise<string> {
@@ -28,6 +29,7 @@ export async function verifyToken(token: string): Promise<UserJwtPayload | null>
       userId: payload.userId as string,
       phone: payload.phone as string,
       name: (payload.name as string) || null,
+      role: (payload.role as 'ADMIN' | 'USER') || 'USER',
     }
   } catch {
     return null

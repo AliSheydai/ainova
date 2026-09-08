@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { LogIn, Menu, Sparkles, User, Loader2 } from 'lucide-react'
+import { LogIn, Menu, Sparkles, User, Loader2, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -51,6 +51,14 @@ export function LandingHeader() {
       .then((data) => {
         if (isMounted && data?.authenticated && data?.user) {
           setUser(data.user)
+
+          // Check if returned from payment
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (params.get('payment') || params.get('orderId')) {
+              setDashboardModalOpen(true)
+            }
+          }
         }
       })
       .catch(() => null)
@@ -151,19 +159,33 @@ export function LandingHeader() {
             </Button>
 
             {user ? (
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => setDashboardModalOpen(true)}
-                className='hidden md:flex items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer'
-              >
-                <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
-                  {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
-                </div>
-                <span className='max-w-[140px] truncate text-sm font-medium'>
-                  {displayName}
-                </span>
-              </Button>
+              <div className='hidden md:flex items-center gap-2'>
+                {user.role === 'ADMIN' && (
+                  <Link href='/dashboard'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='items-center gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 text-xs font-semibold h-9 px-3 rounded-xl'
+                    >
+                      <Shield className='size-3.5' />
+                      <span>پنل ادمین</span>
+                    </Button>
+                  </Link>
+                )}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setDashboardModalOpen(true)}
+                  className='items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer'
+                >
+                  <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+                    {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
+                  </div>
+                  <span className='max-w-[140px] truncate text-sm font-medium'>
+                    {displayName}
+                  </span>
+                </Button>
+              </div>
             ) : (
               <Button
                 variant='ghost'
@@ -174,7 +196,7 @@ export function LandingHeader() {
                 ورود
               </Button>
             )}
-            <Link href='/dashboard/buy'>
+            <Link href='/checkout'>
               <Button size='sm' className='hidden text-sm md:flex'>
                 خرید اشتراک جمینای
               </Button>
@@ -267,19 +289,32 @@ export function LandingHeader() {
                   </Button>
 
                   {user ? (
-                    <Button
-                      variant='outline'
-                      onClick={() => {
-                        setOpen(false)
-                        setDashboardModalOpen(true)
-                      }}
-                      className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium'
-                    >
-                      <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
-                        {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
-                      </div>
-                      <span className='truncate'>{displayName}</span>
-                    </Button>
+                    <>
+                      {user.role === 'ADMIN' && (
+                        <Link href='/dashboard' onClick={() => setOpen(false)}>
+                          <Button
+                            variant='outline'
+                            className='w-full justify-center gap-2 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-semibold'
+                          >
+                            <Shield className='size-4' />
+                            <span>ورود به پنل مدیریت</span>
+                          </Button>
+                        </Link>
+                      )}
+                      <Button
+                        variant='outline'
+                        onClick={() => {
+                          setOpen(false)
+                          setDashboardModalOpen(true)
+                        }}
+                        className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium'
+                      >
+                        <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+                          {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
+                        </div>
+                        <span className='truncate'>{displayName}</span>
+                      </Button>
+                    </>
                   ) : (
                     <Button
                       variant='outline'
@@ -292,7 +327,7 @@ export function LandingHeader() {
                       ورود به حساب
                     </Button>
                   )}
-                  <Link href='/dashboard/buy' onClick={() => setOpen(false)}>
+                  <Link href='/checkout' onClick={() => setOpen(false)}>
                     <Button className='w-full justify-center text-sm'>
                       خرید اشتراک جمینای
                     </Button>

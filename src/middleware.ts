@@ -9,31 +9,42 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
 
-  let isAuthenticated = false
+  let payload: Record<string, unknown> | null = null
 
   if (token) {
     try {
-      await jwtVerify(token, secretKey)
-      isAuthenticated = true
+      const verified = await jwtVerify(token, secretKey)
+      payload = verified.payload as Record<string, unknown>
     } catch {
-      isAuthenticated = false
+      payload = null
     }
   }
 
-  // If user is logged in and trying to access /login, redirect to /dashboard
+  const isAuthenticated = Boolean(payload)
+  const isAdmin = payload?.role === 'ADMIN'
+
+  // If user is already logged in and attempts to access /login:
   if (pathname.startsWith('/login')) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      if (isAdmin) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+      return NextResponse.redirect(new URL('/', request.url))
     }
     return NextResponse.next()
   }
 
-  // Protect /dashboard routes
+  // Strictly protect /dashboard routes: ONLY for ADMIN
   if (pathname.startsWith('/dashboard')) {
     if (!isAuthenticated) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
+    }
+
+    if (!isAdmin) {
+      // Regular user trying to access admin dashboard -> redirect to home page
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 

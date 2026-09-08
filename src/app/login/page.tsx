@@ -41,8 +41,6 @@ type AuthStep = 'phone' | 'otp' | 'name'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectUrl = searchParams.get('redirect') || '/dashboard'
-
   const [step, setStep] = useState<AuthStep>('phone')
   const [phone, setPhone] = useState('')
   const [otpCode, setOtpCode] = useState('')
@@ -50,6 +48,18 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [devCode, setDevCode] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  const getDestination = (role?: string | null) => {
+    const custom = searchParams.get('redirect')
+    if (role === 'ADMIN') {
+      return custom || '/dashboard'
+    }
+    if (custom && !custom.startsWith('/dashboard')) {
+      return custom
+    }
+    return '/'
+  }
 
   // Countdown timer for resend
   useEffect(() => {
@@ -115,10 +125,13 @@ function LoginForm() {
       const data = await res.json()
 
       if (data.success) {
-        // If user already has a name registered, proceed directly to dashboard
+        const role = data.user?.role
+        setUserRole(role)
+
+        // If user already has a name registered, proceed directly
         if (data.user?.name && data.user.name.trim().length > 0) {
           toast.success(`خوش آمدید، ${data.user.name}! در حال انتقال...`)
-          router.push(redirectUrl)
+          router.push(getDestination(role))
           router.refresh()
         } else {
           // Otherwise prompt for first and last name
@@ -153,8 +166,8 @@ function LoginForm() {
       const data = await res.json()
 
       if (data.success) {
-        toast.success(`خوش آمدید، ${fullName.trim()} عزیز! در حال ورود به پنل...`)
-        router.push(redirectUrl)
+        toast.success(`خوش آمدید، ${fullName.trim()} عزیز! در حال ورود...`)
+        router.push(getDestination(userRole))
         router.refresh()
       } else {
         toast.error(data.message || 'خطا در ثبت نام.')
@@ -168,8 +181,8 @@ function LoginForm() {
 
   // Skip name step if user chooses
   const handleSkipName = () => {
-    toast.success('خوش آمدید! در حال انتقال به داشبورد...')
-    router.push(redirectUrl)
+    toast.success('خوش آمدید! در حال انتقال...')
+    router.push(getDestination(userRole))
     router.refresh()
   }
 

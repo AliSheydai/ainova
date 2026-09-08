@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   if (!authority) {
-    return NextResponse.redirect(`${appUrl}/dashboard/orders?payment=invalid_request`)
+    return NextResponse.redirect(`${appUrl}/?payment=invalid_request`)
   }
 
   // Find payment record
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     if (querySource === 'telegram') {
       return NextResponse.redirect(`${appUrl}/telegram-return?status=failed&msg=not_found`)
     }
-    return NextResponse.redirect(`${appUrl}/dashboard/orders?payment=not_found`)
+    return NextResponse.redirect(`${appUrl}/?payment=not_found`)
   }
 
   const isTelegram =
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.redirect(`${appUrl}/dashboard/orders?payment=cancelled`)
+    return NextResponse.redirect(`${appUrl}/?payment=cancelled`)
   }
 
   // Already processed?
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       )
     }
     return NextResponse.redirect(
-      `${appUrl}/dashboard/orders/${payment.orderId}?payment=already_verified`
+      `${appUrl}/?orderId=${payment.orderId}&payment=already_verified`
     )
   }
 
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.redirect(
-      `${appUrl}/dashboard/orders?payment=failed&msg=${encodeURIComponent(errorMsg)}`
+      `${appUrl}/?payment=failed&msg=${encodeURIComponent(errorMsg)}`
     )
   }
 
@@ -178,7 +178,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.redirect(
-      `${appUrl}/dashboard/orders/${payment.orderId}?payment=success`
+      `${appUrl}/?orderId=${payment.orderId}&payment=success`
     )
   } catch (err: unknown) {
     const error = err as Error
@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.redirect(
-        `${appUrl}/dashboard/orders/${payment.orderId}?payment=stock_exhausted`
+        `${appUrl}/?orderId=${payment.orderId}&payment=stock_exhausted`
       )
     }
 
@@ -223,6 +223,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.redirect(`${appUrl}/dashboard/orders?payment=processing_error`)
+    return NextResponse.redirect(`${appUrl}/?payment=processing_error`)
   }
 }

@@ -30,8 +30,8 @@ export function SidebarBrand() {
           <span className='truncate text-sm font-bold text-foreground transition-colors group-hover/brand:text-primary'>
             جمینای
           </span>
-          <span className='mt-0.5 truncate text-xs text-muted-foreground'>
-            پنل کاربری
+          <span className='mt-0.5 truncate text-xs text-muted-foreground font-medium'>
+            پنل مدیریت
           </span>
         </div>
       </Link>

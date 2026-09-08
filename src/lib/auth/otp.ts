@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { sendOtpSms } from './sms'
 import { signToken, AUTH_COOKIE_NAME, TOKEN_EXPIRY } from './jwt'
+import { getOrCreateUserWithRole } from './user-role'
 
 export function normalizePhone(rawPhone: string): string {
   if (!rawPhone) return ''
@@ -135,6 +136,7 @@ export interface VerifyOtpResult {
     id: string
     phone: string
     name: string | null
+    role: string
   }
 }
 
@@ -188,20 +190,15 @@ export async function verifyOtpCode(rawPhone: string, rawCode: string): Promise<
     data: { used: true },
   })
 
-  // Upsert user
-  const user = await prisma.user.upsert({
-    where: { phone },
-    update: {},
-    create: {
-      phone,
-    },
-  })
+  // Get or create user with race-safe first user = ADMIN logic
+  const user = await getOrCreateUserWithRole({ phone })
 
   // Create JWT session
   const jwt = await signToken({
     userId: user.id,
-    phone: user.phone,
+    phone: user.phone || phone,
     name: user.name,
+    role: user.role,
   })
 
   return {
@@ -210,8 +207,9 @@ export async function verifyOtpCode(rawPhone: string, rawCode: string): Promise<
     token: jwt,
     user: {
       id: user.id,
-      phone: user.phone,
+      phone: user.phone || phone,
       name: user.name,
+      role: user.role,
     },
   }
 }

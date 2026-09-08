@@ -68,7 +68,7 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
                 ))}
               </ul>
 
-              <Link href='/dashboard/buy' className='block'>
+              <Link href='/checkout' className='block'>
                 <Button className='w-full py-5 text-base font-semibold shadow-md'>
                   خرید و فعال‌سازی فوری
                 </Button>

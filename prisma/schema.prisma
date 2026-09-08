@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 // =====================
 // User
 // =====================
@@ -19,10 +24,12 @@ model User {
   telegramId       String?  @unique
   telegramUsername String?
   name             String?
+  role             Role     @default(USER)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders      Order[]
+  orders          Order[]
+  supportTickets  SupportTicket[]
 
   @@map("users")
 }
@@ -100,6 +107,7 @@ model Order {
   plan            Plan            @relation(fields: [planId], references: [id])
   payment         Payment?
   activationLink  ActivationLink?
+  supportTickets  SupportTicket[]
 
   @@map("orders")
 }
@@ -155,3 +163,44 @@ model ActivationLink {
 
   @@map("activation_links")
 }
+
+// =====================
+// Support Tickets
+// =====================
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model SupportTicket {
+  id          String       @id @default(cuid())
+  userId      String?
+  orderId     String?
+  subject     String
+  message     String
+  status      TicketStatus @default(OPEN)
+  contactInfo String?      // phone / telegram / email
+  response    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user        User?        @relation(fields: [userId], references: [id])
+  order       Order?       @relation(fields: [orderId], references: [id])
+
+  @@map("support_tickets")
+}
+
+// =====================
+// System Settings
+// =====================
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+

@@ -28,7 +28,7 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
             <p className='mb-8 text-2xl font-bold text-primary'>{price}</p>
           )}
           <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-            <Link href='/dashboard/buy'>
+            <Link href='/checkout'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md'>
                 خرید و شروع با جمینای
               </Button>

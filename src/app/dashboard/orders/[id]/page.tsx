@@ -29,6 +29,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
+      user: true,
       plan: {
         include: { product: true },
       },
@@ -37,7 +38,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
     },
   })
 
-  if (!order || order.userId !== session.userId) {
+  if (!order) {
     notFound()
   }
 

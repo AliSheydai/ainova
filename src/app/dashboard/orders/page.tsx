@@ -1,66 +1,132 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { Package, CheckCircle2, XCircle, AlertCircle, ExternalLink, Copy, Check, ShoppingBag, ArrowLeft, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { useEffect, useState } from 'react'
+import {
+  Package,
+  Search,
+  Filter,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Copy,
+  ExternalLink,
+  RefreshCw,
+  Loader2,
+  Eye,
+  Check,
+} from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
 
-interface OrderItem {
+interface AdminOrder {
   id: string
   amount: number
-  status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  status: string
+  source: string | null
   createdAt: string
+  updatedAt: string
+  user: {
+    id: string
+    phone: string | null
+    name: string | null
+    telegramUsername: string | null
+  }
   plan: {
+    id: string
     name: string
     duration: number
     product: {
       name: string
     }
   }
-  payment?: {
-    refId: string | null
-    gatewayName: string
+  payment: {
+    id: string
+    amount: number
     status: string
+    gatewayName: string
+    authority: string | null
+    refId: string | null
+    createdAt: string
   } | null
-  activationLink?: {
+  activationLink: {
+    id: string
     url: string
     status: string
+    assignedAt: string | null
+    usedAt: string | null
   } | null
 }
 
-function OrdersContent() {
-  const searchParams = useSearchParams()
-  const paymentStatus = searchParams.get('payment')
+function formatPrice(amount: number): string {
+  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
+}
 
-  const [orders, setOrders] = useState<OrderItem[]>([])
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('fa-IR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
+
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (paymentStatus === 'cancelled') {
-      toast.info('پرداخت لغو شد.')
-    } else if (paymentStatus === 'failed') {
-      toast.error('پرداخت با خطا مواجه شد.')
-    }
-  }, [paymentStatus])
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
   const fetchOrders = async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/orders')
-      if (res.ok) {
-        const data = await res.json()
+      const params = new URLSearchParams()
+      if (search) params.set('search', search)
+      if (statusFilter !== 'ALL') params.set('status', statusFilter)
+
+      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      const data = await res.json()
+      if (data.success) {
         setOrders(data.orders || [])
+      } else {
+        toast.error(data.error || 'خطا در دریافت سفارش‌ها.')
       }
     } catch {
-      toast.error('خطا در بارگذاری لیست سفارش‌ها.')
+      toast.error('خطای ارتباط با سرور.')
     } finally {
       setLoading(false)
     }
@@ -68,223 +134,382 @@ function OrdersContent() {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [statusFilter])
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    toast.success('لینک در حافظه کپی شد.')
-    setTimeout(() => setCopiedId(null), 2500)
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    fetchOrders()
   }
 
-  const renderStatusBadge = (status: OrderItem['status']) => {
-    switch (status) {
-      case 'COMPLETED':
-        return (
-          <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
-            <CheckCircle2 className="me-1 h-3.5 w-3.5" />
-            تکمیل شده
-          </Badge>
-        )
-      case 'PENDING_PAYMENT':
-        return (
-          <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10">
-            <AlertCircle className="me-1 h-3.5 w-3.5" />
-            در انتظار پرداخت
-          </Badge>
-        )
-      case 'PAID':
-        return (
-          <Badge className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30">
-            پرداخت شده (در حال صدور)
-          </Badge>
-        )
-      case 'FAILED':
-        return (
-          <Badge variant="destructive">
-            <XCircle className="me-1 h-3.5 w-3.5" />
-            ناموفق
-          </Badge>
-        )
-      case 'CANCELLED':
-        return (
-          <Badge variant="secondary">
-            لغو شده
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url)
+    setCopiedLink(true)
+    toast.success('لینک فعال‌سازی کپی شد.')
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingStatus(true)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status: newStatus }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message || 'وضعیت سفارش به‌روزرسانی شد.')
+        fetchOrders()
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder({ ...selectedOrder, status: newStatus })
+        }
+      } else {
+        toast.error(data.error || 'خطا در تغییر وضعیت.')
+      }
+    } catch {
+      toast.error('خطای سرور.')
+    } finally {
+      setUpdatingStatus(false)
     }
   }
 
   return (
     <>
       <Header>
-        <div className="ms-auto flex items-center gap-2">
+        <div className='flex items-center gap-2'>
+          <h1 className='text-base font-bold flex items-center gap-2'>
+            <Package className='size-4 text-primary' />
+            <span>مدیریت تمام سفارش‌ها</span>
+          </h1>
+        </div>
+        <div className='ms-auto flex items-center gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={fetchOrders}
+            disabled={loading}
+            className='gap-1.5 text-xs h-8'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>بروزرسانی</span>
+          </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className="flex flex-col gap-6 p-4 sm:p-6">
-        {/* Page Title */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-              <Package className="size-5 text-primary" />
+      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
+        {/* Search & Filter Bar */}
+        <Card className='border-border/60 shadow-xs'>
+          <CardContent className='p-4'>
+            <form onSubmit={handleSearchSubmit} className='flex flex-col sm:flex-row items-center gap-3'>
+              <div className='relative flex-1 w-full'>
+                <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
+                <Input
+                  placeholder='جستجو با شناسه سفارش، شماره موبایل کاربر، Authority یا RefId...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='ps-9 text-xs sm:text-sm h-10'
+                />
+              </div>
+
+              <div className='flex items-center gap-2 w-full sm:w-auto'>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className='w-full sm:w-44 h-10 text-xs'>
+                    <SelectValue placeholder='فیلتر وضعیت سفارش' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='ALL'>همه وضعیت‌ها</SelectItem>
+                    <SelectItem value='PAID'>پرداخت شده (PAID)</SelectItem>
+                    <SelectItem value='COMPLETED'>تکمیل شده (COMPLETED)</SelectItem>
+                    <SelectItem value='PENDING_PAYMENT'>در انتظار پرداخت</SelectItem>
+                    <SelectItem value='FAILED'>ناموفق (FAILED)</SelectItem>
+                    <SelectItem value='CANCELLED'>لغو شده (CANCELLED)</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button type='submit' size='sm' className='h-10 px-4 text-xs font-semibold'>
+                  جستجو
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Orders Table */}
+        <Card className='border-border/60 shadow-xs'>
+          <CardHeader className='pb-3'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <CardTitle className='text-base font-bold'>سفارش‌های سامانه</CardTitle>
+                <CardDescription className='text-xs'>
+                  مجموع {orders.length.toLocaleString('fa-IR')} سفارش ثبت‌شده
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">سفارش‌های من</h1>
-              <p className="text-sm text-muted-foreground">
-                تاریخچه خریدها، وضعیت پرداخت و لینک‌های فعال‌سازی
-              </p>
-            </div>
-          </div>
-
-          <Button asChild size="sm">
-            <Link href="/dashboard/buy">
-              <ShoppingBag className="me-2 size-4" />
-              خرید اشتراک جدید
-            </Link>
-          </Button>
-        </div>
-
-        <Separator />
-
-        {/* Content */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-primary" />
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-muted mb-4">
-              <Package className="size-8 text-muted-foreground/60" />
-            </div>
-            <p className="mb-1 text-base font-semibold text-foreground">
-              هنوز سفارشی ثبت نکرده‌اید
-            </p>
-            <p className="mb-6 max-w-sm text-xs text-muted-foreground">
-              با خرید اشتراک جمینای، لینک فعال‌سازی حساب کاربری‌تان بلافاصله در اینجا قرار می‌گیرد.
-            </p>
-            <Button asChild>
-              <Link href="/dashboard/buy">
-                <ShoppingBag className="me-2 size-4" />
-                مشاهده و خرید اشتراک
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {orders.map((order) => (
-              <Card key={order.id} className="overflow-hidden border-border/80 shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-3 bg-muted/20">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-base font-bold">
-                        {order.plan.product.name} ({order.plan.name})
-                      </CardTitle>
-                      {renderStatusBadge(order.status)}
-                    </div>
-                    <CardDescription className="text-xs">
-                      شماره سفارش: <span className="font-mono text-foreground">{order.id.slice(0, 10)}...</span> •{' '}
-                      {new Date(order.createdAt).toLocaleDateString('fa-IR')}
-                    </CardDescription>
-                  </div>
-
-                  <div className="text-end">
-                    <div className="text-base font-bold text-foreground">
-                      {order.amount.toLocaleString('fa-IR')} <span className="text-xs font-normal text-muted-foreground">تومان</span>
-                    </div>
-                    {order.payment?.refId && (
-                      <div className="text-[11px] text-muted-foreground font-mono">
-                        کد پیگیری: {order.payment.refId}
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-4 space-y-3">
-                  {/* Activation Link block if completed */}
-                  {order.status === 'COMPLETED' && order.activationLink?.url ? (
-                    <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="size-4" />
-                          لینک فعال‌سازی اختصاصی شما:
-                        </div>
-                        <div className="font-mono text-xs text-muted-foreground truncate max-w-md" dir="ltr">
-                          {order.activationLink.url}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(order.activationLink!.url, order.id)}
-                          className="h-9 gap-1 text-xs"
-                        >
-                          {copiedId === order.id ? (
-                            <>
-                              <Check className="size-3.5 text-emerald-500" />
-                              کپی شد
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="size-3.5" />
-                              کپی لینک
-                            </>
+          </CardHeader>
+          <CardContent className='pt-0'>
+            {loading ? (
+              <div className='flex items-center justify-center py-16'>
+                <Loader2 className='size-8 animate-spin text-primary' />
+              </div>
+            ) : orders.length === 0 ? (
+              <div className='py-12 text-center text-xs text-muted-foreground'>
+                هیچ سفارشی با این مشخصات یافت نشد.
+              </div>
+            ) : (
+              <div className='overflow-x-auto'>
+                <table className='w-full text-xs text-start'>
+                  <thead>
+                    <tr className='border-b border-border/50 text-muted-foreground'>
+                      <th className='py-3 text-start font-medium'>شناسه</th>
+                      <th className='py-3 text-start font-medium'>کاربر</th>
+                      <th className='py-3 text-start font-medium'>محصول و پلن</th>
+                      <th className='py-3 text-start font-medium'>مبلغ</th>
+                      <th className='py-3 text-start font-medium'>وضعیت سفارش</th>
+                      <th className='py-3 text-start font-medium'>وضعیت پرداخت</th>
+                      <th className='py-3 text-start font-medium'>لینک فعال‌سازی</th>
+                      <th className='py-3 text-start font-medium'>تاریخ ثبت</th>
+                      <th className='py-3 text-end font-medium'>عملیات</th>
+                    </tr>
+                  </thead>
+                  <tbody className='divide-y divide-border/40'>
+                    {orders.map((ord) => (
+                      <tr key={ord.id} className='hover:bg-muted/30 transition-colors'>
+                        <td className='py-3 font-mono font-bold text-foreground'>
+                          {ord.id.slice(-8)}
+                        </td>
+                        <td className='py-3'>
+                          <span className='font-semibold block text-foreground'>
+                            {ord.user?.name || ord.user?.phone || 'کاربر'}
+                          </span>
+                          {ord.user?.phone && ord.user?.name && (
+                            <span className='text-[10px] text-muted-foreground font-mono'>
+                              {ord.user.phone}
+                            </span>
                           )}
-                        </Button>
+                        </td>
+                        <td className='py-3'>
+                          <span className='text-foreground block font-medium'>
+                            {ord.plan?.product?.name}
+                          </span>
+                          <span className='text-[10px] text-muted-foreground'>
+                            {ord.plan?.name}
+                          </span>
+                        </td>
+                        <td className='py-3 font-bold text-foreground'>
+                          {formatPrice(ord.amount)}
+                        </td>
+                        <td className='py-3'>
+                          {ord.status === 'COMPLETED' ? (
+                            <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] font-medium'>
+                              تکمیل شده
+                            </Badge>
+                          ) : ord.status === 'PAID' ? (
+                            <Badge variant='outline' className='border-blue-500/30 bg-blue-500/10 text-blue-600 text-[10px] font-medium'>
+                              پرداخت شده
+                            </Badge>
+                          ) : ord.status === 'PENDING_PAYMENT' ? (
+                            <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 text-[10px] font-medium'>
+                              در انتظار پرداخت
+                            </Badge>
+                          ) : (
+                            <Badge variant='outline' className='border-rose-500/30 bg-rose-500/10 text-rose-600 text-[10px] font-medium'>
+                              {ord.status}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className='py-3'>
+                          {ord.payment?.status === 'SUCCESS' ? (
+                            <span className='text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1'>
+                              <CheckCircle2 className='size-3' />
+                              موفق
+                            </span>
+                          ) : ord.payment?.status === 'PENDING' ? (
+                            <span className='text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1'>
+                              <Clock className='size-3' />
+                              در انتظار
+                            </span>
+                          ) : (
+                            <span className='text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1'>
+                              <XCircle className='size-3' />
+                              {ord.payment?.status || 'ثبت‌نشده'}
+                            </span>
+                          )}
+                        </td>
+                        <td className='py-3'>
+                          {ord.activationLink ? (
+                            <Badge variant='outline' className='border-primary/30 text-primary text-[10px] font-mono'>
+                              تخصیص یافته
+                            </Badge>
+                          ) : (
+                            <span className='text-muted-foreground text-[10px]'>—</span>
+                          )}
+                        </td>
+                        <td className='py-3 text-muted-foreground text-[11px]'>
+                          {formatDate(ord.createdAt)}
+                        </td>
+                        <td className='py-3 text-end'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => setSelectedOrder(ord)}
+                            className='h-7 px-2.5 text-[11px] gap-1'
+                          >
+                            <Eye className='size-3' />
+                            <span>بررسی</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Main>
 
-                        <Button asChild size="sm" className="h-9 gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white">
-                          <a href={order.activationLink.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="size-3.5" />
-                            باز کردن لینک
-                          </a>
-                        </Button>
-                      </div>
+      {/* Order Detail Modal */}
+      <Dialog
+        open={Boolean(selectedOrder)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedOrder(null)
+        }}
+      >
+        <DialogContent className='max-w-xl p-6'>
+          <DialogHeader>
+            <DialogTitle className='text-lg font-bold flex items-center gap-2'>
+              <Package className='size-5 text-primary' />
+              <span>جزئیات کامل سفارش</span>
+            </DialogTitle>
+            <DialogDescription className='text-xs font-mono'>
+              شناسه سفارش: {selectedOrder?.id}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className='space-y-4 pt-2 text-xs'>
+              {/* Info Grid */}
+              <div className='grid grid-cols-2 gap-3 p-4 rounded-xl border border-border/60 bg-muted/20'>
+                <div>
+                  <span className='text-muted-foreground block text-[10px]'>مشتری / کاربر:</span>
+                  <span className='font-bold text-foreground text-sm'>
+                    {selectedOrder.user?.name || selectedOrder.user?.phone || 'کاربر'}
+                  </span>
+                  {selectedOrder.user?.phone && (
+                    <span className='text-muted-foreground font-mono block text-[11px] mt-0.5'>
+                      {selectedOrder.user.phone}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <span className='text-muted-foreground block text-[10px]'>مبلغ پرداختی:</span>
+                  <span className='font-extrabold text-foreground text-sm text-primary'>
+                    {formatPrice(selectedOrder.amount)}
+                  </span>
+                </div>
+                <div>
+                  <span className='text-muted-foreground block text-[10px]'>محصول:</span>
+                  <span className='font-semibold text-foreground'>
+                    {selectedOrder.plan?.product?.name} ({selectedOrder.plan?.name})
+                  </span>
+                </div>
+                <div>
+                  <span className='text-muted-foreground block text-[10px]'>تاریخ ایجاد:</span>
+                  <span className='font-semibold text-foreground'>
+                    {formatDate(selectedOrder.createdAt)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Update Row */}
+              <div className='flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card'>
+                <span className='font-semibold'>وضعیت سفارش:</span>
+                <Select
+                  value={selectedOrder.status}
+                  onValueChange={(val) => handleUpdateOrderStatus(selectedOrder.id, val)}
+                  disabled={updatingStatus}
+                >
+                  <SelectTrigger className='h-8 w-44 text-xs font-semibold'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='PENDING_PAYMENT'>PENDING_PAYMENT</SelectItem>
+                    <SelectItem value='PAID'>PAID</SelectItem>
+                    <SelectItem value='COMPLETED'>COMPLETED</SelectItem>
+                    <SelectItem value='FAILED'>FAILED</SelectItem>
+                    <SelectItem value='CANCELLED'>CANCELLED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Payment Details */}
+              <div className='p-4 rounded-xl border border-border/60 space-y-2'>
+                <h4 className='font-bold text-foreground text-xs'>اطلاعات پرداخت بانکی:</h4>
+                {selectedOrder.payment ? (
+                  <div className='grid grid-cols-2 gap-2 text-[11px]'>
+                    <div>
+                      <span className='text-muted-foreground'>درگاه:</span>{' '}
+                      <span className='font-semibold'>{selectedOrder.payment.gatewayName}</span>
                     </div>
-                  ) : null}
-
-                  {/* Actions footer */}
-                  <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
-                    <Link
-                      href={`/dashboard/orders/${order.id}`}
-                      className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-                    >
-                      جزئیات کامل سفارش و راهنمای فعال‌سازی
-                      <ArrowLeft className="size-3" />
-                    </Link>
-
-                    {order.status === 'PENDING_PAYMENT' && (
-                      <Button asChild size="sm" variant="default" className="h-8 text-xs">
-                        <Link href="/dashboard/buy">
-                          پرداخت مجدد
-                        </Link>
-                      </Button>
+                    <div>
+                      <span className='text-muted-foreground'>وضعیت:</span>{' '}
+                      <span className='font-semibold'>{selectedOrder.payment.status}</span>
+                    </div>
+                    {selectedOrder.payment.authority && (
+                      <div className='col-span-2 truncate'>
+                        <span className='text-muted-foreground'>Authority:</span>{' '}
+                        <span className='font-mono text-[10px]'>{selectedOrder.payment.authority}</span>
+                      </div>
+                    )}
+                    {selectedOrder.payment.refId && (
+                      <div className='col-span-2'>
+                        <span className='text-muted-foreground'>کد پیگیری بانکی (RefId):</span>{' '}
+                        <span className='font-mono font-bold text-emerald-600 dark:text-emerald-400'>
+                          {selectedOrder.payment.refId}
+                        </span>
+                      </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Main>
-    </>
-  )
-}
+                ) : (
+                  <p className='text-muted-foreground text-[11px]'>تراکنشی برای این سفارش ثبت نشده است.</p>
+                )}
+              </div>
 
-export default function OrdersPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      }
-    >
-      <OrdersContent />
-    </Suspense>
+              {/* Activation Link Details */}
+              <div className='p-4 rounded-xl border border-border/60 space-y-2'>
+                <h4 className='font-bold text-foreground text-xs'>لینک فعال‌سازی اختصاص‌یافته:</h4>
+                {selectedOrder.activationLink ? (
+                  <div className='space-y-2'>
+                    <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/40'>
+                      <span className='font-mono text-[11px] truncate flex-1 select-all'>
+                        {selectedOrder.activationLink.url}
+                      </span>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => handleCopyLink(selectedOrder.activationLink!.url)}
+                        className='size-7 shrink-0'
+                        title='کپی لینک'
+                      >
+                        {copiedLink ? <Check className='size-3.5 text-emerald-500' /> : <Copy className='size-3.5' />}
+                      </Button>
+                    </div>
+                    <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+                      <span>وضعیت لینک: {selectedOrder.activationLink.status}</span>
+                      {selectedOrder.activationLink.assignedAt && (
+                        <span>تخصیص: {formatDate(selectedOrder.activationLink.assignedAt)}</span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className='text-muted-foreground text-[11px]'>هنوز لینکی به این سفارش تخصیص نیافته است.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -1,223 +1,456 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  BookOpen,
-  HeadphonesIcon,
+  Users,
   Package,
-  Sparkles,
+  CreditCard,
+  Link as LinkIcon,
+  TrendingUp,
+  Clock,
   CheckCircle2,
-  ShieldCheck,
+  AlertCircle,
+  ArrowUpRight,
+  RefreshCw,
   Loader2,
-  User,
+  Shield,
+  Layers,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 
-const quickLinks = [
-  {
-    icon: Package,
-    title: 'سفارش‌های من',
-    description: 'مشاهده تاریخچه و لینک‌ها',
-    href: '/dashboard/orders',
-  },
-  {
-    icon: BookOpen,
-    title: 'راهنمای فعال‌سازی',
-    description: 'آموزش گام به گام فعال‌سازی',
-    href: '/dashboard/activation-guide',
-  },
-  {
-    icon: HeadphonesIcon,
-    title: 'پشتیبانی',
-    description: 'ارتباط آنلاین و تلفنی',
-    href: '/dashboard/support',
-  },
-]
-
-interface DashboardData {
-  user: {
-    name: string | null
-    phone: string
-  } | null
-  activeOrder: {
-    id: string
-    planName: string
-    activationUrl: string
-    createdAt: string
-  } | null
-  ordersCount: number
+interface OverviewStats {
+  totalUsers: number
+  newUsers: number
+  totalOrders: number
+  successfulOrders: number
+  pendingOrders: number
+  totalRevenue: number
+  availableLinks: number
+  assignedLinks: number
+  reservedLinks: number
+  usedLinks: number
+  invalidLinks: number
 }
 
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData>({
-    user: null,
-    activeOrder: null,
-    ordersCount: 0,
-  })
+interface RecentOrder {
+  id: string
+  amount: number
+  status: string
+  createdAt: string
+  user?: {
+    phone?: string
+    name?: string
+  }
+  plan?: {
+    name: string
+    product?: {
+      name: string
+    }
+  }
+}
+
+interface RecentUser {
+  id: string
+  phone: string | null
+  name: string | null
+  role: string
+  createdAt: string
+  _count: {
+    orders: number
+  }
+}
+
+function formatPrice(amount: number): string {
+  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('fa-IR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
+
+export default function AdminOverviewPage() {
+  const [stats, setStats] = useState<OverviewStats | null>(null)
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchOverview = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/overview')
+      const data = await res.json()
+      if (data.success) {
+        setStats(data.stats)
+        setRecentOrders(data.recentOrders || [])
+        setRecentUsers(data.recentUsers || [])
+      } else {
+        toast.error(data.error || 'خطا در دریافت اطلاعات داشبورد.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    Promise.all([
-      fetch('/api/auth/me').then((r) => r.json()).catch(() => null),
-      fetch('/api/orders').then((r) => r.json()).catch(() => null),
-    ])
-      .then(([authRes, ordersRes]) => {
-        const user = authRes?.authenticated ? authRes.user : null
-        const orders = ordersRes?.orders || []
-        const completed = orders.find((o: any) => o.status === 'COMPLETED' && o.activationLink?.url)
-
-        setData({
-          user,
-          activeOrder: completed
-            ? {
-                id: completed.id,
-                planName: `${completed.plan?.product?.name} (${completed.plan?.name})`,
-                activationUrl: completed.activationLink.url,
-                createdAt: completed.createdAt,
-              }
-            : null,
-          ordersCount: orders.length,
-        })
-      })
-      .finally(() => setLoading(false))
+    fetchOverview()
   }, [])
-
-  const hasName = Boolean(data.user?.name && data.user.name.trim().length > 0)
-  const displayName = hasName ? data.user!.name!.trim() : 'کاربر گرامی'
-  const initial = displayName.charAt(0) || 'ک'
 
   return (
     <>
       <Header>
-        <div className="ms-auto flex items-center gap-2">
+        <div className='flex items-center gap-2'>
+          <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold gap-1'>
+            <Shield className='size-3' />
+            مدیریت سیستم
+          </Badge>
+        </div>
+        <div className='ms-auto flex items-center gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={fetchOverview}
+            disabled={loading}
+            className='gap-1.5 text-xs h-8'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>بروزرسانی</span>
+          </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className="flex flex-col gap-6 p-4 sm:p-6">
-        {/* Welcome Section - Showing user name instead of phone number */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-l from-primary/5 via-card to-card p-5 shadow-xs">
-          <div className="flex items-center gap-4">
-            {/* Modern Avatar with Gradient Ring */}
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-2xl shadow-lg shadow-primary/25 ring-2 ring-primary/20">
-              {initial}
-              <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-black text-foreground">
-                  سلام، {displayName} عزیز 👋
-                </h1>
-                <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-primary/20 text-xs gap-1 font-medium">
-                  <Sparkles className="h-3 w-3 text-amber-500" />
-                  حساب کاربری فعال
-                </Badge>
-              </div>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                به سامانه فعال‌سازی و مدیریت اشتراک جمینای خوش آمدید.
-              </p>
-            </div>
+      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
+        {/* Welcome Banner */}
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/15 p-5'>
+          <div>
+            <h1 className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+              داشبورد مدیریت و آمار فروش
+            </h1>
+            <p className='text-xs sm:text-sm text-muted-foreground mt-1'>
+              نمای کلی شاخص‌های کلیدی کسب‌وکار، سفارش‌ها، کاربران و موجودی انبار لینک‌ها
+            </p>
           </div>
-
-          {/* User Name Badge or CTA */}
-          <div className="flex items-center gap-2">
-            {hasName ? (
-              <div className="flex items-center gap-2.5 rounded-xl border border-border/70 bg-card px-4 py-2 shadow-xs">
-                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div className="flex flex-col text-xs text-start">
-                  <span className="text-[10px] text-muted-foreground">نام حساب کاربری:</span>
-                  <span className="font-bold text-foreground text-sm">{displayName}</span>
-                </div>
-              </div>
-            ) : (
-              <Button asChild variant="outline" size="sm" className="rounded-xl text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
-                <Link href="/dashboard/profile">
-                  <User className="h-3.5 w-3.5" />
-                  تکمیل نام و نام خانوادگی
-                </Link>
+          <div className='flex items-center gap-2'>
+            <Link href='/dashboard/activation-links'>
+              <Button size='sm' className='gap-1.5 text-xs font-semibold'>
+                <LinkIcon className='size-3.5' />
+                <span>افزودن لینک فعال‌سازی</span>
               </Button>
-            )}
+            </Link>
+            <Link href='/dashboard/orders'>
+              <Button variant='outline' size='sm' className='gap-1.5 text-xs'>
+                <Package className='size-3.5' />
+                <span>مشاهده سفارش‌ها</span>
+              </Button>
+            </Link>
           </div>
         </div>
 
-        <Separator />
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="size-6 animate-spin text-primary" />
+        {/* KPI Cards Grid */}
+        {loading && !stats ? (
+          <div className='flex items-center justify-center py-20'>
+            <Loader2 className='size-8 animate-spin text-primary' />
           </div>
-        ) : (
-          <>
-            {/* Active Subscription Banner */}
-            {data.activeOrder && (
-              <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
-                <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-                      <CheckCircle2 className="size-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">اشتراک فعال شما:</span>
-                        <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-none text-xs">
-                          {data.activeOrder.planName}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        لینک فعال‌سازی آماده استفاده روی اکانت گوگل شماست.
-                      </p>
-                    </div>
-                  </div>
+        ) : stats ? (
+          <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            {/* Revenue */}
+            <Card className='border-border/60 shadow-xs'>
+              <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                <CardTitle className='text-xs font-medium text-muted-foreground'>
+                  درآمد کل
+                </CardTitle>
+                <div className='size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center'>
+                  <TrendingUp className='size-4' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                  {formatPrice(stats.totalRevenue)}
+                </div>
+                <p className='text-[11px] text-muted-foreground mt-1'>
+                  فروش تاییدشده و موفق
+                </p>
+              </CardContent>
+            </Card>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1 text-xs">
-                      <Link href={`/dashboard/orders/${data.activeOrder.id}`}>
-                        <Sparkles className="size-3.5" />
-                        مشاهده لینک فعال‌سازی
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Total Orders */}
+            <Card className='border-border/60 shadow-xs'>
+              <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                <CardTitle className='text-xs font-medium text-muted-foreground'>
+                  سفارش‌های موفق
+                </CardTitle>
+                <div className='size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center'>
+                  <CheckCircle2 className='size-4' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                  {stats.successfulOrders.toLocaleString('fa-IR')}{' '}
+                  <span className='text-xs font-normal text-muted-foreground'>
+                    از {stats.totalOrders.toLocaleString('fa-IR')} کل
+                  </span>
+                </div>
+                <div className='flex items-center gap-1.5 mt-1 text-[11px] text-amber-600 dark:text-amber-400'>
+                  <Clock className='size-3' />
+                  <span>{stats.pendingOrders.toLocaleString('fa-IR')} در انتظار پرداخت</span>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* Quick links grid */}
-            <div>
-              <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-                دسترسی سریع
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {quickLinks.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <Card className="h-full cursor-pointer border-border/60 transition-all duration-200 hover:border-primary/40 hover:shadow-sm">
-                      <CardHeader className="pb-2">
-                        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                          <item.icon className="size-4 text-primary" />
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <CardTitle className="mb-1 text-sm font-semibold">
-                          {item.title}
-                        </CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+            {/* Total Users */}
+            <Card className='border-border/60 shadow-xs'>
+              <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                <CardTitle className='text-xs font-medium text-muted-foreground'>
+                  کل کاربران
+                </CardTitle>
+                <div className='size-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center'>
+                  <Users className='size-4' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                  {stats.totalUsers.toLocaleString('fa-IR')}
+                </div>
+                <p className='text-[11px] text-muted-foreground mt-1'>
+                  {stats.newUsers.toLocaleString('fa-IR')} کاربر جدید ۷ روز اخیر
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Available Links Inventory */}
+            <Card className='border-border/60 shadow-xs'>
+              <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                <CardTitle className='text-xs font-medium text-muted-foreground'>
+                  موجودی لینک‌های فعال
+                </CardTitle>
+                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                  <Layers className='size-4' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-xl sm:text-2xl font-bold tracking-tight text-primary'>
+                  {stats.availableLinks.toLocaleString('fa-IR')}{' '}
+                  <span className='text-xs font-normal text-muted-foreground'>لینک موجود</span>
+                </div>
+                <p className='text-[11px] text-muted-foreground mt-1'>
+                  {stats.usedLinks.toLocaleString('fa-IR')} لینک مصرف‌شده
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
+
+        {/* Link Inventory Status Bar */}
+        {stats && (
+          <Card className='border-border/60 shadow-xs'>
+            <CardHeader className='py-4'>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-sm font-semibold flex items-center gap-2'>
+                  <LinkIcon className='size-4 text-primary' />
+                  <span>وضعیت انبار و گردش لینک‌های فعال‌سازی</span>
+                </CardTitle>
+                <Link href='/dashboard/activation-links'>
+                  <Button variant='ghost' size='sm' className='text-xs gap-1 h-7 text-primary'>
+                    <span>مدیریت کامل لینک‌ها</span>
+                    <ArrowUpRight className='size-3' />
+                  </Button>
+                </Link>
               </div>
-            </div>
-          </>
+            </CardHeader>
+            <CardContent className='pt-0 pb-4'>
+              <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                <div className='rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3'>
+                  <span className='text-xs text-muted-foreground'>موجود (آماده تحویل)</span>
+                  <div className='text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5'>
+                    {stats.availableLinks.toLocaleString('fa-IR')}
+                  </div>
+                </div>
+                <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-3'>
+                  <span className='text-xs text-muted-foreground'>رزرو شده</span>
+                  <div className='text-lg font-bold text-blue-600 dark:text-blue-400 mt-0.5'>
+                    {stats.reservedLinks.toLocaleString('fa-IR')}
+                  </div>
+                </div>
+                <div className='rounded-xl border border-slate-500/20 bg-slate-500/5 p-3'>
+                  <span className='text-xs text-muted-foreground'>مصرف شده (تحویل شده)</span>
+                  <div className='text-lg font-bold text-slate-700 dark:text-slate-300 mt-0.5'>
+                    {stats.usedLinks.toLocaleString('fa-IR')}
+                  </div>
+                </div>
+                <div className='rounded-xl border border-rose-500/20 bg-rose-500/5 p-3'>
+                  <span className='text-xs text-muted-foreground'>نامعتبر / منقضی</span>
+                  <div className='text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5'>
+                    {stats.invalidLinks.toLocaleString('fa-IR')}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
+
+        {/* Two Columns: Recent Orders & Recent Users */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+          {/* Recent Orders (2 cols) */}
+          <Card className='lg:col-span-2 border-border/60 shadow-xs'>
+            <CardHeader className='flex flex-row items-center justify-between pb-3'>
+              <div>
+                <CardTitle className='text-base font-bold'>آخرین سفارش‌ها</CardTitle>
+                <CardDescription className='text-xs'>
+                  وضعیت سفارش‌های اخیر ثبت‌شده در سامانه
+                </CardDescription>
+              </div>
+              <Link href='/dashboard/orders'>
+                <Button variant='outline' size='sm' className='text-xs h-8'>
+                  مشاهده همه
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className='pt-0'>
+              {recentOrders.length === 0 ? (
+                <div className='py-8 text-center text-xs text-muted-foreground'>
+                  هنوز هیچ سفارشی ثبت نشده است.
+                </div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='w-full text-xs text-start'>
+                    <thead>
+                      <tr className='border-b border-border/50 text-muted-foreground'>
+                        <th className='py-2.5 text-start font-medium'>شناسه</th>
+                        <th className='py-2.5 text-start font-medium'>کاربر</th>
+                        <th className='py-2.5 text-start font-medium'>پلن</th>
+                        <th className='py-2.5 text-start font-medium'>مبلغ</th>
+                        <th className='py-2.5 text-start font-medium'>وضعیت</th>
+                        <th className='py-2.5 text-start font-medium'>زمان</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-border/40'>
+                      {recentOrders.map((ord) => (
+                        <tr key={ord.id} className='hover:bg-muted/30 transition-colors'>
+                          <td className='py-3 font-mono font-medium text-foreground/80'>
+                            {ord.id.slice(-6)}
+                          </td>
+                          <td className='py-3 font-medium'>
+                            {ord.user?.name || ord.user?.phone || 'کاربر'}
+                          </td>
+                          <td className='py-3 text-muted-foreground'>
+                            {ord.plan?.name || 'جمینای ۱۸ ماهه'}
+                          </td>
+                          <td className='py-3 font-bold text-foreground'>
+                            {formatPrice(ord.amount)}
+                          </td>
+                          <td className='py-3'>
+                            {ord.status === 'COMPLETED' || ord.status === 'PAID' ? (
+                              <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] font-medium'>
+                                موفق
+                              </Badge>
+                            ) : ord.status === 'PENDING_PAYMENT' ? (
+                              <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 text-[10px] font-medium'>
+                                در انتظار
+                              </Badge>
+                            ) : (
+                              <Badge variant='outline' className='border-rose-500/30 bg-rose-500/10 text-rose-600 text-[10px] font-medium'>
+                                ناموفق
+                              </Badge>
+                            )}
+                          </td>
+                          <td className='py-3 text-muted-foreground text-[11px]'>
+                            {formatDate(ord.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Users (1 col) */}
+          <Card className='border-border/60 shadow-xs'>
+            <CardHeader className='flex flex-row items-center justify-between pb-3'>
+              <div>
+                <CardTitle className='text-base font-bold'>آخرین کاربران</CardTitle>
+                <CardDescription className='text-xs'>
+                  کاربران تازه ثبت‌نام‌شده
+                </CardDescription>
+              </div>
+              <Link href='/dashboard/users'>
+                <Button variant='outline' size='sm' className='text-xs h-8'>
+                  مشاهده همه
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className='pt-0'>
+              {recentUsers.length === 0 ? (
+                <div className='py-8 text-center text-xs text-muted-foreground'>
+                  هنوز کاربری ثبت نشده است.
+                </div>
+              ) : (
+                <div className='space-y-3'>
+                  {recentUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      className='flex items-center justify-between p-2.5 rounded-xl border border-border/40 hover:bg-muted/30 transition-colors'
+                    >
+                      <div className='flex items-center gap-2.5'>
+                        <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs'>
+                          {u.name?.trim() ? u.name.trim().charAt(0) : <Users className='size-3.5' />}
+                        </div>
+                        <div>
+                          <div className='flex items-center gap-1.5'>
+                            <span className='text-xs font-bold text-foreground'>
+                              {u.name || u.phone || 'کاربر'}
+                            </span>
+                            {u.role === 'ADMIN' && (
+                              <Badge className='bg-amber-500/15 text-amber-600 border-amber-500/30 text-[9px] px-1 py-0'>
+                                ادمین
+                              </Badge>
+                            )}
+                          </div>
+                          <span className='text-[10px] text-muted-foreground font-mono'>
+                            {u.phone || 'ورود تلگرام'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className='text-end'>
+                        <span className='text-[11px] font-semibold text-primary block'>
+                          {u._count.orders.toLocaleString('fa-IR')} سفارش
+                        </span>
+                        <span className='text-[10px] text-muted-foreground block'>
+                          {formatDate(u.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </Main>
     </>
   )

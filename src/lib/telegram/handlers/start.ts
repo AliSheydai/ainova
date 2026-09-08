@@ -1,5 +1,6 @@
 import { Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUserWithRole } from '@/lib/auth/user-role'
 import { MESSAGES } from '../messages'
 import { mainMenuKeyboard } from '../keyboards'
 import { handleOrders } from './orders'
@@ -74,12 +75,10 @@ export async function handleStart(ctx: Context) {
         },
       })
     } else {
-      existingUser = await prisma.user.create({
-        data: {
-          telegramId,
-          telegramUsername,
-          name,
-        },
+      existingUser = await getOrCreateUserWithRole({
+        telegramId,
+        telegramUsername,
+        name,
       })
     }
   } catch (error) {

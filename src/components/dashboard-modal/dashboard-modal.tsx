@@ -104,7 +104,7 @@ export function DashboardModal({
           <OrdersTab
             onGoToBuy={() => {
               onOpenChange(false)
-              window.location.href = '/dashboard/buy'
+              window.location.href = '/checkout'
             }}
           />
         )}
@@ -165,7 +165,7 @@ export function DashboardModal({
                 size="sm"
                 onClick={() => {
                   onOpenChange(false)
-                  window.location.href = '/dashboard/buy'
+                  window.location.href = '/checkout'
                 }}
                 className="h-8 text-[11px] gap-1 px-2.5 rounded-xl bg-primary text-primary-foreground shadow-xs"
               >
@@ -326,7 +326,7 @@ export function DashboardModal({
               size="sm"
               onClick={() => {
                 onOpenChange(false)
-                window.location.href = '/dashboard/buy'
+                window.location.href = '/checkout'
               }}
               className="w-full gap-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-xs"
             >

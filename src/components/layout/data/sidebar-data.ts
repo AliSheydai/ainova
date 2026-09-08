@@ -1,27 +1,31 @@
 import {
-  BookOpen,
+  CreditCard,
   HeadphonesIcon,
   Home,
+  Link as LinkIcon,
   Package,
+  Settings,
+  ShoppingBag,
+  Users,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
   user: {
-    name: 'کاربر',
+    name: 'مدیر سیستم',
     email: '',
     avatar: '',
   },
   teams: [
     {
       name: 'جمینای',
-      logo: () => null, // Will use custom brand
-      plan: 'پنل کاربری',
+      logo: () => null,
+      plan: 'پنل مدیریت',
     },
   ],
   navGroups: [
     {
-      title: 'منو اصلی',
+      title: 'منوی مدیریت',
       items: [
         {
           title: 'داشبورد',
@@ -29,19 +33,39 @@ export const sidebarData: SidebarData = {
           icon: Home,
         },
         {
-          title: 'سفارش‌های من',
+          title: 'کاربران',
+          url: '/dashboard/users',
+          icon: Users,
+        },
+        {
+          title: 'سفارش‌ها',
           url: '/dashboard/orders',
           icon: Package,
         },
         {
-          title: 'راهنمای فعال‌سازی',
-          url: '/dashboard/activation-guide',
-          icon: BookOpen,
+          title: 'پرداخت‌ها',
+          url: '/dashboard/payments',
+          icon: CreditCard,
+        },
+        {
+          title: 'لینک‌های فعال‌سازی',
+          url: '/dashboard/activation-links',
+          icon: LinkIcon,
+        },
+        {
+          title: 'محصولات و پلن‌ها',
+          url: '/dashboard/products',
+          icon: ShoppingBag,
         },
         {
           title: 'پشتیبانی',
           url: '/dashboard/support',
           icon: HeadphonesIcon,
+        },
+        {
+          title: 'تنظیمات',
+          url: '/dashboard/settings',
+          icon: Settings,
         },
       ],
     },

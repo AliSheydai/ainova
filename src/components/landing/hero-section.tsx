@@ -53,7 +53,7 @@ export function HeroSection({ price }: HeroSectionProps) {
 
           {/* CTAs */}
           <div className='mb-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-            <Link href='/dashboard/buy'>
+            <Link href='/checkout'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md'>
                 خرید و فعال‌سازی جمینای
                 {price && (
