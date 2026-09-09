@@ -84,21 +84,21 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
     switch (status) {
       case 'COMPLETED':
         return (
-          <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-none font-medium gap-1 text-[11px]">
+          <Badge className="bg-primary/10 text-primary border border-primary/20 font-medium gap-1 text-[11px]">
             <CheckCircle2 className="size-3" />
             تحویل‌شده و فعال
           </Badge>
         )
       case 'PAID':
         return (
-          <Badge className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-none font-medium gap-1 text-[11px]">
+          <Badge className="bg-primary/15 text-primary border border-primary/25 font-medium gap-1 text-[11px]">
             <AlertCircle className="size-3" />
             پرداخت‌شده (در حال صدور)
           </Badge>
         )
       case 'PENDING_PAYMENT':
         return (
-          <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-none font-medium gap-1 text-[11px]">
+          <Badge className="bg-muted/60 text-muted-foreground border border-border/80 font-medium gap-1 text-[11px]">
             <AlertCircle className="size-3" />
             در انتظار پرداخت
           </Badge>
@@ -106,7 +106,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
       case 'FAILED':
       case 'CANCELLED':
         return (
-          <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border-none font-medium gap-1 text-[11px]">
+          <Badge className="bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-medium gap-1 text-[11px]">
             <XCircle className="size-3" />
             ناموفق / لغو شده
           </Badge>
@@ -229,9 +229,9 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
 
                     {/* Activation Link Box if COMPLETED */}
                     {hasActivationLink && (
-                      <div className="mt-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 sm:p-3.5">
+                      <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5">
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                             <Sparkles className="size-3.5" />
                             <span>لینک اختصاصی دعوت و فعال‌سازی اشتراک:</span>
                           </div>
@@ -255,11 +255,11 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               onClick={() =>
                                 copyToClipboard(order.activationLink!.url, order.id)
                               }
-                              className="h-9 gap-1.5 text-xs flex-1 sm:flex-none border-border/80 hover:bg-emerald-500/10 hover:text-emerald-600"
+                              className="h-9 gap-1.5 text-xs flex-1 sm:flex-none border-border/80 hover:bg-primary/10 hover:text-primary"
                             >
                               {copiedId === order.id ? (
                                 <>
-                                  <Check className="size-3.5 text-emerald-500" />
+                                  <Check className="size-3.5 text-primary" />
                                   کپی شد
                                 </>
                               ) : (
@@ -278,7 +278,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                             >
                               <Button
                                 size="sm"
-                                className="w-full h-9 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                className="w-full h-9 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
                               >
                                 <ExternalLink className="size-3.5" />
                                 فعال‌سازی

@@ -302,8 +302,8 @@ export default function AdminUsersPage() {
                         </td>
                         <td className='py-3'>
                           {u.role === 'ADMIN' ? (
-                            <Badge className='bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1'>
-                              <Shield className='size-2.5' />
+                            <Badge className='bg-primary/10 text-primary border-primary/25 text-[10px] gap-1 font-medium'>
+                              <Shield className='size-2.5 text-primary' />
                               مدیر (Admin)
                             </Badge>
                           ) : (

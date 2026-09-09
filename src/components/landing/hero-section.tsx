@@ -35,7 +35,7 @@ export function HeroSection({ price }: HeroSectionProps) {
               className='rounded-full px-4 py-1.5 text-sm font-medium'
             >
               <Sparkles className='me-1.5 size-3.5 text-primary' />
-              پیشنهاد ویژه لانچ — اشتراک ۱۸ ماهه جمینای
+              پیشنهاد ویژه — اشتراک ۱۸ ماهه جمینای
             </Badge>
           </div>
 

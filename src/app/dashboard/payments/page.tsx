@@ -227,12 +227,12 @@ export default function AdminPaymentsPage() {
                         </td>
                         <td className='py-3'>
                           {p.status === 'SUCCESS' ? (
-                            <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] gap-1 font-medium'>
+                            <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary text-[10px] gap-1 font-medium'>
                               <CheckCircle2 className='size-2.5' />
                               موفق
                             </Badge>
                           ) : p.status === 'PENDING' ? (
-                            <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 text-[10px] gap-1 font-medium'>
+                            <Badge variant='outline' className='border-border/80 bg-muted/50 text-muted-foreground text-[10px] gap-1 font-medium'>
                               <Clock className='size-2.5' />
                               در انتظار
                             </Badge>
@@ -246,7 +246,7 @@ export default function AdminPaymentsPage() {
                         <td className='py-3 font-sans text-[11px] text-muted-foreground max-w-[140px] truncate' title={p.authority || ''}>
                           {p.authority || '—'}
                         </td>
-                        <td className='py-3 font-sans font-bold text-emerald-600 dark:text-emerald-400'>
+                        <td className='py-3 font-sans font-bold text-primary'>
                           {p.refId || '—'}
                         </td>
                         <td className='py-3 text-muted-foreground text-[11px]'>

@@ -52,7 +52,7 @@ const steps = [
     badge: 'نکته طلایی',
     tip: 'استفاده از حالت Incognito مانع از فعال شدن اشتباه اشتراک روی سایر جیمیل‌های کاری یا فرعی شما می‌شود.',
     icon: Globe,
-    color: 'from-amber-500 to-orange-600',
+    color: 'from-sky-600 to-blue-600',
   },
   {
     number: '۳',
@@ -63,7 +63,7 @@ const steps = [
     badge: 'امنیت کامل',
     tip: 'مطمئن شوید همان اکانتی را لاگین می‌کنید که می‌خواهید ۲ ترابایت فضا و هوش مصنوعی روی آن فعال شود.',
     icon: Lock,
-    color: 'from-emerald-500 to-teal-600',
+    color: 'from-blue-700 to-indigo-700',
   },
   {
     number: '۴',
@@ -141,7 +141,7 @@ export default function ActivationGuidePage() {
                   <Sparkles className="size-3.5" />
                   آموزش جامع و گام‌به‌گام
                 </Badge>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-xs gap-1">
+                <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
                   <ShieldCheck className="size-3.5" />
                   بدون نیاز به رمز عبور
                 </Badge>
@@ -161,11 +161,11 @@ export default function ActivationGuidePage() {
                   <span>زمان لازم: <strong>کمتر از ۲ دقیقه</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Zap className="size-4 text-amber-500" />
+                  <Zap className="size-4 text-primary" />
                   <span>تحویل: <strong>آنی و خودکار</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Lock className="size-4 text-emerald-500" />
+                  <Lock className="size-4 text-primary" />
                   <span>رمز عبور: <strong>هرگز نیاز نیست</strong></span>
                 </div>
               </div>
@@ -317,15 +317,15 @@ export default function ActivationGuidePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
             <div className="flex items-center gap-2 text-foreground/80">
-              <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="size-4 text-primary shrink-0" />
               <span>عدم دسترسی به فایل‌ها و عکس‌های شخصی</span>
             </div>
             <div className="flex items-center gap-2 text-foreground/80">
-              <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="size-4 text-primary shrink-0" />
               <span>بدون نیاز به نام کاربری یا پسورد شما</span>
             </div>
             <div className="flex items-center gap-2 text-foreground/80">
-              <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="size-4 text-primary shrink-0" />
               <span>پشتیبانی و ضمانت تعویض در صورت بروز مشکل</span>
             </div>
           </div>
@@ -355,15 +355,7 @@ export default function ActivationGuidePage() {
                 >
                   <CollapsibleTrigger className="flex w-full items-center justify-between p-4 sm:p-5 text-start hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`flex size-8 items-center justify-center rounded-xl shrink-0 ${
-                          faq.severity === 'warning'
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : faq.severity === 'success'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-primary/10 text-primary'
-                        }`}
-                      >
+                      <div className="flex size-8 items-center justify-center rounded-xl shrink-0 bg-primary/10 text-primary">
                         {faq.severity === 'warning' ? (
                           <AlertTriangle className="size-4" />
                         ) : faq.severity === 'success' ? (

@@ -288,23 +288,23 @@ export default function AdminActivationLinksPage() {
               </CardContent>
             </Card>
 
-            <Card className='border-emerald-500/30 bg-emerald-500/5 shadow-xs'>
+            <Card className='border-primary/30 bg-primary/5 shadow-xs'>
               <CardContent className='p-3.5'>
-                <span className='text-xs text-emerald-700 dark:text-emerald-400 font-medium'>
+                <span className='text-xs text-primary font-medium'>
                   موجود (AVAILABLE)
                 </span>
-                <div className='text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1'>
+                <div className='text-xl font-bold text-primary mt-1'>
                   {stats.available.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className='border-blue-500/30 bg-blue-500/5 shadow-xs'>
+            <Card className='border-border/60 bg-muted/30 shadow-xs'>
               <CardContent className='p-3.5'>
-                <span className='text-xs text-blue-700 dark:text-blue-400 font-medium'>
+                <span className='text-xs text-muted-foreground font-medium'>
                   رزرو شده (RESERVED)
                 </span>
-                <div className='text-xl font-bold text-blue-600 dark:text-blue-400 mt-1'>
+                <div className='text-xl font-bold text-foreground mt-1'>
                   {stats.reserved.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
@@ -437,7 +437,7 @@ export default function AdminActivationLinksPage() {
                                 title='کپی لینک'
                               >
                                 {copiedId === link.id ? (
-                                  <Check className='size-3.5 text-emerald-500' />
+                                  <Check className='size-3.5 text-primary' />
                                 ) : (
                                   <Copy className='size-3.5' />
                                 )}

@@ -189,34 +189,34 @@ export default function AdminSupportPage() {
         {/* KPI Counts */}
         {counts && (
           <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-            <Card className='border-amber-500/30 bg-amber-500/5 shadow-xs'>
+            <Card className='border-border/80 bg-muted/40 shadow-xs'>
               <CardContent className='p-3.5'>
-                <span className='text-xs text-amber-700 dark:text-amber-400 font-medium'>
+                <span className='text-xs text-muted-foreground font-medium'>
                   تیکت‌های باز (OPEN)
                 </span>
-                <div className='text-xl font-bold text-amber-600 dark:text-amber-400 mt-1'>
+                <div className='text-xl font-bold text-foreground mt-1'>
                   {counts.open.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className='border-blue-500/30 bg-blue-500/5 shadow-xs'>
+            <Card className='border-primary/30 bg-primary/5 shadow-xs'>
               <CardContent className='p-3.5'>
-                <span className='text-xs text-blue-700 dark:text-blue-400 font-medium'>
+                <span className='text-xs text-primary font-medium'>
                   در حال بررسی
                 </span>
-                <div className='text-xl font-bold text-blue-600 dark:text-blue-400 mt-1'>
+                <div className='text-xl font-bold text-primary mt-1'>
                   {counts.inProgress.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className='border-emerald-500/30 bg-emerald-500/5 shadow-xs'>
+            <Card className='border-primary/20 bg-primary/5 shadow-xs'>
               <CardContent className='p-3.5'>
-                <span className='text-xs text-emerald-700 dark:text-emerald-400 font-medium'>
+                <span className='text-xs text-primary/80 font-medium'>
                   حل شده (RESOLVED)
                 </span>
-                <div className='text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1'>
+                <div className='text-xl font-bold text-foreground mt-1'>
                   {counts.resolved.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
@@ -284,15 +284,15 @@ export default function AdminSupportPage() {
                       <div className='flex items-center gap-2'>
                         <span className='font-bold text-sm text-foreground'>{t.subject}</span>
                         {t.status === 'OPEN' ? (
-                          <Badge className='bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]'>
+                          <Badge variant='outline' className='border-border/80 bg-muted/50 text-muted-foreground text-[10px]'>
                             باز
                           </Badge>
                         ) : t.status === 'IN_PROGRESS' ? (
-                          <Badge className='bg-blue-500/15 text-blue-600 border-blue-500/30 text-[10px]'>
+                          <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary text-[10px]'>
                             در حال بررسی
                           </Badge>
                         ) : t.status === 'RESOLVED' ? (
-                          <Badge className='bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]'>
+                          <Badge variant='outline' className='border-primary/20 bg-primary/5 text-primary text-[10px]'>
                             پاسخ داده شده
                           </Badge>
                         ) : (

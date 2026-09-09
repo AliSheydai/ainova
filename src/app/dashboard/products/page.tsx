@@ -322,7 +322,7 @@ export default function AdminProductsPage() {
                             {prod.slug}
                           </Badge>
                           {prod.active ? (
-                            <Badge className='bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]'>
+                            <Badge className='bg-primary/10 text-primary border-primary/25 text-[10px]'>
                               فعال
                             </Badge>
                           ) : (
@@ -389,7 +389,7 @@ export default function AdminProductsPage() {
                                   variant='outline'
                                   className={`text-[10px] font-semibold ${
                                     (plan.availableLinks || 0) > 0
-                                      ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/5'
+                                      ? 'border-primary/30 text-primary bg-primary/5'
                                       : 'border-rose-500/30 text-rose-600 bg-rose-500/5'
                                   }`}
                                 >

@@ -127,10 +127,10 @@ export default function AdminSettingsPage() {
 
       <Main className='flex flex-col gap-6 p-4 sm:p-6 max-w-4xl'>
         {/* Security Notice */}
-        <div className='rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3 text-xs text-amber-700 dark:text-amber-400'>
-          <ShieldAlert className='size-5 shrink-0 mt-0.5' />
+        <div className='rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 text-xs text-primary'>
+          <ShieldAlert className='size-5 shrink-0 mt-0.5 text-primary' />
           <div>
-            <span className='font-bold block text-sm'>امنیت کلیدها و اسرار سیستم:</span>
+            <span className='font-bold block text-sm text-foreground'>امنیت کلیدها و اسرار سیستم:</span>
             <p className='mt-0.5 leading-relaxed text-muted-foreground'>
               کلیدهای حساس مانند توکن درگاه زرین‌پال، توکن ربات تلگرام، کلید کاوه‌نگار و JWT Secret صرفاً از فایل <code className='font-mono font-bold text-foreground'>.env</code> خوانده می‌شوند و در دیتابیس یا پنل وب نمایش داده نخواهند شد.
             </p>

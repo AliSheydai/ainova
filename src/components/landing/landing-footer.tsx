@@ -8,8 +8,6 @@ const footerLinks = [
   { label: 'صفحه اصلی', href: '/' },
   { label: 'نحوه فعال‌سازی', href: '#how-it-works' },
   { label: 'سوالات متداول', href: '#faq' },
-  { label: 'قوانین و شرایط', href: '/terms' },
-  { label: 'پشتیبانی', href: '/dashboard/support' },
 ]
 
 export function LandingFooter() {

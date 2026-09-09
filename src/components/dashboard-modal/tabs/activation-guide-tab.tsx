@@ -41,7 +41,7 @@ const steps = [
     badge: 'گام ۲',
     tip: 'استفاده از حالت Incognito از تداخل جیمیل‌های کاری با جیمیل اصلی جلوگیری می‌کند.',
     icon: Globe,
-    color: 'from-amber-500 to-orange-600',
+    color: 'from-sky-600 to-blue-600',
   },
   {
     number: '۳',
@@ -52,7 +52,7 @@ const steps = [
     badge: 'گام ۳',
     tip: 'دقت کنید همان حسابی را انتخاب کنید که می‌خواهید اشتراک روی آن فعال شود.',
     icon: Lock,
-    color: 'from-emerald-500 to-teal-600',
+    color: 'from-blue-700 to-indigo-700',
   },
   {
     number: '۴',
@@ -112,7 +112,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
             <Sparkles className="size-3" />
             آموزش ۵ مرحله‌ای
           </Badge>
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-xs gap-1">
+          <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
             <ShieldCheck className="size-3" />
             بدون نیاز به پسورد
           </Badge>

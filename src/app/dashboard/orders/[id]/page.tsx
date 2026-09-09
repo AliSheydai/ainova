@@ -184,7 +184,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
             <CardContent className="py-8 text-center text-xs text-muted-foreground">
               {order.status === 'PENDING_PAYMENT' ? (
                 <div className="space-y-3">
-                  <AlertCircle className="size-8 mx-auto text-amber-500" />
+                  <AlertCircle className="size-8 mx-auto text-primary" />
                   <p>این سفارش در انتظار پرداخت است.</p>
                   <Button asChild size="sm">
                     <Link href="/dashboard/buy">اقدام به پرداخت</Link>

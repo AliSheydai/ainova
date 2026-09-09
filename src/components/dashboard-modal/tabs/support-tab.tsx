@@ -27,7 +27,7 @@ export function SupportTab() {
             <HeadphonesIcon className="size-3" />
             مرکز پشتیبانی ۲۴/۷
           </Badge>
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-xs gap-1">
+          <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
             <Clock className="size-3" />
             پاسخ‌گویی سریع
           </Badge>
@@ -107,7 +107,7 @@ export function SupportTab() {
 
       {/* Assurance Note */}
       <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5 text-xs text-muted-foreground flex items-center gap-2.5">
-        <ShieldCheck className="size-4 shrink-0 text-emerald-500" />
+        <ShieldCheck className="size-4 shrink-0 text-primary" />
         <span>
           کلیه اشتراک‌های ارائه‌شده دارای ضمانت کارکرد ۱۸ ماهه قانونی بوده و پشتیبانی اختصاصی برای رفع مشکلات احتمالی ارائه می‌شود.
         </span>

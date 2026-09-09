@@ -301,15 +301,15 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className='py-3'>
                           {ord.status === 'COMPLETED' ? (
-                            <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] font-medium'>
+                            <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary text-[10px] font-medium'>
                               تکمیل شده
                             </Badge>
                           ) : ord.status === 'PAID' ? (
-                            <Badge variant='outline' className='border-blue-500/30 bg-blue-500/10 text-blue-600 text-[10px] font-medium'>
+                            <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary text-[10px] font-medium'>
                               پرداخت شده
                             </Badge>
                           ) : ord.status === 'PENDING_PAYMENT' ? (
-                            <Badge variant='outline' className='border-amber-500/30 bg-amber-500/10 text-amber-600 text-[10px] font-medium'>
+                            <Badge variant='outline' className='border-border/80 bg-muted/50 text-muted-foreground text-[10px] font-medium'>
                               در انتظار پرداخت
                             </Badge>
                           ) : (
@@ -320,12 +320,12 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className='py-3'>
                           {ord.payment?.status === 'SUCCESS' ? (
-                            <span className='text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1'>
+                            <span className='text-primary font-semibold flex items-center gap-1'>
                               <CheckCircle2 className='size-3' />
                               موفق
                             </span>
                           ) : ord.payment?.status === 'PENDING' ? (
-                            <span className='text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1'>
+                            <span className='text-muted-foreground font-semibold flex items-center gap-1'>
                               <Clock className='size-3' />
                               در انتظار
                             </span>
@@ -465,7 +465,7 @@ export default function AdminOrdersPage() {
                     {selectedOrder.payment.refId && (
                       <div className='col-span-2'>
                         <span className='text-muted-foreground'>کد پیگیری بانکی (RefId):</span>{' '}
-                        <span className='font-sans font-bold text-emerald-600 dark:text-emerald-400'>
+                        <span className='font-sans font-bold text-primary'>
                           {selectedOrder.payment.refId}
                         </span>
                       </div>
@@ -492,7 +492,7 @@ export default function AdminOrdersPage() {
                         className='size-7 shrink-0'
                         title='کپی لینک'
                       >
-                        {copiedLink ? <Check className='size-3.5 text-emerald-500' /> : <Copy className='size-3.5' />}
+                        {copiedLink ? <Check className='size-3.5 text-primary' /> : <Copy className='size-3.5' />}
                       </Button>
                     </div>
                     <div className='flex items-center justify-between text-[11px] text-muted-foreground'>

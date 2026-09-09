@@ -149,7 +149,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
       <div className="flex items-center gap-4 rounded-2xl border border-border/70 bg-gradient-to-l from-primary/5 via-card to-card p-4 sm:p-5 shadow-xs">
         <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
           {initial}
-          <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+          <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-primary ring-2 ring-card" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -157,7 +157,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
             <h3 className="text-base font-bold text-foreground truncate">
               {displayName}
             </h3>
-            <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-none text-[10px] gap-1 font-medium">
+            <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] gap-1 font-medium">
               <ShieldCheck className="h-3 w-3" />
               حساب فعال
             </Badge>
@@ -265,7 +265,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
               <CardTitle className="text-sm font-bold">یکپارچه‌سازی و اتصال به تلگرام</CardTitle>
             </div>
             {user.telegramId ? (
-              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-none text-[11px] gap-1 font-medium">
+              <Badge className="bg-primary/10 text-primary border border-primary/20 text-[11px] gap-1 font-medium">
                 <CheckCircle2 className="size-3" />
                 متصل به تلگرام
               </Badge>

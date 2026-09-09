@@ -97,14 +97,14 @@ export default function ProfilePage() {
         <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-gradient-to-l from-primary/5 via-card to-card p-5 shadow-xs">
           <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-2xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
             {initial}
-            <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+            <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-primary ring-2 ring-card" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-foreground">
                 {displayName}
               </h1>
-              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-none text-[11px] gap-1 font-medium">
+              <Badge className="bg-primary/10 text-primary border border-primary/20 text-[11px] gap-1 font-medium">
                 <ShieldCheck className="h-3 w-3" />
                 حساب احرازهویت‌شده
               </Badge>
