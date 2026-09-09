@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { fadeUp, viewportOnce } from '@/lib/motion'
 
 const faqs = [
   {
@@ -76,19 +78,31 @@ export function FaqSection() {
   return (
     <section id='faq' className='bg-muted/40 py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
-        <div className='mb-10 text-center'>
+        <motion.div
+          className='mb-10 text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <h2 className='mb-2 text-2xl font-bold text-foreground sm:text-3xl'>
             سوالات متداول
           </h2>
           <p className='text-sm text-muted-foreground'>
             پاسخ به سوال‌های پرتکرار درباره اشتراک ۱۸ ماهه جمینای
           </p>
-        </div>
-        <div className='mx-auto max-w-2xl rounded-xl border border-border/60 bg-card px-5 shadow-sm'>
+        </motion.div>
+        <motion.div
+          className='mx-auto max-w-2xl rounded-xl border border-border/60 bg-card px-5 shadow-sm'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           {faqs.map((faq) => (
             <FaqItem key={faq.q} q={faq.q} a={faq.a} />
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

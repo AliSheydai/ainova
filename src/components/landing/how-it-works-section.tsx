@@ -10,6 +10,8 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { fadeUp, staggerContainer, viewportOnce } from '@/lib/motion'
 
 const steps = [
   {
@@ -58,7 +60,13 @@ export function HowItWorksSection() {
 
       <div className='container relative mx-auto px-4 sm:px-6'>
         {/* Section Header */}
-        <div className='mx-auto mb-14 max-w-2xl text-center'>
+        <motion.div
+          className='mx-auto mb-14 max-w-2xl text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <div className='mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary shadow-xs'>
             <Sparkles className='size-3.5' />
             <span>مسیر ساده و شفاف</span>
@@ -71,13 +79,23 @@ export function HowItWorksSection() {
             سریع، کاملاً خودکار و بدون نیاز به ارسال هرگونه اطلاعات حساس یا رمز
             عبور اکانت گوگل شما
           </p>
-        </div>
+        </motion.div>
 
         {/* Steps Flow Grid */}
         <div className='mx-auto max-w-5xl'>
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6'>
+          <motion.div
+            className='grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6'
+            initial='hidden'
+            whileInView='visible'
+            viewport={viewportOnce}
+            variants={staggerContainer(0.1)}
+          >
             {steps.map((step, idx) => (
-              <div key={step.number} className='relative flex flex-col'>
+              <motion.div
+                key={step.number}
+                variants={fadeUp}
+                className='relative flex flex-col'
+              >
                 {/* Step Card */}
                 <div className='group relative flex h-full flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
                   {/* Card Top: Icon & Step Badge */}
@@ -145,12 +163,18 @@ export function HowItWorksSection() {
                     <div className='h-2.5 w-0.5 bg-border' />
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Bottom Security Assurance Banner */}
-          <div className='mt-10 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-card to-emerald-500/5 p-5 shadow-xs sm:p-6'>
+          <motion.div
+            className='mt-10 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-card to-emerald-500/5 p-5 shadow-xs sm:p-6'
+            initial='hidden'
+            whileInView='visible'
+            viewport={viewportOnce}
+            variants={fadeUp}
+          >
             <div className='flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-right'>
               <div className='flex size-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400'>
                 <ShieldCheck className='size-6' />
@@ -171,7 +195,7 @@ export function HowItWorksSection() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { ShieldCheck, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { fadeUp, viewportOnce } from '@/lib/motion'
 
 interface FinalCtaSectionProps {
   price?: string
@@ -12,7 +14,13 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
   return (
     <section className='py-20 md:py-28'>
       <div className='container mx-auto px-4 sm:px-6'>
-        <div className='mx-auto max-w-2xl text-center'>
+        <motion.div
+          className='mx-auto max-w-2xl text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <div className='mb-4 flex justify-center'>
             <div className='flex size-14 items-center justify-center rounded-2xl bg-primary/10'>
               <Sparkles className='size-7 text-primary' />
@@ -29,7 +37,7 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
           )}
           <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
             <Link href='/checkout'>
-              <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md'>
+              <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
                 خرید و شروع با جمینای
               </Button>
             </Link>
@@ -38,7 +46,7 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
             <ShieldCheck className='size-3.5 text-primary' />
             <span>فعال‌سازی آنی • کاملاً امن و بدون نیاز به رمز عبور</span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

@@ -1,6 +1,8 @@
 'use client'
 
 import { Lock, ShieldCheck, UserCheck } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { fadeUp, staggerContainer, viewportOnce } from '@/lib/motion'
 
 const securityPoints = [
   {
@@ -24,7 +26,13 @@ export function SecuritySection() {
   return (
     <section id='security' className='py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
-        <div className='mx-auto max-w-2xl text-center'>
+        <motion.div
+          className='mx-auto max-w-2xl text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <div className='mb-4 flex justify-center'>
             <div className='flex size-14 items-center justify-center rounded-2xl bg-primary/10'>
               <ShieldCheck className='size-7 text-primary' />
@@ -38,13 +46,22 @@ export function SecuritySection() {
             حسابتان ندارید. شما مستقیماً از طریق لینک رسمی فعال‌سازی، اشتراک را روی
             گوگل فعال می‌کنید.
           </p>
-        </div>
+        </motion.div>
 
-        <div className='mx-auto grid max-w-3xl gap-4 sm:grid-cols-3'>
+        <motion.div
+          className='mx-auto grid max-w-3xl gap-4 sm:grid-cols-3'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={staggerContainer(0.08)}
+        >
           {securityPoints.map((point) => (
-            <div
+            <motion.div
               key={point.title}
-              className='rounded-xl border border-border/60 bg-card p-5 text-center shadow-sm'
+              variants={fadeUp}
+              whileHover={{ y: -3 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className='rounded-xl border border-border/60 bg-card p-5 text-center shadow-sm transition-colors hover:border-primary/30'
             >
               <div className='mb-3 flex justify-center'>
                 <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10'>
@@ -57,9 +74,9 @@ export function SecuritySection() {
               <p className='text-xs leading-relaxed text-muted-foreground'>
                 {point.description}
               </p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

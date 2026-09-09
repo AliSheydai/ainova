@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
+import { fadeUp, fadeIn, staggerContainer } from '@/lib/motion'
 
 interface OverviewStats {
   totalUsers: number
@@ -176,144 +178,164 @@ export default function AdminOverviewPage() {
             <Loader2 className='size-8 animate-spin text-primary' />
           </div>
         ) : stats ? (
-          <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+          <motion.div
+            className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4'
+            variants={staggerContainer(0.05)}
+            initial='hidden'
+            animate='visible'
+          >
             {/* Revenue */}
-            <Card className='border-border/60 shadow-xs'>
-              <CardHeader className='flex flex-row items-center justify-between pb-2'>
-                <CardTitle className='text-xs font-medium text-muted-foreground'>
-                  درآمد کل
-                </CardTitle>
-                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
-                  <TrendingUp className='size-4' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
-                  {formatPrice(stats.totalRevenue)}
-                </div>
-                <p className='text-[11px] text-muted-foreground mt-1'>
-                  فروش تاییدشده و موفق
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div variants={fadeUp} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+              <Card className='border-border/60 shadow-xs h-full'>
+                <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                  <CardTitle className='text-xs font-medium text-muted-foreground'>
+                    درآمد کل
+                  </CardTitle>
+                  <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                    <TrendingUp className='size-4' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                    {formatPrice(stats.totalRevenue)}
+                  </div>
+                  <p className='text-[11px] text-muted-foreground mt-1'>
+                    فروش تاییدشده و موفق
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Total Orders */}
-            <Card className='border-border/60 shadow-xs'>
-              <CardHeader className='flex flex-row items-center justify-between pb-2'>
-                <CardTitle className='text-xs font-medium text-muted-foreground'>
-                  سفارش‌های موفق
-                </CardTitle>
-                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
-                  <CheckCircle2 className='size-4' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
-                  {stats.successfulOrders.toLocaleString('fa-IR')}{' '}
-                  <span className='text-xs font-normal text-muted-foreground'>
-                    از {stats.totalOrders.toLocaleString('fa-IR')} کل
-                  </span>
-                </div>
-                <div className='flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground'>
-                  <Clock className='size-3 text-primary' />
-                  <span>{stats.pendingOrders.toLocaleString('fa-IR')} در انتظار پرداخت</span>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div variants={fadeUp} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+              <Card className='border-border/60 shadow-xs h-full'>
+                <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                  <CardTitle className='text-xs font-medium text-muted-foreground'>
+                    سفارش‌های موفق
+                  </CardTitle>
+                  <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                    <CheckCircle2 className='size-4' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                    {stats.successfulOrders.toLocaleString('fa-IR')}{' '}
+                    <span className='text-xs font-normal text-muted-foreground'>
+                      از {stats.totalOrders.toLocaleString('fa-IR')} کل
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground'>
+                    <Clock className='size-3 text-primary' />
+                    <span>{stats.pendingOrders.toLocaleString('fa-IR')} در انتظار پرداخت</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Total Users */}
-            <Card className='border-border/60 shadow-xs'>
-              <CardHeader className='flex flex-row items-center justify-between pb-2'>
-                <CardTitle className='text-xs font-medium text-muted-foreground'>
-                  کل کاربران
-                </CardTitle>
-                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
-                  <Users className='size-4' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
-                  {stats.totalUsers.toLocaleString('fa-IR')}
-                </div>
-                <p className='text-[11px] text-muted-foreground mt-1'>
-                  {stats.newUsers.toLocaleString('fa-IR')} کاربر جدید ۷ روز اخیر
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div variants={fadeUp} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+              <Card className='border-border/60 shadow-xs h-full'>
+                <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                  <CardTitle className='text-xs font-medium text-muted-foreground'>
+                    کل کاربران
+                  </CardTitle>
+                  <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                    <Users className='size-4' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
+                    {stats.totalUsers.toLocaleString('fa-IR')}
+                  </div>
+                  <p className='text-[11px] text-muted-foreground mt-1'>
+                    {stats.newUsers.toLocaleString('fa-IR')} کاربر جدید ۷ روز اخیر
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Available Links Inventory */}
-            <Card className='border-border/60 shadow-xs'>
-              <CardHeader className='flex flex-row items-center justify-between pb-2'>
-                <CardTitle className='text-xs font-medium text-muted-foreground'>
-                  موجودی لینک‌های فعال
-                </CardTitle>
-                <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
-                  <Layers className='size-4' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xl sm:text-2xl font-bold tracking-tight text-primary'>
-                  {stats.availableLinks.toLocaleString('fa-IR')}{' '}
-                  <span className='text-xs font-normal text-muted-foreground'>لینک موجود</span>
-                </div>
-                <p className='text-[11px] text-muted-foreground mt-1'>
-                  {stats.usedLinks.toLocaleString('fa-IR')} لینک مصرف‌شده
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+            <motion.div variants={fadeUp} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+              <Card className='border-border/60 shadow-xs h-full'>
+                <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                  <CardTitle className='text-xs font-medium text-muted-foreground'>
+                    موجودی لینک‌های فعال
+                  </CardTitle>
+                  <div className='size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                    <Layers className='size-4' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xl sm:text-2xl font-bold tracking-tight text-primary'>
+                    {stats.availableLinks.toLocaleString('fa-IR')}{' '}
+                    <span className='text-xs font-normal text-muted-foreground'>لینک موجود</span>
+                  </div>
+                  <p className='text-[11px] text-muted-foreground mt-1'>
+                    {stats.usedLinks.toLocaleString('fa-IR')} لینک مصرف‌شده
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
         ) : null}
 
         {/* Link Inventory Status Bar */}
         {stats && (
-          <Card className='border-border/60 shadow-xs'>
-            <CardHeader className='py-4'>
-              <div className='flex items-center justify-between'>
-                <CardTitle className='text-sm font-semibold flex items-center gap-2'>
-                  <LinkIcon className='size-4 text-primary' />
-                  <span>وضعیت انبار و گردش لینک‌های فعال‌سازی</span>
-                </CardTitle>
-                <Link href='/dashboard/activation-links'>
-                  <Button variant='ghost' size='sm' className='text-xs gap-1 h-7 text-primary'>
-                    <span>مدیریت کامل لینک‌ها</span>
-                    <ArrowUpRight className='size-3' />
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent className='pt-0 pb-4'>
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                <div className='rounded-xl border border-primary/25 bg-primary/5 p-3'>
-                  <span className='text-xs text-muted-foreground'>موجود (آماده تحویل)</span>
-                  <div className='text-lg font-bold text-primary mt-0.5'>
-                    {stats.availableLinks.toLocaleString('fa-IR')}
+          <motion.div variants={fadeUp} initial='hidden' animate='visible'>
+            <Card className='border-border/60 shadow-xs'>
+              <CardHeader className='py-4'>
+                <div className='flex items-center justify-between'>
+                  <CardTitle className='text-sm font-semibold flex items-center gap-2'>
+                    <LinkIcon className='size-4 text-primary' />
+                    <span>وضعیت انبار و گردش لینک‌های فعال‌سازی</span>
+                  </CardTitle>
+                  <Link href='/dashboard/activation-links'>
+                    <Button variant='ghost' size='sm' className='text-xs gap-1 h-7 text-primary'>
+                      <span>مدیریت کامل لینک‌ها</span>
+                      <ArrowUpRight className='size-3' />
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className='pt-0 pb-4'>
+                <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                  <div className='rounded-xl border border-primary/25 bg-primary/5 p-3'>
+                    <span className='text-xs text-muted-foreground'>موجود (آماده تحویل)</span>
+                    <div className='text-lg font-bold text-primary mt-0.5'>
+                      {stats.availableLinks.toLocaleString('fa-IR')}
+                    </div>
+                  </div>
+                  <div className='rounded-xl border border-primary/15 bg-primary/5 p-3'>
+                    <span className='text-xs text-muted-foreground'>رزرو شده</span>
+                    <div className='text-lg font-bold text-primary mt-0.5'>
+                      {stats.reservedLinks.toLocaleString('fa-IR')}
+                    </div>
+                  </div>
+                  <div className='rounded-xl border border-border/80 bg-muted/30 p-3'>
+                    <span className='text-xs text-muted-foreground'>مصرف شده (تحویل شده)</span>
+                    <div className='text-lg font-bold text-foreground mt-0.5'>
+                      {stats.usedLinks.toLocaleString('fa-IR')}
+                    </div>
+                  </div>
+                  <div className='rounded-xl border border-border/60 bg-muted/20 p-3'>
+                    <span className='text-xs text-muted-foreground'>نامعتبر / منقضی</span>
+                    <div className='text-lg font-bold text-muted-foreground mt-0.5'>
+                      {stats.invalidLinks.toLocaleString('fa-IR')}
+                    </div>
                   </div>
                 </div>
-                <div className='rounded-xl border border-primary/15 bg-primary/5 p-3'>
-                  <span className='text-xs text-muted-foreground'>رزرو شده</span>
-                  <div className='text-lg font-bold text-primary mt-0.5'>
-                    {stats.reservedLinks.toLocaleString('fa-IR')}
-                  </div>
-                </div>
-                <div className='rounded-xl border border-border/80 bg-muted/30 p-3'>
-                  <span className='text-xs text-muted-foreground'>مصرف شده (تحویل شده)</span>
-                  <div className='text-lg font-bold text-foreground mt-0.5'>
-                    {stats.usedLinks.toLocaleString('fa-IR')}
-                  </div>
-                </div>
-                <div className='rounded-xl border border-border/60 bg-muted/20 p-3'>
-                  <span className='text-xs text-muted-foreground'>نامعتبر / منقضی</span>
-                  <div className='text-lg font-bold text-muted-foreground mt-0.5'>
-                    {stats.invalidLinks.toLocaleString('fa-IR')}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
         {/* Two Columns: Recent Orders & Recent Users */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+        <motion.div
+          className='grid grid-cols-1 lg:grid-cols-3 gap-6'
+          variants={fadeUp}
+          initial='hidden'
+          animate='visible'
+        >
           {/* Recent Orders (2 cols) */}
           <Card className='lg:col-span-2 border-border/60 shadow-xs'>
             <CardHeader className='flex flex-row items-center justify-between pb-3'>
@@ -450,7 +472,7 @@ export default function AdminOverviewPage() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </Main>
     </>
   )

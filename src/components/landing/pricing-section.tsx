@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { Check, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { fadeUp, scaleIn, viewportOnce } from '@/lib/motion'
 
 const planFeatures = [
   'فعال‌سازی روی حساب شخصی گوگل شما (جیمیل)',
@@ -25,17 +27,29 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
   return (
     <section id='pricing' className='py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
-        <div className='mb-12 text-center'>
+        <motion.div
+          className='mb-12 text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
             قیمت شفاف و بدون هزینه پنهان
           </h2>
           <p className='text-sm text-muted-foreground sm:text-base'>
             یک‌بار پرداخت برای ۱۸ ماه استفاده نامحدود از جمینای
           </p>
-        </div>
+        </motion.div>
 
-        <div className='mx-auto max-w-sm'>
-          <Card className='relative overflow-hidden border-primary/30 shadow-lg shadow-primary/10'>
+        <motion.div
+          className='mx-auto max-w-sm'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={scaleIn}
+        >
+          <Card className='relative overflow-hidden border-primary/30 shadow-lg shadow-primary/10 transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/15'>
             {/* Popular badge */}
             <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-primary to-primary/70' />
 
@@ -69,7 +83,7 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
               </ul>
 
               <Link href='/checkout' className='block'>
-                <Button className='w-full py-5 text-base font-semibold shadow-md'>
+                <Button className='w-full py-5 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
                   خرید و فعال‌سازی فوری
                 </Button>
               </Link>
@@ -79,7 +93,7 @@ export function PricingSection({ price = '۳۹۰،۰۰۰ تومان' }: PricingS
               </p>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

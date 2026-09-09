@@ -8,7 +8,9 @@ import {
   HardDrive,
   Microscope,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { fadeUp, staggerContainer, viewportOnce } from '@/lib/motion'
 
 const features = [
   {
@@ -54,7 +56,13 @@ export function FeaturesSection() {
     <section id='features' className='py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
         {/* Header */}
-        <div className='mb-12 text-center'>
+        <motion.div
+          className='mb-12 text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
             با اشتراک جمینای چه امکاناتی به دست می‌آورید؟
           </h2>
@@ -62,31 +70,41 @@ export function FeaturesSection() {
             جامع‌ترین جعبه‌ابزار هوش مصنوعی گوگل برای سرعت بخشیدن به کارها،
             یادگیری عمیق و تولید محتوای هوشمندانه.
           </p>
-        </div>
+        </motion.div>
 
         {/* Grid */}
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+        <motion.div
+          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={staggerContainer(0.06)}
+        >
           {features.map((feature) => (
-            <Card
+            <motion.div
               key={feature.title}
-              className='group border border-border/60 bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'
+              variants={fadeUp}
+              whileHover={{ y: -3 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              <CardHeader className='pb-2'>
-                <div className='mb-3 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15'>
-                  <feature.icon className='size-5' />
-                </div>
-                <h3 className='text-base font-semibold text-foreground'>
-                  {feature.title}
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <p className='text-sm leading-relaxed text-muted-foreground'>
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+              <Card className='group h-full border border-border/60 bg-card transition-colors duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'>
+                <CardHeader className='pb-2'>
+                  <div className='mb-3 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15'>
+                    <feature.icon className='size-5' />
+                  </div>
+                  <h3 className='text-base font-semibold text-foreground'>
+                    {feature.title}
+                  </h3>
+                </CardHeader>
+                <CardContent>
+                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )
