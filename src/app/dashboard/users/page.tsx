@@ -188,86 +188,88 @@ export default function AdminUsersPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <Users className='size-4 text-primary' />
-            <span>مدیریت کاربران</span>
+        <div className='flex items-center gap-2 overflow-hidden'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <Users className='size-4 text-primary shrink-0' />
+            <span className='truncate'>مدیریت کاربران</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchUsers}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
+            title='بروزرسانی'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
-        {/* Filter & Search Bar */}
-        <Card className='border-border/60 shadow-xs'>
-          <CardContent className='p-4'>
-            <form onSubmit={handleSearchSubmit} className='flex flex-col sm:flex-row items-center gap-3'>
-              <div className='relative flex-1 w-full'>
-                <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
-                <Input
-                  placeholder='جستجو با شماره موبایل، نام یا نام کاربری تلگرام...'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className='ps-9 text-xs sm:text-sm h-10'
-                />
-              </div>
+      <Main className='p-3.5 sm:p-6'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
+          {/* Filter & Search Bar */}
+          <Card className='border-border/60 shadow-xs'>
+            <CardContent className='p-3.5 sm:p-4'>
+              <form onSubmit={handleSearchSubmit} className='flex flex-col sm:flex-row items-center gap-3'>
+                <div className='relative flex-1 w-full'>
+                  <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
+                  <Input
+                    placeholder='جستجو با شماره موبایل، نام یا نام کاربری تلگرام...'
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className='ps-9 text-xs sm:text-sm h-10'
+                  />
+                </div>
 
-              <div className='flex items-center gap-2 w-full sm:w-auto'>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className='w-full sm:w-36 h-10 text-xs'>
-                    <SelectValue placeholder='فیلتر نقش' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL'>همه نقش‌ها</SelectItem>
-                    <SelectItem value='ADMIN'>مدیران (Admin)</SelectItem>
-                    <SelectItem value='USER'>کاربران عادی (User)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className='flex items-center gap-2 w-full sm:w-auto'>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className='w-full sm:w-36 h-10 text-xs'>
+                      <SelectValue placeholder='فیلتر نقش' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='ALL'>همه نقش‌ها</SelectItem>
+                      <SelectItem value='ADMIN'>مدیران (Admin)</SelectItem>
+                      <SelectItem value='USER'>کاربران عادی (User)</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Button type='submit' size='sm' className='h-10 px-4 text-xs font-semibold'>
-                  جستجو
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  <Button type='submit' size='sm' className='h-10 px-4 text-xs font-semibold shrink-0'>
+                    جستجو
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
-        {/* Users Table */}
-        <Card className='border-border/60 shadow-xs'>
-          <CardHeader className='pb-3'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <CardTitle className='text-base font-bold'>لیست کاربران سیستم</CardTitle>
-                <CardDescription className='text-xs'>
-                  مجموع {users.length.toLocaleString('fa-IR')} کاربر ثبت‌شده در پایگاه‌داده
-                </CardDescription>
+          {/* Users Table */}
+          <Card className='border-border/60 shadow-xs'>
+            <CardHeader className='p-4 sm:p-6 pb-3 sm:pb-4'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <CardTitle className='text-sm sm:text-base font-bold'>لیست کاربران سیستم</CardTitle>
+                  <CardDescription className='text-xs'>
+                    مجموع {users.length.toLocaleString('fa-IR')} کاربر ثبت‌شده در پایگاه‌داده
+                  </CardDescription>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className='pt-0'>
-            {loading ? (
-              <div className='flex items-center justify-center py-16'>
-                <Loader2 className='size-8 animate-spin text-primary' />
-              </div>
-            ) : users.length === 0 ? (
-              <div className='py-12 text-center text-xs text-muted-foreground'>
-                هیچ کاربری با این مشخصات یافت نشد.
-              </div>
-            ) : (
-              <div className='overflow-x-auto'>
-                <table className='w-full text-xs text-start'>
+            </CardHeader>
+            <CardContent className='p-4 sm:p-6 pt-0 sm:pt-0'>
+              {loading ? (
+                <div className='flex items-center justify-center py-16'>
+                  <Loader2 className='size-8 animate-spin text-primary' />
+                </div>
+              ) : users.length === 0 ? (
+                <div className='py-12 text-center text-xs text-muted-foreground'>
+                  هیچ کاربری با این مشخصات یافت نشد.
+                </div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='w-full min-w-[700px] text-xs text-start'>
                   <thead>
                     <tr className='border-b border-border/50 text-muted-foreground'>
                       <th className='py-3 text-start font-medium'>کاربر</th>
@@ -340,6 +342,7 @@ export default function AdminUsersPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </Main>
 
       {/* User Detail Dialog */}

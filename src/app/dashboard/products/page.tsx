@@ -253,39 +253,42 @@ export default function AdminProductsPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <ShoppingBag className='size-4 text-primary' />
-            <span>مدیریت محصولات و پلن‌های فروش (Data-Driven)</span>
+        <div className='flex items-center gap-2 overflow-hidden'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <ShoppingBag className='size-4 text-primary shrink-0' />
+            <span className='truncate'>مدیریت محصولات و پلن‌های فروش</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             size='sm'
             onClick={() => setNewProductOpen(true)}
             variant='outline'
-            className='gap-1.5 text-xs h-8 font-semibold'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3 font-semibold'
           >
             <Plus className='size-3.5' />
-            <span>محصول جدید</span>
+            <span className='hidden sm:inline'>محصول جدید</span>
+            <span className='sm:hidden'>محصول</span>
           </Button>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchProducts}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
+            title='بروزرسانی'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
-        {/* Info Card */}
-        <div className='rounded-2xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs'>
+      <Main className='p-3.5 sm:p-6'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
+          {/* Info Card */}
+          <div className='rounded-2xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs'>
           <div>
             <span className='font-bold text-foreground block text-sm'>
               ساختار داینامیک و مبتنی بر داده (Data-Driven)
@@ -360,7 +363,7 @@ export default function AdminProductsPage() {
                     </div>
                   ) : (
                     <div className='overflow-x-auto'>
-                      <table className='w-full text-xs text-start'>
+                      <table className='w-full min-w-[700px] text-xs text-start'>
                         <thead>
                           <tr className='border-b border-border/40 text-muted-foreground bg-muted/5'>
                             <th className='py-3 px-4 text-start font-medium'>نام پلن</th>
@@ -432,6 +435,7 @@ export default function AdminProductsPage() {
             ))}
           </div>
         )}
+        </div>
       </Main>
 
       {/* Edit Plan Dialog */}

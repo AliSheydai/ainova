@@ -30,7 +30,7 @@ export function Main({ fixed, className, fluid, children, ...props }: MainProps)
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-        className={cn('w-full', fixed && 'flex flex-1 flex-col overflow-hidden')}
+        className={cn('w-full min-w-0', fixed && 'flex flex-1 flex-col overflow-hidden')}
       >
         {children}
       </motion.div>

@@ -104,29 +104,31 @@ export default function AdminSettingsPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <Settings className='size-4 text-primary' />
-            <span>تنظیمات عمومی سامانه</span>
+        <div className='flex items-center gap-2 overflow-hidden'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <Settings className='size-4 text-primary shrink-0' />
+            <span className='truncate'>تنظیمات عمومی سامانه</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchSettings}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
+            title='بروزرسانی'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6 max-w-4xl'>
-        {/* Security Notice */}
+      <Main className='p-3.5 sm:p-6 max-w-4xl'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
+          {/* Security Notice */}
         <div className='rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 text-xs text-primary'>
           <ShieldAlert className='size-5 shrink-0 mt-0.5 text-primary' />
           <div>
@@ -276,6 +278,7 @@ export default function AdminSettingsPage() {
             </div>
           </form>
         )}
+        </div>
       </Main>
     </>
   )

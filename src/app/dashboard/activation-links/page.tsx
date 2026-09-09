@@ -246,43 +246,46 @@ export default function AdminActivationLinksPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <LinkIcon className='size-4 text-primary' />
-            <span>مدیریت موجودی لینک‌های فعال‌سازی</span>
+        <div className='flex items-center gap-2 overflow-hidden'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <LinkIcon className='size-4 text-primary shrink-0' />
+            <span className='truncate'>انبار و مدیریت لینک‌های فعال‌سازی</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             size='sm'
             onClick={() => setBulkDialogOpen(true)}
-            className='gap-1.5 text-xs h-8 font-semibold shadow-xs'
+            className='gap-1.5 text-xs font-semibold h-8 px-2.5 sm:px-3'
           >
             <Plus className='size-3.5' />
-            <span>افزودن دسته‌ای لینک</span>
+            <span className='hidden sm:inline'>افزودن دسته‌ای لینک</span>
+            <span className='sm:hidden'>افزودن لینک</span>
           </Button>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchLinks}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
+            title='بروزرسانی'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
+      <Main className='flex flex-col gap-5 sm:gap-6 p-3 sm:p-6'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
         {/* KPI Cards */}
         {stats && (
-          <div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
+          <div className='grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3'>
             <Card className='border-border/60 shadow-xs'>
-              <CardContent className='p-3.5'>
-                <span className='text-xs text-muted-foreground'>کل لینک‌ها</span>
-                <div className='text-xl font-bold text-foreground mt-1'>
+              <CardContent className='p-3 sm:p-3.5'>
+                <span className='text-[11px] sm:text-xs text-muted-foreground truncate block'>کل لینک‌ها</span>
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
                   {stats.total.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
@@ -393,7 +396,7 @@ export default function AdminActivationLinksPage() {
               </div>
             ) : (
               <div className='overflow-x-auto'>
-                <table className='w-full text-xs text-start'>
+                <table className='w-full min-w-[780px] text-xs text-start'>
                   <thead>
                     <tr className='border-b border-border/50 text-muted-foreground'>
                       <th className='py-3 text-start font-medium'>پلن</th>
@@ -501,6 +504,7 @@ export default function AdminActivationLinksPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </Main>
 
       {/* Bulk Add Links Dialog */}

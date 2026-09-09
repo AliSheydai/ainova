@@ -37,14 +37,14 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
     >
       <div
         className={cn(
-          'relative flex h-full items-center gap-3 p-4 sm:gap-4',
+          'relative flex h-full items-center gap-2.5 px-3 sm:px-4 sm:gap-4 min-w-0',
           offset > 10 &&
             fixed &&
             'after:absolute after:inset-0 after:-z-10 after:bg-background/20 after:backdrop-blur-lg'
         )}
       >
-        <SidebarTrigger variant='outline' className='md:hidden max-md:scale-125' />
-        <Separator orientation='vertical' className='h-6 md:hidden' />
+        <SidebarTrigger variant='outline' className='md:hidden size-8 shrink-0' />
+        <Separator orientation='vertical' className='h-5 md:hidden shrink-0' />
         {children}
       </div>
     </header>

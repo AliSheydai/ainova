@@ -164,68 +164,69 @@ export default function AdminSupportPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <HeadphonesIcon className='size-4 text-primary' />
-            <span>مدیریت درخواست‌ها و پیام‌های پشتیبانی</span>
+        <div className='flex items-center gap-2 min-w-0'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <HeadphonesIcon className='size-4 text-primary shrink-0' />
+            <span className='truncate'>پشتیبانی و پیام‌ها</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchTickets}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
+      <Main className='flex flex-col gap-5 sm:gap-6 p-3 sm:p-6'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
         {/* KPI Counts */}
         {counts && (
-          <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3'>
             <Card className='border-border/80 bg-muted/40 shadow-xs'>
-              <CardContent className='p-3.5'>
-                <span className='text-xs text-muted-foreground font-medium'>
-                  تیکت‌های باز (OPEN)
+              <CardContent className='p-3 sm:p-3.5'>
+                <span className='text-[11px] sm:text-xs text-muted-foreground font-medium truncate block'>
+                  تیکت‌های باز
                 </span>
-                <div className='text-xl font-bold text-foreground mt-1'>
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
                   {counts.open.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
             <Card className='border-primary/30 bg-primary/5 shadow-xs'>
-              <CardContent className='p-3.5'>
-                <span className='text-xs text-primary font-medium'>
+              <CardContent className='p-3 sm:p-3.5'>
+                <span className='text-[11px] sm:text-xs text-primary font-medium truncate block'>
                   در حال بررسی
                 </span>
-                <div className='text-xl font-bold text-primary mt-1'>
+                <div className='text-lg sm:text-xl font-bold text-primary mt-1 tabular-nums'>
                   {counts.inProgress.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
             <Card className='border-primary/20 bg-primary/5 shadow-xs'>
-              <CardContent className='p-3.5'>
-                <span className='text-xs text-primary/80 font-medium'>
+              <CardContent className='p-3 sm:p-3.5'>
+                <span className='text-[11px] sm:text-xs text-primary/80 font-medium truncate block'>
                   حل شده (RESOLVED)
                 </span>
-                <div className='text-xl font-bold text-foreground mt-1'>
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
                   {counts.resolved.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
             </Card>
 
             <Card className='border-border/60 shadow-xs'>
-              <CardContent className='p-3.5'>
-                <span className='text-xs text-muted-foreground'>کل تیکت‌ها</span>
-                <div className='text-xl font-bold text-foreground mt-1'>
+              <CardContent className='p-3 sm:p-3.5'>
+                <span className='text-[11px] sm:text-xs text-muted-foreground truncate block'>کل تیکت‌ها</span>
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
                   {counts.total.toLocaleString('fa-IR')}
                 </div>
               </CardContent>
@@ -235,10 +236,10 @@ export default function AdminSupportPage() {
 
         {/* Filter Bar */}
         <Card className='border-border/60 shadow-xs'>
-          <CardContent className='p-4 flex items-center justify-between'>
+          <CardContent className='p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4'>
             <div className='flex items-center gap-2'>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className='w-44 h-9 text-xs'>
+                <SelectTrigger className='w-full sm:w-44 h-9 text-xs'>
                   <SelectValue placeholder='فیلتر وضعیت' />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,13 +259,13 @@ export default function AdminSupportPage() {
 
         {/* Tickets List */}
         <Card className='border-border/60 shadow-xs'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-base font-bold'>پیام‌های دریافتی از کاربران</CardTitle>
+          <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3'>
+            <CardTitle className='text-sm sm:text-base font-bold'>پیام‌های دریافتی از کاربران</CardTitle>
             <CardDescription className='text-xs'>
               مشاهده متن پیام، مشخصات کاربر و ثبت پاسخ
             </CardDescription>
           </CardHeader>
-          <CardContent className='pt-0'>
+          <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
               <div className='flex items-center justify-center py-16'>
                 <Loader2 className='size-8 animate-spin text-primary' />
@@ -313,7 +314,7 @@ export default function AdminSupportPage() {
                       variant='outline'
                       size='sm'
                       onClick={() => handleOpenTicket(t)}
-                      className='h-8 text-xs gap-1.5 shrink-0'
+                      className='h-8 text-xs gap-1.5 w-full sm:w-auto shrink-0'
                     >
                       <Eye className='size-3.5' />
                       <span>مشاهده و پاسخ</span>
@@ -324,6 +325,7 @@ export default function AdminSupportPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </Main>
 
       {/* Ticket Details / Response Dialog */}
@@ -333,7 +335,7 @@ export default function AdminSupportPage() {
           if (!open) setSelectedTicket(null)
         }}
       >
-        <DialogContent className='max-w-xl p-6'>
+        <DialogContent className='max-w-xl p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-full max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle className='text-base font-bold flex items-center gap-2'>
               <MessageSquare className='size-4 text-primary' />
@@ -408,19 +410,19 @@ export default function AdminSupportPage() {
             </div>
           )}
 
-          <DialogFooter className='gap-2 pt-2'>
+          <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
             <Button
               variant='outline'
               onClick={() => setSelectedTicket(null)}
               disabled={submitting}
-              className='text-xs'
+              className='text-xs w-full sm:w-auto'
             >
               انصراف
             </Button>
             <Button
               onClick={handleSaveResponse}
               disabled={submitting}
-              className='text-xs font-semibold gap-1.5'
+              className='text-xs font-semibold gap-1.5 w-full sm:w-auto'
             >
               {submitting ? <Loader2 className='size-3.5 animate-spin' /> : <Send className='size-3.5' />}
               ذخیره پاسخ و وضعیت

@@ -114,28 +114,30 @@ export default function AdminPaymentsPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-bold flex items-center gap-2'>
-            <CreditCard className='size-4 text-primary' />
-            <span>مشاهده و بررسی تراکنش‌های پرداخت</span>
+        <div className='flex items-center gap-2 overflow-hidden'>
+          <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
+            <CreditCard className='size-4 text-primary shrink-0' />
+            <span className='truncate'>مشاهده و بررسی تراکنش‌های پرداخت</span>
           </h1>
         </div>
-        <div className='ms-auto flex items-center gap-2'>
+        <div className='ms-auto flex items-center gap-2 shrink-0'>
           <Button
             variant='outline'
             size='sm'
             onClick={fetchPayments}
             disabled={loading}
-            className='gap-1.5 text-xs h-8'
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
+            title='بروزرسانی'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>بروزرسانی</span>
+            <span className='hidden sm:inline'>بروزرسانی</span>
           </Button>
           <ThemeSwitch />
         </div>
       </Header>
 
-      <Main className='flex flex-col gap-6 p-4 sm:p-6'>
+      <Main className='p-3.5 sm:p-6'>
+        <div className='flex flex-col gap-5 sm:gap-6 w-full min-w-0'>
         {/* Search & Status Filter */}
         <Card className='border-border/60 shadow-xs'>
           <CardContent className='p-4'>
@@ -192,7 +194,7 @@ export default function AdminPaymentsPage() {
               </div>
             ) : (
               <div className='overflow-x-auto'>
-                <table className='w-full text-xs text-start'>
+                <table className='w-full min-w-[780px] text-xs text-start'>
                   <thead>
                     <tr className='border-b border-border/50 text-muted-foreground'>
                       <th className='py-3 text-start font-medium'>شناسه</th>
@@ -260,6 +262,7 @@ export default function AdminPaymentsPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </Main>
     </>
   )

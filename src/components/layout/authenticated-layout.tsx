@@ -22,6 +22,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           <AppSidebar />
           <SidebarInset
             className={cn(
+              'min-w-0 max-w-full overflow-x-hidden',
               // Set content container, so we can use container queries
               '@container/content',
 
