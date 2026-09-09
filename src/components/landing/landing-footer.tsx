@@ -64,7 +64,7 @@ export function LandingFooter() {
           <p>
             © {new Date().getFullYear()} جمینای — تمامی حقوق محفوظ است
           </p>
-          <p className='text-center text-xs text-muted-foreground/70'>
+          <p className='text-center text-xs text-muted-foreground'>
             این سرویس بستری امن و آسان برای فعال‌سازی اشتراک رسمی هوش مصنوعی روی حساب‌های کاربری گوگل است.
           </p>
         </div>

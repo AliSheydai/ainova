@@ -105,11 +105,11 @@ export function HowItWorksSection() {
                         <step.icon className='size-6' />
                       </div>
 
-                      <div className='flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground'>
+                      <div className='flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/70 px-2.5 py-1 text-xs font-semibold text-foreground/80'>
                         <span className='font-bold text-primary'>
                           {step.number}
                         </span>
-                        <span className='opacity-40'>|</span>
+                        <span className='text-border font-normal'>|</span>
                         <span>{step.stepLabel}</span>
                       </div>
                     </div>
@@ -169,14 +169,14 @@ export function HowItWorksSection() {
 
           {/* Bottom Security Assurance Banner */}
           <motion.div
-            className='mt-10 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-card to-emerald-500/5 p-5 shadow-xs sm:p-6'
+            className='mt-10 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/5 via-card to-primary/5 p-5 shadow-xs sm:p-6'
             initial='hidden'
             whileInView='visible'
             viewport={viewportOnce}
             variants={fadeUp}
           >
             <div className='flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-right'>
-              <div className='flex size-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400'>
+              <div className='flex size-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20'>
                 <ShieldCheck className='size-6' />
               </div>
               <div className='flex-1 space-y-1.5'>
@@ -184,7 +184,7 @@ export function HowItWorksSection() {
                   <h4 className='text-base font-bold text-foreground'>
                     تضمین ۱۰۰٪ امنیت اطلاعات و حریم خصوصی
                   </h4>
-                  <span className='rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400'>
+                  <span className='rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary'>
                     عدم نیاز به رمز عبور
                   </span>
                 </div>

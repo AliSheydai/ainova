@@ -61,7 +61,7 @@ export function SecuritySection() {
               variants={fadeUp}
               whileHover={{ y: -3 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className='rounded-xl border border-border/60 bg-card p-5 text-center shadow-sm transition-colors hover:border-primary/30'
+              className='rounded-xl border border-border/75 bg-card p-5 text-center shadow-xs transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5'
             >
               <div className='mb-3 flex justify-center'>
                 <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10'>

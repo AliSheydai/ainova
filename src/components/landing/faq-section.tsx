@@ -76,7 +76,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export function FaqSection() {
   return (
-    <section id='faq' className='bg-muted/40 py-20 md:py-24'>
+    <section id='faq' className='bg-muted/50 py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
         <motion.div
           className='mb-10 text-center'
@@ -93,7 +93,7 @@ export function FaqSection() {
           </p>
         </motion.div>
         <motion.div
-          className='mx-auto max-w-2xl rounded-xl border border-border/60 bg-card px-5 shadow-sm'
+          className='mx-auto max-w-2xl rounded-xl border border-border/75 bg-card px-5 shadow-xs'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}

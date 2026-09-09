@@ -118,7 +118,7 @@ export function FeaturesSection() {
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              <Card className='group h-full border border-border/60 bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
+              <Card className='group h-full border border-border/70 bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
                 <CardHeader className='pb-2'>
                   <div className='mb-3 flex items-center justify-between'>
                     <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-200 group-hover:scale-105 group-hover:bg-primary/15'>
@@ -126,7 +126,7 @@ export function FeaturesSection() {
                     </div>
                     <Badge
                       variant='secondary'
-                      className='border border-primary/15 bg-primary/5 text-[11px] font-medium text-primary/90 dir-ltr'
+                      className='border border-primary/20 bg-primary/10 text-[11px] font-medium text-primary dir-ltr'
                     >
                       {feature.tag}
                     </Badge>

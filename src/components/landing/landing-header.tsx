@@ -130,13 +130,13 @@ export function LandingHeader() {
               size='sm'
               onClick={handleTelegramCta}
               disabled={openingTg}
-              className='hidden sm:inline-flex items-center gap-2 border-sky-500/30 bg-sky-500/10 text-sky-700 hover:bg-sky-500/20 hover:border-sky-500/50 dark:text-sky-400 dark:border-sky-500/20 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 font-medium text-xs md:text-sm px-3.5 h-9 rounded-xl shadow-xs transition-all duration-200 cursor-pointer'
+              className='hidden sm:inline-flex items-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 font-medium text-xs md:text-sm px-3.5 h-9 rounded-xl shadow-xs transition-all duration-200 cursor-pointer'
               title='ورود مستقیم به ربات تلگرام'
             >
               {openingTg ? (
-                <Loader2 className='size-4 animate-spin text-sky-500' />
+                <Loader2 className='size-4 animate-spin text-primary' />
               ) : (
-                <TelegramIcon className='size-4 text-sky-500 shrink-0' />
+                <TelegramIcon className='size-4 text-primary shrink-0' />
               )}
               <span>ربات تلگرام</span>
             </Button>
@@ -147,14 +147,14 @@ export function LandingHeader() {
               size='icon'
               onClick={handleTelegramCta}
               disabled={openingTg}
-              className='sm:hidden size-8 rounded-lg border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20'
+              className='sm:hidden size-8 rounded-lg border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
               aria-label='ورود به ربات تلگرام'
               title='ورود به ربات تلگرام'
             >
               {openingTg ? (
-                <Loader2 className='size-3.5 animate-spin text-sky-500' />
+                <Loader2 className='size-3.5 animate-spin text-primary' />
               ) : (
-                <TelegramIcon className='size-4 text-sky-500' />
+                <TelegramIcon className='size-4 text-primary' />
               )}
             </Button>
 
@@ -282,9 +282,9 @@ export function LandingHeader() {
                       setOpen(false)
                       handleTelegramCta()
                     }}
-                    className='w-full justify-center gap-2 border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:bg-sky-500/20 text-sm font-medium py-2.5 rounded-xl'
+                    className='w-full justify-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium py-2.5 rounded-xl'
                   >
-                    <TelegramIcon className='size-4.5 text-sky-500 shrink-0' />
+                    <TelegramIcon className='size-4.5 text-primary shrink-0' />
                     <span>🤖 ورود به ربات تلگرام</span>
                   </Button>
 
