@@ -29,6 +29,7 @@ import { ActivationGuideTab } from './tabs/activation-guide-tab'
 import { SupportTab } from './tabs/support-tab'
 import { ProfileTab } from './tabs/profile-tab'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface DashboardModalProps {
   open: boolean
@@ -99,33 +100,42 @@ export function DashboardModal({
   // Render tab contents
   const renderTabContent = () => {
     return (
-      <>
-        {activeTab === 'orders' && (
-          <OrdersTab
-            onGoToBuy={() => {
-              onOpenChange(false)
-              window.location.href = '/checkout'
-            }}
-          />
-        )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="w-full"
+        >
+          {activeTab === 'orders' && (
+            <OrdersTab
+              onGoToBuy={() => {
+                onOpenChange(false)
+                window.location.href = '/checkout'
+              }}
+            />
+          )}
 
-        {activeTab === 'guide' && (
-          <ActivationGuideTab onGoToOrders={() => setActiveTab('orders')} />
-        )}
+          {activeTab === 'guide' && (
+            <ActivationGuideTab onGoToOrders={() => setActiveTab('orders')} />
+          )}
 
-        {activeTab === 'support' && <SupportTab />}
+          {activeTab === 'support' && <SupportTab />}
 
-        {activeTab === 'profile' && (
-          <ProfileTab
-            user={user}
-            onUserUpdate={onUserUpdate}
-            onLogout={() => {
-              onLogout()
-              onOpenChange(false)
-            }}
-          />
-        )}
-      </>
+          {activeTab === 'profile' && (
+            <ProfileTab
+              user={user}
+              onUserUpdate={onUserUpdate}
+              onLogout={() => {
+                onLogout()
+                onOpenChange(false)
+              }}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     )
   }
 

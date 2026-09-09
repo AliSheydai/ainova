@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { motion } from 'framer-motion'
+import { fadeUp, staggerContainer } from '@/lib/motion'
 
 const steps = [
   {
@@ -141,7 +143,12 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
       </div>
 
       {/* Steps List */}
-      <div className="space-y-3">
+      <motion.div
+        className="space-y-3"
+        variants={staggerContainer(0.06)}
+        initial="hidden"
+        animate="visible"
+      >
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
           مراحل فعال‌سازی گام‌به‌گام
         </h4>
@@ -149,39 +156,46 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
         {steps.map((step) => {
           const Icon = step.icon
           return (
-            <Card key={step.number} className="border-border/70 overflow-hidden shadow-xs">
-              <CardContent className="p-4 sm:p-4.5">
-                <div className="flex items-start gap-3.5">
-                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr ${step.color} text-white font-bold text-sm shadow-sm`}>
-                    <Icon className="size-5" />
-                  </div>
-
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <h5 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                        <span className="text-primary font-sans font-black">{step.number}.</span>
-                        {step.title}
-                      </h5>
-                      <span className="text-[11px] text-muted-foreground font-medium">
-                        {step.subtitle}
-                      </span>
+            <motion.div
+              key={step.number}
+              variants={fadeUp}
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="border-border/70 overflow-hidden shadow-xs transition-colors hover:border-primary/30">
+                <CardContent className="p-4 sm:p-4.5">
+                  <div className="flex items-start gap-3.5">
+                    <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr ${step.color} text-white font-bold text-sm shadow-sm`}>
+                      <Icon className="size-5" />
                     </div>
 
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h5 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                          <span className="text-primary font-sans font-black">{step.number}.</span>
+                          {step.title}
+                        </h5>
+                        <span className="text-[11px] text-muted-foreground font-medium">
+                          {step.subtitle}
+                        </span>
+                      </div>
 
-                    <div className="flex items-start gap-1.5 text-[11px] text-primary/90 bg-primary/5 rounded-lg p-2 mt-2 border border-primary/10">
-                      <Info className="size-3.5 shrink-0 mt-0.5" />
-                      <span>{step.tip}</span>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {step.description}
+                      </p>
+
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary/90 bg-primary/5 rounded-lg p-2 mt-2 border border-primary/10">
+                        <Info className="size-3.5 shrink-0 mt-0.5" />
+                        <span>{step.tip}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
       {/* FAQs Section */}
       <div className="space-y-3 pt-2">
