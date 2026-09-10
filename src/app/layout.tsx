@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang='fa' dir='rtl' className={cn(vazirmatn.variable, vazirmatn.className, 'font-sans')} suppressHydrationWarning>
-      <body className={cn(vazirmatn.className, 'min-h-svh w-full bg-background font-sans text-foreground antialiased')}>
+      <body className={cn(vazirmatn.className, 'min-h-svh w-full bg-background font-sans text-foreground antialiased')} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
