@@ -10,6 +10,8 @@ export async function GET() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
     const [
+      totalProducts,
+      activeProducts,
       totalUsers,
       newUsers,
       totalOrders,
@@ -22,7 +24,12 @@ export async function GET() {
       invalidLinks,
       recentOrders,
       recentUsers,
+      topProducts,
     ] = await Promise.all([
+      // Total products
+      prisma.product.count({ where: { status: { not: 'ARCHIVED' } } }),
+      // Active products
+      prisma.product.count({ where: { status: 'ACTIVE' } }),
       // Total users
       prisma.user.count(),
       // New users last 7 days
@@ -43,7 +50,7 @@ export async function GET() {
       prisma.activationLink.count({ where: { status: 'RESERVED' } }),
       prisma.activationLink.count({ where: { status: 'USED' } }),
       prisma.activationLink.count({ where: { status: 'INVALID' } }),
-      // Recent orders
+      // Recent orders with product and user
       prisma.order.findMany({
         take: 8,
         orderBy: { createdAt: 'desc' },
@@ -51,6 +58,7 @@ export async function GET() {
           user: {
             select: { id: true, phone: true, name: true },
           },
+          product: true,
           plan: {
             include: { product: true },
           },
@@ -69,6 +77,12 @@ export async function GET() {
           },
         },
       }),
+      // Top products
+      prisma.product.findMany({
+        where: { status: 'ACTIVE' },
+        take: 5,
+        orderBy: [{ purchaseCount: 'desc' }, { createdAt: 'desc' }],
+      }),
     ])
 
     const totalRevenue = revenueResult._sum.amount || 0
@@ -76,6 +90,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stats: {
+        totalProducts,
+        activeProducts,
         totalUsers,
         newUsers,
         totalOrders,
@@ -90,6 +106,7 @@ export async function GET() {
       },
       recentOrders,
       recentUsers,
+      topProducts,
     })
   } catch (error: unknown) {
     console.error('Error fetching admin overview:', error)

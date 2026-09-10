@@ -34,6 +34,8 @@ import { motion } from 'framer-motion'
 import { fadeUp, fadeIn, staggerContainer } from '@/lib/motion'
 
 interface OverviewStats {
+  totalProducts?: number
+  activeProducts?: number
   totalUsers: number
   newUsers: number
   totalOrders: number
@@ -56,12 +58,18 @@ interface RecentOrder {
     phone?: string
     name?: string
   }
+  product?: {
+    id: string
+    title: string
+    name: string
+    slug: string
+  } | null
   plan?: {
     name: string
     product?: {
       name: string
     }
-  }
+  } | null
 }
 
 interface RecentUser {
@@ -415,7 +423,7 @@ export default function AdminOverviewPage() {
                           <tr className='border-b border-border/50 text-muted-foreground'>
                             <th className='py-2.5 text-start font-medium'>شناسه</th>
                             <th className='py-2.5 text-start font-medium'>کاربر</th>
-                            <th className='py-2.5 text-start font-medium'>پلن</th>
+                            <th className='py-2.5 text-start font-medium'>محصول</th>
                             <th className='py-2.5 text-start font-medium'>مبلغ</th>
                             <th className='py-2.5 text-start font-medium'>وضعیت</th>
                             <th className='py-2.5 text-start font-medium'>زمان</th>
@@ -430,8 +438,8 @@ export default function AdminOverviewPage() {
                               <td className='py-3 font-medium'>
                                 {ord.user?.name || ord.user?.phone || 'کاربر'}
                               </td>
-                              <td className='py-3 text-muted-foreground'>
-                                {ord.plan?.name || 'جمینای ۱۸ ماهه'}
+                              <td className='py-3 font-medium text-foreground'>
+                                {ord.product?.title || ord.product?.name || ord.plan?.name || 'محصول'}
                               </td>
                               <td className='py-3 font-bold text-foreground tabular-nums'>
                                 {formatPrice(ord.amount)}

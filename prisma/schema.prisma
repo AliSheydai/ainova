@@ -50,16 +50,41 @@ model OtpToken {
 // =====================
 // Product & Plan
 // =====================
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
 
-  plans       Plan[]
+enum FulfillmentType {
+  ACTIVATION_LINK
+  ACTIVATION_CODE
+  DOWNLOAD
+  MANUAL
+}
+
+model Product {
+  id               String          @id @default(cuid())
+  title            String          @default("")
+  name             String          @default("") // Keep synced for compatibility
+  slug             String          @unique
+  shortDescription String?
+  description      String?
+  image            String?
+  price            Int             @default(0) // price in Toman
+  status           ProductStatus   @default(ACTIVE)
+  stock            Int             @default(0)
+  purchaseCount    Int             @default(0)
+  sortOrder        Int             @default(0)
+  fulfillmentType  FulfillmentType @default(ACTIVATION_LINK)
+  active           Boolean         @default(true) // Keep synced for compatibility
+  archivedAt       DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  orders          Order[]
+  activationLinks ActivationLink[]
+  plans           Plan[]
 
   @@map("products")
 }
@@ -95,7 +120,8 @@ enum OrderStatus {
 model Order {
   id             String      @id @default(cuid())
   userId         String
-  planId         String
+  productId      String?
+  planId         String?
   amount         Int         // in Toman
   status         OrderStatus @default(PENDING_PAYMENT)
   source         String?     @default("web") // "web" | "telegram"
@@ -104,7 +130,8 @@ model Order {
   updatedAt      DateTime    @updatedAt
 
   user            User            @relation(fields: [userId], references: [id])
-  plan            Plan            @relation(fields: [planId], references: [id])
+  product         Product?        @relation(fields: [productId], references: [id])
+  plan            Plan?           @relation(fields: [planId], references: [id])
   payment         Payment?
   activationLink  ActivationLink?
   supportTickets  SupportTicket[]
@@ -151,7 +178,8 @@ enum LinkStatus {
 
 model ActivationLink {
   id          String     @id @default(cuid())
-  planId      String
+  productId   String?
+  planId      String?
   url         String
   status      LinkStatus @default(AVAILABLE)
   orderId     String?    @unique
@@ -159,7 +187,8 @@ model ActivationLink {
   assignedAt  DateTime?
   usedAt      DateTime?
 
-  plan        Plan       @relation(fields: [planId], references: [id])
+  product     Product?   @relation(fields: [productId], references: [id])
+  plan        Plan?      @relation(fields: [planId], references: [id])
   order       Order?     @relation(fields: [orderId], references: [id])
 
   @@map("activation_links")

@@ -57,6 +57,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
     const orders = await prisma.order.findMany({
       where: { userId: user.id },
       include: {
+        product: true,
         plan: {
           include: { product: true },
         },
@@ -79,8 +80,13 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         day: 'numeric',
       }).format(new Date(order.createdAt))
 
+      const productTitle =
+        order.product?.title ||
+        order.product?.name ||
+        (order.plan ? `${order.plan.product.name} (${order.plan.name})` : 'محصول')
+
       messageText += `🔢 **سفارش #${orderCode}**\n`
-      messageText += `📦 **محصول:** ${order.plan.product.name} (${order.plan.name})\n`
+      messageText += `📦 **محصول:** ${productTitle}\n`
       messageText += `💰 **مبلغ:** ${order.amount.toLocaleString('fa-IR')} تومان\n`
       messageText += `📅 **تاریخ:** ${dateStr}\n`
       messageText += `📊 **وضعیت:** ${getStatusBadge(order.status)}\n`

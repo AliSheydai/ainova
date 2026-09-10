@@ -10,21 +10,25 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const statusFilter = searchParams.get('status') as LinkStatus | null
+    const productIdFilter = searchParams.get('productId')
     const planIdFilter = searchParams.get('planId')
 
     const where: any = {}
     if (statusFilter && Object.values(LinkStatus).includes(statusFilter)) {
       where.status = statusFilter
     }
-    if (planIdFilter) {
+    if (productIdFilter) {
+      where.productId = productIdFilter
+    } else if (planIdFilter) {
       where.planId = planIdFilter
     }
 
-    const [links, total, available, reserved, used, invalid, plans] = await Promise.all([
+    const [links, total, available, reserved, used, invalid, products] = await Promise.all([
       prisma.activationLink.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         include: {
+          product: true,
           plan: {
             include: { product: true },
           },
@@ -43,10 +47,10 @@ export async function GET(req: NextRequest) {
       prisma.activationLink.count({ where: { status: 'RESERVED' } }),
       prisma.activationLink.count({ where: { status: 'USED' } }),
       prisma.activationLink.count({ where: { status: 'INVALID' } }),
-      prisma.plan.findMany({
-        where: { active: true },
-        include: { product: true },
-        orderBy: { price: 'asc' },
+      prisma.product.findMany({
+        where: { status: { not: 'ARCHIVED' } },
+        orderBy: { sortOrder: 'asc' },
+        include: { plans: true },
       }),
     ])
 
@@ -60,7 +64,7 @@ export async function GET(req: NextRequest) {
         used,
         invalid,
       },
-      plans,
+      products,
     })
   } catch (error: unknown) {
     console.error('Error in GET /api/admin/activation-links:', error)
@@ -77,11 +81,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { planId, links } = body
+    const { productId, planId, links } = body
 
-    if (!planId || !Array.isArray(links) || links.length === 0) {
+    if ((!productId && !planId) || !Array.isArray(links) || links.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'پلن و حداقل یک لینک فعال‌سازی الزامی است.' },
+        { success: false, error: 'انتخاب محصول و حداقل یک لینک فعال‌سازی الزامی است.' },
         { status: 400 }
       )
     }
@@ -98,19 +102,36 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify plan exists
-    const plan = await prisma.plan.findUnique({ where: { id: planId } })
-    if (!plan) {
-      return NextResponse.json(
-        { success: false, error: 'پلن انتخابی نامعتبر است.' },
-        { status: 404 }
-      )
+    // Resolve product
+    let targetProductId = productId
+    let targetPlanId = planId
+
+    if (!targetProductId && targetPlanId) {
+      const plan = await prisma.plan.findUnique({ where: { id: targetPlanId } })
+      if (!plan) {
+        return NextResponse.json({ success: false, error: 'پلن نامعتبر است.' }, { status: 404 })
+      }
+      targetProductId = plan.productId
     }
 
-    // Create many records
+    const product = await prisma.product.findUnique({
+      where: { id: targetProductId },
+      include: { plans: true },
+    })
+
+    if (!product) {
+      return NextResponse.json({ success: false, error: 'محصول نامعتبر است.' }, { status: 404 })
+    }
+
+    if (!targetPlanId && product.plans.length > 0) {
+      targetPlanId = product.plans[0].id
+    }
+
+    // Create records
     const created = await prisma.activationLink.createMany({
       data: cleanUrls.map((url: string) => ({
-        planId,
+        productId: targetProductId,
+        planId: targetPlanId || null,
         url,
         status: LinkStatus.AVAILABLE,
       })),
@@ -119,46 +140,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       count: created.count,
-      message: `${created.count} لینک فعال‌سازی جدید با موفقیت به انبار اضافه شد.`,
+      message: `${created.count.toLocaleString('fa-IR')} لینک فعال‌سازی جدید برای «${product.title || product.name}» با موفقیت اضافه شد.`,
     })
   } catch (error: unknown) {
-    console.error('Error in POST /api/admin/activation-links:', error)
+    console.error('Error adding activation links:', error)
     return NextResponse.json(
-      { success: false, error: 'خطا در ذخیره‌سازی دسته‌ای لینک‌ها.' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PATCH(req: NextRequest) {
-  const { errorResponse } = await requireAdminApi()
-  if (errorResponse) return errorResponse
-
-  try {
-    const body = await req.json()
-    const { linkId, status } = body
-
-    if (!linkId || !status || !Object.values(LinkStatus).includes(status)) {
-      return NextResponse.json(
-        { success: false, error: 'پارامترهای درخواست نامعتبر هستند.' },
-        { status: 400 }
-      )
-    }
-
-    const updated = await prisma.activationLink.update({
-      where: { id: linkId },
-      data: { status },
-    })
-
-    return NextResponse.json({
-      success: true,
-      link: updated,
-      message: 'وضعیت لینک با موفقیت به‌روزرسانی شد.',
-    })
-  } catch (error: unknown) {
-    console.error('Error updating activation link:', error)
-    return NextResponse.json(
-      { success: false, error: 'خطا در تغییر وضعیت لینک.' },
+      { success: false, error: 'خطا در افزودن لینک‌های فعال‌سازی.' },
       { status: 500 }
     )
   }
@@ -170,22 +157,32 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const linkId = searchParams.get('id')
+    const id = searchParams.get('id')
 
-    if (!linkId) {
+    if (!id) {
       return NextResponse.json(
         { success: false, error: 'شناسه لینک الزامی است.' },
         { status: 400 }
       )
     }
 
-    await prisma.activationLink.delete({
-      where: { id: linkId },
-    })
+    const link = await prisma.activationLink.findUnique({ where: { id } })
+    if (!link) {
+      return NextResponse.json({ success: false, error: 'لینک یافت نشد.' }, { status: 404 })
+    }
+
+    if (link.status === 'USED' || link.orderId) {
+      return NextResponse.json(
+        { success: false, error: 'لینک‌های تحویل‌داده‌شده به مشتری قابل حذف نیستند.' },
+        { status: 400 }
+      )
+    }
+
+    await prisma.activationLink.delete({ where: { id } })
 
     return NextResponse.json({
       success: true,
-      message: 'لینک فعال‌سازی با موفقیت حذف شد.',
+      message: 'لینک با موفقیت حذف شد.',
     })
   } catch (error: unknown) {
     console.error('Error deleting activation link:', error)

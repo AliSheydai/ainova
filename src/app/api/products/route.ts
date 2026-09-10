@@ -1,10 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const product = await prisma.product.findFirst({
-      where: { slug: 'google-ai-pro', active: true },
+    const products = await prisma.product.findMany({
+      where: {
+        status: 'ACTIVE',
+        active: true,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: {
         plans: {
           where: { active: true },
@@ -13,11 +18,29 @@ export async function GET() {
       },
     })
 
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
+    const enrichedProducts = await Promise.all(
+      products.map(async (prod) => {
+        const [stock, purchaseCount] = await Promise.all([
+          FulfillmentService.getProductStock(prod.id),
+          FulfillmentService.getProductPurchaseCount(prod.id),
+        ])
 
-    return NextResponse.json(product)
+        return {
+          ...prod,
+          stock,
+          purchaseCount,
+        }
+      })
+    )
+
+    const firstProduct = enrichedProducts[0] || null
+
+    // Return list of products while preserving backwards-compatibility for legacy single-product callers
+    return NextResponse.json({
+      success: true,
+      products: enrichedProducts,
+      ...(firstProduct ? firstProduct : {}),
+    })
   } catch (error) {
     console.error('[GET /api/products]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

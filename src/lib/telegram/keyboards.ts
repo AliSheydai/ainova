@@ -1,7 +1,7 @@
 import { Keyboard, InlineKeyboard } from 'grammy'
 
 export const BUTTONS = {
-  BUY: '🛒 خرید اشتراک جمینای',
+  BUY: '🛒 خرید اشتراک',
   ORDERS: '📦 سفارش‌های من',
   GUIDE: '📖 راهنمای فعال‌سازی',
   SUPPORT: '🎧 پشتیبانی',
@@ -57,6 +57,38 @@ export function accountLinkInlineKeyboard(webUrl: string) {
     .url('🌐 باز کردن وب‌سایت', webUrl)
     .row()
     .text('🔙 بازگشت به منوی اصلی', 'nav:main')
+}
+
+export function productsListInlineKeyboard(
+  products: Array<{ id: string; title: string; price: number; stock: number }>
+) {
+  const kb = new InlineKeyboard()
+  for (const prod of products) {
+    const stockStr = prod.stock > 0 ? '' : ' (ناموجود)'
+    kb.text(
+      `🔹 ${prod.title} — ${prod.price.toLocaleString('fa-IR')} تومان${stockStr}`,
+      `product:select:${prod.id}`
+    ).row()
+  }
+  kb.text('🔙 بازگشت به منوی اصلی', 'nav:main')
+  return kb
+}
+
+export function productDetailsKeyboard(
+  productId: string,
+  price: number,
+  isAvailable: boolean
+) {
+  const kb = new InlineKeyboard()
+  if (isAvailable) {
+    kb.text(
+      `💳 خرید این محصول (${price.toLocaleString('fa-IR')} تومان)`,
+      `buy:product:${productId}`
+    ).row()
+  }
+  kb.text('📋 بازگشت به لیست محصولات', 'nav:products').row()
+  kb.text('🔙 منوی اصلی', 'nav:main')
+  return kb
 }
 
 export function productBuyKeyboard(planId: string, planName: string, price: number) {

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { prisma } from '@/lib/prisma'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { LandingHeader } from '@/components/landing/landing-header'
 import { HeroSection } from '@/components/landing/hero-section'
 import { FeaturesSection } from '@/components/landing/features-section'
@@ -8,47 +10,70 @@ import { SecuritySection } from '@/components/landing/security-section'
 import { FaqSection } from '@/components/landing/faq-section'
 import { FinalCtaSection } from '@/components/landing/final-cta-section'
 import { LandingFooter } from '@/components/landing/landing-footer'
+import { ProductsShowcaseSection } from '@/components/landing/products-showcase-section'
 
 export const metadata: Metadata = {
-  title: 'جمینای — اشتراک اختصاصی ۱۸ ماهه هوش مصنوعی گوگل',
+  title: 'فروشگاه اشتراک‌های هوش مصنوعی و دیجیتال — تحویل فوری',
   description:
-    'اشتراک پیشرفته جمینای را روی حساب گوگل شخصی خودتان فعال کنید. دسترسی ۱۸ ماهه، تحویل فوری پس از پرداخت، کاملاً امن و بدون نیاز به رمز عبور.',
+    'خرید انواع اشتراک‌های هوش مصنوعی رسمی مانند Google AI Pro (Gemini)، فعال‌سازی روی حساب شخصی، تحویل آنی پس از پرداخت، ۱۰۰٪ امن و بدون نیاز به رمز عبور.',
 }
 
-// Fetch product price from API (server component)
-async function getProductPrice(): Promise<string> {
+function formatPrice(amount: number): string {
+  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
+}
+
+async function getProductsData() {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/products`, {
-      next: { revalidate: 60 },
+    const products = await prisma.product.findMany({
+      where: { status: 'ACTIVE', active: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
-    if (!res.ok) throw new Error('fetch failed')
-    const data = await res.json()
-    const plan = data?.plans?.[0]
-    if (plan?.price) {
-      return new Intl.NumberFormat('fa-IR').format(plan.price) + ' تومان'
-    }
-  } catch {
-    // fallback price
+
+    const enriched = await Promise.all(
+      products.map(async (prod) => {
+        const [stock, purchaseCount] = await Promise.all([
+          FulfillmentService.getProductStock(prod.id),
+          FulfillmentService.getProductPurchaseCount(prod.id),
+        ])
+        return {
+          id: prod.id,
+          title: prod.title || prod.name,
+          name: prod.name,
+          slug: prod.slug,
+          shortDescription: prod.shortDescription,
+          price: prod.price,
+          stock,
+          purchaseCount,
+          fulfillmentType: prod.fulfillmentType,
+        }
+      })
+    )
+
+    return enriched
+  } catch (error) {
+    console.error('Error fetching landing products:', error)
+    return []
   }
-  return '۳۹۰،۰۰۰ تومان'
 }
 
 export default async function LandingPage() {
-  const price = await getProductPrice()
+  const products = await getProductsData()
+  const primaryProduct = products.find((p) => p.slug === 'google-ai-pro') || products[0]
+  const formattedPrice = primaryProduct ? formatPrice(primaryProduct.price) : '۳۹۰،۰۰۰ تومان'
 
   return (
-    <div className='flex min-h-svh flex-col'>
+    <div className='flex min-h-svh flex-col' dir='rtl'>
       <LandingHeader />
       <main className='flex-1'>
-        <HeroSection price={price} />
+        <HeroSection price={formattedPrice} />
+        {/* Dynamic Products Showcase: displays all active products */}
+        <ProductsShowcaseSection products={products} />
         <FeaturesSection />
         <HowItWorksSection />
-        <PricingSection price={price} />
+        <PricingSection price={formattedPrice} />
         <SecuritySection />
         <FaqSection />
-        <FinalCtaSection price={price} />
+        <FinalCtaSection price={formattedPrice} />
       </main>
       <LandingFooter />
     </div>

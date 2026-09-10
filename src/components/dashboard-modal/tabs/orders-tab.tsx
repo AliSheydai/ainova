@@ -27,13 +27,18 @@ interface OrderItem {
   status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
   source?: string | null
   createdAt: string
-  plan: {
+  product?: {
+    title: string
+    name: string
+    fulfillmentType?: string
+  } | null
+  plan?: {
     name: string
     duration: number
     product: {
       name: string
     }
-  }
+  } | null
   payment?: {
     refId: string | null
     gatewayName: string
@@ -157,17 +162,17 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           </div>
           <h4 className="text-sm font-bold text-foreground">هنوز سفارشی ثبت نکرده‌اید</h4>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-            اشتراک جمینای ادونس ۱۸ ماهه را با گارانتی قانونی روی اکانت شخصی خود فعال کنید.
+            برای مشاهده و فعال‌سازی اشتراک‌های هوش مصنوعی و دیجیتال، از فروشگاه اقدام نمایید.
           </p>
           <Button
             onClick={() => {
               if (onGoToBuy) onGoToBuy()
-              else window.location.href = '/checkout'
+              else window.location.href = '/#products'
             }}
             className="mt-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
           >
             <Sparkles className="size-3.5" />
-            خرید اشتراک جمینای
+            مشاهده محصولات و خرید
           </Button>
         </motion.div>
       ) : (
@@ -194,7 +199,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                 >
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex flex-col gap-3">
-                      {/* Top Row: Plan info + status */}
+                      {/* Top Row: Product info + status */}
                       <div className="flex items-start justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-3">
                           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -202,10 +207,12 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-foreground">
-                              {order.plan?.product?.name || 'جمینای ادونس'}
-                              <span className="text-muted-foreground font-normal text-xs mr-2">
-                                ({order.plan?.name || 'اشتراک ۱۸ ماهه'})
-                              </span>
+                              {order.product?.title || order.product?.name || order.plan?.product?.name || 'اشتراک ویژه'}
+                              {order.plan?.name && (
+                                <span className="text-muted-foreground font-normal text-xs mr-2">
+                                  ({order.plan.name})
+                                </span>
+                              )}
                             </h4>
                             <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                               <span>شماره سفارش:</span>

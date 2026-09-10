@@ -81,12 +81,12 @@ interface LinkStats {
   invalid: number
 }
 
-interface PlanOption {
+interface ProductOption {
   id: string
+  title: string
   name: string
-  product: {
-    name: string
-  }
+  slug: string
+  plans?: Array<{ id: string; name: string }>
 }
 
 function formatDate(dateStr: string | null): string {
@@ -106,14 +106,14 @@ function formatDate(dateStr: string | null): string {
 export default function AdminActivationLinksPage() {
   const [links, setLinks] = useState<ActivationLinkItem[]>([])
   const [stats, setStats] = useState<LinkStats | null>(null)
-  const [plans, setPlans] = useState<PlanOption[]>([])
+  const [products, setProducts] = useState<ProductOption[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [planFilter, setPlanFilter] = useState('ALL')
+  const [productFilter, setProductFilter] = useState('ALL')
 
   // Bulk Add Dialog
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
-  const [bulkPlanId, setBulkPlanId] = useState('')
+  const [bulkProductId, setBulkProductId] = useState('')
   const [bulkText, setBulkText] = useState('')
   const [importing, setImporting] = useState(false)
 
@@ -126,16 +126,16 @@ export default function AdminActivationLinksPage() {
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'ALL') params.set('status', statusFilter)
-      if (planFilter !== 'ALL') params.set('planId', planFilter)
+      if (productFilter !== 'ALL') params.set('productId', productFilter)
 
       const res = await fetch(`/api/admin/activation-links?${params.toString()}`)
       const data = await res.json()
       if (data.success) {
         setLinks(data.links || [])
         setStats(data.stats || null)
-        setPlans(data.plans || [])
-        if (!bulkPlanId && data.plans && data.plans.length > 0) {
-          setBulkPlanId(data.plans[0].id)
+        setProducts(data.products || [])
+        if (!bulkProductId && data.products && data.products.length > 0) {
+          setBulkProductId(data.products[0].id)
         }
       } else {
         toast.error(data.error || 'خطا در بارگذاری لینک‌ها.')
@@ -149,7 +149,7 @@ export default function AdminActivationLinksPage() {
 
   useEffect(() => {
     fetchLinks()
-  }, [statusFilter, planFilter])
+  }, [statusFilter, productFilter])
 
   const handleCopy = (id: string, url: string) => {
     navigator.clipboard.writeText(url)
@@ -168,8 +168,8 @@ export default function AdminActivationLinksPage() {
   }
 
   const handleBulkImport = async () => {
-    if (!bulkPlanId) {
-      toast.error('لطفاً پلن مورد نظر را انتخاب کنید.')
+    if (!bulkProductId) {
+      toast.error('لطفاً محصول مورد نظر را انتخاب کنید.')
       return
     }
 
@@ -188,7 +188,7 @@ export default function AdminActivationLinksPage() {
       const res = await fetch('/api/admin/activation-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: bulkPlanId, links: lines }),
+        body: JSON.stringify({ productId: bulkProductId, links: lines }),
       })
       const data = await res.json()
       if (data.success) {
@@ -354,16 +354,16 @@ export default function AdminActivationLinksPage() {
                 </SelectContent>
               </Select>
 
-              {plans.length > 1 && (
-                <Select value={planFilter} onValueChange={setPlanFilter}>
-                  <SelectTrigger className='w-full sm:w-44 h-9 text-xs'>
-                    <SelectValue placeholder='فیلتر بر اساس پلن' />
+              {products.length > 1 && (
+                <Select value={productFilter} onValueChange={setProductFilter}>
+                  <SelectTrigger className='w-full sm:w-52 h-9 text-xs'>
+                    <SelectValue placeholder='فیلتر بر اساس محصول' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='ALL'>همه پلن‌ها</SelectItem>
-                    {plans.map((p) => (
+                    <SelectItem value='ALL'>همه محصولات</SelectItem>
+                    {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.product?.name} ({p.name})
+                        {p.title || p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -399,7 +399,7 @@ export default function AdminActivationLinksPage() {
                 <table className='w-full min-w-[780px] text-xs text-start'>
                   <thead>
                     <tr className='border-b border-border/50 text-muted-foreground'>
-                      <th className='py-3 text-start font-medium'>پلن</th>
+                      <th className='py-3 text-start font-medium'>محصول</th>
                       <th className='py-3 text-start font-medium'>لینک فعال‌سازی (محافظت‌شده)</th>
                       <th className='py-3 text-start font-medium'>وضعیت</th>
                       <th className='py-3 text-start font-medium'>سفارش مرتبط</th>
@@ -414,7 +414,7 @@ export default function AdminActivationLinksPage() {
                       return (
                         <tr key={link.id} className='hover:bg-muted/30 transition-colors'>
                           <td className='py-3 font-semibold text-foreground whitespace-nowrap'>
-                            {link.plan?.product?.name} ({link.plan?.name})
+                            {link.product?.title || link.product?.name || link.plan?.product?.name || 'محصول'}
                           </td>
 
                           {/* Protected / Masked URL */}
@@ -522,15 +522,15 @@ export default function AdminActivationLinksPage() {
 
           <div className='space-y-4 pt-2'>
             <div>
-              <label className='text-xs font-semibold block mb-1.5'>انتخاب پلن مربوطه:</label>
-              <Select value={bulkPlanId} onValueChange={setBulkPlanId}>
+              <label className='text-xs font-semibold block mb-1.5'>انتخاب محصول مربوطه:</label>
+              <Select value={bulkProductId} onValueChange={setBulkProductId}>
                 <SelectTrigger className='h-10 text-xs'>
-                  <SelectValue placeholder='پلن را انتخاب کنید' />
+                  <SelectValue placeholder='محصول را انتخاب کنید' />
                 </SelectTrigger>
                 <SelectContent>
-                  {plans.map((p) => (
+                  {products.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.product?.name} — {p.name}
+                      {p.title || p.name} ({p.slug})
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -2,7 +2,7 @@ import { Bot } from 'grammy'
 import { BUTTONS, mainMenuKeyboard } from '../keyboards'
 import { MESSAGES } from '../messages'
 import { handleStart } from './start'
-import { handleShowProducts, handleBuyCallback } from './buy'
+import { handleShowProducts, handleSelectProduct, handleBuyProduct, handleBuyCallback } from './buy'
 import { handleOrders } from './orders'
 import { handleGuide } from './guide'
 import { handleSupport } from './support'
@@ -42,7 +42,7 @@ export function registerHandlers(bot: Bot) {
   })
 
   // Reply Keyboard Buttons
-  bot.hears(BUTTONS.BUY, handleShowProducts)
+  bot.hears([BUTTONS.BUY, '🛒 خرید اشتراک', '🛒 خرید', 'خرید', 'خرید اشتراک جمینای', 'خرید محصول'], handleShowProducts)
   bot.hears(BUTTONS.ORDERS, (ctx) => handleOrders(ctx, 1))
   bot.hears(BUTTONS.GUIDE, handleGuide)
   bot.hears(BUTTONS.SUPPORT, handleSupport)
@@ -105,10 +105,27 @@ export function registerHandlers(bot: Bot) {
     }).catch(() => {})
   })
 
-  // Callback Queries: Buy action
+  // Callback Queries: Select product from catalog
+  bot.callbackQuery(/^product:select:(.+)$/, async (ctx) => {
+    const productId = ctx.match[1]
+    await handleSelectProduct(ctx, productId)
+  })
+
+  // Callback Queries: Buy specific product
+  bot.callbackQuery(/^buy:product:(.+)$/, async (ctx) => {
+    const productId = ctx.match[1]
+    await handleBuyProduct(ctx, productId)
+  })
+
+  // Callback Queries: Navigation - Back to products list
+  bot.callbackQuery('nav:products', async (ctx) => {
+    await handleShowProducts(ctx)
+  })
+
+  // Callback Queries: Legacy Buy action
   bot.callbackQuery(/^buy:(.+)$/, async (ctx) => {
-    const planId = ctx.match[1]
-    await handleBuyCallback(ctx, planId)
+    const planOrProductId = ctx.match[1]
+    await handleBuyCallback(ctx, planOrProductId)
   })
 
   // Callback Queries: Orders pagination

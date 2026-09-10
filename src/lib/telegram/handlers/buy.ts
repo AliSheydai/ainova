@@ -1,52 +1,128 @@
 import { Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { PaymentService } from '@/lib/payment'
-import { MESSAGES, formatProductDetails } from '../messages'
-import { productBuyKeyboard, orderPaymentKeyboard } from '../keyboards'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
+import { MESSAGES } from '../messages'
+import {
+  productsListInlineKeyboard,
+  productDetailsKeyboard,
+  orderPaymentKeyboard,
+} from '../keyboards'
 
 export async function handleShowProducts(ctx: Context) {
   try {
-    // Find active plans with product
-    const plans = await prisma.plan.findMany({
-      where: { active: true },
-      include: { product: true },
-      orderBy: { price: 'asc' },
+    const products = await prisma.product.findMany({
+      where: { status: 'ACTIVE', active: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
 
-    if (!plans || plans.length === 0) {
-      await ctx.reply('در حال حاضر پلن فعالی در سیستم موجود نیست. لطفاً بعداً مراجعه نمایید.')
+    if (!products || products.length === 0) {
+      await ctx.reply('در حال حاضر محصول فعالی در فروشگاه موجود نیست. لطفاً بعداً مراجعه فرمایید.')
       return
     }
 
-    // Default to the first active plan (e.g., 18 months plan)
-    // Architecture supports multiple plans seamlessly
-    for (const plan of plans) {
-      const messageText = formatProductDetails(
-        plan.product.name,
-        plan.name,
-        plan.duration,
-        plan.price
-      )
+    const enriched = await Promise.all(
+      products.map(async (p) => {
+        const stock = await FulfillmentService.getProductStock(p.id)
+        return {
+          id: p.id,
+          title: p.title || p.name,
+          price: p.price,
+          stock,
+        }
+      })
+    )
 
-      await ctx.reply(messageText, {
+    const text =
+      `🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\n` +
+      `لطفاً محصول مورد نظر خود را جهت مشاهده جزئیات و خرید انتخاب فرمایید:`
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
-        reply_markup: productBuyKeyboard(plan.id, plan.name, plan.price),
+        reply_markup: productsListInlineKeyboard(enriched),
+      }).catch(async () => {
+        await ctx.reply(text, {
+          parse_mode: 'Markdown',
+          reply_markup: productsListInlineKeyboard(enriched),
+        })
+      })
+      await ctx.answerCallbackQuery().catch(() => {})
+    } else {
+      await ctx.reply(text, {
+        parse_mode: 'Markdown',
+        reply_markup: productsListInlineKeyboard(enriched),
       })
     }
   } catch (error) {
     console.error('Error in handleShowProducts:', error)
-    await ctx.reply('متأسفانه در دریافت اطلاعات محصول خطایی رخ داد. لطفاً دوباره تلاش کنید.')
+    await ctx.reply('متأسفانه در دریافت لیست محصولات خطایی رخ داد. لطفاً دوباره تلاش کنید.')
   }
 }
 
-export async function handleBuyCallback(ctx: Context, planId: string) {
+export async function handleSelectProduct(ctx: Context, productId: string) {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    })
+
+    if (!product || product.status !== 'ACTIVE') {
+      await ctx.answerCallbackQuery({ text: 'محصول یافت نشد یا غیرفعال است.', show_alert: true }).catch(() => {})
+      return
+    }
+
+    const [stock, purchaseCount] = await Promise.all([
+      FulfillmentService.getProductStock(product.id),
+      FulfillmentService.getProductPurchaseCount(product.id),
+    ])
+
+    const isAvailable = stock > 0
+    const title = product.title || product.name
+
+    let detailsText = `✨ **${title}** ✨\n\n`
+
+    if (product.shortDescription) {
+      detailsText += `📝 ${product.shortDescription}\n\n`
+    }
+
+    if (product.description) {
+      detailsText += `📋 **توضیحات کامل:**\n${product.description}\n\n`
+    }
+
+    detailsText += `━━━━━━━━━━━━━━━━━━━━\n`
+    detailsText += `💵 **قیمت:** ${product.price.toLocaleString('fa-IR')} تومان\n`
+    detailsText += `📦 **وضعیت موجودی:** ${isAvailable ? `✅ موجود (${stock.toLocaleString('fa-IR')} عدد)` : '❌ اتمام موجودی موقت'}\n`
+    if (purchaseCount > 0) {
+      detailsText += `👥 **خریداران راضی:** ${purchaseCount.toLocaleString('fa-IR')} خریدار\n`
+    }
+    detailsText += `🚀 **نوع تحویل:** آنی و خودکار پس از پرداخت آنلاین\n`
+    detailsText += `🔐 **امنیت:** بدون نیاز به پسورد یا اطلاعات حساس`
+
+    await ctx.editMessageText(detailsText, {
+      parse_mode: 'Markdown',
+      reply_markup: productDetailsKeyboard(product.id, product.price, isAvailable),
+    }).catch(async () => {
+      await ctx.reply(detailsText, {
+        parse_mode: 'Markdown',
+        reply_markup: productDetailsKeyboard(product.id, product.price, isAvailable),
+      })
+    })
+
+    await ctx.answerCallbackQuery().catch(() => {})
+  } catch (error) {
+    console.error('Error in handleSelectProduct:', error)
+    await ctx.reply('خطا در دریافت اطلاعات محصول. لطفاً مجدداً تلاش کنید.')
+  }
+}
+
+export async function handleBuyProduct(ctx: Context, productId: string) {
   const from = ctx.from
   if (!from || !ctx.chat) return
 
   const telegramId = String(from.id)
   const chatId = String(ctx.chat.id)
 
-  await ctx.answerCallbackQuery({ text: 'در حال ایجاد پیش‌فاکتور...' }).catch(() => {})
+  await ctx.answerCallbackQuery({ text: 'در حال صدور فاکتور خرید...' }).catch(() => {})
 
   try {
     const user = await prisma.user.findUnique({
@@ -59,50 +135,44 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
       return
     }
 
-    // Find plan
-    const plan = await prisma.plan.findUnique({
-      where: { id: planId, active: true },
-      include: { product: true },
+    const product = await prisma.product.findUnique({
+      where: { id: productId, status: 'ACTIVE', active: true },
+      include: { plans: true },
     })
 
-    if (!plan) {
-      await ctx.reply('پلن انتخاب‌شده یافت نشد یا غیرفعال شده است.')
+    if (!product) {
+      await ctx.reply('محصول انتخاب‌شده یافت نشد یا غیرفعال شده است.')
       return
     }
 
-    // Check inventory
-    const availableCount = await prisma.activationLink.count({
-      where: {
-        planId: plan.id,
-        status: 'AVAILABLE',
-      },
-    })
-
-    if (availableCount === 0) {
+    const stock = await FulfillmentService.getProductStock(product.id)
+    if (stock <= 0) {
       await ctx.reply(MESSAGES.stockExhausted, { parse_mode: 'Markdown' })
       return
     }
 
-    // Create Order
+    // Create Order referencing productId and snapshot amount
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        planId: plan.id,
-        amount: plan.price,
+        productId: product.id,
+        planId: product.plans?.[0]?.id || null,
+        amount: product.price, // SNAPSHOT: will not change if product price is changed later
         status: 'PENDING_PAYMENT',
         source: 'telegram',
         telegramChatId: chatId,
       },
     })
 
-    // Request Payment via PaymentService (supports Mock & Zarinpal)
+    // Request Payment via PaymentService
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const callbackUrl = `${appUrl}/api/payment/callback?source=telegram&orderId=${order.id}`
+    const productTitle = product.title || product.name
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
-      amount: plan.price,
-      description: `خرید تلگرام: ${plan.product.name} (${plan.name})`,
+      amount: product.price,
+      description: `خرید تلگرام: ${productTitle}`,
       callbackUrl,
       mobile: user.phone,
     })
@@ -114,9 +184,7 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
       return
     }
 
-    // Send order confirmation and payment button
-    const productFullTitle = `${plan.product.name} — ${plan.name}`
-    let messageText = MESSAGES.orderCreated(order.id, productFullTitle, plan.price)
+    let messageText = MESSAGES.orderCreated(order.id, productTitle, product.price)
 
     const fullPaymentUrl = paymentResult.paymentUrl.startsWith('http')
       ? paymentResult.paymentUrl
@@ -134,7 +202,23 @@ export async function handleBuyCallback(ctx: Context, planId: string) {
       reply_markup: orderPaymentKeyboard(fullPaymentUrl),
     })
   } catch (error) {
-    console.error('Error handling buy callback:', error)
-    await ctx.reply('متأسفانه در پردازش سفارش شما خطایی رخ داد. لطفاً دوباره تلاش کنید.')
+    console.error('Error in handleBuyProduct:', error)
+    await ctx.reply('متأسفانه در پردازش سفارش خطایی رخ داد. لطفاً دوباره تلاش کنید.')
   }
+}
+
+export async function handleBuyCallback(ctx: Context, planOrProductId: string) {
+  // Check if it's a product
+  const product = await prisma.product.findUnique({ where: { id: planOrProductId } })
+  if (product) {
+    return handleBuyProduct(ctx, product.id)
+  }
+
+  // Fallback to plan
+  const plan = await prisma.plan.findUnique({ where: { id: planOrProductId }, include: { product: true } })
+  if (plan) {
+    return handleBuyProduct(ctx, plan.productId)
+  }
+
+  await ctx.reply('محصول یا پلن انتخاب‌شده یافت نشد.')
 }

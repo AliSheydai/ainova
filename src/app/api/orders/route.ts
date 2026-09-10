@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
 import { PaymentService } from '@/lib/payment'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,64 +16,88 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { planId } = body
+    const { productId, slug, planId, source } = body
 
-    if (!planId) {
-      return NextResponse.json(
-        { success: false, message: 'شناسه پلن الزامی است.' },
-        { status: 400 }
-      )
+    // 1. Resolve product
+    let product = null
+    let plan = null
+
+    if (productId) {
+      product = await prisma.product.findUnique({
+        where: { id: productId },
+      })
+    } else if (slug) {
+      product = await prisma.product.findUnique({
+        where: { slug },
+      })
+    } else if (planId) {
+      plan = await prisma.plan.findUnique({
+        where: { id: planId },
+        include: { product: true },
+      })
+      if (plan) {
+        product = plan.product
+      }
     }
 
-    // Find plan and product
-    const plan = await prisma.plan.findUnique({
-      where: { id: planId, active: true },
-      include: { product: true },
-    })
-
-    if (!plan) {
+    if (!product) {
       return NextResponse.json(
-        { success: false, message: 'پلن انتخابی نامعتبر یا غیرفعال است.' },
+        { success: false, message: 'محصول مورد نظر یافت نشد.' },
         { status: 404 }
       )
     }
 
-    // Check inventory of available activation links
-    const availableLinksCount = await prisma.activationLink.count({
-      where: {
-        planId: plan.id,
-        status: 'AVAILABLE',
-      },
-    })
+    // 2. Security Check: is product active?
+    if (product.status !== 'ACTIVE' || !product.active) {
+      return NextResponse.json(
+        { success: false, message: 'این محصول در حال حاضر غیرفعال و غیرقابل خرید است.' },
+        { status: 400 }
+      )
+    }
 
-    if (availableLinksCount === 0) {
+    // 3. Check inventory
+    const availableStock = await FulfillmentService.getProductStock(product.id)
+    if (availableStock <= 0) {
       return NextResponse.json(
         {
           success: false,
-          message: 'موجودی لینک‌های فعال‌سازی این پلن موقتاً به پایان رسیده است. لطفاً بعداً مراجعه نمایید.',
+          message: 'موجودی این محصول موقتاً به پایان رسیده است. لطفاً بعداً مراجعه نمایید.',
         },
         { status: 400 }
       )
     }
 
-    // Create Order in PENDING_PAYMENT status
+    // 4. Determine final snapshot amount (Server-side controlled)
+    const orderAmount = product.price > 0 ? product.price : (plan?.price || 0)
+
+    if (orderAmount <= 0) {
+      return NextResponse.json(
+        { success: false, message: 'قیمت محصول نامعتبر است.' },
+        { status: 400 }
+      )
+    }
+
+    // 5. Create Order with snapshot amount and productId reference
     const order = await prisma.order.create({
       data: {
         userId: session.userId,
-        planId: plan.id,
-        amount: plan.price,
+        productId: product.id,
+        planId: plan?.id || null,
+        amount: orderAmount, // SNAPSHOT: Will never change even if product.price is modified later
         status: 'PENDING_PAYMENT',
+        source: source || 'web',
       },
     })
 
-    // Request payment using the active PaymentProvider via PaymentService
+    // 6. Request payment via PaymentService
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const callbackUrl = `${appUrl}/api/payment/callback?orderId=${order.id}`
+    const productTitle = product.title || product.name
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
-      amount: plan.price,
-      description: `خرید اشتراک ${plan.product.name} (${plan.name})`,
+      amount: orderAmount,
+      description: `خرید: ${productTitle}`,
       callbackUrl,
       mobile: session.phone,
     })
@@ -110,9 +135,11 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Security: Only return orders belonging to current user
     const orders = await prisma.order.findMany({
       where: { userId: session.userId },
       include: {
+        product: true,
         plan: {
           include: { product: true },
         },

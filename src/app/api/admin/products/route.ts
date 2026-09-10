@@ -1,56 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
+import { ProductStatus, FulfillmentType } from '@prisma/client'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
   if (errorResponse) return errorResponse
 
   try {
+    const { searchParams } = new URL(req.url)
+    const includeArchived = searchParams.get('includeArchived') === 'true'
+
+    const whereClause: any = {}
+    if (!includeArchived) {
+      whereClause.status = { not: 'ARCHIVED' }
+    }
+
     const products = await prisma.product.findMany({
-      orderBy: { createdAt: 'asc' },
+      where: whereClause,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       include: {
         plans: {
           orderBy: { price: 'asc' },
-          include: {
-            _count: {
-              select: {
-                orders: true,
-                activationLinks: true,
-              },
-            },
+        },
+        _count: {
+          select: {
+            orders: true,
+            activationLinks: true,
           },
         },
       },
     })
 
-    // Attach inventory counts for available links per plan
-    const plansWithAvailable = await Promise.all(
+    // Compute real-time stock and verified purchase count for every product
+    const enrichedProducts = await Promise.all(
       products.map(async (prod) => {
-        const plans = await Promise.all(
-          prod.plans.map(async (plan) => {
-            const availableCount = await prisma.activationLink.count({
-              where: {
-                planId: plan.id,
-                status: 'AVAILABLE',
-              },
-            })
-            return {
-              ...plan,
-              availableLinks: availableCount,
-            }
-          })
-        )
+        const [stock, verifiedPurchases] = await Promise.all([
+          FulfillmentService.getProductStock(prod.id),
+          FulfillmentService.getProductPurchaseCount(prod.id),
+        ])
+
         return {
           ...prod,
-          plans,
+          stock,
+          purchaseCount: verifiedPurchases,
         }
       })
     )
 
     return NextResponse.json({
       success: true,
-      products: plansWithAvailable,
+      products: enrichedProducts,
     })
   } catch (error: unknown) {
     console.error('Error fetching admin products:', error)
@@ -67,67 +68,72 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { action } = body
+    const {
+      title,
+      name,
+      slug,
+      shortDescription,
+      description,
+      price,
+      image,
+      fulfillmentType,
+      sortOrder,
+    } = body
 
-    if (action === 'create-product') {
-      const { name, slug, description } = body
-      if (!name || !slug) {
-        return NextResponse.json(
-          { success: false, error: 'نام و نامک (slug) محصول الزامی هستند.' },
-          { status: 400 }
-        )
-      }
+    const productTitle = (title || name || '').trim()
+    const productSlug = (slug || '').trim().toLowerCase().replace(/\s+/g, '-')
 
-      const product = await prisma.product.create({
-        data: {
-          name,
-          slug,
-          description: description || null,
-          active: true,
-        },
-      })
-
-      return NextResponse.json({
-        success: true,
-        product,
-        message: 'محصول جدید با موفقیت ایجاد شد.',
-      })
+    if (!productTitle || !productSlug) {
+      return NextResponse.json(
+        { success: false, error: 'عنوان و نامک (Slug) محصول الزامی هستند.' },
+        { status: 400 }
+      )
     }
 
-    if (action === 'create-plan') {
-      const { productId, name, duration, price } = body
-      if (!productId || !name || !duration || !price) {
-        return NextResponse.json(
-          { success: false, error: 'تمام اطلاعات پلن الزامی هستند.' },
-          { status: 400 }
-        )
-      }
+    // Check slug uniqueness
+    const existing = await prisma.product.findUnique({
+      where: { slug: productSlug },
+    })
 
-      const plan = await prisma.plan.create({
-        data: {
-          productId,
-          name,
-          duration: parseInt(duration, 10),
-          price: parseInt(price, 10),
-          active: true,
-        },
-      })
-
-      return NextResponse.json({
-        success: true,
-        plan,
-        message: 'پلن جدید با موفقیت اضافه شد.',
-      })
+    if (existing) {
+      return NextResponse.json(
+        { success: false, error: 'این نامک (Slug) قبلاً برای محصول دیگری ثبت شده است.' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(
-      { success: false, error: 'عملیات نامعتبر است.' },
-      { status: 400 }
-    )
+    const parsedPrice = parseInt(String(price || 0), 10)
+    const parsedSortOrder = parseInt(String(sortOrder || 0), 10)
+
+    const validFulfillmentType = Object.values(FulfillmentType).includes(fulfillmentType)
+      ? (fulfillmentType as FulfillmentType)
+      : 'ACTIVATION_LINK'
+
+    const product = await prisma.product.create({
+      data: {
+        title: productTitle,
+        name: productTitle,
+        slug: productSlug,
+        shortDescription: shortDescription?.trim() || null,
+        description: description?.trim() || null,
+        price: isNaN(parsedPrice) ? 0 : parsedPrice,
+        image: image?.trim() || null,
+        fulfillmentType: validFulfillmentType,
+        sortOrder: isNaN(parsedSortOrder) ? 0 : parsedSortOrder,
+        status: 'ACTIVE',
+        active: true,
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      product,
+      message: 'محصول جدید با موفقیت ایجاد شد.',
+    })
   } catch (error: unknown) {
-    console.error('Error creating product/plan:', error)
+    console.error('Error creating product:', error)
     return NextResponse.json(
-      { success: false, error: 'خطا در ایجاد محصول یا پلن.' },
+      { success: false, error: 'خطا در ایجاد محصول.' },
       { status: 500 }
     )
   }
@@ -139,52 +145,155 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { planId, productId, name, price, duration, active } = body
+    const {
+      id,
+      productId,
+      title,
+      name,
+      slug,
+      shortDescription,
+      description,
+      price,
+      image,
+      status,
+      active,
+      sortOrder,
+      fulfillmentType,
+    } = body
 
-    if (planId) {
-      const data: any = {}
-      if (name !== undefined) data.name = name
-      if (price !== undefined) data.price = parseInt(price, 10)
-      if (duration !== undefined) data.duration = parseInt(duration, 10)
-      if (active !== undefined) data.active = Boolean(active)
-
-      const updatedPlan = await prisma.plan.update({
-        where: { id: planId },
-        data,
-      })
-
-      return NextResponse.json({
-        success: true,
-        plan: updatedPlan,
-        message: 'پلن با موفقیت به‌روزرسانی شد.',
-      })
+    const targetId = id || productId
+    if (!targetId) {
+      return NextResponse.json(
+        { success: false, error: 'شناسه محصول الزامی است.' },
+        { status: 400 }
+      )
     }
 
-    if (productId) {
-      const data: any = {}
-      if (name !== undefined) data.name = name
-      if (active !== undefined) data.active = Boolean(active)
+    const updateData: any = {}
 
-      const updatedProduct = await prisma.product.update({
-        where: { id: productId },
-        data,
-      })
-
-      return NextResponse.json({
-        success: true,
-        product: updatedProduct,
-        message: 'محصول با موفقیت به‌روزرسانی شد.',
-      })
+    if (title !== undefined || name !== undefined) {
+      const val = (title || name || '').trim()
+      updateData.title = val
+      updateData.name = val
     }
 
-    return NextResponse.json(
-      { success: false, error: 'شناسه پلن یا محصول الزامی است.' },
-      { status: 400 }
-    )
+    if (slug !== undefined) {
+      const newSlug = slug.trim().toLowerCase().replace(/\s+/g, '-')
+      // Ensure slug uniqueness if changed
+      const current = await prisma.product.findUnique({ where: { id: targetId } })
+      if (current && current.slug !== newSlug) {
+        const slugExists = await prisma.product.findUnique({ where: { slug: newSlug } })
+        if (slugExists) {
+          return NextResponse.json(
+            { success: false, error: 'این نامک (Slug) توسط محصول دیگری استفاده شده است.' },
+            { status: 400 }
+          )
+        }
+        updateData.slug = newSlug
+      }
+    }
+
+    if (shortDescription !== undefined) updateData.shortDescription = shortDescription?.trim() || null
+    if (description !== undefined) updateData.description = description?.trim() || null
+    if (image !== undefined) updateData.image = image?.trim() || null
+
+    if (price !== undefined) {
+      const p = parseInt(String(price), 10)
+      if (!isNaN(p) && p >= 0) updateData.price = p
+    }
+
+    if (sortOrder !== undefined) {
+      const so = parseInt(String(sortOrder), 10)
+      if (!isNaN(so)) updateData.sortOrder = so
+    }
+
+    if (fulfillmentType !== undefined && Object.values(FulfillmentType).includes(fulfillmentType)) {
+      updateData.fulfillmentType = fulfillmentType
+    }
+
+    if (status !== undefined && Object.values(ProductStatus).includes(status)) {
+      updateData.status = status
+      updateData.active = status === 'ACTIVE'
+    } else if (active !== undefined) {
+      const isActive = Boolean(active)
+      updateData.active = isActive
+      updateData.status = isActive ? 'ACTIVE' : 'INACTIVE'
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: targetId },
+      data: updateData,
+    })
+
+    return NextResponse.json({
+      success: true,
+      product: updatedProduct,
+      message: 'مشخصات محصول با موفقیت به‌روزرسانی شد.',
+    })
   } catch (error: unknown) {
-    console.error('Error updating product/plan:', error)
+    console.error('Error updating product:', error)
     return NextResponse.json(
-      { success: false, error: 'خطا در به‌روزرسانی پلن یا محصول.' },
+      { success: false, error: 'خطا در به‌روزرسانی محصول.' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const { errorResponse } = await requireAdminApi()
+  if (errorResponse) return errorResponse
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'شناسه محصول الزامی است.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if product has orders
+    const orderCount = await prisma.order.count({
+      where: { productId: id },
+    })
+
+    if (orderCount > 0) {
+      // Soft delete / Archive to preserve financial and historical data integrity
+      await prisma.product.update({
+        where: { id },
+        data: {
+          status: 'ARCHIVED',
+          active: false,
+          archivedAt: new Date(),
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: `این محصول دارای ${orderCount.toLocaleString('fa-IR')} سفارش ثبت‌شده است؛ بنابراین به صورت امن بایگانی (Archive) گردید و از دسترس عمومی خارج شد.`,
+        action: 'archived',
+      })
+    }
+
+    // If no orders, delete safely
+    // 1. Delete associated activation links first if any exist
+    await prisma.activationLink.deleteMany({ where: { productId: id } })
+    // 2. Delete plans if any exist
+    await prisma.plan.deleteMany({ where: { productId: id } })
+    // 3. Delete product
+    await prisma.product.delete({ where: { id } })
+
+    return NextResponse.json({
+      success: true,
+      message: 'محصول با موفقیت حذف شد.',
+      action: 'deleted',
+    })
+  } catch (error: unknown) {
+    console.error('Error deleting product:', error)
+    return NextResponse.json(
+      { success: false, error: 'خطا در حذف یا بایگانی محصول.' },
       { status: 500 }
     )
   }

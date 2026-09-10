@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       order: {
         include: {
           user: true,
+          product: true,
           plan: {
             include: {
               product: true,
@@ -132,7 +133,10 @@ export async function GET(req: NextRequest) {
 
     const targetChatId =
       payment.order.telegramChatId || payment.order.user?.telegramId
-    const productTitle = `${payment.order.plan.product.name} — ${payment.order.plan.name}`
+    const productTitle =
+      payment.order.product?.title ||
+      payment.order.product?.name ||
+      (payment.order.plan ? `${payment.order.plan.product.name} — ${payment.order.plan.name}` : 'محصول')
 
     // If stock ran out:
     if (fulfillment.status === 'STOCK_EXHAUSTED') {
