@@ -361,7 +361,7 @@ export default function AdminActivationLinksPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2.5 min-w-0'>
+        <div className='hidden sm:flex items-center gap-2.5 min-w-0'>
           <div className='size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0'>
             <LinkIcon className='size-4' />
           </div>

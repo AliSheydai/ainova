@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { type ProductItem, type PlanItem } from '../types'
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
+import { toEnglishDigits } from '@/lib/persian-utils'
 
 export function useProducts() {
   const [products, setProducts] = useState<ProductItem[]>([])
@@ -220,11 +221,15 @@ export function useProducts() {
       return
     }
 
-    const priceNum = parseInt(formPlanPrice, 10)
+    const cleanPrice = toEnglishDigits(formPlanPrice).replace(/[^\d]/g, '')
+    const priceNum = parseInt(cleanPrice, 10)
     if (isNaN(priceNum) || priceNum < 0) {
       toast.error('مبلغ معتبری برای پلن وارد فرمایید.')
       return
     }
+
+    const durationNum = parseInt(toEnglishDigits(formPlanDuration).replace(/[^\d]/g, ''), 10) || 1
+    const sortOrderNum = parseInt(toEnglishDigits(formPlanSortOrder).replace(/[^\d]/g, ''), 10) || 1
 
     setSubmittingPlan(true)
     try {
@@ -232,11 +237,11 @@ export function useProducts() {
         id: currentPlanId,
         productId: planTargetProductId,
         name: formPlanName.trim(),
-        duration: parseInt(formPlanDuration, 10) || 1,
+        duration: durationNum,
         price: priceNum,
         fulfillmentType: formPlanFulfillmentType,
         checkoutFields: formPlanFields,
-        sortOrder: parseInt(formPlanSortOrder, 10) || 1,
+        sortOrder: sortOrderNum,
         active: formPlanActive,
       }
 

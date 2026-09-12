@@ -133,7 +133,7 @@ export default function AdminOverviewPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2 min-w-0'>
+        <div className='hidden sm:flex items-center gap-2 min-w-0'>
           <Badge variant='outline' className='border-primary/30 bg-primary/10 text-primary font-semibold gap-1 text-[11px] sm:text-xs py-0.5 sm:py-1 shrink-0'>
             <Shield className='size-3' />
             <span>مدیریت سیستم</span>

@@ -143,7 +143,7 @@ export default function AdminSettingsPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2 overflow-hidden'>
+        <div className='hidden sm:flex items-center gap-2 overflow-hidden'>
           <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
             <Settings className='size-4 text-primary shrink-0' />
             <span className='truncate'>تنظیمات عمومی سامانه</span>

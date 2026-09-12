@@ -164,7 +164,7 @@ export default function AdminSupportPage() {
   return (
     <>
       <Header>
-        <div className='flex items-center gap-2 min-w-0'>
+        <div className='hidden sm:flex items-center gap-2 min-w-0'>
           <h1 className='text-sm sm:text-base font-bold flex items-center gap-2 truncate'>
             <HeadphonesIcon className='size-4 text-primary shrink-0' />
             <span className='truncate'>پشتیبانی و پیام‌ها</span>
