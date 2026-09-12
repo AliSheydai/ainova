@@ -14,7 +14,7 @@ const footerLinks = [
 
 export function LandingFooter() {
   return (
-    <footer className='border-t border-border/50 bg-muted/30 py-10'>
+    <footer className='border-t border-border/50 bg-muted/30 pt-10 pb-24 md:py-10'>
       <div className='container mx-auto px-4 sm:px-6'>
         {/* Top */}
         <div className='flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between'>

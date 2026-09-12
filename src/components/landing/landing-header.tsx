@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/sheet'
 import { AuthModal, type AuthUserData } from '@/components/auth/auth-modal'
 import { DashboardModal } from '@/components/dashboard-modal/dashboard-modal'
+import { MobileBottomNav } from '@/components/landing/mobile-bottom-nav'
 
 function TelegramIcon({ className = 'size-4' }: { className?: string }) {
   return (
@@ -355,11 +356,11 @@ export function LandingHeader() {
               </Button>
             )}
 
-            <Link href='/#products'>
-              <Button size='sm' className='hidden text-sm md:flex'>
+            <Button asChild size='sm' className='hidden text-sm md:inline-flex'>
+              <Link href='/#products'>
                 مشاهده محصولات
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
             {/* Mobile User Quick Icon / Dropdown */}
             {user ? (
@@ -549,6 +550,19 @@ export function LandingHeader() {
           }}
         />
       )}
+
+      {/* Mobile Sticky/Fixed Bottom Navigation */}
+      <MobileBottomNav
+        onOpenDashboard={() => {
+          if (user) {
+            setDashboardTab('orders')
+            setDashboardModalOpen(true)
+          } else {
+            setAuthModalOpen(true)
+          }
+        }}
+        hidden={open || authModalOpen || dashboardModalOpen}
+      />
     </>
   )
 }

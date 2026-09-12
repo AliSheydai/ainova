@@ -20,7 +20,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
   return (
-    <section className='relative overflow-hidden py-20 md:py-28 lg:py-32'>
+    <section id='hero' className='relative overflow-hidden py-20 md:py-28 lg:py-32'>
       {/* Background Glow */}
       <div
         aria-hidden='true'
