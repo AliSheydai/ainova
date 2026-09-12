@@ -2,9 +2,29 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { LogIn, Menu, Sparkles, User, Loader2, Shield, Package } from 'lucide-react'
+import {
+  LogIn,
+  Menu,
+  Sparkles,
+  User,
+  Loader2,
+  Shield,
+  Package,
+  ChevronDown,
+  LayoutDashboard,
+  Bell,
+  LogOut,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Sheet,
   SheetContent,
@@ -26,6 +46,150 @@ function TelegramIcon({ className = 'size-4' }: { className?: string }) {
     >
       <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z' />
     </svg>
+  )
+}
+
+interface UserDropdownProps {
+  user: AuthUserData
+  displayName: string
+  openingTg: boolean
+  handleTelegramCta: () => Promise<void>
+  onOpenDashboard: () => void
+  onLogout: () => void
+  isMobile?: boolean
+}
+
+function UserDropdown({
+  user,
+  displayName,
+  openingTg,
+  handleTelegramCta,
+  onOpenDashboard,
+  onLogout,
+  isMobile,
+}: UserDropdownProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {isMobile ? (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-9 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer'
+            aria-label='منوی کاربری'
+            title={displayName}
+          >
+            <div className='flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+              {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3.5' />}
+            </div>
+          </Button>
+        ) : (
+          <Button
+            variant='outline'
+            size='sm'
+            className='group items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer rounded-xl h-9 px-3'
+          >
+            <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+              {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
+            </div>
+            <span className='max-w-[140px] truncate text-sm font-medium'>
+              {displayName}
+            </span>
+            <ChevronDown className='size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180' />
+          </Button>
+        )}
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align='end'
+        sideOffset={8}
+        className='w-56 p-1.5 rounded-2xl shadow-xl border-border/60 bg-background/95 backdrop-blur-md [direction:rtl] text-right font-sans z-50'
+      >
+        {/* اطلاعات کاربر */}
+        <div className='px-2.5 py-2 select-none'>
+          <div className='flex items-center justify-between gap-2'>
+            <p className='text-sm font-semibold text-foreground truncate'>
+              {displayName}
+            </p>
+            {user.role === 'ADMIN' && (
+              <span className='rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0'>
+                مدیر
+              </span>
+            )}
+          </div>
+          {user.phone && (
+            <p className='text-xs text-muted-foreground font-mono mt-0.5 [direction:ltr] text-right'>
+              {user.phone}
+            </p>
+          )}
+        </div>
+
+        <DropdownMenuSeparator className='my-1' />
+
+        {/* 1. داشبورد (باز شدن مدال داشبورد) */}
+        <DropdownMenuItem
+          onClick={onOpenDashboard}
+          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-foreground transition-colors'
+        >
+          <LayoutDashboard className='size-4 text-primary shrink-0' />
+          <span>داشبورد</span>
+        </DropdownMenuItem>
+
+        {/* 2. پنل ادمین (در صورت دسترسی مدیر) */}
+        {user.role === 'ADMIN' && (
+          <DropdownMenuItem
+            asChild
+            className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-amber-600 dark:text-amber-400 focus:text-amber-600 focus:bg-amber-500/10 transition-colors'
+          >
+            <Link href='/dashboard' className='flex items-center gap-2.5 w-full'>
+              <Shield className='size-4 text-amber-500 shrink-0' />
+              <span>پنل ادمین</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {/* 3. ربات تلگرام */}
+        <DropdownMenuItem
+          onClick={handleTelegramCta}
+          disabled={openingTg}
+          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-primary focus:text-primary focus:bg-primary/10 transition-colors'
+        >
+          {openingTg ? (
+            <Loader2 className='size-4 animate-spin shrink-0' />
+          ) : (
+            <TelegramIcon className='size-4 text-primary shrink-0' />
+          )}
+          <span>ربات تلگرام</span>
+        </DropdownMenuItem>
+
+        {/* 4. اعلانات */}
+        <DropdownMenuItem
+          onClick={() => {
+            toast.info('بخش اعلانات به زودی فعال خواهد شد.')
+          }}
+          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-foreground transition-colors justify-between'
+        >
+          <div className='flex items-center gap-2.5'>
+            <Bell className='size-4 text-muted-foreground shrink-0' />
+            <span>اعلانات</span>
+          </div>
+          <span className='rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+            به‌زودی
+          </span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className='my-1' />
+
+        {/* خروج از حساب */}
+        <DropdownMenuItem
+          onClick={onLogout}
+          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors'
+        >
+          <LogOut className='size-4 shrink-0' />
+          <span>خروج از حساب</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -86,6 +250,20 @@ export function LandingHeader() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
+      if (res.ok) {
+        setUser(null)
+        toast.success('با موفقیت از حساب کاربری خارج شدید.')
+      } else {
+        toast.error('خطا در خروج از حساب.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    }
+  }
+
   const displayName = user?.name?.trim() || user?.phone || 'حساب کاربری'
 
   const handleTelegramCta = async () => {
@@ -115,17 +293,14 @@ export function LandingHeader() {
 
   return (
     <>
-      <header className='sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md'>
+      <header className='sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md [direction:ltr] md:[direction:rtl]'>
         <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
           {/* Logo */}
           <Link href='/' className='flex items-center gap-2.5 select-none'>
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>
-            <div className='flex flex-col text-start'>
-              <span className='text-base font-bold text-foreground leading-tight'>آینوا</span>
-              <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
-            </div>
+            <span className='text-base font-bold text-foreground leading-tight'>آریوچت</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -145,56 +320,10 @@ export function LandingHeader() {
           <div className='flex items-center gap-2'>
             <ThemeSwitch />
 
-            {/* Telegram Bot CTA - Desktop */}
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleTelegramCta}
-              disabled={openingTg}
-              aria-busy={openingTg}
-              className='hidden sm:inline-flex items-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 font-medium text-xs md:text-sm px-3.5 h-9 rounded-xl shadow-xs transition-all duration-200 cursor-pointer'
-              title='ورود مستقیم به ربات تلگرام'
-            >
-              {openingTg ? (
-                <Loader2 className='size-4 animate-spin text-primary' aria-hidden='true' />
-              ) : (
-                <TelegramIcon className='size-4 text-primary shrink-0' />
-              )}
-              <span>ربات تلگرام</span>
-            </Button>
-
-            {/* Telegram Bot CTA - Mobile quick button */}
-            <Button
-              variant='outline'
-              size='icon'
-              onClick={handleTelegramCta}
-              disabled={openingTg}
-              aria-busy={openingTg}
-              className='sm:hidden size-8 rounded-lg border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
-              aria-label='ورود به ربات تلگرام'
-              title='ورود به ربات تلگرام'
-            >
-              {openingTg ? (
-                <Loader2 className='size-3.5 animate-spin text-primary' aria-hidden='true' />
-              ) : (
-                <TelegramIcon className='size-4 text-primary' />
-              )}
-            </Button>
-
+            {/* Desktop User Section */}
             {user ? (
               <div className='hidden md:flex items-center gap-2'>
-                {user.role === 'ADMIN' && (
-                  <Link href='/dashboard'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='items-center gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 text-xs font-semibold h-9 px-3 rounded-xl'
-                    >
-                      <Shield className='size-3.5' />
-                      <span>پنل ادمین</span>
-                    </Button>
-                  </Link>
-                )}
+                {/* دکمه سفارش‌های من در هدر باقی می‌ماند */}
                 <Button
                   variant='outline'
                   size='sm'
@@ -204,19 +333,16 @@ export function LandingHeader() {
                   <Package className='size-3.5 text-primary' />
                   <span>سفارش‌های من</span>
                 </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setDashboardModalOpen(true)}
-                  className='items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer'
-                >
-                  <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
-                    {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
-                  </div>
-                  <span className='max-w-[140px] truncate text-sm font-medium'>
-                    {displayName}
-                  </span>
-                </Button>
+
+                {/* دراپ‌داون نام کاربری با گزینه‌های داشبورد، پنل ادمین، ربات تلگرام، اعلانات و خروج */}
+                <UserDropdown
+                  user={user}
+                  displayName={displayName}
+                  openingTg={openingTg}
+                  handleTelegramCta={handleTelegramCta}
+                  onOpenDashboard={() => setDashboardModalOpen(true)}
+                  onLogout={handleLogout}
+                />
               </div>
             ) : (
               <Button
@@ -228,26 +354,26 @@ export function LandingHeader() {
                 ورود
               </Button>
             )}
+
             <Link href='/#products'>
               <Button size='sm' className='hidden text-sm md:flex'>
                 مشاهده محصولات
               </Button>
             </Link>
 
-            {/* Mobile User Quick Icon */}
+            {/* Mobile User Quick Icon / Dropdown */}
             {user ? (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => setDashboardModalOpen(true)}
-                className='md:hidden size-9 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10'
-                aria-label='داشبورد کاربری'
-                title={displayName}
-              >
-                <div className='flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
-                  {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3.5' />}
-                </div>
-              </Button>
+              <div className='md:hidden flex items-center'>
+                <UserDropdown
+                  user={user}
+                  displayName={displayName}
+                  openingTg={openingTg}
+                  handleTelegramCta={handleTelegramCta}
+                  onOpenDashboard={() => setDashboardModalOpen(true)}
+                  onLogout={handleLogout}
+                  isMobile
+                />
+              </div>
             ) : (
               <Button
                 variant='outline'
@@ -286,12 +412,11 @@ export function LandingHeader() {
                       </div>
                       <div className='flex flex-col text-start'>
                         <SheetTitle className='text-base font-bold text-foreground leading-tight'>
-                          آینوا
+                          آریوچت
                         </SheetTitle>
                         <SheetDescription className='sr-only'>
                           منوی دسترسی سریع و ناوبری بخش‌های فروشگاه
                         </SheetDescription>
-                        <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
                       </div>
                     </div>
                   </SheetHeader>

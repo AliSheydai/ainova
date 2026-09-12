@@ -5,7 +5,6 @@ import {
   ShoppingBag,
   Plus,
   RefreshCw,
-  Sparkles,
   Loader2,
   Search,
   SlidersHorizontal,
@@ -50,6 +49,7 @@ import { useProducts } from './hooks/use-products'
 import { ProductTable } from './components/product-table'
 import { ProductDialog } from './components/product-dialog'
 import { PlanDialog } from './components/plan-dialog'
+import { toPersianDigits } from '@/lib/persian-utils'
 
 export default function AdminProductsPage() {
   const {
@@ -206,7 +206,7 @@ export default function AdminProductsPage() {
                 کاتالوگ محصولات و پلن‌ها
               </h1>
               <Badge variant='secondary' className='text-[10px] h-5 px-1.5 font-sans font-medium'>
-                {totalProductsCount.toLocaleString('fa-IR')} محصول
+                {toPersianDigits(totalProductsCount)} محصول
               </Badge>
             </div>
             <p className='text-[11px] text-muted-foreground hidden sm:block truncate'>
@@ -263,7 +263,7 @@ export default function AdminProductsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
-                  {totalProductsCount.toLocaleString('fa-IR')}
+                  {toPersianDigits(totalProductsCount)}
                 </span>
                 <span className='text-[10px] text-muted-foreground'>محصول</span>
               </div>
@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
-                  {activeProductsCount.toLocaleString('fa-IR')}
+                  {toPersianDigits(activeProductsCount)}
                 </span>
                 <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>فعال</span>
               </div>
@@ -313,7 +313,7 @@ export default function AdminProductsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-primary'>
-                  {inStockCount.toLocaleString('fa-IR')}
+                  {toPersianDigits(inStockCount)}
                 </span>
                 <span className='text-[10px] text-primary/80'>موجود</span>
               </div>
@@ -327,7 +327,7 @@ export default function AdminProductsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
-                  {totalPlansCount.toLocaleString('fa-IR')}
+                  {toPersianDigits(totalPlansCount)}
                 </span>
                 <span className='text-[10px] text-muted-foreground'>پلن تعریف‌شده</span>
               </div>
@@ -385,7 +385,7 @@ export default function AdminProductsPage() {
                     <span className='hidden sm:inline'>فیلترها</span>
                     {activeFiltersCount > 0 && (
                       <span className='size-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center font-sans'>
-                        {activeFiltersCount}
+                        {toPersianDigits(activeFiltersCount)}
                       </span>
                     )}
                   </Button>

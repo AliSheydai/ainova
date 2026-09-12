@@ -149,3 +149,74 @@ export function formatPlanDurationLabel(months: number | string): string {
   if (m % 12 === 0) return `${toPersianDigits(m / 12)} ساله (${toPersianDigits(m)} ماهه)`
   return `${toPersianDigits(m)} ماهه`
 }
+
+/**
+ * Standard Persian price formatter ensuring full Persian digits and 3-digit comma separation.
+ * Example: 390000 -> "۳۹۰,۰۰۰ تومان"
+ */
+export function formatPrice(amount: number | string | null | undefined): string {
+  if (amount === null || amount === undefined || amount === '') return '۰ تومان'
+  const cleanStr = toEnglishDigits(amount).replace(/[^\d.-]/g, '')
+  const num = parseFloat(cleanStr)
+  if (isNaN(num)) return '۰ تومان'
+  const formatted = new Intl.NumberFormat('en-US').format(num)
+  return `${toPersianDigits(formatted)} تومان`
+}
+
+/**
+ * Formats a number with comma separation and Persian digits without currency suffix.
+ * Example: 390000 -> "۳۹۰,۰۰۰"
+ */
+export function formatPersianNumber(input: number | string | null | undefined): string {
+  if (input === null || input === undefined || input === '') return ''
+  const cleanStr = toEnglishDigits(input).replace(/[^\d.-]/g, '')
+  const num = parseFloat(cleanStr)
+  if (isNaN(num)) return ''
+  const formatted = new Intl.NumberFormat('en-US').format(num)
+  return toPersianDigits(formatted)
+}
+
+/**
+ * Formats date into Persian (Solar Hijri) calendar with guaranteed Persian digits.
+ */
+export function formatPersianDate(
+  dateInput: string | Date | null | undefined,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (!dateInput) return ''
+  try {
+    const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+    const formatted = d.toLocaleDateString(
+      'fa-IR',
+      options || {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }
+    )
+    return toPersianDigits(formatted)
+  } catch {
+    return toPersianDigits(String(dateInput))
+  }
+}
+
+/**
+ * Formats relative time in Persian with guaranteed Persian digits.
+ * Example: "۵ دقیقه پیش", "۲ ساعت پیش", "۳ روز پیش"
+ */
+export function formatRelativeTime(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return ''
+  try {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+    const now = new Date()
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffSec < 60) return 'لحظاتی پیش'
+    if (diffSec < 3600) return `${toPersianDigits(Math.floor(diffSec / 60))} دقیقه پیش`
+    if (diffSec < 86400) return `${toPersianDigits(Math.floor(diffSec / 3600))} ساعت پیش`
+    if (diffSec < 604800) return `${toPersianDigits(Math.floor(diffSec / 86400))} روز پیش`
+    return formatPersianDate(date, { month: 'short', day: 'numeric' })
+  } catch {
+    return toPersianDigits(String(dateInput))
+  }
+}

@@ -2,7 +2,6 @@ import React from 'react'
 import {
   CreditCard,
   Plus,
-  Sparkles,
   Mail,
   Phone,
   FileText,
@@ -23,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { toPersianDigits } from '@/lib/persian-utils'
 
 interface CheckoutFieldEditorProps {
   fields: CheckoutFieldDefinition[]
@@ -114,8 +114,8 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
             <span className='text-xs font-bold text-foreground break-words'>
               اطلاعات تسویه‌حساب (Checkout Fields)
             </span>
-            <Badge variant='secondary' className='text-[10px] font-mono shrink-0'>
-              {fields.length} فیلد
+            <Badge variant='secondary' className='text-[10px] font-sans shrink-0'>
+              {toPersianDigits(fields.length)} فیلد
             </Badge>
           </div>
           <span className='text-[10px] sm:text-[11px] text-muted-foreground block mt-0.5 leading-relaxed break-words'>
@@ -138,7 +138,6 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
       {/* Preset Shortcuts */}
       <div className='flex items-center gap-1 sm:gap-1.5 flex-wrap p-2 rounded-xl bg-muted/30 border border-border/40 min-w-0 w-full overflow-hidden'>
         <span className='text-[10px] sm:text-[10.5px] font-medium text-muted-foreground flex items-center gap-1 shrink-0'>
-          <Sparkles className='size-3 text-primary' />
           <span>سریع:</span>
         </span>
         <button
@@ -188,8 +187,8 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
               {/* Field Item Header - Protected against overflow on small screens */}
               <div className='flex items-center justify-between gap-2 pb-2 border-b border-border/40 min-w-0 w-full'>
                 <div className='flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden'>
-                  <div className='size-5 rounded-md bg-muted text-foreground flex items-center justify-center font-mono text-[10px] font-bold shrink-0'>
-                    {idx + 1}
+                  <div className='size-5 rounded-md bg-muted text-foreground flex items-center justify-center font-sans text-[10px] font-bold shrink-0'>
+                    {toPersianDigits(idx + 1)}
                   </div>
                   <span className='text-xs font-bold text-foreground truncate'>
                     {field.label || 'فیلد بدون عنوان'}

@@ -10,7 +10,6 @@ import {
   Loader2,
   Lock,
   Clock,
-  Sparkles,
   ArrowLeft,
   Layers,
 } from 'lucide-react'
@@ -19,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
 
 interface PlanItem {
   id: string
@@ -41,9 +41,7 @@ interface ProductBuyCardProps {
   plans?: PlanItem[]
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
+
 
 function getFulfillmentLabel(type?: string) {
   switch (type) {
@@ -183,7 +181,7 @@ export function ProductBuyCard({
             <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
               <span className='text-muted-foreground block text-[11px] mb-0.5'>سفارش‌های موفق</span>
               <strong className='text-sm text-foreground font-sans'>
-                {purchaseCount.toLocaleString('fa-IR')} خریدار راضی
+                {toPersianDigits(purchaseCount)} خریدار راضی
               </strong>
             </div>
           </div>

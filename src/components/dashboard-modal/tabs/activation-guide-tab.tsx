@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
-  Sparkles,
   AlertTriangle,
   Globe,
   Lock,
@@ -31,7 +30,7 @@ const steps = [
       'پس از ثبت سفارش، سیستم خودکار لینک اختصاصی برای شما صادر می‌کند. از تب «سفارش‌های من» روی «کپی لینک» یا «فعال‌سازی» کلیک کنید.',
     badge: 'گام ۱',
     tip: 'هر لینک منحصراً برای شما بوده و بدون نیاز به رمز عبور اکانت فعال می‌شود.',
-    icon: Sparkles,
+    icon: ExternalLink,
     color: 'from-blue-600 to-indigo-600',
   },
   {
@@ -111,7 +110,6 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <Badge className="bg-primary text-primary-foreground text-xs gap-1">
-            <Sparkles className="size-3" />
             آموزش ۵ مرحله‌ای
           </Badge>
           <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
@@ -136,7 +134,6 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
             onClick={onGoToOrders}
             className="mt-3 gap-1.5 text-xs font-semibold rounded-xl bg-primary text-primary-foreground shadow-xs"
           >
-            <Sparkles className="size-3.5" />
             مشاهده سفارش‌ها و کپی لینک فعال‌سازی
           </Button>
         )}

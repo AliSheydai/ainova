@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Package, Sparkles, ArrowLeft, Check, Zap, Tag } from 'lucide-react'
+import { Package, ArrowLeft, Check, Zap, Tag } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { fadeUp, staggerContainer, viewportOnce } from '@/lib/motion'
+import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
 
 export interface ProductSummary {
   id: string
@@ -23,10 +24,6 @@ export interface ProductSummary {
   fulfillmentType: string
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 export function ProductsShowcaseSection({ products }: { products: ProductSummary[] }) {
   if (!products || products.length === 0) return null
 
@@ -41,7 +38,6 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
           variants={fadeUp}
         >
           <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold mb-3'>
-            <Sparkles className='size-3.5' />
             <span>محصولات و اشتراک‌های برگزیده</span>
           </div>
           <h2 className='text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight'>
@@ -118,8 +114,8 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                     </div>
 
                     <div className='flex items-center justify-between text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-lg'>
-                      <span>موجودی: {isAvailable ? `${prod.stock.toLocaleString('fa-IR')} عدد` : 'ناموجود'}</span>
-                      <span>{prod.purchaseCount.toLocaleString('fa-IR')} خرید موفق</span>
+                      <span>موجودی: {isAvailable ? `${toPersianDigits(prod.stock)} عدد` : 'ناموجود'}</span>
+                      <span>{toPersianDigits(prod.purchaseCount)} خرید موفق</span>
                     </div>
 
                     <Link href={`/products/${prod.slug}`} className='block w-full'>

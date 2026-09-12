@@ -10,7 +10,6 @@ import {
   Microscope,
   Palette,
   Play,
-  Sparkles,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
@@ -96,7 +95,6 @@ export function FeaturesSection() {
           variants={fadeUp}
         >
           <div className='mb-3 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary'>
-            <Sparkles className='size-3.5' />
             <span>امکانات و توانمندی‌ها</span>
           </div>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>

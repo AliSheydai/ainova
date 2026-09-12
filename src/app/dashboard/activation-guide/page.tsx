@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
-  Sparkles,
   AlertTriangle,
   HelpCircle,
   Globe,
@@ -40,7 +39,7 @@ const steps = [
       'پس از ثبت و پرداخت موفق سفارش، سیستم به صورت کاملاً خودکار یک لینک اختصاصی برای شما صادر می‌کند. وارد بخش سفارش‌ها شده و با کلیک روی دکمه «کپی لینک» یا «باز کردن و فعال‌سازی»، فرآیند را آغاز کنید.',
     badge: 'گام اولیه',
     tip: 'هر لینک منحصراً متعلق به اکانت شما بوده و با یک کلیک فعال‌سازی می‌شود.',
-    icon: Sparkles,
+    icon: ExternalLink,
     color: 'from-blue-600 to-indigo-600',
   },
   {
@@ -138,7 +137,6 @@ export default function ActivationGuidePage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1 text-xs gap-1.5 shadow-sm">
-                  <Sparkles className="size-3.5" />
                   آموزش جامع و گام‌به‌گام
                 </Badge>
                 <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
@@ -175,7 +173,6 @@ export default function ActivationGuidePage() {
             <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
               <Button asChild className="gap-2 shadow-md shadow-primary/20">
                 <Link href="/dashboard/orders">
-                  <Sparkles className="size-4" />
                   مشاهده سفارش‌ها و لینک من
                 </Link>
               </Button>
@@ -484,18 +481,13 @@ export default function ActivationGuidePage() {
 
         {/* Bottom Call to Action */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-primary/20 bg-primary/5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold">
-              <Sparkles className="size-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-foreground">
-                آیا هنوز سفارش ثبت‌نشده یا فعال‌نشده‌ای دارید؟
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                از طریق دکمه‌های زیر می‌توانید سفارش‌های قبلی را ببینید یا با پشتیبانی در ارتباط باشید.
-              </p>
-            </div>
+          <div>
+            <h4 className="text-sm font-bold text-foreground">
+              آیا هنوز سفارش ثبت‌نشده یا فعال‌نشده‌ای دارید؟
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              از طریق دکمه‌های زیر می‌توانید سفارش‌های قبلی را ببینید یا با پشتیبانی در ارتباط باشید.
+            </p>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -507,7 +499,6 @@ export default function ActivationGuidePage() {
             </Button>
             <Button asChild size="sm" className="flex-1 sm:flex-none gap-1.5 text-xs shadow-sm">
               <Link href="/dashboard/orders">
-                <Sparkles className="size-3.5" />
                 سفارش‌های من
               </Link>
             </Button>

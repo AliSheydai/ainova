@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Plus, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toPersianDigits } from '@/lib/persian-utils'
 
 export interface NumberInputProps
   extends Omit<React.ComponentProps<'input'>, 'type'> {
@@ -221,13 +222,13 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           step={step}
           disabled={disabled}
           readOnly={readOnly}
-          placeholder={placeholder}
+          placeholder={typeof placeholder === 'string' || typeof placeholder === 'number' ? toPersianDigits(placeholder) : placeholder}
           value={value}
           defaultValue={defaultValue}
           onChange={onChange}
           dir={dir || 'ltr'}
           className={cn(
-            'flex-1 min-w-0 h-full w-full bg-transparent px-2 text-center text-xs sm:text-sm font-mono outline-none',
+            'flex-1 min-w-0 h-full w-full bg-transparent px-2 text-center text-xs sm:text-sm font-sans font-medium outline-none',
             '!border-0 !shadow-none !ring-0 !outline-none disabled:cursor-not-allowed placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground',
             inputClassName
           )}

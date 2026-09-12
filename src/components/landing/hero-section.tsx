@@ -14,22 +14,21 @@ const trustItems = [
 ]
 
 interface HeroSectionProps {
+  productCount?: number
   price?: string
 }
 
-export function HeroSection({ price }: HeroSectionProps) {
+export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
   return (
-    <section className='relative overflow-hidden py-20 md:py-28 lg:py-36'>
-      {/* Background glow with subtle breathing fade */}
-      <motion.div
-        aria-hidden
-        className='pointer-events-none absolute inset-0 -z-10'
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+    <section className='relative overflow-hidden py-20 md:py-28 lg:py-32'>
+      {/* Background Glow */}
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'
       >
-        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/6 blur-3xl' />
-      </motion.div>
+        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/8 blur-3xl' />
+        <div className='absolute bottom-0 right-1/4 h-[300px] w-[400px] rounded-full bg-primary/5 blur-3xl' />
+      </div>
 
       <div className='container mx-auto px-4 sm:px-6'>
         <motion.div
@@ -74,7 +73,6 @@ export function HeroSection({ price }: HeroSectionProps) {
           >
             <Link href='#products'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
-                <Sparkles className='size-4' />
                 مشاهده و خرید محصولات
               </Button>
             </Link>

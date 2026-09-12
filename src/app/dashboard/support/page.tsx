@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -80,16 +81,12 @@ interface TicketCounts {
 }
 
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export default function AdminSupportPage() {
@@ -195,8 +192,8 @@ export default function AdminSupportPage() {
                 <span className='text-[11px] sm:text-xs text-muted-foreground font-medium truncate block'>
                   تیکت‌های باز
                 </span>
-                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
-                  {counts.open.toLocaleString('fa-IR')}
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 font-sans'>
+                  {toPersianDigits(counts.open)}
                 </div>
               </CardContent>
             </Card>
@@ -206,8 +203,8 @@ export default function AdminSupportPage() {
                 <span className='text-[11px] sm:text-xs text-primary font-medium truncate block'>
                   در حال بررسی
                 </span>
-                <div className='text-lg sm:text-xl font-bold text-primary mt-1 tabular-nums'>
-                  {counts.inProgress.toLocaleString('fa-IR')}
+                <div className='text-lg sm:text-xl font-bold text-primary mt-1 font-sans'>
+                  {toPersianDigits(counts.inProgress)}
                 </div>
               </CardContent>
             </Card>
@@ -217,8 +214,8 @@ export default function AdminSupportPage() {
                 <span className='text-[11px] sm:text-xs text-primary/80 font-medium truncate block'>
                   حل شده (RESOLVED)
                 </span>
-                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
-                  {counts.resolved.toLocaleString('fa-IR')}
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 font-sans'>
+                  {toPersianDigits(counts.resolved)}
                 </div>
               </CardContent>
             </Card>
@@ -226,8 +223,8 @@ export default function AdminSupportPage() {
             <Card className='border-border/60 shadow-xs'>
               <CardContent className='p-3 sm:p-3.5'>
                 <span className='text-[11px] sm:text-xs text-muted-foreground truncate block'>کل تیکت‌ها</span>
-                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums'>
-                  {counts.total.toLocaleString('fa-IR')}
+                <div className='text-lg sm:text-xl font-bold text-foreground mt-1 font-sans'>
+                  {toPersianDigits(counts.total)}
                 </div>
               </CardContent>
             </Card>
@@ -252,7 +249,7 @@ export default function AdminSupportPage() {
               </Select>
             </div>
             <span className='text-xs text-muted-foreground'>
-              {tickets.length.toLocaleString('fa-IR')} پیام ثبت‌شده
+              {toPersianDigits(tickets.length)} پیام ثبت‌شده
             </span>
           </CardContent>
         </Card>

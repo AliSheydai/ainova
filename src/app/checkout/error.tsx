@@ -62,7 +62,7 @@ export default function CheckoutError({
               asChild
               className='gap-1.5'
             >
-              <Link href='https://t.me/ainova_support' target='_blank'>
+              <Link href='https://t.me/support' target='_blank'>
                 <MessageSquare className='w-4 h-4' />
                 پشتیبانی تلگرام
               </Link>

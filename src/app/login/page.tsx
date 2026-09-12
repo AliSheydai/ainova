@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   KeyRound,
   Check,
-  Sparkle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -35,6 +34,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { cn } from '@/lib/utils'
+import { toPersianDigits } from '@/lib/persian-utils'
 
 type AuthStep = 'phone' | 'otp' | 'name'
 
@@ -220,9 +220,9 @@ function LoginForm() {
             <div className="text-right">
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black tracking-tight text-foreground">
-                  آینوا
+                  آریوچت
                 </span>
-                <span className="text-xs font-semibold text-primary">AiNova Store</span>
+                <span className="text-xs font-semibold text-primary">ArioChat</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -444,7 +444,7 @@ function LoginForm() {
                   <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 text-center text-xs text-primary">
                     <span className="font-semibold">حالت تستی:</span> کد تأیید شما{' '}
                     <span className="font-sans font-bold text-sm tracking-widest bg-primary/10 px-2 py-0.5 rounded-md text-primary">
-                      {devCode}
+                      {toPersianDigits(devCode)}
                     </span>{' '}
                     است.
                   </div>
@@ -496,8 +496,8 @@ function LoginForm() {
                   {cooldown > 0 ? (
                     <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-full">
                       <span>ارسال مجدد کد پس از</span>
-                      <span className="font-sans font-bold text-primary tabular-nums">
-                        {cooldown}
+                      <span className="font-sans font-bold text-primary">
+                        {toPersianDigits(cooldown)}
                       </span>
                       <span>ثانیه</span>
                     </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CheckCircle2, XCircle, ArrowRight, MessageCircle, Sparkles } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowRight, MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 interface PageProps {

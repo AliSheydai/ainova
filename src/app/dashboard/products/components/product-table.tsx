@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { type ProductItem, type PlanItem, formatPrice } from '../types'
+import { toPersianDigits } from '@/lib/persian-utils'
 import { ProductStatusBadge, StockBadge } from './product-badges'
 import { ProductPlansAccordion } from './product-plans-accordion'
 
@@ -104,7 +105,7 @@ export function ProductTable({
                     </Link>
                     <ProductStatusBadge status={prod.status} />
                     <Badge variant='outline' className='text-[10px] font-sans px-2 py-0.5'>
-                      {plans.length} پلن
+                      {toPersianDigits(plans.length)} پلن
                     </Badge>
                     <StockBadge stock={prod.stock} />
                   </div>
@@ -121,10 +122,10 @@ export function ProductTable({
                       قیمت پایه: <strong className='text-foreground font-sans'>{formatPrice(prod.price)}</strong>
                     </span>
                     <span className='inline-flex items-center gap-1 bg-background px-2 py-1 rounded-lg border border-border/60 shadow-2xs font-medium'>
-                      فروش موفق: <strong className='text-foreground font-sans'>{prod.purchaseCount.toLocaleString('fa-IR')}</strong> سفارش
+                      فروش موفق: <strong className='text-foreground font-sans'>{toPersianDigits(prod.purchaseCount)}</strong> سفارش
                     </span>
                     <span className='inline-flex items-center gap-1 bg-background px-2 py-1 rounded-lg border border-border/60 shadow-2xs font-medium'>
-                      اولویت نمایش: <strong className='text-foreground font-mono'>{prod.sortOrder}</strong>
+                      اولویت نمایش: <strong className='text-foreground font-sans'>{toPersianDigits(prod.sortOrder)}</strong>
                     </span>
                   </div>
                 </div>

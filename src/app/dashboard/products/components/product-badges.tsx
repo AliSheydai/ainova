@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { toPersianDigits } from '@/lib/persian-utils'
 import { getFulfillmentBadge } from '../types'
 
 export function ProductStatusBadge({ status }: { status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED' }) {
@@ -36,8 +37,8 @@ export function PlanFulfillmentBadge({ type }: { type: string }) {
 export function StockBadge({ stock }: { stock: number }) {
   if (stock > 0) {
     return (
-      <Badge variant='outline' className='bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-mono'>
-        {stock.toLocaleString('fa-IR')} عدد موجود
+      <Badge variant='outline' className='bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-sans'>
+        {toPersianDigits(stock)} عدد موجود
       </Badge>
     )
   }

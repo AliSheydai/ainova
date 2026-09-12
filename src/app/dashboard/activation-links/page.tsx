@@ -34,6 +34,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPersianDate, formatRelativeTime, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -106,34 +107,7 @@ interface ProductOption {
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—'
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-function formatRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return '—'
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffSec < 60) return 'لحظاتی پیش'
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} دقیقه پیش`
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ساعت پیش`
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} روز پیش`
-    return date.toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr)
 }
 
 function getStatusBadge(status: string) {
@@ -820,8 +794,8 @@ export default function AdminActivationLinksPage() {
                         return (
                           <tr key={link.id} className='hover:bg-muted/40 transition-colors group cursor-default'>
                             {/* ID */}
-                            <td className='py-3.5 px-4 whitespace-nowrap min-w-[110px] font-mono font-bold text-foreground'>
-                              #{link.id.slice(-6).toUpperCase()}
+                            <td className='py-3.5 px-4 whitespace-nowrap min-w-[110px] font-sans font-bold text-foreground'>
+                              #{toPersianDigits(link.id.slice(-6).toUpperCase())}
                             </td>
 
                             {/* Product & Plan */}
@@ -890,8 +864,8 @@ export default function AdminActivationLinksPage() {
                                   <span className='font-bold block text-foreground'>
                                     {link.order.user?.name || link.order.user?.phone || 'کاربر'}
                                   </span>
-                                  <span className='text-[10px] text-muted-foreground font-mono block mt-0.5'>
-                                    سفارش: #{link.order.id.slice(-6).toUpperCase()}
+                                  <span className='text-[10px] text-muted-foreground font-sans block mt-0.5'>
+                                    سفارش: #{toPersianDigits(link.order.id.slice(-6).toUpperCase())}
                                   </span>
                                 </div>
                               ) : (
@@ -943,8 +917,8 @@ export default function AdminActivationLinksPage() {
                         className='rounded-xl border border-border/70 p-3.5 bg-card hover:border-primary/40 transition-all space-y-2.5'
                       >
                         <div className='flex items-center justify-between'>
-                          <span className='font-mono font-bold text-xs text-foreground'>
-                            #{link.id.slice(-6).toUpperCase()}
+                          <span className='font-sans font-bold text-xs text-foreground'>
+                            #{toPersianDigits(link.id.slice(-6).toUpperCase())}
                           </span>
                           <Badge className={`text-[9px] gap-1 border ${status.className}`}>
                             <StatusIcon className='size-2.5' />
@@ -1059,7 +1033,7 @@ export default function AdminActivationLinksPage() {
                                     : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                                 }`}
                               >
-                                {p}
+                                {toPersianDigits(p)}
                               </button>
                             </div>
                           )

@@ -63,10 +63,10 @@ function DialogContent({
         className={cn(
           'fixed z-50 flex flex-col w-full min-w-0 max-w-full gap-4 border bg-background shadow-2xl duration-200 box-border [&>*]:shrink-0',
           // Mobile Bottom Sheet styles
-          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-4 sm:p-6 pt-3 pb-7 max-h-[85vh] max-h-[85dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain',
+          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-4 pt-3 pb-7 max-h-[85vh] max-h-[85dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom',
           // Desktop Centered Dialog styles
-          'sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:inset-x-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border sm:p-6 sm:max-w-lg sm:max-h-[85vh]',
+          'sm:top-[50%] sm:bottom-auto sm:inset-x-auto sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border sm:p-6 sm:max-w-lg sm:max-h-[85vh]',
           'sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95',
           className
         )}

@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { fadeUp, fadeIn, staggerContainer } from '@/lib/motion'
+import { formatPrice, formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
 
 interface OverviewStats {
   totalProducts?: number
@@ -83,21 +84,13 @@ interface RecentUser {
   }
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export default function AdminOverviewPage() {
@@ -235,14 +228,14 @@ export default function AdminOverviewPage() {
                   </CardHeader>
                   <CardContent className='p-3.5 sm:p-5 pt-0 sm:pt-0'>
                     <div className='text-lg xs:text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
-                      {stats.successfulOrders.toLocaleString('fa-IR')}{' '}
+                      {toPersianDigits(stats.successfulOrders)}{' '}
                       <span className='text-xs font-normal text-muted-foreground'>
-                        از {stats.totalOrders.toLocaleString('fa-IR')} کل
+                        از {toPersianDigits(stats.totalOrders)} کل
                       </span>
                     </div>
                     <div className='flex items-center gap-1.5 mt-1 text-[10px] sm:text-[11px] text-muted-foreground truncate'>
                       <Clock className='size-3 text-primary shrink-0' />
-                      <span className='truncate'>{stats.pendingOrders.toLocaleString('fa-IR')} در انتظار پرداخت</span>
+                      <span className='truncate'>{toPersianDigits(stats.pendingOrders)} در انتظار پرداخت</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -261,10 +254,10 @@ export default function AdminOverviewPage() {
                   </CardHeader>
                   <CardContent className='p-3.5 sm:p-5 pt-0 sm:pt-0'>
                     <div className='text-lg xs:text-xl sm:text-2xl font-bold tracking-tight text-foreground'>
-                      {stats.totalUsers.toLocaleString('fa-IR')}
+                      {toPersianDigits(stats.totalUsers)}
                     </div>
                     <p className='text-[10px] sm:text-[11px] text-muted-foreground mt-1 truncate'>
-                      {stats.newUsers.toLocaleString('fa-IR')} کاربر جدید ۷ روز اخیر
+                      {toPersianDigits(stats.newUsers)} کاربر جدید ۷ روز اخیر
                     </p>
                   </CardContent>
                 </Card>
@@ -283,11 +276,11 @@ export default function AdminOverviewPage() {
                   </CardHeader>
                   <CardContent className='p-3.5 sm:p-5 pt-0 sm:pt-0'>
                     <div className='text-lg xs:text-xl sm:text-2xl font-bold tracking-tight text-primary'>
-                      {stats.availableLinks.toLocaleString('fa-IR')}{' '}
+                      {toPersianDigits(stats.availableLinks)}{' '}
                       <span className='text-xs font-normal text-muted-foreground'>لینک موجود</span>
                     </div>
                     <p className='text-[10px] sm:text-[11px] text-muted-foreground mt-1 truncate'>
-                      {stats.usedLinks.toLocaleString('fa-IR')} لینک مصرف‌شده
+                      {toPersianDigits(stats.usedLinks)} لینک مصرف‌شده
                     </p>
                   </CardContent>
                 </Card>
@@ -317,26 +310,26 @@ export default function AdminOverviewPage() {
                   <div className='grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3'>
                     <div className='rounded-xl border border-primary/25 bg-primary/5 p-2.5 sm:p-3'>
                       <span className='text-[11px] sm:text-xs text-muted-foreground line-clamp-1'>موجود (آماده تحویل)</span>
-                      <div className='text-base sm:text-lg font-bold text-primary mt-0.5 tabular-nums'>
-                        {stats.availableLinks.toLocaleString('fa-IR')}
+                      <div className='text-base sm:text-lg font-bold text-primary mt-0.5 tabular-nums font-sans'>
+                        {toPersianDigits(stats.availableLinks)}
                       </div>
                     </div>
                     <div className='rounded-xl border border-primary/15 bg-primary/5 p-2.5 sm:p-3'>
                       <span className='text-[11px] sm:text-xs text-muted-foreground line-clamp-1'>رزرو شده</span>
-                      <div className='text-base sm:text-lg font-bold text-primary mt-0.5 tabular-nums'>
-                        {stats.reservedLinks.toLocaleString('fa-IR')}
+                      <div className='text-base sm:text-lg font-bold text-primary mt-0.5 tabular-nums font-sans'>
+                        {toPersianDigits(stats.reservedLinks)}
                       </div>
                     </div>
                     <div className='rounded-xl border border-border/80 bg-muted/30 p-2.5 sm:p-3'>
                       <span className='text-[11px] sm:text-xs text-muted-foreground line-clamp-1'>مصرف شده</span>
-                      <div className='text-base sm:text-lg font-bold text-foreground mt-0.5 tabular-nums'>
-                        {stats.usedLinks.toLocaleString('fa-IR')}
+                      <div className='text-base sm:text-lg font-bold text-foreground mt-0.5 tabular-nums font-sans'>
+                        {toPersianDigits(stats.usedLinks)}
                       </div>
                     </div>
                     <div className='rounded-xl border border-border/60 bg-muted/20 p-2.5 sm:p-3'>
                       <span className='text-[11px] sm:text-xs text-muted-foreground line-clamp-1'>نامعتبر / منقضی</span>
-                      <div className='text-base sm:text-lg font-bold text-muted-foreground mt-0.5 tabular-nums'>
-                        {stats.invalidLinks.toLocaleString('fa-IR')}
+                      <div className='text-base sm:text-lg font-bold text-muted-foreground mt-0.5 tabular-nums font-sans'>
+                        {toPersianDigits(stats.invalidLinks)}
                       </div>
                     </div>
                   </div>
@@ -383,8 +376,8 @@ export default function AdminOverviewPage() {
                         >
                           <div className='flex items-center justify-between text-xs'>
                             <div className='flex items-center gap-1.5'>
-                              <span className='font-mono font-bold text-foreground/90 bg-muted px-1.5 py-0.5 rounded text-[11px]'>
-                                #{ord.id.slice(-6)}
+                              <span className='font-sans font-bold text-foreground/90 bg-muted px-1.5 py-0.5 rounded text-[11px]'>
+                                #{toPersianDigits(ord.id.slice(-6))}
                               </span>
                               <span className='text-[11px] text-muted-foreground truncate max-w-[120px]'>
                                 {ord.plan?.name || 'جمینای ۱۸ ماهه'}

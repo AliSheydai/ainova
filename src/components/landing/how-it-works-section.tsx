@@ -7,7 +7,6 @@ import {
   Clock,
   CreditCard,
   ShieldCheck,
-  Sparkles,
   Zap,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -68,7 +67,6 @@ export function HowItWorksSection() {
           variants={fadeUp}
         >
           <div className='mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary shadow-xs'>
-            <Sparkles className='size-3.5' />
             <span>مسیر ساده و شفاف</span>
           </div>
 

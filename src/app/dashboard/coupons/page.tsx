@@ -11,7 +11,6 @@ import {
   Check,
   Copy,
   Calendar,
-  Sparkles,
   ShoppingBag,
   Percent,
   Coins,
@@ -25,6 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPrice, formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -85,20 +85,8 @@ interface ProductOption {
   slug: string
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr)
 }
 
 export default function AdminCouponsPage() {
@@ -500,7 +488,7 @@ export default function AdminCouponsPage() {
                                 {item.discountType === 'PERCENTAGE' ? (
                                   <>
                                     <Percent className='size-3.5 text-primary shrink-0' />
-                                    <span>%{item.discountValue} تخفیف</span>
+                                    <span>%{toPersianDigits(item.discountValue)} تخفیف</span>
                                   </>
                                 ) : (
                                   <>
@@ -528,10 +516,10 @@ export default function AdminCouponsPage() {
                             {/* Usage Count */}
                             <td className='p-3'>
                               <div className='flex items-center gap-1 font-sans'>
-                                <span className='font-bold text-foreground'>{item.usedCount}</span>
+                                <span className='font-bold text-foreground'>{toPersianDigits(item.usedCount)}</span>
                                 <span className='text-muted-foreground'>/</span>
                                 <span className='text-muted-foreground'>
-                                  {item.maxUses !== null ? item.maxUses : '∞'}
+                                  {item.maxUses !== null ? toPersianDigits(item.maxUses) : '∞'}
                                 </span>
                               </div>
                               {isMaxedOut && (
@@ -655,7 +643,7 @@ export default function AdminCouponsPage() {
                               {item.discountType === 'PERCENTAGE' ? (
                                 <>
                                   <Percent className='size-3.5 text-primary shrink-0' />
-                                  <span>%{item.discountValue} تخفیف</span>
+                                  <span>%{toPersianDigits(item.discountValue)} تخفیف</span>
                                 </>
                               ) : (
                                 <>
@@ -685,7 +673,7 @@ export default function AdminCouponsPage() {
                           <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
                             <span>دفعات استفاده:</span>
                             <span className='font-sans font-medium text-foreground'>
-                              {item.usedCount} از {item.maxUses !== null ? item.maxUses : 'نامحدود'}
+                              {toPersianDigits(item.usedCount)} از {item.maxUses !== null ? toPersianDigits(item.maxUses) : 'نامحدود'}
                               {isMaxedOut && (
                                 <Badge variant='outline' className='text-[9px] text-rose-600 border-rose-500/30 ms-1.5'>
                                   تکمیل
@@ -775,7 +763,6 @@ export default function AdminCouponsPage() {
                   className='h-10 px-3 text-xs shrink-0 gap-1 rounded-xl cursor-pointer'
                   title='تولید کد تصادفی'
                 >
-                  <Sparkles className='size-3.5 text-primary' />
                   <span>کد تصادفی</span>
                 </Button>
               </div>
@@ -808,11 +795,10 @@ export default function AdminCouponsPage() {
                   min='1'
                   max={newDiscountType === 'PERCENTAGE' ? '100' : undefined}
                   step={newDiscountType === 'PERCENTAGE' ? '1' : '5000'}
-                  placeholder={newDiscountType === 'PERCENTAGE' ? 'مثلاً: 20' : 'مثلاً: 50000'}
+                  placeholder={newDiscountType === 'PERCENTAGE' ? 'مثلاً: ۲۰' : 'مثلاً: ۵۰,۰۰۰'}
                   value={newDiscountValue}
                   onChange={(e) => setNewDiscountValue(e.target.value)}
-                  className='text-xs font-mono h-10 rounded-xl'
-                  dir='ltr'
+                  className='text-xs font-sans h-10 rounded-xl'
                   required
                 />
               </div>
@@ -826,11 +812,10 @@ export default function AdminCouponsPage() {
                   type='number'
                   min='0'
                   step='10000'
-                  placeholder='مثلاً: 100000'
+                  placeholder='مثلاً: ۱۰۰,۰۰۰'
                   value={newMinOrderAmount}
                   onChange={(e) => setNewMinOrderAmount(e.target.value)}
-                  className='text-xs font-mono h-10 rounded-xl'
-                  dir='ltr'
+                  className='text-xs font-sans h-10 rounded-xl'
                 />
               </div>
 
@@ -841,11 +826,10 @@ export default function AdminCouponsPage() {
                     type='number'
                     min='0'
                     step='10000'
-                    placeholder='مثلاً: 150000'
+                    placeholder='مثلاً: ۱۵۰,۰۰۰'
                     value={newMaxDiscountAmount}
                     onChange={(e) => setNewMaxDiscountAmount(e.target.value)}
-                    className='text-xs font-mono h-10 rounded-xl'
-                    dir='ltr'
+                    className='text-xs font-sans h-10 rounded-xl'
                   />
                 </div>
               ) : (
@@ -855,11 +839,10 @@ export default function AdminCouponsPage() {
                     type='number'
                     min='1'
                     step='1'
-                    placeholder='مثلاً: 50'
+                    placeholder='مثلاً: ۵۰'
                     value={newMaxUses}
                     onChange={(e) => setNewMaxUses(e.target.value)}
-                    className='text-xs font-mono h-10 rounded-xl'
-                    dir='ltr'
+                    className='text-xs font-sans h-10 rounded-xl'
                   />
                 </div>
               )}
@@ -872,11 +855,10 @@ export default function AdminCouponsPage() {
                   type='number'
                   min='1'
                   step='1'
-                  placeholder='مثلاً: 50'
+                  placeholder='مثلاً: ۵۰'
                   value={newMaxUses}
                   onChange={(e) => setNewMaxUses(e.target.value)}
-                  className='text-xs font-mono h-10 rounded-xl'
-                  dir='ltr'
+                  className='text-xs font-sans h-10 rounded-xl'
                 />
               </div>
             )}

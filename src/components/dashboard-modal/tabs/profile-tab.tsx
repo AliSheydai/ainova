@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { type AuthUserData } from '@/components/auth/auth-modal'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
 
 function TelegramIcon({ className = 'size-4' }: { className?: string }) {
   return (
@@ -234,8 +235,8 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                   <Calendar className="size-3.5 shrink-0 text-primary" />
                   <span>
                     تاریخ عضویت:{' '}
-                    <strong className="text-foreground font-sans tabular-nums">
-                      {new Date(user.createdAt).toLocaleDateString('fa-IR')}
+                    <strong className="text-foreground font-sans">
+                      {formatPersianDate(user.createdAt)}
                     </strong>
                   </span>
                 </div>

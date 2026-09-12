@@ -33,6 +33,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPrice, formatPersianDate, formatRelativeTime, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -100,38 +101,14 @@ interface UserDetailModalData {
   }[]
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-function formatRelativeTime(dateStr: string): string {
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffSec < 60) return 'لحظاتی پیش'
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} دقیقه پیش`
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ساعت پیش`
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} روز پیش`
-    return date.toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export default function AdminUsersPage() {
@@ -381,7 +358,7 @@ export default function AdminUsersPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
-                  {counts.all.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.all)}
                 </span>
                 <span className='text-[10px] text-muted-foreground'>کاربر</span>
               </div>
@@ -408,7 +385,7 @@ export default function AdminUsersPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
-                  {counts.buyers.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.buyers)}
                 </span>
                 <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>نفر</span>
               </div>
@@ -433,7 +410,7 @@ export default function AdminUsersPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-primary'>
-                  {counts.admins.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.admins)}
                 </span>
                 <span className='text-[10px] text-primary/80'>مدیر</span>
               </div>
@@ -458,7 +435,7 @@ export default function AdminUsersPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
-                  {counts.noOrders.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.noOrders)}
                 </span>
                 <span className='text-[10px] text-muted-foreground'>کاربر</span>
               </div>
@@ -1065,7 +1042,7 @@ export default function AdminUsersPage() {
                   <div>
                     <span className='text-muted-foreground block text-[10px]'>تعداد کل سفارش‌ها:</span>
                     <span className='font-bold text-foreground font-sans'>
-                      {userDetail.orders?.length || 0} سفارش
+                      {toPersianDigits(userDetail.orders?.length || 0)} سفارش
                     </span>
                   </div>
                   <div>
@@ -1081,7 +1058,7 @@ export default function AdminUsersPage() {
               <div className='space-y-2'>
                 <h4 className='font-bold text-foreground text-xs flex items-center gap-1.5'>
                   <ShoppingBag className='size-3.5 text-primary' />
-                  <span>تاریخچه سفارش‌های ثبت‌شده ({userDetail.orders?.length || 0}):</span>
+                  <span>تاریخچه سفارش‌های ثبت‌شده ({toPersianDigits(userDetail.orders?.length || 0)}):</span>
                 </h4>
 
                 {!userDetail.orders || userDetail.orders.length === 0 ? (
@@ -1103,10 +1080,10 @@ export default function AdminUsersPage() {
                             <span className='text-muted-foreground text-[10px]'>({ord.plan?.name})</span>
                           </div>
                           <div className='flex items-center gap-3 text-[10px] text-muted-foreground mt-1'>
-                            <span className='font-mono'>#{ord.id.slice(-6).toUpperCase()}</span>
+                            <span className='font-sans text-muted-foreground'>#{toPersianDigits(ord.id.slice(-6).toUpperCase())}</span>
                             <span>{formatDate(ord.createdAt)}</span>
                             {ord.payment?.refId && (
-                              <span className='font-sans text-primary'>RefId: {ord.payment.refId}</span>
+                              <span className='font-sans text-primary'>RefId: {toPersianDigits(ord.payment.refId)}</span>
                             )}
                           </div>
                         </div>

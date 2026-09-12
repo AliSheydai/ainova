@@ -266,7 +266,6 @@ function SuccessContent() {
             <div className='rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 shadow-sm'>
               <div className='flex items-center justify-between gap-2 mb-3'>
                 <div className='flex items-center gap-2 text-sm font-bold text-primary'>
-                  <Sparkles className='size-4 text-primary animate-pulse' />
                   <span>لینک اختصاصی فعال‌سازی اشتراک:</span>
                 </div>
                 <Badge variant='outline' className='text-[10px] bg-background/80 border-primary/30 text-primary'>
@@ -322,7 +321,6 @@ function SuccessContent() {
             <div className='rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 shadow-sm space-y-4'>
               <div className='flex items-center justify-between gap-2'>
                 <div className='flex items-center gap-2 text-sm font-bold text-primary'>
-                  <Sparkles className='size-4 text-primary' />
                   <span>اطلاعات ورود به اکانت اختصاصی شما:</span>
                 </div>
                 <Badge className='bg-primary/15 text-primary border-primary/30 text-[10px]'>

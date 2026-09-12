@@ -8,10 +8,10 @@ import {
   ShieldCheck,
   Check,
   Loader2,
-  Sparkles,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPersianDate } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -110,7 +110,7 @@ export default function ProfilePage() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              مدیریت مشخصات فردی و اطلاعات حساب کاربری جمینای
+              مدیریت مشخصات فردی و اطلاعات حساب کاربری آریوچت
             </p>
           </div>
         </div>
@@ -180,9 +180,9 @@ export default function ProfilePage() {
                   <Calendar className="size-4 shrink-0 text-primary" />
                   <span>
                     تاریخ عضویت شما در سامانه:{' '}
-                    <strong className="text-foreground font-sans tabular-nums">
+                    <strong className="text-foreground font-sans">
                       {profile?.createdAt
-                        ? new Date(profile.createdAt).toLocaleDateString('fa-IR')
+                        ? formatPersianDate(profile.createdAt)
                         : '-'}
                     </strong>
                   </span>

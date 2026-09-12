@@ -14,7 +14,6 @@ import {
   Minus,
   Coins,
   ArrowUpDown,
-  Sparkles,
 } from 'lucide-react'
 import {
   Dialog,
@@ -32,6 +31,7 @@ import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form
 import { CheckoutFieldEditor } from './checkout-field-editor'
 import {
   toEnglishDigits,
+  toPersianDigits,
   formatNumberWithCommas,
   numberToWordsPersian,
   formatPlanDurationLabel,
@@ -87,7 +87,7 @@ export function PlanDialog({
   const [previewValues, setPreviewValues] = useState<Record<string, unknown>>({})
 
   // Formatted display values and calculations
-  const formattedPriceDisplay = formatNumberWithCommas(formPlanPrice)
+  const formattedPriceDisplay = toPersianDigits(formatNumberWithCommas(formPlanPrice))
   const priceInWords = numberToWordsPersian(formPlanPrice)
 
   const durationNum = parseInt(toEnglishDigits(formPlanDuration).replace(/[^\d]/g, ''), 10) || 1
@@ -274,7 +274,7 @@ export function PlanDialog({
               </div>
 
               {/* Row 2: Duration & Sort Order (2 Balanced Columns) */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
+              <div className='flex flex-col md:flex-row items-center gap-3.5'>
                 {/* Column 1: Plan Duration */}
                 <div className='space-y-1.5'>
                   <div className='flex items-center justify-between min-w-0'>
@@ -304,11 +304,10 @@ export function PlanDialog({
                     <input
                       type='text'
                       inputMode='numeric'
-                      value={formPlanDuration}
+                      value={toPersianDigits(formPlanDuration)}
                       onChange={handleDurationChange}
                       placeholder='مثال: ۱۲'
                       className='flex-1 h-9 bg-transparent text-center font-sans text-xs sm:text-sm text-foreground outline-none font-bold px-2'
-                      dir='ltr'
                     />
                     <button
                       type='button'
@@ -337,7 +336,7 @@ export function PlanDialog({
                               : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
                         >
-                          {preset} ماهه
+                          {toPersianDigits(preset)} ماهه
                         </button>
                       ))}
                     </div>
@@ -370,11 +369,10 @@ export function PlanDialog({
                     <input
                       type='text'
                       inputMode='numeric'
-                      value={formPlanSortOrder}
+                      value={toPersianDigits(formPlanSortOrder)}
                       onChange={handleSortOrderChange}
                       placeholder='مثال: ۱'
                       className='flex-1 h-9 bg-transparent text-center font-sans text-xs sm:text-sm text-foreground outline-none font-bold px-2'
-                      dir='ltr'
                     />
                     <button
                       type='button'
@@ -429,7 +427,6 @@ export function PlanDialog({
                 {/* Real-time Persian Words Representation */}
                 {priceInWords ? (
                   <div className='flex items-center gap-1.5 text-xs text-foreground bg-background/90 border border-border/80 rounded-xl px-3 py-2 shadow-2xs animate-fadeIn'>
-                    <Sparkles className='size-3.5 text-amber-500 shrink-0' />
                     <span className='text-[11px] text-muted-foreground shrink-0'>مبلغ به حروف:</span>
                     <span className='font-bold text-[11px] sm:text-xs text-primary leading-normal'>
                       {priceInWords} تومان

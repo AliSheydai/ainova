@@ -29,6 +29,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPrice, formatPersianDate, formatRelativeTime, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -79,38 +80,14 @@ interface AdminPaymentItem {
   }
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-function formatRelativeTime(dateStr: string): string {
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffSec < 60) return 'لحظاتی پیش'
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} دقیقه پیش`
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ساعت پیش`
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} روز پیش`
-    return date.toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export default function AdminPaymentsPage() {
@@ -331,7 +308,7 @@ export default function AdminPaymentsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
-                  {counts.success.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.success)}
                 </span>
                 <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>تراکنش</span>
               </div>
@@ -358,7 +335,7 @@ export default function AdminPaymentsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
-                  {counts.pending.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.pending)}
                 </span>
                 <span className='text-[10px] text-muted-foreground'>تراکنش</span>
               </div>
@@ -385,7 +362,7 @@ export default function AdminPaymentsPage() {
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-rose-600 dark:text-rose-400'>
-                  {counts.failed.toLocaleString('fa-IR')}
+                  {toPersianDigits(counts.failed)}
                 </span>
                 <span className='text-[10px] text-rose-600/80 dark:text-rose-400/80'>تراکنش</span>
               </div>

@@ -35,6 +35,7 @@ import { toast } from 'sonner'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { formatPrice } from '@/lib/persian-utils'
 
 interface PlanData {
   id: string
@@ -68,9 +69,7 @@ const defaultFeatures = [
   'بدون نیاز به ارسال رمز عبور یا اطلاعات حساس',
 ]
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
-}
+
 
 function getFulfillmentLabel(type?: string) {
   switch (type) {
@@ -302,10 +301,7 @@ function CheckoutContent() {
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>
-            <div className='flex flex-col text-start'>
-              <span className='text-base font-bold text-foreground leading-tight'>آینوا</span>
-              <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
-            </div>
+            <span className='text-base font-bold text-foreground leading-tight'>آریوچت</span>
           </Link>
 
           <div className='flex items-center gap-2.5'>

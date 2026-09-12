@@ -15,7 +15,7 @@ import { ProductsShowcaseSection } from '@/components/landing/products-showcase-
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'آینوا (AiNova) | فروشگاه رسمی اشتراک‌های هوش مصنوعی و دیجیتال',
+  title: 'آریوچت (ArioChat) | فروشگاه رسمی اشتراک‌های هوش مصنوعی و دیجیتال',
   description:
     'خرید مطمئن و قانونی انواع اشتراک‌های هوش مصنوعی بین‌المللی (Google AI Pro، ابزارهای تولید محتوا و فضای ابری) با فعال‌سازی روی حساب شخصی، تحویل آنی و بدون نیاز به رمز عبور.',
 }

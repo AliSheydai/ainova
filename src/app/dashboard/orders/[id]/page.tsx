@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { CheckCircle2, Copy, ExternalLink, ShieldCheck, Sparkles, ArrowRight, Clock, HelpCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle2, Copy, ExternalLink, ShieldCheck, ArrowRight, Clock, HelpCircle, AlertCircle } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/jwt'
+import { formatPrice, formatPersianDate } from '@/lib/persian-utils'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -100,16 +101,14 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              ثبت شده در {new Date(order.createdAt).toLocaleDateString('fa-IR')} ساعت{' '}
-              {new Date(order.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
+              ثبت شده در {formatPersianDate(order.createdAt, { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
 
           <div className="text-start sm:text-end">
-            <span className="text-2xl font-extrabold text-foreground">
-              {order.amount.toLocaleString('fa-IR')}
+            <span className="text-2xl font-extrabold text-foreground font-sans">
+              {formatPrice(order.amount)}
             </span>
-            <span className="text-xs text-muted-foreground me-1"> تومان</span>
           </div>
         </div>
 
@@ -120,7 +119,6 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
           <Card className="border-primary/30 bg-gradient-to-b from-primary/5 to-transparent shadow-lg overflow-hidden">
             <CardHeader className="pb-3 border-b border-primary/15">
               <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-primary" />
                 <CardTitle className="text-lg text-foreground font-bold">
                   لینک اختصاصی فعال‌سازی
                 </CardTitle>

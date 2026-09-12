@@ -12,7 +12,6 @@ import {
   ShoppingBag,
   Loader2,
   RefreshCw,
-  Sparkles,
   User,
   Key,
   Eye,
@@ -25,6 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer, scaleIn } from '@/lib/motion'
+import { formatPrice, formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
 
 interface OrderItem {
   id: string
@@ -196,7 +196,6 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
             }}
             className="mt-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
           >
-            <Sparkles className="size-3.5" />
             مشاهده محصولات و خرید
           </Button>
         </motion.div>
@@ -240,10 +239,10 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                             </h4>
                             <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                               <span>شماره سفارش:</span>
-                              <span className="font-sans font-medium">{order.id.slice(0, 8)}</span>
+                              <span className="font-sans font-medium">{toPersianDigits(order.id.slice(0, 8))}</span>
                               <span>•</span>
-                              <span className="tabular-nums">
-                                {new Date(order.createdAt).toLocaleDateString('fa-IR')}
+                              <span className="font-sans">
+                                {formatPersianDate(order.createdAt)}
                               </span>
                             </div>
                           </div>
@@ -263,14 +262,14 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
                         <div className="text-muted-foreground">
                           مبلغ پرداختی:{' '}
-                          <span className="font-bold text-foreground tabular-nums font-sans">
-                            {new Intl.NumberFormat('fa-IR').format(order.amount)} تومان
+                          <span className="font-bold text-foreground font-sans">
+                            {formatPrice(order.amount)}
                           </span>
                         </div>
                         {order.payment?.refId && (
                           <div className="text-[11px] text-muted-foreground">
                             کد پیگیری:{' '}
-                            <span className="font-sans font-medium text-foreground">{order.payment.refId}</span>
+                            <span className="font-sans font-medium text-foreground">{toPersianDigits(order.payment.refId)}</span>
                           </div>
                         )}
                       </div>
@@ -282,7 +281,6 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5">
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                              <Sparkles className="size-3.5" />
                               <span>لینک اختصاصی فعال‌سازی:</span>
                             </div>
                             <span className="text-[10px] text-muted-foreground">تحویل آنی</span>
@@ -320,10 +318,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       {order.status === 'COMPLETED' && deliveryType === 'PRE_CREATED_ACCOUNT' && (
                         <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5 space-y-2.5">
                           <div className="flex items-center justify-between text-xs font-semibold text-primary">
-                            <span className="flex items-center gap-1.5">
-                              <Sparkles className="size-3.5" />
-                              اطلاعات ورود به اکانت:
-                            </span>
+                            <span>اطلاعات ورود به اکانت:</span>
                             <span className="text-[10px] text-muted-foreground">تحویل فوری</span>
                           </div>
 

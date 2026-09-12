@@ -264,7 +264,8 @@ export function DashboardModal({
       <DialogContent
         dir="rtl"
         showCloseButton={false}
-        className="max-w-4xl sm:max-w-4xl md:max-w-5xl p-0 overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl h-[90vh] max-h-[720px] flex flex-col md:flex-row gap-0"
+        showHandle={false}
+        className="max-w-4xl sm:max-w-4xl md:max-w-5xl p-0 sm:p-0 overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl h-[90vh] max-h-[720px] flex flex-col md:flex-row gap-0"
       >
         {/* ================= RIGHT SIDEBAR (راست‌چین عمودی) ================= */}
         <aside className="w-full md:w-64 lg:w-72 shrink-0 border-b md:border-b-0 md:border-l border-border/60 bg-muted/30 flex flex-col justify-between p-4 sm:p-5 select-none">
@@ -278,7 +279,7 @@ export function DashboardModal({
                 </div>
                 <div>
                   <DialogTitle className="text-sm font-bold text-foreground">
-                    جمینای
+                    آریوچت
                   </DialogTitle>
                   <DialogDescription className="text-[11px] text-muted-foreground">
                     پنل کاربری و اشتراک

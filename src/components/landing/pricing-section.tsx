@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { fadeUp, scaleIn, staggerContainer, viewportOnce } from '@/lib/motion'
+import { formatPrice } from '@/lib/persian-utils'
 
 const fallbackFeatures = [
   'فعال‌سازی رسمی و قانونی روی حساب شما',
@@ -41,10 +42,6 @@ interface PricingSectionProps {
   productSlug?: string
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 export function PricingSection({
   products,
   price = '۳۹۰،۰۰۰ تومان',
@@ -65,7 +62,6 @@ export function PricingSection({
           variants={fadeUp}
         >
           <div className='mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary'>
-            <Sparkles className='size-3' />
             <span>پلن‌ها و تعرفه‌های ویژه</span>
           </div>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>

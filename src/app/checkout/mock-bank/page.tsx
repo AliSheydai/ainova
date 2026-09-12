@@ -79,7 +79,7 @@ function MockBankContent() {
               <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
                 <Sparkles className='size-4' />
               </div>
-              <span className='text-base font-bold text-foreground'>جمینای</span>
+              <span className='text-base font-bold text-foreground'>آریوچت</span>
             </Link>
             <span className='hidden text-xs text-muted-foreground sm:inline-block'>|</span>
             <span className='hidden text-xs text-muted-foreground sm:inline-block'>درگاه پرداخت الکترونیک</span>
@@ -123,7 +123,7 @@ function MockBankContent() {
                 <CardTitle className='text-xl font-bold'>درگاه پرداخت الکترونیک شاپرک</CardTitle>
               </div>
               <CardDescription className='text-xs text-muted-foreground mt-1.5'>
-                پذیرنده: فروشگاه رسمی اشتراک جمینای (گوگل)
+                پذیرنده: فروشگاه رسمی آریوچت
               </CardDescription>
             </CardHeader>
 

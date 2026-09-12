@@ -1,4 +1,6 @@
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
+import { formatPrice } from '@/lib/persian-utils'
+export { formatPrice }
 
 export interface PlanItem {
   id: string
@@ -36,9 +38,6 @@ export interface ProductItem {
   }
 }
 
-export function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
 
 export function getFulfillmentBadge(type: string) {
   switch (type) {

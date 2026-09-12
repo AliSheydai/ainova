@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-  Sparkles,
   Phone,
   RefreshCw,
   Loader2,
@@ -619,11 +618,6 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
           {/* Scrollable Form Body */}
           <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-10 overscroll-contain touch-pan-y">
             <SheetHeader className="text-center pb-3 space-y-1 p-0">
-              <div className="flex justify-center mb-1">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Sparkles className="size-5" />
-                </div>
-              </div>
               <SheetTitle className="text-lg font-bold text-foreground">
                 {stepTitle}
               </SheetTitle>
@@ -654,11 +648,6 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
         <div className="p-6 pt-4">
           <DialogHeader className="text-center pb-3 space-y-1">
-            <div className="flex justify-center mb-1">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Sparkles className="size-5" />
-              </div>
-            </div>
             <DialogTitle className="text-lg font-bold text-foreground">
               {stepTitle}
             </DialogTitle>

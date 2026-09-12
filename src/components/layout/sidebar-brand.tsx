@@ -28,7 +28,7 @@ export function SidebarBrand() {
         </div>
         <div className='flex flex-col overflow-hidden text-start leading-none'>
           <span className='truncate text-sm font-bold text-foreground transition-colors group-hover/brand:text-primary'>
-            جمینای
+            آریوچت
           </span>
           <span className='mt-0.5 truncate text-xs text-muted-foreground font-medium'>
             پنل مدیریت

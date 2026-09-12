@@ -16,7 +16,6 @@ import {
   Send,
   User,
   Key,
-  Sparkles,
   Filter,
   SlidersHorizontal,
   ChevronRight,
@@ -38,6 +37,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { formatPrice, formatPersianDate, formatRelativeTime, toPersianDigits } from '@/lib/persian-utils'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -167,38 +167,14 @@ interface OrdersResponse {
   error?: string
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
-}
-
 function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-function formatRelativeTime(dateStr: string): string {
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffSec < 60) return 'لحظاتی پیش'
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} دقیقه پیش`
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ساعت پیش`
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} روز پیش`
-    return date.toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  return formatPersianDate(dateStr, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function getFulfillmentBadge(type?: string) {
@@ -1941,7 +1917,6 @@ export default function AdminOrdersPage() {
               {selectedOrder.checkoutData && Object.keys(selectedOrder.checkoutData).length > 0 && (
                 <div className='p-3.5 rounded-xl border border-primary/25 bg-primary/5 space-y-2'>
                   <h4 className='font-bold text-foreground text-xs flex items-center gap-1.5'>
-                    <Sparkles className='size-3.5 text-primary' />
                     داده‌های وارد شده توسط مشتری هنگام خرید (Checkout Data):
                   </h4>
                   <div className='grid grid-cols-1 gap-1.5 text-xs bg-background/90 p-3 rounded-lg border border-border/70'>
@@ -2088,7 +2063,7 @@ export default function AdminOrdersPage() {
                     <span>اطلاعات استرداد وجه:</span>
                   </div>
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] pt-1'>
-                    <div>مبلغ بازگشتی: <strong className='font-mono'>{formatPrice(selectedOrder.refundAmount || selectedOrder.amount)}</strong></div>
+                    <div>مبلغ بازگشتی: <strong className='font-sans font-bold text-foreground'>{formatPrice(selectedOrder.refundAmount || selectedOrder.amount)}</strong></div>
                     {selectedOrder.refundRefId && <div>کد پیگیری شبا/بانک: <code className='font-mono font-bold'>{selectedOrder.refundRefId}</code></div>}
                     {selectedOrder.refundReason && <div className='col-span-1 sm:col-span-2'>علت: {selectedOrder.refundReason}</div>}
                     {selectedOrder.refundedAt && <div className='col-span-1 sm:col-span-2 text-muted-foreground'>زمان استرداد: {formatDate(selectedOrder.refundedAt)}</div>}
@@ -2103,7 +2078,7 @@ export default function AdminOrdersPage() {
                     <Tag className='size-3.5 text-emerald-600' />
                     <span>کد تخفیف اعمال‌شده: {selectedOrder.coupon?.code || 'کد اختصاصی'}</span>
                   </span>
-                  <span className='font-mono font-bold'>
+                  <span className='font-sans font-bold'>
                     {formatPrice(selectedOrder.discountAmount)} تخفیف
                   </span>
                 </div>

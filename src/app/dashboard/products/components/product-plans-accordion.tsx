@@ -3,6 +3,7 @@ import { Layers, Plus, Edit3, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { type PlanItem, formatPrice, getFulfillmentBadge } from '../types'
+import { toPersianDigits } from '@/lib/persian-utils'
 
 interface ProductPlansAccordionProps {
   plans: PlanItem[]
@@ -68,7 +69,7 @@ export function ProductPlansAccordion({
                         )}
                       </div>
                       <span className='text-[11px] text-muted-foreground'>
-                        مدت زمان: {plan.duration} ماهه
+                        مدت زمان: {toPersianDigits(plan.duration)} ماهه
                       </span>
                     </div>
                     <Badge variant='outline' className={`text-[10px] font-semibold ${fulfillment.color}`}>
@@ -85,8 +86,8 @@ export function ProductPlansAccordion({
 
                   <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
                     <span>فیلدهای Checkout:</span>
-                    <Badge variant='outline' className='text-[10px] font-mono'>
-                      {fieldCount} فیلد
+                    <Badge variant='outline' className='text-[10px] font-sans'>
+                      {toPersianDigits(fieldCount)} فیلد
                     </Badge>
                   </div>
                 </div>

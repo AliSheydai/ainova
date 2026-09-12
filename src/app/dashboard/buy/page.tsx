@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, Loader2, ShoppingCart, Sparkles, Package, Zap, ArrowLeft } from 'lucide-react'
+import { Check, Loader2, ShoppingCart, Package, Zap, ArrowLeft } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'

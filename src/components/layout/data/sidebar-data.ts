@@ -19,7 +19,7 @@ export const sidebarData: SidebarData = {
   },
   teams: [
     {
-      name: 'جمینای',
+      name: 'آریوچت',
       logo: () => null,
       plan: 'پنل مدیریت',
     },
