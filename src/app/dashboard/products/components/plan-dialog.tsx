@@ -10,6 +10,11 @@ import {
   Package,
   Layers,
   Settings2,
+  Plus,
+  Minus,
+  Coins,
+  ArrowUpDown,
+  Sparkles,
 } from 'lucide-react'
 import {
   Dialog,
@@ -25,6 +30,12 @@ import { Switch } from '@/components/ui/switch'
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
 import { CheckoutFieldEditor } from './checkout-field-editor'
+import {
+  toEnglishDigits,
+  formatNumberWithCommas,
+  numberToWordsPersian,
+  formatPlanDurationLabel,
+} from '@/lib/persian-utils'
 
 interface PlanDialogProps {
   open: boolean
@@ -74,6 +85,51 @@ export function PlanDialog({
 }: PlanDialogProps) {
   const [modalTab, setModalTab] = useState<'config' | 'preview'>('config')
   const [previewValues, setPreviewValues] = useState<Record<string, unknown>>({})
+
+  // Formatted display values and calculations
+  const formattedPriceDisplay = formatNumberWithCommas(formPlanPrice)
+  const priceInWords = numberToWordsPersian(formPlanPrice)
+
+  const durationNum = parseInt(toEnglishDigits(formPlanDuration).replace(/[^\d]/g, ''), 10) || 1
+  const durationFriendlyText = formatPlanDurationLabel(durationNum)
+
+  const sortOrderNum = parseInt(toEnglishDigits(formPlanSortOrder).replace(/[^\d]/g, ''), 10) || 1
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value
+    const cleaned = toEnglishDigits(raw).replace(/[^\d]/g, '')
+    setFormPlanPrice(cleaned)
+  }
+
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = toEnglishDigits(e.target.value).replace(/[^\d]/g, '')
+    setFormPlanDuration(cleaned)
+  }
+
+  const incrementDuration = () => {
+    setFormPlanDuration(String(durationNum + 1))
+  }
+
+  const decrementDuration = () => {
+    if (durationNum > 1) {
+      setFormPlanDuration(String(durationNum - 1))
+    }
+  }
+
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = toEnglishDigits(e.target.value).replace(/[^\d]/g, '')
+    setFormPlanSortOrder(cleaned)
+  }
+
+  const incrementSortOrder = () => {
+    setFormPlanSortOrder(String(sortOrderNum + 1))
+  }
+
+  const decrementSortOrder = () => {
+    if (sortOrderNum > 1) {
+      setFormPlanSortOrder(String(sortOrderNum - 1))
+    }
+  }
 
   const fulfillmentOptions: Array<{
     type: FulfillmentType
@@ -169,90 +225,221 @@ export function PlanDialog({
         {modalTab === 'config' ? (
           <div className='space-y-4 sm:space-y-5 py-1 sm:py-2 min-w-0 w-full'>
             {/* Section 1: Basic Plan Information */}
-            <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3.5 min-w-0 w-full'>
-              <div className='flex items-center gap-2 pb-2 border-b border-border/40 min-w-0'>
-                <Tag className='size-4 text-primary shrink-0' />
-                <span className='text-xs font-bold text-foreground'>مشخصات عمومی و مالی پلن</span>
-              </div>
-
-              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                <div>
-                  <span className='text-xs font-medium text-foreground block mb-1'>
-                    نام نمایشی پلن: <span className='text-rose-500'>*</span>
-                  </span>
-                  <Input
-                    value={formPlanName}
-                    onChange={(e) => setFormPlanName(e.target.value)}
-                    placeholder='مثال: ۱۲ ماهه (ویژه)'
-                    className='text-xs h-9 rounded-xl'
-                  />
-                </div>
-
-                <div>
-                  <span className='text-xs font-medium text-foreground block mb-1'>
-                    مدت زمان اشتراک (ماه):
-                  </span>
-                  <div className='relative'>
-                    <Input
-                      type='number'
-                      min='1'
-                      value={formPlanDuration}
-                      onChange={(e) => setFormPlanDuration(e.target.value)}
-                      placeholder='12'
-                      className='text-xs h-9 rounded-xl pe-8 font-mono'
-                      dir='ltr'
-                    />
-                    <Clock className='size-3.5 text-muted-foreground absolute end-2.5 top-3' />
+            <div className='bg-card rounded-2xl border border-border/70 p-3.5 sm:p-5 shadow-xs space-y-4 min-w-0 w-full'>
+              {/* Header with Title & Active Status Toggle */}
+              <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border/40 min-w-0'>
+                <div className='flex items-center gap-2.5 min-w-0'>
+                  <div className='size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-2xs'>
+                    <Tag className='size-4' />
+                  </div>
+                  <div className='min-w-0'>
+                    <h3 className='text-xs sm:text-sm font-bold text-foreground truncate'>
+                      مشخصات عمومی و مالی پلن
+                    </h3>
+                    <p className='text-[10.5px] text-muted-foreground truncate'>
+                      نام، دوره زمانی، اولویت چیدمان و قیمت‌گذاری فروش
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <span className='text-xs font-medium text-foreground block mb-1'>
-                    قیمت فروش (تومان): <span className='text-rose-500'>*</span>
+                {/* Plan Active Status Switch */}
+                <div className='flex items-center justify-between sm:justify-end gap-3 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/60 shrink-0 select-none'>
+                  <span className={`text-[11px] font-semibold transition-colors ${formPlanActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                    {formPlanActive ? 'پلن فعال (قابل مشاهده و خرید)' : 'پلن غیرفعال'}
                   </span>
-                  <Input
-                    type='number'
-                    min='0'
-                    value={formPlanPrice}
-                    onChange={(e) => setFormPlanPrice(e.target.value)}
-                    placeholder='390000'
-                    className='text-xs h-9 rounded-xl font-mono'
-                    dir='ltr'
+                  <Switch
+                    checked={formPlanActive}
+                    onCheckedChange={setFormPlanActive}
+                    className='shrink-0'
                   />
+                </div>
+              </div>
+
+              {/* Row 1: Plan Display Name */}
+              <div className='space-y-1.5'>
+                <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
+                  <span>نام نمایشی پلن</span>
+                  <span className='text-rose-500 font-bold'>*</span>
+                  <span className='text-[10.5px] text-muted-foreground font-normal'>
+                    (عنوانی که خریدار در صفحه محصول و انتخاب اشتراک مشاهده می‌کند)
+                  </span>
+                </label>
+                <Input
+                  value={formPlanName}
+                  onChange={(e) => setFormPlanName(e.target.value)}
+                  placeholder='مثال: اشتراک ۱۲ ماهه ویژه'
+                  className='text-xs sm:text-sm h-10 rounded-xl px-3'
+                  dir='rtl'
+                />
+              </div>
+
+              {/* Row 2: Duration & Sort Order (2 Balanced Columns) */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
+                {/* Column 1: Plan Duration */}
+                <div className='space-y-1.5'>
+                  <div className='flex items-center justify-between min-w-0'>
+                    <label className='text-xs font-semibold text-foreground flex items-center gap-1.5 truncate'>
+                      <Clock className='size-3.5 text-primary shrink-0' />
+                      <span className='truncate'>مدت زمان اشتراک (ماه):</span>
+                      <span className='text-rose-500 font-bold'>*</span>
+                    </label>
+                    {durationFriendlyText && (
+                      <span className='text-[10px] sm:text-[10.5px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg shrink-0'>
+                        {durationFriendlyText}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Stepper Input */}
+                  <div className='flex items-center rounded-xl border border-input bg-background overflow-hidden focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40 transition-all'>
+                    <button
+                      type='button'
+                      onClick={incrementDuration}
+                      className='size-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors border-e border-input/60 shrink-0 cursor-pointer'
+                      title='افزایش مدت'
+                      aria-label='افزایش مدت زمان'
+                    >
+                      <Plus className='size-3.5' />
+                    </button>
+                    <input
+                      type='text'
+                      inputMode='numeric'
+                      value={formPlanDuration}
+                      onChange={handleDurationChange}
+                      placeholder='مثال: ۱۲'
+                      className='flex-1 h-9 bg-transparent text-center font-sans text-xs sm:text-sm text-foreground outline-none font-bold px-2'
+                      dir='ltr'
+                    />
+                    <button
+                      type='button'
+                      onClick={decrementDuration}
+                      disabled={durationNum <= 1}
+                      className='size-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors border-s border-input/60 shrink-0 disabled:opacity-30 disabled:pointer-events-none cursor-pointer'
+                      title='کاهش مدت'
+                      aria-label='کاهش مدت زمان'
+                    >
+                      <Minus className='size-3.5' />
+                    </button>
+                  </div>
+
+                  {/* Quick Select Preset Buttons */}
+                  <div className='flex items-center gap-1.5 pt-0.5'>
+                    <span className='text-[10px] text-muted-foreground shrink-0'>انتخاب سریع:</span>
+                    <div className='flex items-center gap-1 flex-wrap'>
+                      {[1, 3, 6, 12].map((preset) => (
+                        <button
+                          key={preset}
+                          type='button'
+                          onClick={() => setFormPlanDuration(String(preset))}
+                          className={`px-2 py-0.5 rounded-md text-[10.5px] font-medium transition-all ${
+                            durationNum === preset
+                              ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                              : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          {preset} ماهه
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2: Sort Order */}
+                <div className='space-y-1.5'>
+                  <div className='flex items-center justify-between min-w-0'>
+                    <label className='text-xs font-semibold text-foreground flex items-center gap-1.5 truncate'>
+                      <ArrowUpDown className='size-3.5 text-primary shrink-0' />
+                      <span className='truncate'>اولویت نمایش (Sort Order):</span>
+                    </label>
+                    <span className='text-[10px] text-muted-foreground shrink-0'>
+                      ترتیب چیدمان
+                    </span>
+                  </div>
+
+                  {/* Stepper Input */}
+                  <div className='flex items-center rounded-xl border border-input bg-background overflow-hidden focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40 transition-all'>
+                    <button
+                      type='button'
+                      onClick={incrementSortOrder}
+                      className='size-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors border-e border-input/60 shrink-0 cursor-pointer'
+                      title='افزایش اولویت'
+                      aria-label='افزایش اولویت'
+                    >
+                      <Plus className='size-3.5' />
+                    </button>
+                    <input
+                      type='text'
+                      inputMode='numeric'
+                      value={formPlanSortOrder}
+                      onChange={handleSortOrderChange}
+                      placeholder='مثال: ۱'
+                      className='flex-1 h-9 bg-transparent text-center font-sans text-xs sm:text-sm text-foreground outline-none font-bold px-2'
+                      dir='ltr'
+                    />
+                    <button
+                      type='button'
+                      onClick={decrementSortOrder}
+                      disabled={sortOrderNum <= 1}
+                      className='size-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors border-s border-input/60 shrink-0 disabled:opacity-30 disabled:pointer-events-none cursor-pointer'
+                      title='کاهش اولویت'
+                      aria-label='کاهش اولویت'
+                    >
+                      <Minus className='size-3.5' />
+                    </button>
+                  </div>
+
+                  <p className='text-[10px] text-muted-foreground leading-relaxed'>
+                    عدد کمتر (مانند ۱) در بالای لیست و به عنوان گزینه اول نشان داده می‌شود.
+                  </p>
+                </div>
+              </div>
+
+              {/* Row 3: Financial Specifications (Price in Tomans) */}
+              <div className='rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/5 via-background to-muted/30 p-3.5 sm:p-4 space-y-2.5 shadow-2xs'>
+                <div className='flex items-center justify-between gap-2 min-w-0'>
+                  <label className='text-xs font-bold text-foreground flex items-center gap-1.5 truncate'>
+                    <Coins className='size-4 text-primary shrink-0' />
+                    <span className='truncate'>قیمت فروش پلن (تومان):</span>
+                    <span className='text-rose-500 font-bold'>*</span>
+                  </label>
                   {formPlanPrice && !isNaN(parseInt(formPlanPrice, 10)) && (
-                    <span className='text-[10px] text-muted-foreground block mt-1'>
-                      معادل {parseInt(formPlanPrice, 10).toLocaleString('fa-IR')} تومان
+                    <span className='text-[10px] sm:text-[11px] font-medium text-muted-foreground shrink-0'>
+                      معادل <strong className='text-foreground font-sans'>{formattedPriceDisplay}</strong> تومان
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1'>
-                <div>
-                  <span className='text-xs font-medium text-foreground block mb-1'>
-                    اولویت نمایش (Sort Order):
-                  </span>
-                  <Input
-                    type='number'
-                    value={formPlanSortOrder}
-                    onChange={(e) => setFormPlanSortOrder(e.target.value)}
-                    placeholder='1'
-                    className='text-xs h-9 rounded-xl font-mono'
-                    dir='ltr'
+                <div className='relative flex items-center'>
+                  <input
+                    type='text'
+                    inputMode='numeric'
+                    value={formattedPriceDisplay}
+                    onChange={handlePriceChange}
+                    placeholder='مثال: ۳۹۰,۰۰۰'
+                    className='w-full h-11 rounded-xl border border-input bg-background/95 pe-16 ps-3.5 text-base sm:text-lg font-extrabold font-sans text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-start placeholder:text-muted-foreground/60 placeholder:font-normal'
+                    dir='rtl'
                   />
-                </div>
-
-                <div className='flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-muted/30 border border-border/50 self-end gap-2'>
-                  <div className='min-w-0'>
-                    <span className='text-xs font-bold text-foreground block truncate'>
-                      وضعیت فعال‌بودن پلن
-                    </span>
-                    <span className='text-[10px] sm:text-[10.5px] text-muted-foreground block truncate'>
-                      قابل مشاهده و خرید توسط مشتریان
+                  <div className='absolute end-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none'>
+                    <span className='text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg shadow-2xs'>
+                      تومان
                     </span>
                   </div>
-                  <Switch checked={formPlanActive} onCheckedChange={setFormPlanActive} className='shrink-0' />
                 </div>
+
+                {/* Real-time Persian Words Representation */}
+                {priceInWords ? (
+                  <div className='flex items-center gap-1.5 text-xs text-foreground bg-background/90 border border-border/80 rounded-xl px-3 py-2 shadow-2xs animate-fadeIn'>
+                    <Sparkles className='size-3.5 text-amber-500 shrink-0' />
+                    <span className='text-[11px] text-muted-foreground shrink-0'>مبلغ به حروف:</span>
+                    <span className='font-bold text-[11px] sm:text-xs text-primary leading-normal'>
+                      {priceInWords} تومان
+                    </span>
+                  </div>
+                ) : (
+                  <p className='text-[10.5px] text-muted-foreground'>
+                    مبلغ را بدون نیاز به صفرهای اضافه یا تبدیل وارد کنید؛ ارقام خودکار ۳ رقم ۳ رقم جدا می‌شوند.
+                  </p>
+                )}
               </div>
             </div>
 

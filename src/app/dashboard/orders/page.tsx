@@ -2244,6 +2244,8 @@ export default function AdminOrdersPage() {
               <label className='font-semibold block mb-1'>مبلغ قابل عودت (تومان): *</label>
               <Input
                 type='number'
+                min='0'
+                step='1000'
                 value={refundAmount}
                 onChange={(e) => setRefundAmount(e.target.value)}
                 placeholder='مبلغ به تومان'

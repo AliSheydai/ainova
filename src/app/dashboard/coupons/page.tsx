@@ -807,6 +807,7 @@ export default function AdminCouponsPage() {
                   type='number'
                   min='1'
                   max={newDiscountType === 'PERCENTAGE' ? '100' : undefined}
+                  step={newDiscountType === 'PERCENTAGE' ? '1' : '5000'}
                   placeholder={newDiscountType === 'PERCENTAGE' ? 'مثلاً: 20' : 'مثلاً: 50000'}
                   value={newDiscountValue}
                   onChange={(e) => setNewDiscountValue(e.target.value)}
@@ -823,6 +824,8 @@ export default function AdminCouponsPage() {
                 <label className='font-semibold block mb-1'>حداقل مبلغ سفارش (اختیاری - تومان):</label>
                 <Input
                   type='number'
+                  min='0'
+                  step='10000'
                   placeholder='مثلاً: 100000'
                   value={newMinOrderAmount}
                   onChange={(e) => setNewMinOrderAmount(e.target.value)}
@@ -836,6 +839,8 @@ export default function AdminCouponsPage() {
                   <label className='font-semibold block mb-1'>سقف مبلغ تخفیف (اختیاری - تومان):</label>
                   <Input
                     type='number'
+                    min='0'
+                    step='10000'
                     placeholder='مثلاً: 150000'
                     value={newMaxDiscountAmount}
                     onChange={(e) => setNewMaxDiscountAmount(e.target.value)}
@@ -848,6 +853,8 @@ export default function AdminCouponsPage() {
                   <label className='font-semibold block mb-1'>سقف کل دفعات استفاده (اختیاری):</label>
                   <Input
                     type='number'
+                    min='1'
+                    step='1'
                     placeholder='مثلاً: 50'
                     value={newMaxUses}
                     onChange={(e) => setNewMaxUses(e.target.value)}
@@ -863,6 +870,8 @@ export default function AdminCouponsPage() {
                 <label className='font-semibold block mb-1'>سقف کل دفعات استفاده (اختیاری):</label>
                 <Input
                   type='number'
+                  min='1'
+                  step='1'
                   placeholder='مثلاً: 50'
                   value={newMaxUses}
                   onChange={(e) => setNewMaxUses(e.target.value)}

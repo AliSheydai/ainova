@@ -374,6 +374,7 @@ export default function AdminSettingsPage() {
                       type='number'
                       min='0'
                       max='100'
+                      step='1'
                       placeholder='3'
                       value={lowStockThreshold}
                       onChange={(e) => setLowStockThreshold(e.target.value)}

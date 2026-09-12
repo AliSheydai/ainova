@@ -110,6 +110,7 @@ export function ProductDialog({
               <Input
                 type='number'
                 min='0'
+                step='10000'
                 value={formProdPrice}
                 onChange={(e) => setFormProdPrice(e.target.value)}
                 placeholder='390000'
@@ -124,6 +125,8 @@ export function ProductDialog({
               </span>
               <Input
                 type='number'
+                min='1'
+                step='1'
                 value={formProdSortOrder}
                 onChange={(e) => setFormProdSortOrder(e.target.value)}
                 placeholder='1'
