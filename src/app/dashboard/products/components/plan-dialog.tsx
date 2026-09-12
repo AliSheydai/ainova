@@ -73,13 +73,13 @@ export function PlanDialog({
   onSave,
 }: PlanDialogProps) {
   const [modalTab, setModalTab] = useState<'config' | 'preview'>('config')
-  const [previewValues, setPreviewValues] = useState<Record<string, any>>({})
+  const [previewValues, setPreviewValues] = useState<Record<string, unknown>>({})
 
   const fulfillmentOptions: Array<{
     type: FulfillmentType
     title: string
     desc: string
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     color: string
     activeClass: string
   }> = [
@@ -119,7 +119,7 @@ export function PlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-full max-w-full sm:max-w-3xl p-3 sm:p-6 overflow-x-hidden box-border'>
+      <DialogContent className='w-full max-w-full sm:max-w-3xl p-3 sm:p-6 box-border'>
         <DialogHeader className='pb-3 border-b border-border/50 min-w-0 w-full'>
           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0 w-full'>
             <div className='flex items-center gap-2 min-w-0 flex-1 pe-7 sm:pe-0'>
@@ -167,9 +167,9 @@ export function PlanDialog({
         </DialogHeader>
 
         {modalTab === 'config' ? (
-          <div className='space-y-4 sm:space-y-5 py-1 sm:py-2 min-w-0 w-full overflow-hidden'>
+          <div className='space-y-4 sm:space-y-5 py-1 sm:py-2 min-w-0 w-full'>
             {/* Section 1: Basic Plan Information */}
-            <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3.5 min-w-0 w-full overflow-hidden'>
+            <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3.5 min-w-0 w-full'>
               <div className='flex items-center gap-2 pb-2 border-b border-border/40 min-w-0'>
                 <Tag className='size-4 text-primary shrink-0' />
                 <span className='text-xs font-bold text-foreground'>مشخصات عمومی و مالی پلن</span>
@@ -257,7 +257,7 @@ export function PlanDialog({
             </div>
 
             {/* Section 2: Fulfillment Type Configuration */}
-            <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full overflow-hidden'>
+            <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full'>
               <div className='flex items-center justify-between pb-2 border-b border-border/40 min-w-0'>
                 <div className='flex items-center gap-2 min-w-0'>
                   <Layers className='size-4 text-primary shrink-0' />
@@ -275,7 +275,7 @@ export function PlanDialog({
                     <div
                       key={opt.type}
                       onClick={() => setFormPlanFulfillmentType(opt.type)}
-                      className={`p-2.5 sm:p-3 rounded-xl border transition-all cursor-pointer select-none relative flex flex-col justify-between gap-2 min-w-0 w-full overflow-hidden ${
+                      className={`p-2.5 sm:p-3 rounded-xl border transition-all cursor-pointer select-none relative flex flex-col justify-between gap-2 min-w-0 w-full ${
                         isSelected
                           ? opt.activeClass
                           : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
@@ -317,7 +317,7 @@ export function PlanDialog({
           </div>
         ) : (
           /* Tab 2: Live Checkout Form Preview */
-          <div className='py-2 sm:py-3 space-y-3.5 min-w-0 w-full overflow-hidden'>
+          <div className='py-2 sm:py-3 space-y-3.5 min-w-0 w-full'>
             <div className='p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex items-start sm:items-center gap-2 min-w-0 w-full'>
               <Eye className='size-4 text-primary shrink-0 mt-0.5 sm:mt-0' />
               <span className='leading-relaxed break-words text-[11px] sm:text-xs min-w-0 flex-1'>
@@ -325,7 +325,7 @@ export function PlanDialog({
               </span>
             </div>
 
-            <div className='bg-card rounded-2xl border border-border/80 p-3 sm:p-5 shadow-xs min-w-0 w-full overflow-hidden'>
+            <div className='bg-card rounded-2xl border border-border/80 p-3 sm:p-5 shadow-xs min-w-0 w-full'>
               <DynamicCheckoutForm
                 fields={formPlanFields}
                 values={previewValues}

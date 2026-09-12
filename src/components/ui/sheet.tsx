@@ -59,13 +59,13 @@ function SheetContent({
         className={cn(
           'fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
           side === 'right' &&
-            'inset-y-0 inset-e-0 h-full w-3/4 border-s overflow-y-auto overscroll-contain data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end sm:max-w-sm',
+            'inset-y-0 inset-e-0 h-full w-3/4 border-s overflow-y-auto overscroll-contain touch-pan-y data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end sm:max-w-sm',
           side === 'left' &&
-            'inset-y-0 inset-s-0 h-full w-3/4 border-e overflow-y-auto overscroll-contain data-[state=closed]:slide-out-to-start data-[state=open]:slide-in-from-start sm:max-w-sm',
+            'inset-y-0 inset-s-0 h-full w-3/4 border-e overflow-y-auto overscroll-contain touch-pan-y data-[state=closed]:slide-out-to-start data-[state=open]:slide-in-from-start sm:max-w-sm',
           side === 'top' &&
-            'inset-x-0 top-0 h-auto max-h-[90dvh] overflow-y-auto overscroll-contain border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+            'inset-x-0 top-0 h-auto max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
           side === 'bottom' &&
-            'inset-x-0 bottom-0 h-auto max-h-[90dvh] overflow-y-auto overscroll-contain border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+            'inset-x-0 bottom-0 h-auto max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
           className
         )}
         {...props}

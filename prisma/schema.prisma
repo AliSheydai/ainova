@@ -31,6 +31,8 @@ model User {
   orders          Order[]
   supportTickets  SupportTicket[]
 
+  @@index([role])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -44,6 +46,9 @@ model OtpToken {
   createdAt DateTime @default(now())
 
   @@index([phone])
+  @@index([phone, used, expiresAt])
+  @@index([createdAt])
+  @@index([expiresAt])
   @@map("otp_tokens")
 }
 
@@ -124,12 +129,13 @@ model Plan {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  product         Product          @relation(fields: [productId], references: [id])
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   orders          Order[]
   activationLinks ActivationLink[]
   inventoryItems  InventoryItem[]
 
   @@index([productId])
+  @@index([productId, active])
   @@map("plans")
 }
 
@@ -168,7 +174,7 @@ model Coupon {
   updatedAt         DateTime     @updatedAt
 
   orders            Order[]
-  product           Product?     @relation(fields: [productId], references: [id])
+  product           Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([code])
   @@index([productId])
@@ -198,10 +204,10 @@ model Order {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  user            User            @relation(fields: [userId], references: [id])
-  product         Product?        @relation(fields: [productId], references: [id])
-  plan            Plan?           @relation(fields: [planId], references: [id])
-  coupon          Coupon?         @relation(fields: [couponId], references: [id])
+  user            User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  plan            Plan?           @relation(fields: [planId], references: [id], onDelete: SetNull)
+  coupon          Coupon?         @relation(fields: [couponId], references: [id], onDelete: SetNull)
   payment         Payment?
   activationLink  ActivationLink?
   delivery        Delivery?
@@ -213,6 +219,9 @@ model Order {
   @@index([planId])
   @@index([couponId])
   @@index([status])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 
@@ -239,8 +248,13 @@ model Payment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  order           Order         @relation(fields: [orderId], references: [id])
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([refId])
+  @@index([gatewayName, status])
   @@map("payments")
 }
 
@@ -265,10 +279,13 @@ model ActivationLink {
   assignedAt  DateTime?
   usedAt      DateTime?
 
-  product     Product?   @relation(fields: [productId], references: [id])
-  plan        Plan?      @relation(fields: [planId], references: [id])
-  order       Order?     @relation(fields: [orderId], references: [id])
+  product     Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  plan        Plan?      @relation(fields: [planId], references: [id], onDelete: SetNull)
+  order       Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
+  @@index([productId, planId, status])
+  @@index([planId, status])
+  @@index([status])
   @@map("activation_links")
 }
 
@@ -294,9 +311,13 @@ model SupportTicket {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  user        User?        @relation(fields: [userId], references: [id])
-  order       Order?       @relation(fields: [orderId], references: [id])
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order       Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
   @@map("support_tickets")
 }
 
@@ -346,12 +367,16 @@ model InventoryItem {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
-  product    Product?      @relation(fields: [productId], references: [id])
-  plan       Plan?         @relation(fields: [planId], references: [id])
-  order      Order?        @relation(fields: [orderId], references: [id])
+  product    Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  plan       Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  order      Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([productId, planId, status])
+  @@index([planId, status])
+  @@index([productId, status])
   @@index([type, status])
+  @@index([type, status, planId])
+  @@index([type, status, productId])
   @@map("inventory_items")
 }
 

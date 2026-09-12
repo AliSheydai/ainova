@@ -40,6 +40,15 @@
     }
   }
 
+  /* Smooth momentum touch scrolling for all modal dialogs and bottom sheets on mobile devices */
+  [data-slot='dialog-content'],
+  [data-slot='alert-dialog-content'],
+  [data-slot='sheet-content'] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
   /* Cursor pointer for buttons */
   button:not(:disabled),
   [role='button']:not(:disabled) {

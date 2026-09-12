@@ -106,7 +106,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
   }
 
   return (
-    <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full overflow-hidden'>
+    <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full'>
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-border/40 min-w-0 w-full'>
         <div className='min-w-0 flex-1'>
           <div className='flex items-center gap-1.5 flex-wrap'>
@@ -179,7 +179,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
           </p>
         </div>
       ) : (
-        <div className='space-y-3 max-h-[360px] overflow-y-auto min-w-0 w-full pe-0.5'>
+        <div className='space-y-3 max-h-none sm:max-h-[360px] overflow-visible sm:overflow-y-auto touch-pan-y overscroll-contain min-w-0 w-full pe-0.5'>
           {fields.map((field, idx) => (
             <div
               key={idx}
@@ -269,7 +269,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                   </span>
                   <Select
                     value={field.type}
-                    onValueChange={(val: any) => handleUpdateField(idx, { type: val })}
+                    onValueChange={(val) => handleUpdateField(idx, { type: val as CheckoutFieldDefinition['type'] })}
                   >
                     <SelectTrigger className='h-8.5 text-xs rounded-lg w-full min-w-0 max-w-full overflow-hidden'>
                       <SelectValue />
