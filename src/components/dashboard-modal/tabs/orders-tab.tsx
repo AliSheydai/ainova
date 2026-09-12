@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff,
   Clock,
+  Calendar,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -72,6 +73,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copiedRefId, setCopiedRefId] = useState<string | null>(null)
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null)
   const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({})
 
   const fetchOrders = async () => {
@@ -107,6 +109,13 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
     setCopiedRefId(orderId)
     toast.success('کد پیگیری با موفقیت کپی شد.')
     setTimeout(() => setCopiedRefId(null), 2500)
+  }
+
+  const copyOrderNumberToClipboard = (orderId: string) => {
+    navigator.clipboard.writeText(orderId)
+    setCopiedOrderId(orderId)
+    toast.success('شماره سفارش با موفقیت کپی شد.')
+    setTimeout(() => setCopiedOrderId(null), 2500)
   }
 
   const toggleShowPassword = (orderId: string) => {
@@ -155,9 +164,16 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
   return (
     <div className="space-y-4">
       {/* Header bar */}
-      <div className="flex items-center justify-between pb-2">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-0 justify-between pb-2">
         <div>
-          <h3 className="text-base font-bold text-foreground">تاریخچه سفارش‌های من</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-foreground">تاریخچه سفارش‌های من</h3>
+            {!loading && orders.length > 0 && (
+              <Badge variant="secondary" className="font-sans text-[11px] px-2 py-0.5 rounded-full font-bold">
+                {toPersianDigits(orders.length)} سفارش
+              </Badge>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             مشاهده وضعیت، فاکتورها و اطلاعات تحویل اشتراک
           </p>
@@ -232,32 +248,38 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex flex-col gap-3">
                       {/* Top Row: Product info + status */}
-                      <div className="flex items-start justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary mt-0.5">
                             <Package className="size-5" />
                           </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-foreground">
-                              {order.product?.title || order.product?.name || order.plan?.product?.name || 'اشتراک ویژه'}
+                          <div className="min-w-0 flex-1 space-y-1.5">
+                            {/* Title & Plan Tag (No broken parentheses, fully responsive) */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              <h4 className="text-sm font-bold text-foreground leading-snug break-words">
+                                {order.product?.title || order.product?.name || order.plan?.product?.name || 'اشتراک ویژه'}
+                              </h4>
                               {order.plan?.name && (
-                                <span className="text-muted-foreground font-normal text-xs mr-2">
-                                  ({order.plan.name})
-                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className="text-[11px] font-medium bg-primary/5 text-primary border-primary/25 px-2 py-0.5 rounded-md shrink-0 shadow-2xs whitespace-normal text-start"
+                                >
+                                  {order.plan.name}
+                                </Badge>
                               )}
-                            </h4>
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                              <span>شماره سفارش:</span>
-                              <span className="font-sans font-medium">{toPersianDigits(order.id.slice(0, 8))}</span>
-                              <span>•</span>
-                              <span className="font-sans">
-                                {formatPersianDate(order.createdAt)}
-                              </span>
+                            </div>
+
+                            {/* Date Chip */}
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/40 hover:bg-muted/60 border border-border/50 px-2.5 py-0.5 rounded-md w-fit transition-colors">
+                              <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
+                              <span>ثبت سفارش:</span>
+                              <span className="font-sans font-medium">{formatPersianDate(order.createdAt)}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        {/* Status & Source badges */}
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end gap-1.5 shrink-0 self-start">
                           {order.source === 'telegram' && (
                             <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] gap-1 font-medium">
                               🤖 تلگرام
@@ -267,18 +289,46 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         </div>
                       </div>
 
-                      {/* Price & Ref info */}
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 border-t border-border/40 pt-3 text-xs">
+                      {/* Order Details Badges: Order ID, Tracking Code, Amount Paid */}
+                      <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 border-t border-border/40 pt-3 text-xs">
+                        {/* 1. شماره سفارش (Copyable Badge) */}
                         <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground text-xs">مبلغ پرداختی:</span>
-                          <Badge
-                            variant="secondary"
-                            className="bg-secondary/70 hover:bg-secondary/70 text-foreground border border-border/60 font-sans font-bold text-xs px-2.5 py-0.5 rounded-lg shadow-2xs"
+                          <span className="text-muted-foreground text-xs">شماره سفارش:</span>
+                          <button
+                            type="button"
+                            onClick={() => copyOrderNumberToClipboard(order.id)}
+                            className="group inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg cursor-pointer"
+                            title={copiedOrderId === order.id ? 'کپی شد!' : 'برای کپی شماره سفارش کلیک کنید'}
+                            aria-label={`کپی شماره سفارش ${order.id.slice(0, 8)}`}
                           >
-                            {formatPrice(order.amount)}
-                          </Badge>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'cursor-pointer select-none font-sans text-xs px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1.5 active:scale-95 border',
+                                copiedOrderId === order.id
+                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
+                                  : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
+                              )}
+                            >
+                              {copiedOrderId === order.id ? (
+                                <>
+                                  <Check className="size-3 text-emerald-600 dark:text-emerald-400 animate-in zoom-in-75" />
+                                  <span className="font-medium font-sans">{toPersianDigits(order.id.slice(0, 8))}</span>
+                                  <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                    کپی شد
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-medium font-sans">{toPersianDigits(order.id.slice(0, 8))}</span>
+                                  <Copy className="size-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                </>
+                              )}
+                            </Badge>
+                          </button>
                         </div>
 
+                        {/* 2. کد پیگیری (Copyable Badge) */}
                         {order.payment?.refId && (
                           <div className="flex items-center gap-1.5">
                             <span className="text-muted-foreground text-xs">کد پیگیری:</span>
@@ -316,6 +366,17 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                             </button>
                           </div>
                         )}
+
+                        {/* 3. مبلغ پرداختی */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground text-xs">مبلغ پرداختی:</span>
+                          <Badge
+                            variant="secondary"
+                            className="bg-secondary/70 hover:bg-secondary/70 text-foreground border border-border/60 font-sans font-bold text-xs px-2.5 py-0.5 rounded-lg shadow-2xs"
+                          >
+                            {formatPrice(order.amount)}
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* DELIVERY RENDERING */}
@@ -367,32 +428,63 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60">
-                              <span className="text-muted-foreground flex items-center gap-1">
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60 gap-2">
+                              <span className="text-muted-foreground flex items-center gap-1 shrink-0">
                                 <User className="size-3 text-primary" />
                                 ایمیل:
                               </span>
-                              <span className="font-mono font-semibold truncate select-all" dir="ltr">
-                                {deliveryData.email || deliveryData.username}
-                              </span>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="font-mono font-semibold truncate select-all" dir="ltr">
+                                  {deliveryData.email || deliveryData.username}
+                                </span>
+                                {(deliveryData.email || deliveryData.username) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(deliveryData.email || deliveryData.username, `email-${order.id}`)}
+                                    className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0"
+                                    title="کپی ایمیل"
+                                  >
+                                    {copiedId === `email-${order.id}` ? (
+                                      <Check className="size-3 text-emerald-500 animate-in zoom-in-75" />
+                                    ) : (
+                                      <Copy className="size-3" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60">
-                              <span className="text-muted-foreground flex items-center gap-1">
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60 gap-2">
+                              <span className="text-muted-foreground flex items-center gap-1 shrink-0">
                                 <Key className="size-3 text-primary" />
                                 رمز عبور:
                               </span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono font-semibold select-all" dir="ltr">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="font-mono font-semibold select-all truncate" dir="ltr">
                                   {showPasswordIds[order.id] ? deliveryData.password || '—' : '••••••••'}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => toggleShowPassword(order.id)}
-                                  className="text-muted-foreground hover:text-foreground"
+                                  className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0"
+                                  title={showPasswordIds[order.id] ? 'مخفی‌سازی رمز' : 'نمایش رمز'}
                                 >
                                   {showPasswordIds[order.id] ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
                                 </button>
+                                {deliveryData.password && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(deliveryData.password, `pass-${order.id}`)}
+                                    className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0"
+                                    title="کپی رمز عبور"
+                                  >
+                                    {copiedId === `pass-${order.id}` ? (
+                                      <Check className="size-3 text-emerald-500 animate-in zoom-in-75" />
+                                    ) : (
+                                      <Copy className="size-3" />
+                                    )}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
