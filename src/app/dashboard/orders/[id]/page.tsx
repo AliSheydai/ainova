@@ -88,7 +88,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-foreground">
-                {order.plan.product.name} ({order.plan.name})
+                {order.plan.product.title} ({order.plan.name})
               </h1>
               {isCompleted ? (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
@@ -210,7 +210,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">محصول:</span>
-                <span className="font-medium text-foreground">{order.plan.product.name}</span>
+                <span className="font-medium text-foreground">{order.plan.product.title}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">پلن:</span>

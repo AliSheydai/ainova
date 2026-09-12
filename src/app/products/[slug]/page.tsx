@@ -34,7 +34,7 @@ export async function generateMetadata(props: ProductPageProps): Promise<Metadat
     }
   }
 
-  const title = `${product.title || product.name} — خرید با تحویل فوری`
+  const title = `${product.title} — خرید با تحویل فوری`
   const description =
     product.shortDescription ||
     product.description?.slice(0, 160) ||
@@ -113,7 +113,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
             </Link>
             <span>/</span>
             <span className='text-foreground font-semibold truncate'>
-              {product.title || product.name}
+              {product.title}
             </span>
           </nav>
 
@@ -139,7 +139,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                 </div>
 
                 <h1 className='text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight'>
-                  {product.title || product.name}
+                  {product.title}
                 </h1>
 
                 {product.shortDescription && (
@@ -156,7 +156,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                     <Package className='size-10 sm:size-12' />
                   </div>
                   <div className='text-xs font-semibold text-muted-foreground'>
-                    {product.title || product.name}
+                    {product.title}
                   </div>
                 </div>
               </div>
@@ -196,12 +196,11 @@ export default async function ProductDetailPage(props: ProductPageProps) {
             <div className='lg:col-span-5 lg:sticky lg:top-24'>
               <ProductBuyCard
                 productId={product.id}
-                productTitle={product.title || product.name}
+                productTitle={product.title}
                 slug={product.slug}
                 price={product.price}
                 stock={stock}
                 purchaseCount={purchaseCount}
-                fulfillmentType={product.fulfillmentType}
                 shortDescription={product.shortDescription}
                 plans={enrichedPlans}
               />

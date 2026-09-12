@@ -85,8 +85,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
 
       const productTitle =
         order.product?.title ||
-        order.product?.name ||
-        (order.plan ? `${order.plan.product.name} (${order.plan.name})` : 'محصول')
+        (order.plan ? `${order.plan.product.title} (${order.plan.name})` : 'محصول')
 
       messageText += `🔢 **سفارش #${orderCode}**\n`
       messageText += `📦 **محصول:** ${productTitle}\n`

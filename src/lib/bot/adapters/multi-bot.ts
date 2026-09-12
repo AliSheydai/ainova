@@ -53,7 +53,7 @@ export class MultiBotController {
     }
 
     const { product, plans } = data
-    const title = product.title || product.name
+    const title = product.title
 
     let text = `✨ **${title}** ✨\n\n`
     if (product.shortDescription) text += `${product.shortDescription}\n\n`

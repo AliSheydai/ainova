@@ -43,10 +43,10 @@ export class BotStoreService {
         const stock = await FulfillmentService.getProductStock(p.id)
         return {
           id: p.id,
-          title: p.title || p.name,
-          name: p.name,
+          title: p.title,
+          name: p.title,
           slug: p.slug,
-          price: p.plans[0]?.price || p.price,
+          price: p.plans[0]?.price ?? p.price,
           stock,
           plansCount: p.plans.length,
         }
@@ -164,7 +164,7 @@ export class BotStoreService {
     // Request payment
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const callbackUrl = `${appUrl}/api/payment/callback?source=${source}&orderId=${order.id}`
-    const productTitle = plan.product.title || plan.product.name
+    const productTitle = plan.product.title
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,

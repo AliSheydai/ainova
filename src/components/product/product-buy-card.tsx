@@ -36,7 +36,7 @@ interface ProductBuyCardProps {
   price: number
   stock: number
   purchaseCount: number
-  fulfillmentType: string
+  fulfillmentType?: string
   shortDescription?: string | null
   plans?: PlanItem[]
 }

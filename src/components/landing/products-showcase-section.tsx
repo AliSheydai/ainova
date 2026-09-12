@@ -78,7 +78,7 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                       )}
                     </div>
                     <CardTitle className='text-base font-bold text-foreground line-clamp-1'>
-                      {prod.title || prod.name}
+                      {prod.title}
                     </CardTitle>
                     {prod.shortDescription && (
                       <CardDescription className='text-xs line-clamp-2 mt-1'>

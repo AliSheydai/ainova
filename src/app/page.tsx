@@ -25,8 +25,11 @@ function formatPrice(amount: number): string {
 async function getProductsData() {
   try {
     const products = await prisma.product.findMany({
-      where: { status: 'ACTIVE', active: true },
+      where: { status: 'ACTIVE' },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      include: {
+        plans: { where: { active: true }, orderBy: { sortOrder: 'asc' } },
+      },
     })
 
     const enriched = await Promise.all(
@@ -35,16 +38,18 @@ async function getProductsData() {
           FulfillmentService.getProductStock(prod.id),
           FulfillmentService.getProductPurchaseCount(prod.id),
         ])
+        const firstPlan = prod.plans[0]
+        const displayPrice = firstPlan?.price ?? prod.price
         return {
           id: prod.id,
-          title: prod.title || prod.name,
-          name: prod.name,
+          title: prod.title,
+          name: prod.title,
           slug: prod.slug,
           shortDescription: prod.shortDescription,
-          price: prod.price,
+          price: displayPrice,
           stock,
           purchaseCount,
-          fulfillmentType: prod.fulfillmentType,
+          fulfillmentType: firstPlan?.fulfillmentType || 'ACTIVATION_LINK',
         }
       })
     )

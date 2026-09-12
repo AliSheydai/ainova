@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
-import { ProductStatus, FulfillmentType } from '@prisma/client'
+import { ProductStatus } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         _count: {
           select: {
             orders: true,
-            activationLinks: true,
+            inventoryItems: true,
           },
         },
       },
@@ -70,17 +70,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       title,
-      name,
       slug,
       shortDescription,
       description,
       price,
       image,
-      fulfillmentType,
       sortOrder,
     } = body
 
-    const productTitle = (title || name || '').trim()
+    const productTitle = (title || '').trim()
     const productSlug = (slug || '').trim().toLowerCase().replace(/\s+/g, '-')
 
     if (!productTitle || !productSlug) {
@@ -105,23 +103,16 @@ export async function POST(req: NextRequest) {
     const parsedPrice = parseInt(String(price || 0), 10)
     const parsedSortOrder = parseInt(String(sortOrder || 0), 10)
 
-    const validFulfillmentType = Object.values(FulfillmentType).includes(fulfillmentType)
-      ? (fulfillmentType as FulfillmentType)
-      : 'ACTIVATION_LINK'
-
     const product = await prisma.product.create({
       data: {
         title: productTitle,
-        name: productTitle,
         slug: productSlug,
         shortDescription: shortDescription?.trim() || null,
         description: description?.trim() || null,
         price: isNaN(parsedPrice) ? 0 : parsedPrice,
         image: image?.trim() || null,
-        fulfillmentType: validFulfillmentType,
         sortOrder: isNaN(parsedSortOrder) ? 0 : parsedSortOrder,
-        status: 'ACTIVE',
-        active: true,
+        status: ProductStatus.ACTIVE,
       },
     })
 
@@ -149,16 +140,13 @@ export async function PATCH(req: NextRequest) {
       id,
       productId,
       title,
-      name,
       slug,
       shortDescription,
       description,
       price,
       image,
       status,
-      active,
       sortOrder,
-      fulfillmentType,
     } = body
 
     const targetId = id || productId
@@ -171,10 +159,8 @@ export async function PATCH(req: NextRequest) {
 
     const updateData: any = {}
 
-    if (title !== undefined || name !== undefined) {
-      const val = (title || name || '').trim()
-      updateData.title = val
-      updateData.name = val
+    if (title !== undefined) {
+      updateData.title = (title || '').trim()
     }
 
     if (slug !== undefined) {
@@ -207,17 +193,8 @@ export async function PATCH(req: NextRequest) {
       if (!isNaN(so)) updateData.sortOrder = so
     }
 
-    if (fulfillmentType !== undefined && Object.values(FulfillmentType).includes(fulfillmentType)) {
-      updateData.fulfillmentType = fulfillmentType
-    }
-
     if (status !== undefined && Object.values(ProductStatus).includes(status)) {
       updateData.status = status
-      updateData.active = status === 'ACTIVE'
-    } else if (active !== undefined) {
-      const isActive = Boolean(active)
-      updateData.active = isActive
-      updateData.status = isActive ? 'ACTIVE' : 'INACTIVE'
     }
 
     const updatedProduct = await prisma.product.update({
@@ -264,8 +241,7 @@ export async function DELETE(req: NextRequest) {
       await prisma.product.update({
         where: { id },
         data: {
-          status: 'ARCHIVED',
-          active: false,
+          status: ProductStatus.ARCHIVED,
           archivedAt: new Date(),
         },
       })
@@ -278,8 +254,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     // If no orders, delete safely
-    // 1. Delete associated activation links first if any exist
-    await prisma.activationLink.deleteMany({ where: { productId: id } })
+    // 1. Delete associated inventory items first if any exist
+    await prisma.inventoryItem.deleteMany({ where: { productId: id } })
     // 2. Delete plans if any exist
     await prisma.plan.deleteMany({ where: { productId: id } })
     // 3. Delete product

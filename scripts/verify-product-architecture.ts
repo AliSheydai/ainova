@@ -22,7 +22,7 @@ async function runTests() {
   const existingLinks = await prisma.activationLink.count({
     where: { productId: geminiProduct.id },
   })
-  console.log(`✅ Gemini Product: "${geminiProduct.title || geminiProduct.name}" (ID: ${geminiProduct.id})`)
+  console.log(`✅ Gemini Product: "${geminiProduct.title}" (ID: ${geminiProduct.id})`)
   console.log(`✅ Existing orders safely preserved: ${existingOrders} orders linked.`)
   console.log(`✅ Existing links safely preserved: ${existingLinks} links linked.`)
 
@@ -32,14 +32,11 @@ async function runTests() {
   const productB = await prisma.product.create({
     data: {
       title: 'Claude 3.7 Sonnet Test Pro',
-      name: 'Claude 3.7 Sonnet Test Pro',
       slug: testSlug,
       shortDescription: 'اکانت تست کلود با تحویل آنی',
       description: 'تست برای اعتبارسنجی ایزولاسیون کامل چند محصول.',
       price: 550000, // 550,000 Toman
       status: 'ACTIVE',
-      active: true,
-      fulfillmentType: 'ACTIVATION_LINK',
       sortOrder: 2,
     },
   })

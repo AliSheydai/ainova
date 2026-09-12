@@ -87,18 +87,15 @@ enum InventoryType {
 model Product {
   id               String          @id @default(cuid())
   title            String          @default("")
-  name             String          @default("") // Keep synced for compatibility
   slug             String          @unique
   shortDescription String?
   description      String?
   image            String?
-  price            Int             @default(0) // price in Toman
+  price            Int             @default(0) // price in Toman (Base / Starts-from)
   status           ProductStatus   @default(ACTIVE)
   stock            Int             @default(0)
   purchaseCount    Int             @default(0)
   sortOrder        Int             @default(0)
-  fulfillmentType  FulfillmentType @default(ACTIVATION_LINK)
-  active           Boolean         @default(true) // Keep synced for compatibility
   archivedAt       DateTime?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -130,6 +127,7 @@ model Plan {
   activationLinks ActivationLink[]
   inventoryItems  InventoryItem[]
 
+  @@index([productId])
   @@map("plans")
 }
 
@@ -167,6 +165,10 @@ model Order {
   inventoryItem   InventoryItem?
   supportTickets  SupportTicket[]
 
+  @@index([userId])
+  @@index([productId])
+  @@index([planId])
+  @@index([status])
   @@map("orders")
 }
 
@@ -198,7 +200,7 @@ model Payment {
 }
 
 // =====================
-// Activation Links
+// Activation Links (@deprecated - Kept for backwards-compatibility; use InventoryItem)
 // =====================
 enum LinkStatus {
   AVAILABLE
@@ -303,6 +305,8 @@ model InventoryItem {
   plan       Plan?         @relation(fields: [planId], references: [id])
   order      Order?        @relation(fields: [orderId], references: [id])
 
+  @@index([productId, planId, status])
+  @@index([type, status])
   @@map("inventory_items")
 }
 

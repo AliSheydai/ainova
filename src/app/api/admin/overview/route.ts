@@ -45,11 +45,11 @@ export async function GET() {
         where: { status: { in: ['PAID', 'COMPLETED'] } },
         _sum: { amount: true },
       }),
-      // Link inventory counts
-      prisma.activationLink.count({ where: { status: 'AVAILABLE' } }),
-      prisma.activationLink.count({ where: { status: 'RESERVED' } }),
-      prisma.activationLink.count({ where: { status: 'USED' } }),
-      prisma.activationLink.count({ where: { status: 'INVALID' } }),
+      // Inventory items counts
+      prisma.inventoryItem.count({ where: { status: 'AVAILABLE' } }),
+      prisma.inventoryItem.count({ where: { status: 'RESERVED' } }),
+      prisma.inventoryItem.count({ where: { status: 'USED' } }),
+      prisma.inventoryItem.count({ where: { status: 'INVALID' } }),
       // Recent orders with product and user
       prisma.order.findMany({
         take: 8,

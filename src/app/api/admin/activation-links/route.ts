@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { LinkStatus } from '@prisma/client'
+import { LinkStatus, InventoryType } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
     const productIdFilter = searchParams.get('productId')
     const planIdFilter = searchParams.get('planId')
 
-    const where: any = {}
+    const where: any = {
+      type: InventoryType.ACTIVATION_LINK,
+    }
     if (statusFilter && Object.values(LinkStatus).includes(statusFilter)) {
       where.status = statusFilter
     }
@@ -23,8 +25,8 @@ export async function GET(req: NextRequest) {
       where.planId = planIdFilter
     }
 
-    const [links, total, available, reserved, used, invalid, products] = await Promise.all([
-      prisma.activationLink.findMany({
+    const [items, total, available, reserved, used, invalid, products] = await Promise.all([
+      prisma.inventoryItem.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -42,11 +44,11 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-      prisma.activationLink.count(),
-      prisma.activationLink.count({ where: { status: 'AVAILABLE' } }),
-      prisma.activationLink.count({ where: { status: 'RESERVED' } }),
-      prisma.activationLink.count({ where: { status: 'USED' } }),
-      prisma.activationLink.count({ where: { status: 'INVALID' } }),
+      prisma.inventoryItem.count({ where: { type: InventoryType.ACTIVATION_LINK } }),
+      prisma.inventoryItem.count({ where: { type: InventoryType.ACTIVATION_LINK, status: 'AVAILABLE' } }),
+      prisma.inventoryItem.count({ where: { type: InventoryType.ACTIVATION_LINK, status: 'RESERVED' } }),
+      prisma.inventoryItem.count({ where: { type: InventoryType.ACTIVATION_LINK, status: 'USED' } }),
+      prisma.inventoryItem.count({ where: { type: InventoryType.ACTIVATION_LINK, status: 'INVALID' } }),
       prisma.product.findMany({
         where: { status: { not: 'ARCHIVED' } },
         orderBy: { sortOrder: 'asc' },
@@ -54,9 +56,31 @@ export async function GET(req: NextRequest) {
       }),
     ])
 
+    // Format items to provide backwards-compatible activationLink shape (with .url property)
+    const formattedLinks = items.map((item) => {
+      const dataObj =
+        typeof item.data === 'string'
+          ? JSON.parse(item.data)
+          : item.data
+      return {
+        id: item.id,
+        productId: item.productId,
+        planId: item.planId,
+        url: dataObj?.url || dataObj?.link || '',
+        status: item.status,
+        orderId: item.orderId,
+        createdAt: item.createdAt,
+        assignedAt: item.assignedAt,
+        usedAt: item.usedAt,
+        product: item.product,
+        plan: item.plan,
+        order: item.order,
+      }
+    })
+
     return NextResponse.json({
       success: true,
-      links,
+      links: formattedLinks,
       stats: {
         total,
         available,
@@ -127,12 +151,13 @@ export async function POST(req: NextRequest) {
       targetPlanId = product.plans[0].id
     }
 
-    // Create records
-    const created = await prisma.activationLink.createMany({
+    // Create records in unified inventory_items table
+    const created = await prisma.inventoryItem.createMany({
       data: cleanUrls.map((url: string) => ({
         productId: targetProductId,
         planId: targetPlanId || null,
-        url,
+        type: InventoryType.ACTIVATION_LINK,
+        data: { url },
         status: LinkStatus.AVAILABLE,
       })),
     })
@@ -140,7 +165,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       count: created.count,
-      message: `${created.count.toLocaleString('fa-IR')} لینک فعال‌سازی جدید برای «${product.title || product.name}» با موفقیت اضافه شد.`,
+      message: `${created.count.toLocaleString('fa-IR')} لینک فعال‌سازی جدید برای «${product.title}» با موفقیت اضافه شد.`,
     })
   } catch (error: unknown) {
     console.error('Error adding activation links:', error)
@@ -166,19 +191,19 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const link = await prisma.activationLink.findUnique({ where: { id } })
-    if (!link) {
+    const item = await prisma.inventoryItem.findUnique({ where: { id } })
+    if (!item) {
       return NextResponse.json({ success: false, error: 'لینک یافت نشد.' }, { status: 404 })
     }
 
-    if (link.status === 'USED' || link.orderId) {
+    if (item.status === 'USED' || item.orderId) {
       return NextResponse.json(
         { success: false, error: 'لینک‌های تحویل‌داده‌شده به مشتری قابل حذف نیستند.' },
         { status: 400 }
       )
     }
 
-    await prisma.activationLink.delete({ where: { id } })
+    await prisma.inventoryItem.delete({ where: { id } })
 
     return NextResponse.json({
       success: true,

@@ -13,21 +13,35 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
           include: { product: true },
         },
         activationLink: true,
+        inventoryItem: true,
+        delivery: true,
         payment: true,
       },
     })
 
-    if (!order || !order.telegramChatId || !order.activationLink) {
+    if (!order || !order.telegramChatId) {
+      return
+    }
+
+    const linkUrl =
+      (order.delivery?.data as any)?.url ||
+      (order.inventoryItem?.data as any)?.url ||
+      order.activationLink?.url
+
+    if (!linkUrl) {
       return
     }
 
     const bot = new Bot(token)
 
+    const productTitle = order.plan?.product?.title || 'سرویس هوش مصنوعی'
+    const planName = order.plan?.name || ''
+
     const successMessage = `
 ✅ **پرداخت با موفقیت انجام شد**
 
 سفارش شما با موفقیت ثبت و تأیید گردید:
-🌟 **${order.plan.product.name} — ${order.plan.name}**
+🌟 **${productTitle}${planName ? ` — ${planName}` : ''}**
 🔢 **شناسه پیگیری بانکی:** \`${order.payment?.refId || '-'}\`
 
 🔐 **توجه مهم:**
@@ -36,11 +50,11 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
 فقط کافیست با کلیک روی دکمه یا لینک اختصاصی زیر، مراحل فعال‌سازی را با حساب Google خودتان تکمیل فرمایید:
 
 🔗 **لینک فعال‌سازی اختصاصی شما:**
-\`${order.activationLink.url}\`
+\`${linkUrl}\`
 `.trim()
 
     const keyboard = new InlineKeyboard()
-      .url('🔗 فعال‌سازی جمینای', order.activationLink.url)
+      .url('🔗 فعال‌سازی جمینای', linkUrl)
       .row()
       .text('📖 راهنمای فعال‌سازی', 'show_activation_guide')
 

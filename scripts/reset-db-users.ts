@@ -98,7 +98,7 @@ async function main() {
         },
       },
     })
-    console.log(`✓ Created initial product: ${p.name}`)
+    console.log(`✓ Created initial product: ${p.title}`)
   } else {
     console.log('✓ Products & plans already exist')
   }

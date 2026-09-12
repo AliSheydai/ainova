@@ -31,7 +31,7 @@ async function runTests() {
   })
 
   console.log('👤 Test Users Ready:', { userA: userA.phone, userB: userB.phone })
-  console.log('📦 Testing with Plan:', `${plan.product.name} (${plan.name}) - ${plan.price} Toman\n`)
+  console.log('📦 Testing with Plan:', `${plan.product.title} (${plan.name}) - ${plan.price} Toman\n`)
 
   // -------------------------------------------------------------
   // TEST 1: Full Standard Checkout Flow
@@ -53,7 +53,7 @@ async function runTests() {
   const payReq1 = await PaymentService.createPayment({
     orderId: order1.id,
     amount: plan.price,
-    description: `خرید اشتراک تست ${plan.product.name}`,
+    description: `خرید اشتراک تست ${plan.product.title}`,
     callbackUrl: `http://localhost:3000/api/payment/callback?orderId=${order1.id}`,
     mobile: userA.phone,
   })

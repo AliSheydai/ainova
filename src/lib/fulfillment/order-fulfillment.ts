@@ -5,40 +5,29 @@ import { FulfillOrderOptions, FulfillOrderResult, ManualDeliveryData } from './t
 
 export class FulfillmentService {
   /**
-   * Calculates real-time available stock for a product or specific plan.
+   * Calculates real-time available stock for a specific plan.
    */
   static async getPlanStock(planId: string): Promise<number> {
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
-      include: { product: true },
     })
 
     if (!plan) return 0
 
-    const fulfillmentType = plan.fulfillmentType || plan.product?.fulfillmentType || 'ACTIVATION_LINK'
+    const fulfillmentType: FulfillmentType = plan.fulfillmentType || 'ACTIVATION_LINK'
 
     switch (fulfillmentType) {
       case 'ACTIVATION_LINK': {
-        const [linksCount, inventoryCount] = await Promise.all([
-          prisma.activationLink.count({
-            where: {
-              OR: [
-                { planId: plan.id, status: 'AVAILABLE' },
-                { productId: plan.productId, planId: null, status: 'AVAILABLE' },
-              ],
-            },
-          }),
-          prisma.inventoryItem.count({
-            where: {
-              type: 'ACTIVATION_LINK',
-              OR: [
-                { planId: plan.id, status: 'AVAILABLE' },
-                { productId: plan.productId, planId: null, status: 'AVAILABLE' },
-              ],
-            },
-          }),
-        ])
-        return linksCount + inventoryCount
+        return await prisma.inventoryItem.count({
+          where: {
+            type: 'ACTIVATION_LINK',
+            status: 'AVAILABLE',
+            OR: [
+              { planId: plan.id },
+              { productId: plan.productId, planId: null },
+            ],
+          },
+        })
       }
 
       case 'PRE_CREATED_ACCOUNT': {
@@ -64,7 +53,7 @@ export class FulfillmentService {
   }
 
   /**
-   * Calculates overall stock for a product across all its plans.
+   * Calculates overall stock for a product across all its active plans.
    */
   static async getProductStock(productId: string): Promise<number> {
     const product = await prisma.product.findUnique({
@@ -84,14 +73,7 @@ export class FulfillmentService {
       return planStocks.reduce((sum, s) => sum + s, 0)
     }
 
-    // Fallback if no plans: check activation links or product stock
-    if (product.fulfillmentType === 'ACTIVATION_LINK') {
-      return await prisma.activationLink.count({
-        where: { productId, status: 'AVAILABLE' },
-      })
-    }
-
-    return product.stock || 999
+    return 0
   }
 
   /**
@@ -117,7 +99,7 @@ export class FulfillmentService {
     adminUserId,
   }: FulfillOrderOptions): Promise<FulfillOrderResult> {
     return await prisma.$transaction(async (tx) => {
-      // 1. Fetch order with product, plan, delivery and payment
+      // 1. Fetch order with product, plan, delivery, inventoryItem and payment
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: {
@@ -127,6 +109,7 @@ export class FulfillmentService {
           },
           payment: true,
           activationLink: true,
+          inventoryItem: true,
           delivery: true,
           user: true,
         },
@@ -136,14 +119,9 @@ export class FulfillmentService {
         throw new Error(`ORDER_NOT_FOUND: Order ${orderId} does not exist.`)
       }
 
-      // Determine effective fulfillment type from Plan, fallback to Product
-      const effectivePlan = order.plan
-      const effectiveProduct = order.product || order.plan?.product
-
+      // Determine effective fulfillment type from Plan
       const fulfillmentType: FulfillmentType =
-        effectivePlan?.fulfillmentType ||
-        effectiveProduct?.fulfillmentType ||
-        'ACTIVATION_LINK'
+        order.plan?.fulfillmentType || 'ACTIVATION_LINK'
 
       // 2. Idempotency check
       if (order.status === 'COMPLETED' && order.delivery?.status === 'DELIVERED') {
@@ -217,14 +195,16 @@ export class FulfillmentService {
             plan: { include: { product: true } },
             payment: true,
             activationLink: true,
+            inventoryItem: true,
             delivery: true,
           },
         })
 
         // Increment purchase count
-        if (effectiveProduct?.id) {
+        const effectiveProductId = order.productId || order.plan?.productId
+        if (effectiveProductId) {
           await tx.product.update({
-            where: { id: effectiveProduct.id },
+            where: { id: effectiveProductId },
             data: { purchaseCount: { increment: 1 } },
           }).catch(() => {})
         }
@@ -266,6 +246,7 @@ export class FulfillmentService {
           plan: { include: { product: true } },
           payment: true,
           activationLink: true,
+          inventoryItem: true,
           delivery: true,
         },
       })

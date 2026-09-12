@@ -66,7 +66,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
     }
 
     const { product, plans } = data
-    const title = product.title || product.name
+    const title = product.title
 
     let detailsText = `✨ **${title}** ✨\n\n`
     if (product.shortDescription) {

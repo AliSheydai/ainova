@@ -17,9 +17,7 @@ export class CustomerProvisioningFulfillmentHandler implements IFulfillmentHandl
     // For now, simulate successful automated provisioning.
     const serviceName =
       order.plan?.product?.title ||
-      order.plan?.product?.name ||
       order.product?.title ||
-      order.product?.name ||
       'سرویس'
 
     const deliveryData: CustomerProvisioningDeliveryData = {

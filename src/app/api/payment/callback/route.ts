@@ -88,10 +88,6 @@ export async function GET(req: NextRequest) {
           where: { id: payment.orderId },
           data: { status: 'CANCELLED' },
         }),
-        prisma.activationLink.updateMany({
-          where: { orderId: payment.orderId, status: 'RESERVED' },
-          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-        }),
         prisma.inventoryItem.updateMany({
           where: { orderId: payment.orderId, status: 'RESERVED' },
           data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
@@ -128,10 +124,6 @@ export async function GET(req: NextRequest) {
         where: { id: payment.orderId },
         data: { status: 'FAILED' },
       }),
-      prisma.activationLink.updateMany({
-        where: { orderId: payment.orderId, status: 'RESERVED' },
-        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-      }),
       prisma.inventoryItem.updateMany({
         where: { orderId: payment.orderId, status: 'RESERVED' },
         data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
@@ -164,8 +156,7 @@ export async function GET(req: NextRequest) {
       payment.order.telegramChatId || payment.order.user?.telegramId
     const productTitle =
       payment.order.product?.title ||
-      payment.order.product?.name ||
-      (payment.order.plan ? `${payment.order.plan.product.name} — ${payment.order.plan.name}` : 'محصول')
+      (payment.order.plan ? `${payment.order.plan.product.title} — ${payment.order.plan.name}` : 'محصول')
 
     // If stock ran out:
     if (fulfillment.status === 'STOCK_EXHAUSTED') {

@@ -61,7 +61,7 @@ interface ActivationLinkItem {
     id: string
     name: string
     product?: {
-      name: string
+      title: string
     }
   }
   order?: {
@@ -414,7 +414,7 @@ export default function AdminActivationLinksPage() {
                       return (
                         <tr key={link.id} className='hover:bg-muted/30 transition-colors'>
                           <td className='py-3 font-semibold text-foreground whitespace-nowrap'>
-                            {link.plan?.product?.name || link.plan?.name || 'محصول'}
+                            {link.plan?.product?.title || link.plan?.name || 'محصول'}
                           </td>
 
                           {/* Protected / Masked URL */}

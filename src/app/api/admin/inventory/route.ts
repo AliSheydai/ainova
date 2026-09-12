@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        product: { select: { id: true, title: true, name: true, slug: true } },
+        product: { select: { id: true, title: true, slug: true } },
         plan: { select: { id: true, name: true } },
         order: {
           select: {
