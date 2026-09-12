@@ -38,20 +38,20 @@ export class BotStoreService {
       },
     })
 
-    return await Promise.all(
-      products.map(async (p) => {
-        const stock = await FulfillmentService.getProductStock(p.id)
-        return {
-          id: p.id,
-          title: p.title,
-          name: p.title,
-          slug: p.slug,
-          price: p.plans[0]?.price ?? p.price,
-          stock,
-          plansCount: p.plans.length,
-        }
-      })
-    )
+    const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases(products)
+
+    return products.map((p) => {
+      const metrics = metricsMap.get(p.id)
+      return {
+        id: p.id,
+        title: p.title,
+        name: p.title,
+        slug: p.slug,
+        price: p.plans[0]?.price ?? p.price,
+        stock: metrics?.stock ?? 0,
+        plansCount: p.plans.length,
+      }
+    })
   }
 
   /**
@@ -73,25 +73,26 @@ export class BotStoreService {
 
     if (!product || product.status !== 'ACTIVE') return null
 
-    const plans = await Promise.all(
-      product.plans.map(async (plan) => {
-        const stock = await FulfillmentService.getPlanStock(plan.id)
-        const fields = (Array.isArray(plan.checkoutFields)
-          ? plan.checkoutFields
-          : []) as unknown as CheckoutFieldDefinition[]
+    const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases([product])
+    const productMetrics = metricsMap.get(product.id)
 
-        return {
-          id: plan.id,
-          productId: plan.productId,
-          name: plan.name,
-          duration: plan.duration,
-          price: plan.price,
-          fulfillmentType: plan.fulfillmentType,
-          stock,
-          checkoutFields: fields,
-        }
-      })
-    )
+    const plans = product.plans.map((plan) => {
+      const stock = productMetrics?.planStocks[plan.id] ?? 0
+      const fields = (Array.isArray(plan.checkoutFields)
+        ? plan.checkoutFields
+        : []) as unknown as CheckoutFieldDefinition[]
+
+      return {
+        id: plan.id,
+        productId: plan.productId,
+        name: plan.name,
+        duration: plan.duration,
+        price: plan.price,
+        fulfillmentType: plan.fulfillmentType,
+        stock,
+        checkoutFields: fields,
+      }
+    })
 
     return { product, plans }
   }

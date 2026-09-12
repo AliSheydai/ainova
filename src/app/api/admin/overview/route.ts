@@ -1,56 +1,56 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
+import { memoryCache } from '@/lib/cache/memory-cache'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
   if (errorResponse) return errorResponse
 
   try {
+    const { searchParams } = new URL(req.url)
+    const forceRefresh = searchParams.get('refresh') === 'true'
+
+    if (!forceRefresh) {
+      const cached = memoryCache.get<object>('admin:overview')
+      if (cached) {
+        return NextResponse.json(cached)
+      }
+    }
+
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
     const [
-      totalProducts,
-      activeProducts,
+      productGroup,
+      ordersGroup,
+      inventoryGroup,
       totalUsers,
       newUsers,
-      totalOrders,
-      successfulOrders,
-      pendingOrders,
-      revenueResult,
-      availableLinks,
-      reservedLinks,
-      usedLinks,
-      invalidLinks,
       recentOrders,
       recentUsers,
       topProducts,
     ] = await Promise.all([
-      // Total products
-      prisma.product.count({ where: { status: { not: 'ARCHIVED' } } }),
-      // Active products
-      prisma.product.count({ where: { status: 'ACTIVE' } }),
-      // Total users
-      prisma.user.count(),
-      // New users last 7 days
-      prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-      // Total orders
-      prisma.order.count(),
-      // Successful orders (PAID or COMPLETED)
-      prisma.order.count({ where: { status: { in: ['PAID', 'COMPLETED'] } } }),
-      // Pending orders
-      prisma.order.count({ where: { status: 'PENDING_PAYMENT' } }),
-      // Total revenue from completed/paid orders
-      prisma.order.aggregate({
-        where: { status: { in: ['PAID', 'COMPLETED'] } },
+      // 1. Products grouped by status (replaces 2 separate queries)
+      prisma.product.groupBy({
+        by: ['status'],
+        _count: { _all: true },
+      }),
+      // 2. Orders grouped by status with amount sum (replaces 4 separate queries)
+      prisma.order.groupBy({
+        by: ['status'],
+        _count: { _all: true },
         _sum: { amount: true },
       }),
-      // Inventory items counts
-      prisma.inventoryItem.count({ where: { status: 'AVAILABLE' } }),
-      prisma.inventoryItem.count({ where: { status: 'RESERVED' } }),
-      prisma.inventoryItem.count({ where: { status: 'USED' } }),
-      prisma.inventoryItem.count({ where: { status: 'INVALID' } }),
-      // Recent orders with product and user
+      // 3. Inventory items grouped by status (replaces 4 separate queries)
+      prisma.inventoryItem.groupBy({
+        by: ['status'],
+        _count: { _all: true },
+      }),
+      // 4. Total users
+      prisma.user.count(),
+      // 5. New users last 7 days
+      prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      // 6. Recent orders with user and product
       prisma.order.findMany({
         take: 8,
         orderBy: { createdAt: 'desc' },
@@ -67,7 +67,7 @@ export async function GET() {
           },
         },
       }),
-      // Recent users
+      // 7. Recent users
       prisma.user.findMany({
         take: 6,
         orderBy: { createdAt: 'desc' },
@@ -77,7 +77,7 @@ export async function GET() {
           },
         },
       }),
-      // Top products
+      // 8. Top products
       prisma.product.findMany({
         where: { status: 'ACTIVE' },
         take: 5,
@@ -85,9 +85,42 @@ export async function GET() {
       }),
     ])
 
-    const totalRevenue = revenueResult._sum.amount || 0
+    // In-memory product metric calculations
+    let totalProducts = 0
+    let activeProducts = 0
+    for (const p of productGroup) {
+      if (p.status !== 'ARCHIVED') totalProducts += p._count._all
+      if (p.status === 'ACTIVE') activeProducts += p._count._all
+    }
 
-    return NextResponse.json({
+    // In-memory order and revenue calculations
+    let totalOrders = 0
+    let successfulOrders = 0
+    let pendingOrders = 0
+    let totalRevenue = 0
+    for (const o of ordersGroup) {
+      totalOrders += o._count._all
+      if (o.status === 'PAID' || o.status === 'COMPLETED') {
+        successfulOrders += o._count._all
+        totalRevenue += o._sum.amount || 0
+      } else if (o.status === 'PENDING_PAYMENT') {
+        pendingOrders += o._count._all
+      }
+    }
+
+    // In-memory inventory metric calculations
+    let availableLinks = 0
+    let reservedLinks = 0
+    let usedLinks = 0
+    let invalidLinks = 0
+    for (const item of inventoryGroup) {
+      if (item.status === 'AVAILABLE') availableLinks = item._count._all
+      else if (item.status === 'RESERVED') reservedLinks = item._count._all
+      else if (item.status === 'USED') usedLinks = item._count._all
+      else if (item.status === 'INVALID') invalidLinks = item._count._all
+    }
+
+    const payload = {
       success: true,
       stats: {
         totalProducts,
@@ -107,7 +140,12 @@ export async function GET() {
       recentOrders,
       recentUsers,
       topProducts,
-    })
+    }
+
+    // Cache overview response for 30 seconds
+    memoryCache.set('admin:overview', payload, 30)
+
+    return NextResponse.json(payload)
   } catch (error: unknown) {
     console.error('Error fetching admin overview:', error)
     return NextResponse.json(

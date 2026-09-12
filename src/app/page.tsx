@@ -12,6 +12,8 @@ import { FinalCtaSection } from '@/components/landing/final-cta-section'
 import { LandingFooter } from '@/components/landing/landing-footer'
 import { ProductsShowcaseSection } from '@/components/landing/products-showcase-section'
 
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: 'آینوا (AiNova) | فروشگاه رسمی اشتراک‌های هوش مصنوعی و دیجیتال',
   description:
@@ -32,43 +34,42 @@ async function getProductsData() {
       },
     })
 
-    const enriched = await Promise.all(
-      products.map(async (prod) => {
-        const [stock, purchaseCount] = await Promise.all([
-          FulfillmentService.getProductStock(prod.id),
-          FulfillmentService.getProductPurchaseCount(prod.id),
-        ])
-        const activePlans = prod.plans || []
-        const minPrice =
-          activePlans.length > 0
-            ? Math.min(...activePlans.map((p) => p.price))
-            : prod.price
-        const firstPlan = activePlans[0]
-        const displayPrice = minPrice > 0 ? minPrice : (firstPlan?.price ?? prod.price)
+    const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases(products)
 
-        return {
-          id: prod.id,
-          title: prod.title,
-          name: prod.title,
-          slug: prod.slug,
-          shortDescription: prod.shortDescription,
-          price: displayPrice,
-          minPrice,
-          hasMultiplePlans: activePlans.length > 1,
-          image: prod.image,
-          features: prod.features as string[] | null,
-          stock,
-          purchaseCount,
-          fulfillmentType: firstPlan?.fulfillmentType || 'ACTIVATION_LINK',
-          plans: activePlans.map((p) => ({
-            id: p.id,
-            name: p.name,
-            duration: p.duration,
-            price: p.price,
-          })),
-        }
-      })
-    )
+    const enriched = products.map((prod) => {
+      const metrics = metricsMap.get(prod.id)
+      const stock = metrics?.stock ?? 0
+      const purchaseCount = metrics?.purchaseCount ?? 0
+      const activePlans = prod.plans || []
+      const minPrice =
+        activePlans.length > 0
+          ? Math.min(...activePlans.map((p) => p.price))
+          : prod.price
+      const firstPlan = activePlans[0]
+      const displayPrice = minPrice > 0 ? minPrice : (firstPlan?.price ?? prod.price)
+
+      return {
+        id: prod.id,
+        title: prod.title,
+        name: prod.title,
+        slug: prod.slug,
+        shortDescription: prod.shortDescription,
+        price: displayPrice,
+        minPrice,
+        hasMultiplePlans: activePlans.length > 1,
+        image: prod.image,
+        features: prod.features as string[] | null,
+        stock,
+        purchaseCount,
+        fulfillmentType: firstPlan?.fulfillmentType || 'ACTIVATION_LINK',
+        plans: activePlans.map((p) => ({
+          id: p.id,
+          name: p.name,
+          duration: p.duration,
+          price: p.price,
+        })),
+      }
+    })
 
     return enriched
   } catch (error) {

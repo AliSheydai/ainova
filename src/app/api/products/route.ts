@@ -18,20 +18,16 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    const enrichedProducts = await Promise.all(
-      products.map(async (prod) => {
-        const [stock, purchaseCount] = await Promise.all([
-          FulfillmentService.getProductStock(prod.id),
-          FulfillmentService.getProductPurchaseCount(prod.id),
-        ])
+    const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases(products)
 
-        return {
-          ...prod,
-          stock,
-          purchaseCount,
-        }
-      })
-    )
+    const enrichedProducts = products.map((prod) => {
+      const metrics = metricsMap.get(prod.id)
+      return {
+        ...prod,
+        stock: metrics?.stock ?? 0,
+        purchaseCount: metrics?.purchaseCount ?? 0,
+      }
+    })
 
     const firstProduct = enrichedProducts[0] || null
 

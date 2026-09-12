@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { InventoryType, LinkStatus } from '@prisma/client'
 import { encryptCredential } from '@/lib/security/crypto'
+import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -174,6 +175,8 @@ export async function POST(req: NextRequest) {
       data: itemsToCreate,
     })
 
+    FulfillmentService.invalidateStockCache()
+
     return NextResponse.json({
       success: true,
       count: itemsToCreate.length,
@@ -206,6 +209,8 @@ export async function DELETE(req: NextRequest) {
     await prisma.inventoryItem.delete({
       where: { id },
     })
+
+    FulfillmentService.invalidateStockCache()
 
     return NextResponse.json({
       success: true,

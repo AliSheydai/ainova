@@ -106,10 +106,11 @@ export default function AdminOverviewPage() {
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchOverview = async () => {
+  const fetchOverview = async (forceRefresh = false) => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/overview')
+      const url = forceRefresh ? '/api/admin/overview?refresh=true' : '/api/admin/overview'
+      const res = await fetch(url)
       const data = await res.json()
       if (data.success) {
         setStats(data.stats)
@@ -142,7 +143,7 @@ export default function AdminOverviewPage() {
           <Button
             variant='outline'
             size='sm'
-            onClick={fetchOverview}
+            onClick={() => fetchOverview(true)}
             disabled={loading}
             className='gap-1.5 text-xs h-8 px-2.5 sm:px-3'
             title='بروزرسانی داده‌ها'

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
@@ -19,15 +20,27 @@ import {
   HelpCircle,
 } from 'lucide-react'
 
+export const revalidate = 60
+
 interface ProductPageProps {
   params: Promise<{ slug: string }>
 }
 
+const getProductBySlug = cache(async (slug: string) => {
+  return await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      plans: {
+        where: { active: true },
+        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+      },
+    },
+  })
+})
+
 export async function generateMetadata(props: ProductPageProps): Promise<Metadata> {
   const params = await props.params
-  const product = await prisma.product.findUnique({
-    where: { slug: params.slug },
-  })
+  const product = await getProductBySlug(params.slug)
 
   if (!product || product.status === 'ARCHIVED') {
     return {
@@ -57,37 +70,25 @@ export default async function ProductDetailPage(props: ProductPageProps) {
   const params = await props.params
   const slug = params.slug
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      plans: {
-        where: { active: true },
-        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
-      },
-    },
-  })
+  const product = await getProductBySlug(slug)
 
   if (!product || product.status === 'ARCHIVED') {
     notFound()
   }
 
-  const [stock, purchaseCount, enrichedPlans] = await Promise.all([
-    FulfillmentService.getProductStock(product.id),
-    FulfillmentService.getProductPurchaseCount(product.id),
-    Promise.all(
-      (product.plans || []).map(async (plan) => {
-        const planStock = await FulfillmentService.getPlanStock(plan.id)
-        return {
-          id: plan.id,
-          name: plan.name,
-          price: plan.price,
-          duration: plan.duration,
-          fulfillmentType: plan.fulfillmentType,
-          stock: planStock,
-        }
-      })
-    ),
-  ])
+  const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases([product])
+  const metrics = metricsMap.get(product.id)
+  const stock = metrics?.stock ?? 0
+  const purchaseCount = metrics?.purchaseCount ?? 0
+
+  const enrichedPlans = (product.plans || []).map((plan) => ({
+    id: plan.id,
+    name: plan.name,
+    price: plan.price,
+    duration: plan.duration,
+    fulfillmentType: plan.fulfillmentType,
+    stock: metrics?.planStocks[plan.id] ?? 0,
+  }))
 
   const defaultFeatures = [
     'فعال‌سازی رسمی و قانونی روی اکانت شخصی شما',

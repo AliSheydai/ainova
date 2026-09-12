@@ -34,20 +34,16 @@ export async function GET(req: NextRequest) {
     })
 
     // Compute real-time stock and verified purchase count for every product
-    const enrichedProducts = await Promise.all(
-      products.map(async (prod) => {
-        const [stock, verifiedPurchases] = await Promise.all([
-          FulfillmentService.getProductStock(prod.id),
-          FulfillmentService.getProductPurchaseCount(prod.id),
-        ])
+    const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases(products)
 
-        return {
-          ...prod,
-          stock,
-          purchaseCount: verifiedPurchases,
-        }
-      })
-    )
+    const enrichedProducts = products.map((prod) => {
+      const metrics = metricsMap.get(prod.id)
+      return {
+        ...prod,
+        stock: metrics?.stock ?? 0,
+        purchaseCount: metrics?.purchaseCount ?? 0,
+      }
+    })
 
     return NextResponse.json({
       success: true,
