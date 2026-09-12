@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { type AuthUserData } from '@/components/auth/auth-modal'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer } from '@/lib/motion'
-import { formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
+import { formatPersianDate } from '@/lib/persian-utils'
 
 function TelegramIcon({ className = 'size-4' }: { className?: string }) {
   return (
@@ -153,32 +153,135 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
       initial="hidden"
       animate="visible"
     >
-      {/* Profile Header Banner */}
+      {/* Profile Header Banner with Integrated Compact Telegram */}
       <motion.div
         variants={fadeUp}
-        className="flex items-center gap-4 rounded-2xl border border-border/70 bg-gradient-to-l from-primary/5 via-card to-card p-4 sm:p-5 shadow-xs"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 rounded-2xl border border-border/70 bg-gradient-to-l from-primary/5 via-card to-card p-4 sm:p-5 shadow-xs"
       >
-        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
-          {initial}
-          <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-primary ring-2 ring-card" />
+        {/* User Identity Info */}
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
+            {initial}
+            <span
+              className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card"
+              title="حساب فعال"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
+                {displayName}
+              </h3>
+              <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] gap-1 font-medium py-0.5">
+                <ShieldCheck className="h-3 w-3" />
+                حساب فعال
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span>شماره موبایل:</span>
+              <span dir="ltr" className="font-sans text-foreground font-medium tabular-nums">
+                {user.phone}
+              </span>
+            </p>
+          </div>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-base font-bold text-foreground truncate">
-              {displayName}
-            </h3>
-            <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] gap-1 font-medium">
-              <ShieldCheck className="h-3 w-3" />
-              حساب فعال
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            شماره موبایل:{' '}
-            <span dir="ltr" className="font-sans text-foreground font-medium">
-              {user.phone}
-            </span>
-          </p>
+        {/* Compact Telegram Integration Widget */}
+        <div className="shrink-0 w-full sm:w-auto">
+          {user.telegramId ? (
+            /* Connected State */
+            <div className="flex items-center justify-between sm:justify-start gap-2.5 rounded-xl border border-sky-500/25 bg-sky-500/5 dark:bg-sky-500/10 px-3 py-2 transition-colors">
+              <div className="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                <TelegramIcon className="size-4" />
+                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-1 ring-card" />
+              </div>
+
+              <div className="flex flex-col min-w-0 text-start">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-foreground">تلگرام متصل</span>
+                  <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] px-1 py-0 h-4 gap-0.5 font-medium">
+                    <CheckCircle2 className="size-2.5" />
+                    همگام
+                  </Badge>
+                </div>
+                <span
+                  dir="ltr"
+                  className="text-[11px] font-sans font-medium text-sky-600 dark:text-sky-400 truncate text-right mt-0.5"
+                >
+                  {user.telegramUsername ? `@${user.telegramUsername}` : `ID: ${user.telegramId}`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0 mr-auto sm:mr-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`https://t.me/${botUsername}`, '_blank')}
+                  className="h-7 px-2.5 text-[11px] gap-1 border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/15 rounded-lg cursor-pointer"
+                  title="ورود به ربات تلگرام"
+                >
+                  <ExternalLink className="size-2.5 ml-0.5" />
+                  ربات
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnlinkTelegram}
+                  disabled={unlinkingTg}
+                  aria-busy={unlinkingTg}
+                  className="h-7 px-2 text-[11px] text-muted-foreground hover:text-red-600 hover:bg-red-500/10 rounded-lg cursor-pointer"
+                  title="قطع اتصال حساب تلگرام"
+                >
+                  {unlinkingTg ? (
+                    <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                  ) : (
+                    'قطع'
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Disconnected State */
+            <div className="flex items-center justify-between sm:justify-start gap-2.5 rounded-xl border border-sky-500/20 bg-sky-500/5 dark:bg-sky-500/10 px-3 py-2 transition-colors">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                <TelegramIcon className="size-4" />
+              </div>
+
+              <div className="flex flex-col min-w-0 text-start">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-foreground">اتصال به تلگرام</span>
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 text-muted-foreground border-border/80 font-normal">
+                    عدم اتصال
+                  </Badge>
+                </div>
+                <span className="text-[10px] text-muted-foreground truncate hidden md:inline mt-0.5">
+                  همگام‌سازی سفارش‌ها و اعلان‌ها
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleConnectTelegram}
+                disabled={connectingTg}
+                aria-busy={connectingTg}
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs shadow-sky-500/20 transition-transform active:scale-95 shrink-0 mr-auto sm:mr-1 cursor-pointer"
+              >
+                {connectingTg ? (
+                  <>
+                    <Loader2 className="size-3 animate-spin ml-1.5" aria-hidden="true" />
+                    در حال اتصال...
+                  </>
+                ) : (
+                  <>
+                    <TelegramIcon className="size-3.5 ml-1.5" aria-hidden="true" />
+                    اتصال ربات
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -194,38 +297,40 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
 
           <CardContent className="px-5 pb-5 pt-0">
             <form onSubmit={handleUpdateName} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="profile-name" className="text-xs font-semibold">
-                  نام و نام خانوادگی
-                </Label>
-                <div className="relative group">
-                  <Input
-                    id="profile-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="مثال: علی رضایی"
-                    className="h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans text-xs sm:text-sm"
-                  />
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                    <User className="h-4 w-4" />
+              <div className='flex flex-col md:flex-row md:items-center gap-3.5'>
+                <div className="space-y-1.5 flex-1">
+                  <Label htmlFor="profile-name" className="text-xs font-semibold">
+                    نام و نام خانوادگی
+                  </Label>
+                  <div className="relative group">
+                    <Input
+                      id="profile-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="مثال: علی رضایی"
+                      className="h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans text-xs sm:text-sm"
+                    />
+                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                      <User className="h-4 w-4" />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="profile-phone" className="text-xs font-semibold">
-                  شماره موبایل (شناسه یکتا)
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="profile-phone"
-                    value={user.phone}
-                    readOnly
-                    dir="ltr"
-                    className="bg-muted/50 font-sans tabular-nums text-left h-11 pr-10 rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
-                  />
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <Phone className="h-4 w-4" />
+                <div className="space-y-1.5 flex-1">
+                  <Label htmlFor="profile-phone" className="text-xs font-semibold">
+                    شماره موبایل (شناسه یکتا)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="profile-phone"
+                      value={user.phone}
+                      readOnly
+                      dir="ltr"
+                      className="bg-muted/50 font-sans tabular-nums text-left h-11 pr-10 rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
+                    />
+                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -248,7 +353,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                   disabled={saving}
                   aria-busy={saving}
                   size="sm"
-                  className="text-xs font-semibold h-10 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
+                  className="text-xs font-semibold h-10 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/20 transition-transform active:scale-[0.98] cursor-pointer"
                 >
                   {saving ? (
                     <>
@@ -264,92 +369,6 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Telegram Account Linking Card */}
-      <motion.div variants={fadeUp}>
-        <Card className="border-sky-500/20 bg-sky-500/5 shadow-xs">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400">
-                  <TelegramIcon className="size-4" />
-                </div>
-                <CardTitle className="text-sm font-bold">یکپارچه‌سازی و اتصال به تلگرام</CardTitle>
-              </div>
-              {user.telegramId ? (
-                <Badge className="bg-primary/10 text-primary border border-primary/20 text-[11px] gap-1 font-medium">
-                  <CheckCircle2 className="size-3" />
-                  متصل به تلگرام
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[11px] text-muted-foreground border-border">
-                  عدم اتصال
-                </Badge>
-              )}
-            </div>
-            <CardDescription className="text-xs leading-relaxed mt-1">
-              با اتصال حساب به ربات تلگرام، کلیه سفارش‌ها و لینک‌های فعال‌سازی شما به صورت همگام و آنی در ربات نیز قابل دسترسی خواهند بود.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="px-5 pb-5 pt-0">
-            {user.telegramId ? (
-              <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
-                <div className="text-xs text-muted-foreground">
-                  شناسه متصل:{' '}
-                  <strong className="text-foreground font-sans font-medium">
-                    {user.telegramUsername ? `@${user.telegramUsername}` : user.telegramId}
-                  </strong>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(`https://t.me/${botUsername}`, '_blank')}
-                    className="h-8 gap-1 text-xs border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/10 rounded-xl"
-                  >
-                    <ExternalLink className="size-3" />
-                    ورود به ربات
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleUnlinkTelegram}
-                    disabled={unlinkingTg}
-                    aria-busy={unlinkingTg}
-                    className="h-8 text-xs text-muted-foreground hover:text-red-600 rounded-xl"
-                  >
-                    {unlinkingTg ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : 'قطع اتصال'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  onClick={handleConnectTelegram}
-                  disabled={connectingTg}
-                  aria-busy={connectingTg}
-                  size="sm"
-                  className="h-9 px-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-sm shadow-sky-500/20 transition-transform active:scale-[0.98]"
-                >
-                  {connectingTg ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                      در حال تولید لینک اتصال...
-                    </>
-                  ) : (
-                    <>
-                      <TelegramIcon className="size-3.5" aria-hidden="true" />
-                      🤖 اتصال به ربات تلگرام
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </motion.div>

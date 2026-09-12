@@ -29,89 +29,136 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
-// Step-by-step activation guide
-const steps = [
+// Delivery methods & steps
+const deliveryMethods = [
   {
-    number: '۱',
-    title: 'دریافت لینک اختصاصی فعال‌سازی',
-    subtitle: 'از بخش «سفارش‌های من» پنل کاربری',
-    description:
-      'پس از ثبت و پرداخت موفق سفارش، سیستم به صورت کاملاً خودکار یک لینک اختصاصی برای شما صادر می‌کند. وارد بخش سفارش‌ها شده و با کلیک روی دکمه «کپی لینک» یا «باز کردن و فعال‌سازی»، فرآیند را آغاز کنید.',
-    badge: 'گام اولیه',
-    tip: 'هر لینک منحصراً متعلق به اکانت شما بوده و با یک کلیک فعال‌سازی می‌شود.',
-    icon: ExternalLink,
+    id: 'link',
+    title: 'روش اول: لینک فعال‌سازی و دعوت‌نامه',
+    subtitle: 'مانند جمینای ادونس (Google One Family)، پلن‌های تیمی و اشتراکی',
+    badge: 'بدون نیاز به پسورد',
     color: 'from-blue-600 to-indigo-600',
+    icon: ExternalLink,
+    desc: 'در این روش یک لینک دعوت اختصاصی به شما اختصاص می‌یابد تا اشتراک را مستقیماً روی اکانت شخصی خود بدون به اشتراک گذاشتن رمز عبور فعال کنید.',
+    steps: [
+      {
+        number: '۱',
+        title: 'دریافت لینک از تب «سفارش‌های من»',
+        subtitle: 'کپی لینک یا کلیک روی دکمه فعال‌سازی',
+        desc: 'وارد پنل کاربری بخش «سفارش‌های من» شوید و دکمه کپی لینک یا فعال‌سازی را بزنید.',
+        tip: 'هر لینک منحصراً متعلق به اکانت شما بوده و یک‌بار مصرف است.',
+      },
+      {
+        number: '۲',
+        title: 'اتصال به VPN و باز کردن در حالت ناشناس (Incognito)',
+        subtitle: 'پیش‌نیاز ضروری جهت دور زدن تحریم‌ها',
+        desc: 'فیلترشکن خود را با لوکیشن معتبر (آمریکا یا اروپا) روشن کنید و ترجیحاً لینک را در پنجره ناشناس مرورگر باز نمایید.',
+        tip: 'حالت Incognito از تداخل اکانت‌ها و کش‌های قبلی مرورگر جلوگیری می‌کند.',
+      },
+      {
+        number: '۳',
+        title: 'ورود به حساب شخصی و تایید نهایی عضویت',
+        subtitle: 'پذیرش عضویت با یک کلیک',
+        desc: 'در صفحه رسمی باز شده، وارد اکانت خود شوید و دکمه پذیرش (Accept / Join) را کلیک کنید تا اشتراک فوراً فعال شود.',
+        tip: 'پس از تایید، طرح بلافاصله روی حساب شخصی شما فعال می‌شود.',
+      },
+    ],
   },
   {
-    number: '۲',
-    title: 'آماده‌سازی مرورگر و ابزار تغییر آی‌پی',
-    subtitle: 'پیش‌نیاز ضروری برای کاربران داخل ایران',
-    description:
-      'به دلیل محدودیت‌های منطقه‌ای شرکت گوگل، پیش از باز کردن لینک حتماً VPN خود را با لوکیشن پایدار (آمریکا، آلمان، انگلیس، ترکیه و...) روشن کنید. اکیداً توصیه می‌شود مرورگر خود را در حالت ناشناس (Incognito) باز کنید تا کش و حساب‌های دیگر تداخل ایجاد نکنند.',
-    badge: 'نکته طلایی',
-    tip: 'استفاده از حالت Incognito مانع از فعال شدن اشتباه اشتراک روی سایر جیمیل‌های کاری یا فرعی شما می‌شود.',
-    icon: Globe,
-    color: 'from-sky-600 to-blue-600',
-  },
-  {
-    number: '۳',
-    title: 'ورود به حساب گوگل شخصی شما',
-    subtitle: 'صرفاً در دامنه رسمی accounts.google.com',
-    description:
-      'پس از باز کردن لینک، صفحه رسمی گوگل از شما می‌خواهد که با جیمیل خود وارد شوید. توجه فرمایید که نام کاربری و رمز عبور را فقط در صفحه رسمی Google وارد می‌کنید و هیچ شخص ثالثی دسترسی به مشخصات شما ندارد.',
-    badge: 'امنیت کامل',
-    tip: 'مطمئن شوید همان اکانتی را لاگین می‌کنید که می‌خواهید ۲ ترابایت فضا و هوش مصنوعی روی آن فعال شود.',
+    id: 'account',
+    title: 'روش دوم: اکانت آماده و اختصاصی',
+    subtitle: 'مانند اکانت‌های اختصاصی ChatGPT Plus، Claude Pro و ابزارهای پریمیوم AI',
+    badge: 'تحویل فوری مشخصات',
+    color: 'from-purple-600 to-indigo-600',
     icon: Lock,
-    color: 'from-blue-700 to-indigo-700',
+    desc: 'یک حساب کاربری آماده، تمیز و کاملاً اختصاصی همراه با نام کاربری/ایمیل و رمز عبور در پنل به شما تحویل داده می‌شود.',
+    steps: [
+      {
+        number: '۱',
+        title: 'دریافت مشخصات ورود از بخش سفارش‌ها',
+        subtitle: 'کپی ایمیل و پسورد اختصاصی',
+        desc: 'در کارت سفارش شما، ایمیل و رمز عبور قرار دارد. با کلیک روی آیکون کپی، اطلاعات را کپی کنید.',
+        tip: 'با آیکون چشم می‌توانید رمز عبور را به صورت واضح مشاهده کنید.',
+      },
+      {
+        number: '۲',
+        title: 'روشن کردن VPN و ورود به سایت رسمی سرویس',
+        subtitle: 'مراجعه به پلتفرم با آی‌پی خارجی',
+        desc: 'فیلترشکن خود را فعال کرده و وارد سایت رسمی سرویس مورد نظر (مانند chatgpt.com یا claude.ai) شوید.',
+        tip: 'همیشه از دامنه‌ها و لینک‌های رسمی پلتفرم‌ها برای لاگین استفاده فرمایید.',
+      },
+      {
+        number: '۳',
+        title: 'لاگین و بهره‌مندی از امکانات پرمیوم',
+        subtitle: 'شروع کار بدون نیاز به ساخت حساب جدید',
+        desc: 'با مشخصات دریافتی وارد شوید. اکانت از پیش شارژ شده و تمام قابلیت‌های نسخه پیشرفته در دسترس شماست.',
+        tip: 'اکانت به طور کامل در انحصار شماست و تاریخچه و چت‌های شما محفوظ می‌ماند.',
+      },
+    ],
   },
   {
-    number: '۴',
-    title: 'پذیرش دعوت و تایید نهایی اشتراک',
-    subtitle: 'تایید عضویت با یک کلیک',
-    description:
-      'در صفحه اختصاصی Google One که باز می‌شود، خلاصه طرح جمینای (شامل هوش مصنوعی پیشرفته Gemini و ۲ ترابایت فضای ابری) نمایش داده می‌شود. کافیست روی دکمه Accept / Join Family / ادامه کلیک کنید تا اکانت شما بلافاصله عضو شود.',
-    badge: 'تایید نهایی',
-    tip: 'در صورتی که پیام خوش‌آمدگویی گوگل وان را مشاهده کردید، اشتراک با موفقیت اعمال شده است.',
+    id: 'provisioning',
+    title: 'روش سوم: فعال‌سازی روی ایمیل شخصی شما',
+    subtitle: 'پلن‌هایی که حین خرید، آدرس ایمیل شخصی خود را در فرم ثبت کرده‌اید',
+    badge: 'شارژ مستقیم',
+    color: 'from-emerald-600 to-teal-600',
     icon: CheckCircle2,
-    color: 'from-indigo-500 to-purple-600',
-  },
-  {
-    number: '۵',
-    title: 'بررسی و بهره‌مندی از امکانات اکانت',
-    subtitle: 'تست هوش مصنوعی Gemini Advanced و فضای ۲ ترابایت',
-    description:
-      'بلافاصله به آدرس gemini.google.com بروید؛ نشان جمینای یا Gemini Advanced را در بالای صفحه مشاهده خواهید کرد. همچنین در Google Drive و Google Photos ظرفیت ۲ ترابایت به سهمیه حساب شما افزوده شده است.',
-    badge: 'اتمام مراحل',
-    tip: 'از برترین امکانات هوش مصنوعی روز دنیا با سرعت و سقف توکن فوق‌العاده لذت ببرید!',
-    icon: Bot,
-    color: 'from-violet-600 to-fuchsia-600',
+    desc: 'اشتراک توسط سیستم هوشمند یا کارشناسان فنی مستقیماً روی آدرس ایمیل ثبت‌شده شما شارژ و اعمال می‌شود.',
+    steps: [
+      {
+        number: '۱',
+        title: 'ثبت ایمیل در مرحله تسویه‌حساب',
+        subtitle: 'ثبت آدرس اکانت در فرم سفارش',
+        desc: 'در زمان خرید، ایمیل مورد نظرتان را ثبت کرده‌اید و سفارش در مرحله اعمال روی اکانت شما قرار می‌گیرد.',
+        tip: 'مطمئن شوید ایمیل وارد شده فعال بوده و به صندوق دریافت آن دسترسی دارید.',
+      },
+      {
+        number: '۲',
+        title: 'تکمیل سفارش و ارسال اعلان',
+        subtitle: 'اعمال طرح توسط تیم فنی یا سیستم',
+        desc: 'طرح روی اکانت شما فعال شده و وضعیت سفارش در پنل به حالت «تکمیل شده» درمی‌آید.',
+        tip: 'در صورت نیاز به تایید، ایمیل تاییدیه رسمی از سوی سرویس ارسال خواهد شد.',
+      },
+      {
+        number: '۳',
+        title: 'ورود به حساب و استفاده از اشتراک',
+        subtitle: 'بهره‌مندی از امکانات پرمیوم',
+        desc: 'با ایمیل شخصی خود به سرویس مربوطه وارد شوید؛ اشتراک شما فعال و آماده استفاده است.',
+        tip: 'در صورت مشاهده نکردن تغییر، یک‌بار خارج و مجدداً وارد اکانت شوید.',
+      },
+    ],
   },
 ]
 
 // Common issues & Troubleshooting
 const faqs = [
   {
-    question: 'با خطای «نمی‌توانید عضو گروه خانواده دیگری شوید» (Family Restriction) مواجه شدم، چاره چیست؟',
+    question: 'از کجا بفهمم اشتراک من با کدام روش تحویل داده شده است؟',
     answer:
-      'طبق قوانین شرکت گوگل، هر اکانت جیمیل در هر ۱۲ ماه فقط یک‌بار مجاز به تغییر گروه خانواده (Family Group) است. اگر قبلاً در فمیلی دیگری بوده‌اید، ساده‌ترین و مطمئن‌ترین راه‌حل این است که یک اکانت جیمیل جدید (ساخت آن کمتر از ۱ دقیقه زمان می‌برد) ایجاد کرده و لینک فعال‌سازی را روی آن استفاده نمایید.',
-    severity: 'warning',
-  },
-  {
-    question: 'آیا فایل‌ها، ایمیل‌ها یا عکس‌های شخصی من برای دیگران قابل مشاهده است؟',
-    answer:
-      'مطلقاً خیر! در اشتراک‌های گوگل، حریم خصوصی به صورت ۱۰۰٪ ایزوله است. هیچ‌کس جز خودتان (حتی مدیر گروه یا پشتیبانی) به فایل‌های Drive، عکس‌های Photos، ایمیل‌ها، چت‌های Gemini و اطلاعات خصوصی شما دسترسی ندارد. فقط حجم فضای اشتراکی به اکانت شما تخصیص می‌یابد.',
-    severity: 'success',
-  },
-  {
-    question: 'خطای عدم تطابق کشور / ریجن (Country Association) چیست و چگونه حل می‌شود؟',
-    answer:
-      'حساب گوگل شما باید ریجن مشخصی داشته باشد که با خدمات فمیلی و AI Pro سازگار باشد (مثلاً آمریکا یا کشورهای اروپایی). اگر کشور اکانت شما ایران باشد، می‌توانید از طریق بخش فرم رسمی تطبیق کشور گوگل (Country Association) یا ایجاد پروفایل پرداخت با آی‌پی مناسب، ریجن را هماهنگ کنید.',
+      'در تب «سفارش‌های من»، روی هر سفارش جزئیات تحویل درج شده است: اگر روش لینک باشد، دکمه «کپی لینک»؛ اگر اکانت آماده باشد، «ایمیل و رمز عبور اختصاصی»؛ و اگر فعال‌سازی مستقیم باشد، وضعیت تکمیل سفارش به همراه یادداشت تحویل نمایش داده می‌شود.',
     severity: 'info',
   },
   {
-    question: 'لینک فعال‌سازی تا چه زمانی معتبر است؟',
+    question: 'آیا فایل‌ها، ایمیل‌ها یا چت‌های شخصی من برای دیگران قابل مشاهده است؟',
     answer:
-      'لینک‌های صادر شده تا زمان فعال‌سازی معتبر هستند؛ اما توصیه می‌کنیم ظرف حداکثر ۲۴ ساعت پس از خرید، اشتراک خود را فعال فرمایید. در صورت هرگونه انقضا یا مشکل فنی، پشتیبانی بدون فوت وقت لینک جدید برای شما صادر خواهد کرد.',
+      'مطلقاً خیر! در تمامی روش‌ها (چه لینک‌های اشتراکی و چه اکانت‌های اختصاصی) حریم خصوصی به صورت ۱۰۰٪ ایزوله است. هیچ‌کس جز خودتان به مکالمات، پروژه‌ها و تاریخچه چت‌های هوش مصنوعی شما دسترسی ندارد.',
+    severity: 'success',
+  },
+  {
+    question: 'خطای عدم تطابق کشور یا دسترسی (Region Error / Access Denied) چیست و چگونه حل می‌شود؟',
+    answer:
+      'به دلیل تحریم‌های ارائه‌دهندگان، آی‌پی اتصال شما باید خارج از ایران باشد. اگر با این خطا مواجه شدید، لوکیشن VPN خود را به آمریکا یا آلمان تغییر دهید، کش مرورگر را پاک کنید یا صفحه را در پنجره ناشناس (Incognito) باز کنید.',
+    severity: 'warning',
+  },
+  {
+    question: 'برای اشتراک‌های گوگل، خطای Family Restriction چیست و چه راهکاری دارد؟',
+    answer:
+      'طبق قوانین شرکت گوگل، هر جیمیل در هر ۱۲ ماه فقط یک‌بار مجاز به تغییر گروه خانواده (Family Group) است. اگر قبلاً در فمیلی دیگری بوده‌اید، ساده‌ترین و سریع‌ترین راهکار ساخت یک جیمیل تازه (کمتر از ۱ دقیقه) و فعال‌سازی لینک روی آن است.',
+    severity: 'warning',
+  },
+  {
+    question: 'در صورت بروز هرگونه مشکل در فعال‌سازی چگونه پیگیری کنم؟',
+    answer:
+      'تیم پشتیبانی ما همه‌روزه آماده پاسخگویی به شماست. از طریق بخش «پشتیبانی» با کارشناسان ما در ارتباط باشید؛ تمام سفارش‌ها دارای گارانتی کامل و ضمانت تعویض هستند.',
     severity: 'info',
   },
 ]
@@ -141,15 +188,15 @@ export default function ActivationGuidePage() {
                 </Badge>
                 <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-xs gap-1">
                   <ShieldCheck className="size-3.5" />
-                  بدون نیاز به رمز عبور
+                  حفظ کامل حریم خصوصی
                 </Badge>
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                راهنمای فعال‌سازی <span className="text-primary">جمینای</span>
+                راهنمای فعال‌سازی <span className="text-primary">انواع اشتراک‌ها</span>
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
-                تمام مراحل و نکات لازم برای فعال‌سازی آنی اشتراک ۱۸ ماهه جمینای و ۲ ترابایت فضای ابری روی جیمیل شخصی خودتان، با حفظ کامل امنیت و حریم خصوصی.
+                راهنمای جامع، ساده و گام‌به‌گام برای فعال‌سازی آنی انواع اشتراک‌های هوش مصنوعی و دیجیتال (ChatGPT, Gemini, Claude و...) با حفظ کامل امنیت، اصالت و حریم خصوصی.
               </p>
 
               {/* Status chips */}
@@ -164,7 +211,7 @@ export default function ActivationGuidePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Lock className="size-4 text-primary" />
-                  <span>رمز عبور: <strong>هرگز نیاز نیست</strong></span>
+                  <span>رمز شخصی: <strong>هرگز نیاز نیست</strong></span>
                 </div>
               </div>
             </div>
@@ -173,106 +220,83 @@ export default function ActivationGuidePage() {
             <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
               <Button asChild className="gap-2 shadow-md shadow-primary/20">
                 <Link href="/dashboard/orders">
-                  مشاهده سفارش‌ها و لینک من
+                  مشاهده سفارش‌ها و اطلاعات تحویل
                 </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2 border-border/80 hover:bg-muted">
-                <a
-                  href="https://policies.google.com/country-association-form"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Globe className="size-4 text-primary" />
-                  تست کشور حساب گوگل
-                  <ExternalLink className="size-3 opacity-60" />
-                </a>
               </Button>
             </div>
           </div>
         </div>
 
 
-        {/* Step-by-Step Visual Timeline */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
-                <Layers className="size-5 text-primary" />
-                مراحل ۵ گانه فعال‌سازی
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                راهنمای تفصیلی هر گام همراه با نکات کلیدی
-              </p>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              ۵ مرحله ساده
-            </Badge>
+        {/* Step-by-Step Delivery Methods */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+              <Layers className="size-5 text-primary" />
+              روش‌های ۳ گانه فعال‌سازی سفارش‌ها
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              روش فعال‌سازی مربوط به سفارش شما در تب «سفارش‌های من» مشخص شده است
+            </p>
           </div>
 
-          <div className="space-y-4 relative">
-            {steps.map((step, idx) => {
-              const IconComponent = step.icon
+          <div className="space-y-6">
+            {deliveryMethods.map((method) => {
+              const MethodIcon = method.icon
               return (
                 <div
-                  key={idx}
-                  className="group relative flex flex-col md:flex-row gap-5 p-5 sm:p-6 rounded-2xl border border-border/70 bg-card hover:border-primary/40 hover:shadow-md transition-all"
+                  key={method.id}
+                  className="rounded-3xl border border-border/80 bg-card p-5 sm:p-7 space-y-4 shadow-xs"
                 >
-                  {/* Step Number & Icon */}
-                  <div className="flex items-center md:items-start gap-3 md:gap-4 shrink-0">
-                    <div
-                      className={`flex size-12 sm:size-14 items-center justify-center rounded-2xl bg-gradient-to-tr ${step.color} text-white font-black text-xl shadow-md shadow-primary/20 shrink-0`}
-                    >
-                      {step.number}
-                    </div>
-                    <div className="md:hidden">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-foreground">
-                          {step.title}
-                        </h3>
-                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                          {step.badge}
-                        </Badge>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/50 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr ${method.color} text-white shadow-xs`}>
+                        <MethodIcon className="size-5" />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {step.subtitle}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step Content */}
-                  <div className="flex-1 space-y-3">
-                    <div className="hidden md:flex items-center justify-between gap-2">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-foreground">
-                            {step.title}
-                          </h3>
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                            {step.badge}
-                          </Badge>
-                        </div>
+                        <h3 className="text-base sm:text-lg font-bold text-foreground">
+                          {method.title}
+                        </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {step.subtitle}
+                          {method.subtitle}
                         </p>
                       </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-semibold px-3 py-1 w-fit bg-primary/5 text-primary border-primary/25">
+                      {method.badge}
+                    </Badge>
+                  </div>
 
-                      <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <IconComponent className="size-4.5" />
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    {method.desc}
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    {method.steps.map((step) => (
+                      <div
+                        key={step.number}
+                        className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
+                              {step.number}
+                            </span>
+                            <h4 className="text-xs font-bold text-foreground">
+                              {step.title}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {step.desc}
+                          </p>
+                        </div>
+
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary/90 bg-primary/5 rounded-lg p-2 border border-primary/10 mt-2">
+                          <Info className="size-3.5 shrink-0 mt-0.5" />
+                          <span>{step.tip}</span>
+                        </div>
                       </div>
-                    </div>
-
-                    <p className="text-sm leading-relaxed text-foreground/80">
-                      {step.description}
-                    </p>
-
-                    {/* Tip box */}
-                    <div className="flex items-start gap-2.5 rounded-xl bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground">
-                      <Info className="size-4 text-primary shrink-0 mt-0.5" />
-                      <span className="leading-relaxed">
-                        <strong className="text-foreground">نکته: </strong>
-                        {step.tip}
-                      </span>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )
@@ -290,14 +314,14 @@ export default function ActivationGuidePage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base sm:text-lg font-black text-foreground">
-                    تضمین امنیت، حریم خصوصی و عدم نیاز به پسورد
+                    تضمین اصالت، پایداری و حفظ کامل حریم خصوصی
                   </h3>
                   <Badge variant="destructive" className="text-[11px]">
                     بسیار مهم
                   </Badge>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-                  <strong>ما هرگز رمز عبور حساب Google شما را نمی‌پرسیم.</strong> فعال‌سازی به طور مستقیم از طریق لینک‌های معتبر گوگل روی اکانت شخصی شما صورت می‌گیرد و اطلاعات شما کاملاً محرمانه و محافظت‌شده باقی می‌ماند.
+                  <strong>ما هرگز رمز عبور حساب شخصی شما را نمی‌پرسیم.</strong> تمامی سفارش‌ها با بالاترین استانداردهای امنیتی، به صورت رسمی و قانونی فعال می‌شوند و تاریخچه چت‌ها، فایل‌ها و پروژه‌های شما کاملاً محرمانه باقی می‌مانند.
                 </p>
               </div>
             </div>
@@ -305,7 +329,7 @@ export default function ActivationGuidePage() {
             <Button asChild variant="outline" size="sm" className="shrink-0 border-destructive/30 hover:bg-destructive/10 text-destructive gap-1.5 text-xs">
               <Link href="/dashboard/support">
                 <HelpCircle className="size-3.5" />
-                گزارش یا سوال امنیتی
+                پشتیبانی و ضمانت
               </Link>
             </Button>
           </div>
@@ -315,11 +339,11 @@ export default function ActivationGuidePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
             <div className="flex items-center gap-2 text-foreground/80">
               <CheckCircle2 className="size-4 text-primary shrink-0" />
-              <span>عدم دسترسی به فایل‌ها و عکس‌های شخصی</span>
+              <span>عدم دسترسی دیگران به چت‌ها و فایل‌های شخصی</span>
             </div>
             <div className="flex items-center gap-2 text-foreground/80">
               <CheckCircle2 className="size-4 text-primary shrink-0" />
-              <span>بدون نیاز به نام کاربری یا پسورد شما</span>
+              <span>بدون نیاز به رمز عبور اکانت‌های شخصی شما</span>
             </div>
             <div className="flex items-center gap-2 text-foreground/80">
               <CheckCircle2 className="size-4 text-primary shrink-0" />
@@ -386,69 +410,40 @@ export default function ActivationGuidePage() {
         <div className="space-y-4">
           <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
             <Globe className="size-5 text-primary" />
-            ابزارها و میانبرهای رسمی گوگل
+            میانبرهای ورود به سرویس‌های هوش مصنوعی
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Country Association Form */}
+            {/* ChatGPT Direct Link */}
             <Card className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all">
               <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                      <Globe className="size-5" />
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <Bot className="size-5" />
                     </div>
-                    <Badge variant="outline" className="text-[10px]">ابزار رسمی</Badge>
+                    <Badge variant="outline" className="text-[10px]">OpenAI</Badge>
                   </div>
-                  <h3 className="font-bold text-sm text-foreground">مدیریت کشور اکانت گوگل</h3>
+                  <h3 className="font-bold text-sm text-foreground">ورود به ChatGPT</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    بررسی کشور تعیین‌شده برای اکانت شما و در صورت نیاز درخواست هماهنگ‌سازی ریجن.
+                    دسترسی مستقیم به سامانه چت‌جی‌پی‌تی و مدل‌های پیشرفته GPT-4o و o1.
                   </p>
                 </div>
 
                 <Button asChild variant="outline" size="sm" className="w-full gap-1.5 text-xs">
                   <a
-                    href="https://policies.google.com/country-association-form"
+                    href="https://chatgpt.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span>باز کردن فرم کشور</span>
+                    <span>ورود به ChatGPT</span>
                     <ExternalLink className="size-3.5" />
                   </a>
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Google One Management */}
-            <Card className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all">
-              <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                      <Cloud className="size-5" />
-                    </div>
-                    <Badge variant="outline" className="text-[10px]">سهمیه فضا</Badge>
-                  </div>
-                  <h3 className="font-bold text-sm text-foreground">داشبورد Google One</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    بررسی حجم ۲ ترابایتی و وضعیت فضای مصرفی در درایو، جیمیل و عکس‌های گوگل.
-                  </p>
-                </div>
-
-                <Button asChild variant="outline" size="sm" className="w-full gap-1.5 text-xs">
-                  <a
-                    href="https://one.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span>ورود به گوگل وان</span>
-                    <ExternalLink className="size-3.5" />
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Gemini AI Pro Direct Link */}
+            {/* Gemini AI Direct Link */}
             <Card className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all">
               <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                 <div className="space-y-2">
@@ -456,11 +451,11 @@ export default function ActivationGuidePage() {
                     <div className="flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
                       <Bot className="size-5" />
                     </div>
-                    <Badge variant="outline" className="text-[10px]">هوش مصنوعی</Badge>
+                    <Badge variant="outline" className="text-[10px]">Google</Badge>
                   </div>
-                  <h3 className="font-bold text-sm text-foreground">سامانه Gemini Advanced</h3>
+                  <h3 className="font-bold text-sm text-foreground">ورود به Google Gemini</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    دسترسی مستقیم به مدل پیشرفته Gemini Pro با پنجره زمینه وسیع ۱ میلیون توکن.
+                    دسترسی مستقیم به مدل پیشرفته Gemini Advanced با ۲ ترابایت فضای ابری.
                   </p>
                 </div>
 
@@ -470,7 +465,36 @@ export default function ActivationGuidePage() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span>ورود به جمینای</span>
+                    <span>ورود به Gemini</span>
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Claude AI Direct Link */}
+            <Card className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all">
+              <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                      <Bot className="size-5" />
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">Anthropic</Badge>
+                  </div>
+                  <h3 className="font-bold text-sm text-foreground">ورود به Claude</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    دسترسی به دستیار هوشمند Claude Pro و مدل‌های Sonnet برای کدنویسی و تحلیل متن.
+                  </p>
+                </div>
+
+                <Button asChild variant="outline" size="sm" className="w-full gap-1.5 text-xs">
+                  <a
+                    href="https://claude.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span>ورود به Claude</span>
                     <ExternalLink className="size-3.5" />
                   </a>
                 </Button>
