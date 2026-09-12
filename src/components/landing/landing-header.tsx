@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { LogIn, Menu, Sparkles, User, Loader2, Shield } from 'lucide-react'
+import { LogIn, Menu, Sparkles, User, Loader2, Shield, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -29,16 +29,17 @@ function TelegramIcon({ className = 'size-4' }: { className?: string }) {
 }
 
 const navLinks = [
-  { label: 'محصولات', href: '#products' },
-  { label: 'امکانات و مزایا', href: '#features' },
-  { label: 'نحوه فعال‌سازی', href: '#how-it-works' },
-  { label: 'سوالات متداول', href: '#faq' },
+  { label: 'محصولات', href: '/#products' },
+  { label: 'امکانات و مزایا', href: '/#features' },
+  { label: 'نحوه فعال‌سازی', href: '/#how-it-works' },
+  { label: 'سوالات متداول', href: '/#faq' },
 ]
 
 export function LandingHeader() {
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
+  const [dashboardTab, setDashboardTab] = useState<'orders' | 'guide' | 'support' | 'profile'>('orders')
   const [user, setUser] = useState<AuthUserData | null>(null)
   const [openingTg, setOpeningTg] = useState(false)
 
@@ -53,10 +54,16 @@ export function LandingHeader() {
         if (isMounted && data?.authenticated && data?.user) {
           setUser(data.user)
 
-          // Check if returned from payment
+          // Check if returned from payment or dashboard deeplink
           if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search)
-            if (params.get('payment') || params.get('orderId')) {
+            if (
+              params.get('payment') ||
+              params.get('orderId') ||
+              params.get('dashboard') === 'orders' ||
+              params.get('tab') === 'orders'
+            ) {
+              setDashboardTab('orders')
               setDashboardModalOpen(true)
             }
           }
@@ -68,6 +75,15 @@ export function LandingHeader() {
       isMounted = false
     }
   }, [])
+
+  const openOrdersModal = () => {
+    if (user) {
+      setDashboardTab('orders')
+      setDashboardModalOpen(true)
+    } else {
+      setAuthModalOpen(true)
+    }
+  }
 
   const displayName = user?.name?.trim() || user?.phone || 'حساب کاربری'
 
@@ -98,7 +114,7 @@ export function LandingHeader() {
 
   return (
     <>
-      <header className='sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md [direction:ltr] md:[direction:rtl]'>
+      <header className='sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md'>
         <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
           {/* Logo */}
           <Link href='/' className='flex items-center gap-2.5 select-none'>
@@ -179,6 +195,15 @@ export function LandingHeader() {
                 <Button
                   variant='outline'
                   size='sm'
+                  onClick={openOrdersModal}
+                  className='items-center gap-1.5 border-primary/25 bg-primary/5 hover:bg-primary/10 text-foreground text-xs font-medium h-9 px-3 rounded-xl cursor-pointer'
+                >
+                  <Package className='size-3.5 text-primary' />
+                  <span>سفارش‌های من</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
                   onClick={() => setDashboardModalOpen(true)}
                   className='items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer'
                 >
@@ -200,7 +225,7 @@ export function LandingHeader() {
                 ورود
               </Button>
             )}
-            <Link href='#products'>
+            <Link href='/#products'>
               <Button size='sm' className='hidden text-sm md:flex'>
                 مشاهده محصولات
               </Button>
@@ -246,7 +271,7 @@ export function LandingHeader() {
               </SheetTrigger>
 
               <SheetContent
-                side='left'
+                side='right'
                 className='flex w-[290px] flex-col justify-between p-6 sm:w-[320px]'
                 dir='rtl'
               >
@@ -277,6 +302,18 @@ export function LandingHeader() {
                         {link.label}
                       </Link>
                     ))}
+                    {user && (
+                      <button
+                        onClick={() => {
+                          setOpen(false)
+                          openOrdersModal()
+                        }}
+                        className='rounded-lg px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-accent flex items-center gap-2 w-full text-start cursor-pointer'
+                      >
+                        <Package className='size-4' />
+                        <span>سفارش‌های من</span>
+                      </button>
+                    )}
                   </nav>
                 </div>
 
@@ -312,14 +349,25 @@ export function LandingHeader() {
                         variant='outline'
                         onClick={() => {
                           setOpen(false)
+                          openOrdersModal()
+                        }}
+                        className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium cursor-pointer'
+                      >
+                        <Package className='size-4' />
+                        <span>سفارش‌های من</span>
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        onClick={() => {
+                          setOpen(false)
                           setDashboardModalOpen(true)
                         }}
-                        className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium'
+                        className='w-full justify-center gap-2 text-xs text-muted-foreground'
                       >
-                        <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
-                          {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
+                        <div className='flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold'>
+                          {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-2.5' />}
                         </div>
-                        <span className='truncate'>{displayName}</span>
+                        <span className='truncate'>{displayName} (تنظیمات حساب)</span>
                       </Button>
                     </>
                   ) : (
@@ -334,7 +382,7 @@ export function LandingHeader() {
                       ورود به حساب
                     </Button>
                   )}
-                  <Link href='#products' onClick={() => setOpen(false)}>
+                  <Link href='/#products' onClick={() => setOpen(false)}>
                     <Button className='w-full justify-center text-sm'>
                       مشاهده و خرید محصولات
                     </Button>
@@ -360,6 +408,7 @@ export function LandingHeader() {
         <DashboardModal
           open={dashboardModalOpen}
           onOpenChange={setDashboardModalOpen}
+          defaultTab={dashboardTab}
           user={user}
           onUserUpdate={(updated) => {
             setUser(updated)

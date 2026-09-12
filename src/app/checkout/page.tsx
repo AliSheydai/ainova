@@ -13,6 +13,8 @@ import {
   Lock,
   Layers,
   Zap,
+  Package,
+  User as UserIcon,
 } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
@@ -50,6 +52,7 @@ interface ProductData {
   price: number
   stock: number
   fulfillmentType: string
+  features?: string[] | any
   plans?: PlanData[]
 }
 
@@ -93,6 +96,16 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true)
   const [buying, setBuying] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ id: string; name?: string; phone?: string } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) setCurrentUser(data.user)
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     async function loadProduct() {
@@ -230,10 +243,26 @@ function CheckoutContent() {
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>
-            <span className='text-base font-bold text-foreground'>فروشگاه اشتراک‌های دیجیتال</span>
+            <div className='flex flex-col text-start'>
+              <span className='text-base font-bold text-foreground leading-tight'>آینوا</span>
+              <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
+            </div>
           </Link>
 
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-2.5'>
+            {currentUser && (
+              <Link href='/orders'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='h-8 gap-1.5 text-xs rounded-xl border-primary/25 bg-primary/5 hover:bg-primary/10 text-foreground font-medium'
+                >
+                  <Package className='size-3.5 text-primary' />
+                  <span className='hidden sm:inline'>سفارش‌های من</span>
+                  <span className='sm:hidden'>سفارش‌ها</span>
+                </Button>
+              </Link>
+            )}
             <ThemeSwitch />
             <Link href='/'>
               <Button variant='ghost' size='sm' className='gap-1 text-xs'>
@@ -347,14 +376,20 @@ function CheckoutContent() {
 
               {/* Features list */}
               <div>
-                <h3 className='text-xs font-semibold mb-2 text-muted-foreground'>ضمانت‌های این اشتراک:</h3>
+                <h3 className='text-xs font-semibold mb-2 text-muted-foreground'>مزایا و ضمانت‌های این اشتراک:</h3>
                 <ul className='space-y-2 text-xs'>
-                  {defaultFeatures.slice(0, 3).map((feat) => (
-                    <li key={feat} className='flex items-center gap-2'>
-                      <Check className='size-3.5 text-primary shrink-0' />
-                      <span className='text-foreground/90'>{feat}</span>
-                    </li>
-                  ))}
+                  {(
+                    Array.isArray(product.features) && product.features.length > 0
+                      ? (product.features as string[])
+                      : defaultFeatures
+                  )
+                    .slice(0, 4)
+                    .map((feat, idx) => (
+                      <li key={idx} className='flex items-center gap-2'>
+                        <Check className='size-3.5 text-primary shrink-0' />
+                        <span className='text-foreground/90'>{feat}</span>
+                      </li>
+                    ))}
                 </ul>
               </div>
 

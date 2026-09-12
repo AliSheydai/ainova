@@ -6,6 +6,7 @@ import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { LandingHeader } from '@/components/landing/landing-header'
 import { LandingFooter } from '@/components/landing/landing-footer'
 import { ProductBuyCard } from '@/components/product/product-buy-card'
+import { MarkdownView } from '@/components/ui/markdown-view'
 import { Badge } from '@/components/ui/badge'
 import {
   Sparkles,
@@ -96,6 +97,11 @@ export default async function ProductDetailPage(props: ProductPageProps) {
     'تضمین بازگشت وجه در صورت بروز هرگونه مشکل فعال‌سازی',
   ]
 
+  const productFeatures =
+    Array.isArray(product.features) && (product.features as string[]).length > 0
+      ? (product.features as string[])
+      : defaultFeatures
+
   return (
     <div className='flex min-h-svh flex-col bg-background text-foreground' dir='rtl'>
       <LandingHeader />
@@ -150,15 +156,26 @@ export default async function ProductDetailPage(props: ProductPageProps) {
               </div>
 
               {/* Product Visual / Image */}
-              <div className='relative rounded-2xl overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-muted/30 to-background p-8 sm:p-12 flex items-center justify-center shadow-inner'>
-                <div className='text-center space-y-3'>
-                  <div className='size-20 sm:size-24 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto shadow-md border border-primary/20'>
-                    <Package className='size-10 sm:size-12' />
+              <div className='relative rounded-2xl overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-muted/30 to-background p-4 sm:p-6 flex items-center justify-center shadow-inner'>
+                {product.image ? (
+                  <div className='relative w-full aspect-16/9 max-w-lg rounded-xl overflow-hidden shadow-md border border-border/50 bg-card'>
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className='w-full h-full object-cover transition-transform duration-300 hover:scale-102'
+                      loading='lazy'
+                    />
                   </div>
-                  <div className='text-xs font-semibold text-muted-foreground'>
-                    {product.title}
+                ) : (
+                  <div className='text-center space-y-3 py-6'>
+                    <div className='size-20 sm:size-24 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto shadow-md border border-primary/20'>
+                      <Package className='size-10 sm:size-12' />
+                    </div>
+                    <div className='text-xs font-semibold text-muted-foreground'>
+                      {product.title}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Full Description */}
@@ -167,8 +184,8 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                   <h2 className='text-base sm:text-lg font-bold text-foreground flex items-center gap-2'>
                     <span>توضیحات و مشخصات محصول</span>
                   </h2>
-                  <div className='text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line rounded-xl bg-muted/25 border border-border/40 p-4 sm:p-5'>
-                    {product.description}
+                  <div className='rounded-xl bg-muted/20 border border-border/50 p-4 sm:p-6'>
+                    <MarkdownView content={product.description} />
                   </div>
                 </div>
               )}
@@ -179,7 +196,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                   مزایا و ویژگی‌های این اشتراک
                 </h2>
                 <ul className='grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm'>
-                  {defaultFeatures.map((feat, i) => (
+                  {productFeatures.map((feat, i) => (
                     <li
                       key={i}
                       className='flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/50 text-foreground shadow-xs'

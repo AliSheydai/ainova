@@ -95,6 +95,12 @@ export function DashboardModal({
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (open && defaultTab) {
+      setActiveTab(defaultTab)
+    }
+  }, [open, defaultTab])
+
   const displayName = user.name?.trim() || user.phone
 
   // Render tab contents

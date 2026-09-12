@@ -38,8 +38,14 @@ async function getProductsData() {
           FulfillmentService.getProductStock(prod.id),
           FulfillmentService.getProductPurchaseCount(prod.id),
         ])
-        const firstPlan = prod.plans[0]
-        const displayPrice = firstPlan?.price ?? prod.price
+        const activePlans = prod.plans || []
+        const minPrice =
+          activePlans.length > 0
+            ? Math.min(...activePlans.map((p) => p.price))
+            : prod.price
+        const firstPlan = activePlans[0]
+        const displayPrice = minPrice > 0 ? minPrice : (firstPlan?.price ?? prod.price)
+
         return {
           id: prod.id,
           title: prod.title,
@@ -47,9 +53,19 @@ async function getProductsData() {
           slug: prod.slug,
           shortDescription: prod.shortDescription,
           price: displayPrice,
+          minPrice,
+          hasMultiplePlans: activePlans.length > 1,
+          image: prod.image,
+          features: prod.features as string[] | null,
           stock,
           purchaseCount,
           fulfillmentType: firstPlan?.fulfillmentType || 'ACTIVATION_LINK',
+          plans: activePlans.map((p) => ({
+            id: p.id,
+            name: p.name,
+            duration: p.duration,
+            price: p.price,
+          })),
         }
       })
     )
@@ -76,6 +92,7 @@ export default async function LandingPage() {
         <FeaturesSection />
         <HowItWorksSection />
         <PricingSection
+          products={products}
           price={formattedPrice}
           productTitle={primaryProduct?.title}
           productSlug={primaryProduct?.slug}

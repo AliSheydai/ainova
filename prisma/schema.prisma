@@ -97,6 +97,7 @@ model Product {
   purchaseCount    Int             @default(0)
   sortOrder        Int             @default(0)
   archivedAt       DateTime?
+  features         Json?           // Array of feature strings or structured feature objects
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 

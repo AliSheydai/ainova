@@ -200,16 +200,19 @@ function LoginForm() {
             href="/"
             className="group inline-flex items-center gap-3 transition-transform duration-300 hover:scale-[1.02]"
           >
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary via-blue-600 to-indigo-600 text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/20">
-              <Sparkles className="h-5 w-5 animate-pulse text-white" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-primary/20">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="text-right">
-              <span className="text-2xl font-black tracking-tight bg-gradient-to-l from-primary via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                جمینای
-              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black tracking-tight text-foreground">
+                  آینوا
+                </span>
+                <span className="text-xs font-semibold text-primary">AiNova Store</span>
+              </div>
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
-                <span>سامانه قانونی فعال‌سازی اشتراک</span>
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>فروشگاه رسمی و قانونی اشتراک‌های هوش مصنوعی</span>
               </div>
             </div>
           </Link>

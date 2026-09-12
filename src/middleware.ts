@@ -51,8 +51,8 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!isAdmin) {
-      // Regular user trying to access admin dashboard -> redirect to home page
-      return NextResponse.redirect(new URL('/', request.url))
+      // Regular user trying to access admin dashboard -> redirect to user orders modal
+      return NextResponse.redirect(new URL('/?dashboard=orders', request.url))
     }
   }
 

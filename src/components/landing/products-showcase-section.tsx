@@ -15,6 +15,9 @@ export interface ProductSummary {
   slug: string
   shortDescription: string | null
   price: number
+  minPrice?: number
+  hasMultiplePlans?: boolean
+  image?: string | null
   stock: number
   purchaseCount: number
   fulfillmentType: string
@@ -58,14 +61,26 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
         >
           {products.map((prod) => {
             const isAvailable = prod.stock > 0
+            const displayPrice = prod.minPrice ?? prod.price
             return (
               <motion.div key={prod.id} variants={fadeUp} whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
                 <Card className='h-full flex flex-col justify-between overflow-hidden border-border/70 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200 bg-card'>
                   <CardHeader className='pb-3'>
                     <div className='flex items-start justify-between gap-2 mb-2'>
-                      <div className='size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold'>
-                        <Package className='size-5' />
-                      </div>
+                      {prod.image ? (
+                        <div className='size-11 rounded-xl overflow-hidden border border-border/60 bg-muted shrink-0 shadow-xs'>
+                          <img
+                            src={prod.image}
+                            alt={prod.title}
+                            className='size-full object-cover'
+                            loading='lazy'
+                          />
+                        </div>
+                      ) : (
+                        <div className='size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0'>
+                          <Package className='size-5' />
+                        </div>
+                      )}
                       {isAvailable ? (
                         <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]'>
                           <Zap className='size-2.5 me-1' />
@@ -89,10 +104,17 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
 
                   <CardContent className='pt-0 space-y-4 flex-1 flex flex-col justify-end'>
                     <div className='pt-3 border-t border-border/40 flex items-baseline justify-between'>
-                      <span className='text-[11px] text-muted-foreground'>قیمت اشتراک:</span>
-                      <strong className='text-lg font-bold text-primary font-sans'>
-                        {formatPrice(prod.price)}
-                      </strong>
+                      <span className='text-[11px] text-muted-foreground'>
+                        {prod.hasMultiplePlans ? 'شروع قیمت:' : 'قیمت اشتراک:'}
+                      </span>
+                      <div className='flex items-baseline gap-1'>
+                        {prod.hasMultiplePlans && (
+                          <span className='text-[11px] font-medium text-muted-foreground'>شروع از</span>
+                        )}
+                        <strong className='text-lg font-bold text-primary font-sans'>
+                          {formatPrice(displayPrice)}
+                        </strong>
+                      </div>
                     </div>
 
                     <div className='flex items-center justify-between text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-lg'>
