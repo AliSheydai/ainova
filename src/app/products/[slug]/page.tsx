@@ -10,15 +10,8 @@ import { ProductBuyCard } from '@/components/product/product-buy-card'
 import { ProductDetailVisual } from '@/components/product/product-detail-visual'
 import { MarkdownView } from '@/components/ui/markdown-view'
 import { Badge } from '@/components/ui/badge'
-import {
-  Sparkles,
-  ShieldCheck,
-  Check,
-  Zap,
-  ArrowRight,
-  Clock,
-  HelpCircle,
-} from 'lucide-react'
+import { Check, ChevronLeft, ShieldCheck, Zap, Clock } from 'lucide-react'
+import { StickyMobileCta } from '@/components/product/sticky-mobile-cta'
 
 export const revalidate = 60
 
@@ -47,9 +40,7 @@ export async function generateMetadata(props: ProductPageProps): Promise<Metadat
   const product = await getProductBySlug(params.slug)
 
   if (!product || product.status === 'ARCHIVED') {
-    return {
-      title: 'محصول یافت نشد',
-    }
+    return { title: 'محصول یافت نشد' }
   }
 
   const title = `${product.title} — خرید با تحویل فوری`
@@ -94,108 +85,68 @@ export default async function ProductDetailPage(props: ProductPageProps) {
     stock: metrics?.planStocks[plan.id] ?? 0,
   }))
 
-  const defaultFeatures = [
-    'فعال‌سازی رسمی و قانونی روی اکانت شخصی شما',
-    'تحویل آنی و خودکار بلافاصله پس از پرداخت',
-    'بدون نیاز به ارسال کلمه عبور یا اطلاعات ورود حساب',
-    'پشتیبانی همه‌روزه توسط کارشناسان فنی',
-    'تضمین بازگشت وجه در صورت بروز هرگونه مشکل فعال‌سازی',
-  ]
-
   const productFeatures =
     Array.isArray(product.features) && (product.features as string[]).length > 0
       ? (product.features as string[])
-      : defaultFeatures
+      : null
+
+  const isAvailable = stock > 0
 
   return (
     <div className='flex min-h-svh flex-col bg-background text-foreground' dir='rtl'>
       <LandingHeader />
 
-      <main className='flex-1 py-8 md:py-14'>
-        <div className='container mx-auto px-4 sm:px-6 max-w-6xl'>
+      <main className='flex-1 py-6 md:py-10'>
+        <div className='container mx-auto px-4 sm:px-6 max-w-5xl'>
+
           {/* Breadcrumb */}
-          <nav className='flex items-center gap-2 text-xs text-muted-foreground mb-6 sm:mb-8'>
+          <nav className='mb-6 flex items-center gap-1.5 text-xs text-muted-foreground'>
             <Link href='/' className='hover:text-foreground transition-colors'>
               صفحه اصلی
             </Link>
-            <span>/</span>
+            <ChevronLeft className='size-3 shrink-0' />
             <Link href='/#products' className='hover:text-foreground transition-colors'>
               محصولات
             </Link>
-            <span>/</span>
-            <span className='text-foreground font-semibold truncate'>
-              {product.title}
-            </span>
+            <ChevronLeft className='size-3 shrink-0' />
+            <span className='truncate text-foreground'>{product.title}</span>
           </nav>
 
-          {/* Main Hero Grid */}
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start'>
-            {/* Left/Middle: Product Details */}
-            <div className='lg:col-span-7 space-y-6 sm:space-y-8'>
-              <div className='space-y-3'>
-                <div className='flex flex-wrap items-center gap-2'>
-                  <Badge className='bg-primary/10 text-primary border-primary/25 text-xs px-2.5 py-0.5'>
-                    <Sparkles className='size-3 me-1' />
-                    اشتراک ویژه
-                  </Badge>
-                  {stock > 0 ? (
-                    <Badge variant='outline' className='text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-xs'>
-                      آماده تحویل آنی
-                    </Badge>
-                  ) : (
-                    <Badge variant='outline' className='text-rose-500 border-rose-500/30 text-xs'>
-                      اتمام موجودی موقت
-                    </Badge>
-                  )}
-                </div>
+          {/* Main Grid: Image (right) + Content (left) */}
+          <div className='grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12'>
 
-                <h1 className='text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight'>
+            {/* Column 1: Product Image */}
+            <div className='lg:sticky lg:top-24 lg:self-start'>
+              <ProductDetailVisual image={product.image} title={product.title} />
+            </div>
+
+            {/* Column 2: Content + Buy Section */}
+            <div className='space-y-8'>
+
+              {/* Title & Status */}
+              <div className='space-y-3'>
+                {isAvailable ? (
+                  <Badge className='bg-primary/8 text-primary border-primary/20 text-xs'>
+                    آماده تحویل آنی
+                  </Badge>
+                ) : (
+                  <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-xs'>
+                    اتمام موجودی موقت
+                  </Badge>
+                )}
+
+                <h1 className='text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-3xl'>
                   {product.title}
                 </h1>
 
                 {product.shortDescription && (
-                  <p className='text-sm sm:text-base text-muted-foreground leading-relaxed'>
+                  <p className='text-sm leading-relaxed text-muted-foreground'>
                     {product.shortDescription}
                   </p>
                 )}
               </div>
 
-              {/* Product Visual / Image */}
-              <ProductDetailVisual image={product.image} title={product.title} />
-
-              {/* Full Description */}
-              {product.description && (
-                <div className='space-y-3 pt-2'>
-                  <h2 className='text-base sm:text-lg font-bold text-foreground flex items-center gap-2'>
-                    <span>توضیحات و مشخصات محصول</span>
-                  </h2>
-                  <div className='rounded-xl bg-muted/20 border border-border/50 p-4 sm:p-6'>
-                    <MarkdownView content={product.description} />
-                  </div>
-                </div>
-              )}
-
-              {/* Key Features List */}
-              <div className='space-y-3 pt-2'>
-                <h2 className='text-base sm:text-lg font-bold text-foreground'>
-                  مزایا و ویژگی‌های این اشتراک
-                </h2>
-                <ul className='grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm'>
-                  {productFeatures.map((feat, i) => (
-                    <li
-                      key={i}
-                      className='flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/50 text-foreground shadow-xs'
-                    >
-                      <Check className='size-4 text-primary shrink-0' />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Right: Sticky Buy Box Card */}
-            <div className='lg:col-span-5 lg:sticky lg:top-24'>
+              {/* Buy Section (inline) */}
               <ProductBuyCard
                 productId={product.id}
                 productTitle={product.title}
@@ -206,12 +157,73 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                 shortDescription={product.shortDescription}
                 plans={enrichedPlans}
               />
+
+              {/* Divider */}
+              <hr className='border-border/50' />
+
+              {/* Full Description */}
+              {product.description && (
+                <div className='space-y-3'>
+                  <h2 className='text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
+                    توضیحات محصول
+                  </h2>
+                  <div className='prose-sm text-sm leading-relaxed text-foreground/90'>
+                    <MarkdownView content={product.description} />
+                  </div>
+                </div>
+              )}
+
+              {/* Features List — only if product has custom features */}
+              {productFeatures && (
+                <>
+                  <hr className='border-border/50' />
+                  <div className='space-y-3'>
+                    <h2 className='text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
+                      ویژگی‌ها
+                    </h2>
+                    <ul className='space-y-2'>
+                      {productFeatures.map((feat, i) => (
+                        <li key={i} className='flex items-start gap-2.5 text-sm text-foreground/85'>
+                          <Check className='mt-0.5 size-4 shrink-0 text-muted-foreground' />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {/* Trust Bar */}
+              <hr className='border-border/50' />
+              <div className='flex flex-wrap gap-x-6 gap-y-2.5 text-xs text-muted-foreground'>
+                <span className='flex items-center gap-1.5'>
+                  <ShieldCheck className='size-3.5 shrink-0' />
+                  فعال‌سازی قانونی و رسمی
+                </span>
+                <span className='flex items-center gap-1.5'>
+                  <Zap className='size-3.5 shrink-0' />
+                  تحویل خودکار پس از پرداخت
+                </span>
+                <span className='flex items-center gap-1.5'>
+                  <Clock className='size-3.5 shrink-0' />
+                  پشتیبانی همه‌روزه
+                </span>
+              </div>
+
             </div>
           </div>
         </div>
       </main>
 
       <LandingFooter />
+
+      {/* Sticky Mobile CTA — only visible on mobile when buy button is out of view */}
+      <StickyMobileCta
+        price={enrichedPlans[0]?.price ?? product.price}
+        isAvailable={isAvailable}
+        slug={product.slug}
+        planId={enrichedPlans[0]?.id}
+      />
     </div>
   )
 }

@@ -2,22 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ShoppingCart,
-  CheckCircle2,
-  Zap,
-  ShieldCheck,
-  Loader2,
-  Lock,
-  Clock,
-  ArrowLeft,
-  Layers,
-} from 'lucide-react'
+import { ShoppingCart, Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { AuthModal } from '@/components/auth/auth-modal'
 import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
 
 interface PlanItem {
@@ -41,23 +29,6 @@ interface ProductBuyCardProps {
   plans?: PlanItem[]
 }
 
-
-
-function getFulfillmentLabel(type?: string) {
-  switch (type) {
-    case 'ACTIVATION_LINK':
-      return 'لینک فعال‌سازی آنی'
-    case 'PRE_CREATED_ACCOUNT':
-      return 'اکانت آماده (تحویل فوری)'
-    case 'CUSTOMER_PROVISIONING':
-      return 'فعال‌سازی روی اکانت شما'
-    case 'MANUAL':
-      return 'تحویل توسط پشتیبانی'
-    default:
-      return 'تحویل خودکار'
-  }
-}
-
 export function ProductBuyCard({
   productId,
   productTitle,
@@ -73,12 +44,10 @@ export function ProductBuyCard({
     plans.length > 0 ? plans[0].id : null
   )
   const [buying, setBuying] = useState(false)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
   const router = useRouter()
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) || plans[0]
   const effectivePrice = selectedPlan ? selectedPlan.price : price
-  const effectiveFulfillmentType = selectedPlan?.fulfillmentType || fulfillmentType
   const isAvailable = (selectedPlan?.stock !== undefined ? selectedPlan.stock : stock) > 0
 
   const handleBuy = async () => {
@@ -86,154 +55,103 @@ export function ProductBuyCard({
       toast.error('موجودی این پلن در حال حاضر به پایان رسیده است.')
       return
     }
-
-    // Always navigate to checkout page so user can fill in required fields or confirm plan
     const checkoutUrl = selectedPlanId
       ? `/checkout?slug=${slug}&planId=${selectedPlanId}`
       : `/checkout?slug=${slug}`
-
     router.push(checkoutUrl)
   }
 
   return (
-    <>
-      <Card className='relative overflow-hidden border-primary/25 shadow-xl shadow-primary/5 bg-card/90 backdrop-blur-md'>
-        {/* Top gradient stripe */}
-        <div className='absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-primary via-emerald-500 to-primary' />
+    <div className='space-y-5'>
+      {/* Plan Selector */}
+      {plans.length > 1 && (
+        <div className='space-y-2'>
+          <span id='plan-label' className='text-xs font-medium text-muted-foreground'>
+            انتخاب پلن:
+          </span>
+          <div className='flex flex-wrap gap-2' role='radiogroup' aria-labelledby='plan-label'>
+            {plans.map((p) => {
+              const isSelected = selectedPlan?.id === p.id
+              const planAvailable = (p.stock !== undefined ? p.stock : stock) > 0
+              return (
+                <button
+                  key={p.id}
+                  type='button'
+                  role='radio'
+                  aria-checked={isSelected}
+                  onClick={() => setSelectedPlanId(p.id)}
+                  className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'border-primary bg-primary/8 text-foreground font-semibold'
+                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  } ${!planAvailable ? 'opacity-50' : ''}`}
+                >
+                  <span>{p.name}</span>
+                  <span
+                    className={`text-xs font-medium font-sans ${isSelected ? 'text-primary' : ''}`}
+                  >
+                    {formatPrice(p.price)}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
-        <CardContent className='p-6 sm:p-7 space-y-6'>
-          {/* Plan Selection if multiple plans available */}
-          {plans.length > 1 && (
-            <div className='space-y-2 pb-2'>
-              <span id='plan-selection-label' className='text-xs text-muted-foreground block font-medium'>
-                پلن‌های قابل سفارش:
-              </span>
-              <div
-                className='grid grid-cols-1 gap-2'
-                role='radiogroup'
-                aria-labelledby='plan-selection-label'
-              >
-                {plans.map((p) => {
-                  const isSelected = selectedPlan?.id === p.id
-                  return (
-                    <button
-                      key={p.id}
-                      type='button'
-                      role='radio'
-                      aria-checked={isSelected}
-                      onClick={() => setSelectedPlanId(p.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-primary bg-primary/10 text-foreground font-bold shadow-xs'
-                          : 'border-border/60 hover:bg-muted/40 text-muted-foreground'
-                      }`}
-                    >
-                      <div className='flex items-center gap-2'>
-                        <div
-                          className={`size-3.5 rounded-full border flex items-center justify-center ${isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'}`}
-                          aria-hidden='true'
-                        >
-                          {isSelected && <div className='size-1.5 rounded-full bg-background' />}
-                        </div>
-                        <span>{p.name}</span>
-                      </div>
-                      <strong className='font-sans text-primary'>
-                        {formatPrice(p.price)}
-                      </strong>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+      {/* Price + Status */}
+      <div className='flex items-end justify-between gap-3 border-t border-border/50 pt-5'>
+        <div>
+          <span className='mb-1 block text-xs text-muted-foreground'>قیمت نهایی:</span>
+          <span className='text-2xl font-bold text-foreground'>{formatPrice(effectivePrice)}</span>
+        </div>
+        {isAvailable ? (
+          <Badge className='bg-primary/8 text-primary border-primary/20 text-xs'>
+            آماده تحویل
+          </Badge>
+        ) : (
+          <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-xs'>
+            ناموجود
+          </Badge>
+        )}
+      </div>
+
+      {/* Purchase count */}
+      {purchaseCount > 0 && (
+        <p className='text-xs text-muted-foreground'>
+          {toPersianDigits(purchaseCount)} نفر این محصول را خریداری کرده‌اند
+        </p>
+      )}
+
+      {/* CTA Button */}
+      <div id='buy-button-anchor' className='space-y-2'>
+        <Button
+          onClick={handleBuy}
+          disabled={buying || !isAvailable}
+          aria-busy={buying}
+          size='lg'
+          className='h-12 w-full text-sm font-semibold'
+        >
+          {buying ? (
+            <>
+              <Loader2 className='size-4 animate-spin me-2' aria-hidden='true' />
+              <span>در حال انتقال...</span>
+            </>
+          ) : isAvailable ? (
+            <>
+              <ShoppingCart className='size-4 me-2' aria-hidden='true' />
+              <span>ادامه و ثبت سفارش</span>
+            </>
+          ) : (
+            <span>موقتاً ناموجود</span>
           )}
+        </Button>
 
-          {/* Price Header */}
-          <div className='flex flex-wrap items-baseline justify-between gap-2 pb-2 border-b border-border/40'>
-            <div>
-              <span className='text-xs text-muted-foreground block mb-1'>قیمت نهایی اشتراک:</span>
-              <div className='flex items-baseline gap-1.5'>
-                <span className='text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-sans'>
-                  {formatPrice(effectivePrice)}
-                </span>
-              </div>
-            </div>
-            {isAvailable ? (
-              <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 gap-1'>
-                <Zap className='size-3 text-emerald-500' aria-hidden='true' />
-                <span>{getFulfillmentLabel(effectiveFulfillmentType)}</span>
-              </Badge>
-            ) : (
-              <Badge variant='outline' className='text-rose-500 border-rose-500/30 text-xs px-2.5 py-1'>
-                اتمام موجودی موقت
-              </Badge>
-            )}
-          </div>
-
-          {/* Real-time stats */}
-          <div className='grid grid-cols-2 gap-3 text-xs'>
-            <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
-              <span className='text-muted-foreground block text-[11px] mb-0.5'>وضعیت دسترسی</span>
-              <strong className={`text-sm font-sans ${isAvailable ? 'text-primary' : 'text-rose-500 font-bold'}`}>
-                {isAvailable ? 'آماده تحویل' : 'ناموجود'}
-              </strong>
-            </div>
-
-            <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
-              <span className='text-muted-foreground block text-[11px] mb-0.5'>سفارش‌های موفق</span>
-              <strong className='text-sm text-foreground font-sans'>
-                {toPersianDigits(purchaseCount)} خریدار راضی
-              </strong>
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <div className='space-y-2.5 pt-1'>
-            <Button
-              onClick={handleBuy}
-              disabled={buying || !isAvailable}
-              aria-busy={buying}
-              size='lg'
-              className='w-full py-6 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200 cursor-pointer'
-            >
-              {buying ? (
-                <>
-                  <Loader2 className='size-5 animate-spin me-2' aria-hidden='true' />
-                  <span>در حال انتقال...</span>
-                </>
-              ) : isAvailable ? (
-                <>
-                  <ShoppingCart className='size-5 me-2' aria-hidden='true' />
-                  <span>ثبت سفارش و ادامه خرید</span>
-                  <ArrowLeft className='size-4 ms-2 transition-transform group-hover:-translate-x-1' aria-hidden='true' />
-                </>
-              ) : (
-                <span>موقتاً ناموجود</span>
-              )}
-            </Button>
-
-            <p className='text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5'>
-              <Lock className='size-3 text-primary' aria-hidden='true' />
-              <span>پرداخت امن شتابی با درگاه شاپرک — تحویل بلافاصله پس از پرداخت</span>
-            </p>
-          </div>
-
-          {/* Trust Guarantees */}
-          <div className='pt-4 border-t border-border/40 space-y-2 text-xs text-muted-foreground'>
-            <div className='flex items-center gap-2'>
-              <CheckCircle2 className='size-3.5 text-emerald-500 shrink-0' />
-              <span>فعال‌سازی رسمی و قانونی</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <ShieldCheck className='size-3.5 text-primary shrink-0' />
-              <span>۱۰۰٪ امن و با ضمانت بازگشت وجه</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Clock className='size-3.5 text-amber-500 shrink-0' />
-              <span>پشتیبانی همه‌روزه و راهنمای کامل گام‌به‌گام</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </>
+        <p className='text-center text-xs text-muted-foreground'>
+          <Lock className='me-1 inline size-3' aria-hidden='true' />
+          پرداخت امن — تحویل بلافاصله پس از پرداخت
+        </p>
+      </div>
+    </div>
   )
 }

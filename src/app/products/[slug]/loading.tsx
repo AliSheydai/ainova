@@ -1,48 +1,60 @@
 export default function ProductDetailLoading() {
   return (
     <div
-      className='min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 animate-pulse'
+      className='min-h-screen bg-background py-6 px-4 sm:px-6 animate-pulse'
       dir='rtl'
       role='status'
       aria-live='polite'
     >
-      <span className='sr-only'>در حال بارگذاری اطلاعات محصول و پلن‌ها...</span>
-      <div className='max-w-5xl mx-auto space-y-8'>
+      <span className='sr-only'>در حال بارگذاری اطلاعات محصول...</span>
+
+      <div className='mx-auto max-w-5xl space-y-6'>
         {/* Breadcrumb skeleton */}
-        <div className='flex gap-2 items-center'>
-          <div className='h-4 w-16 bg-muted rounded' />
-          <div className='h-4 w-4 bg-muted rounded' />
-          <div className='h-4 w-32 bg-muted rounded' />
+        <div className='flex items-center gap-2'>
+          <div className='h-3 w-12 rounded bg-muted' />
+          <div className='h-3 w-3 rounded bg-muted' />
+          <div className='h-3 w-16 rounded bg-muted' />
+          <div className='h-3 w-3 rounded bg-muted' />
+          <div className='h-3 w-24 rounded bg-muted' />
         </div>
 
-        {/* Product top section: image + summary */}
-        <div className='grid grid-cols-1 md:grid-cols-12 gap-8'>
-          <div className='md:col-span-5'>
-            <div className='aspect-square w-full bg-muted rounded-3xl' />
-          </div>
-          <div className='md:col-span-7 space-y-4 flex flex-col justify-center'>
-            <div className='h-9 w-3/4 bg-muted rounded-xl' />
-            <div className='h-5 w-1/2 bg-muted/70 rounded' />
-            <div className='h-20 w-full bg-muted/40 rounded-2xl' />
-            <div className='h-12 w-48 bg-primary/20 rounded-2xl mt-4' />
-          </div>
-        </div>
+        {/* Main grid */}
+        <div className='grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12'>
+          {/* Image column */}
+          <div className='aspect-video w-full rounded-2xl bg-muted' />
 
-        {/* Plans section skeleton */}
-        <div className='pt-8 space-y-4'>
-          <div className='h-7 w-40 bg-muted rounded-lg' />
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className='bg-card border border-border p-6 rounded-3xl space-y-4'>
-                <div className='h-6 w-32 bg-muted rounded' />
-                <div className='h-8 w-24 bg-muted rounded' />
-                <div className='space-y-2 pt-2'>
-                  <div className='h-4 w-full bg-muted/60 rounded' />
-                  <div className='h-4 w-4/5 bg-muted/60 rounded' />
+          {/* Content column */}
+          <div className='space-y-8'>
+            {/* Title area */}
+            <div className='space-y-3'>
+              <div className='h-5 w-20 rounded-full bg-muted' />
+              <div className='h-7 w-3/4 rounded-lg bg-muted' />
+              <div className='h-4 w-full rounded bg-muted/70' />
+              <div className='h-4 w-2/3 rounded bg-muted/60' />
+            </div>
+
+            {/* Buy section */}
+            <div className='space-y-4 border-t border-border/40 pt-5'>
+              <div className='flex items-end justify-between'>
+                <div className='space-y-1'>
+                  <div className='h-3 w-16 rounded bg-muted/60' />
+                  <div className='h-7 w-32 rounded-lg bg-muted' />
                 </div>
-                <div className='h-11 w-full bg-muted rounded-xl pt-2' />
+                <div className='h-5 w-20 rounded-full bg-muted/60' />
               </div>
-            ))}
+              <div className='h-12 w-full rounded-xl bg-primary/15' />
+              <div className='h-3 w-48 mx-auto rounded bg-muted/50' />
+            </div>
+
+            {/* Description */}
+            <div className='space-y-3 border-t border-border/40 pt-6'>
+              <div className='h-3 w-20 rounded bg-muted/50' />
+              <div className='space-y-2'>
+                <div className='h-4 w-full rounded bg-muted/50' />
+                <div className='h-4 w-5/6 rounded bg-muted/40' />
+                <div className='h-4 w-4/5 rounded bg-muted/40' />
+              </div>
+            </div>
           </div>
         </div>
       </div>
