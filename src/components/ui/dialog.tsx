@@ -61,9 +61,9 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot='dialog-content'
         className={cn(
-          'fixed z-50 grid w-full gap-4 border bg-background shadow-2xl duration-200',
+          'fixed z-50 flex flex-col w-full min-w-0 max-w-full gap-4 border bg-background shadow-2xl duration-200 box-border',
           // Mobile Bottom Sheet styles
-          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-5 pt-3 pb-6 max-h-[92vh] max-h-[92dvh] overflow-y-auto',
+          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-4 sm:p-6 pt-3 pb-7 max-h-[85vh] max-h-[85dvh] overflow-y-auto overflow-x-hidden',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom',
           // Desktop Centered Dialog styles
           'sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:inset-x-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border sm:p-6 sm:max-w-lg sm:max-h-[85vh]',
@@ -81,7 +81,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot='dialog-close'
-            className="absolute inset-e-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute end-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 z-10"
           >
             <XIcon />
             <span className='sr-only'>Close</span>

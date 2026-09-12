@@ -357,7 +357,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}
-                className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50"
+                className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground"
                 autoFocus
               />
               <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
@@ -520,7 +520,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={loading}
-                className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 font-sans text-sm"
+                className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 font-sans text-sm placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80"
                 autoFocus
               />
               <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
@@ -573,7 +573,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         <SheetContent
           side="bottom"
           dir="rtl"
-          className="max-h-[92vh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
+          className="max-h-[82vh] max-h-[82dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
         >
           {/* Pull Handle Indicator */}
           <div className="flex justify-center pt-3 pb-1 shrink-0">

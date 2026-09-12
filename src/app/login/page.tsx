@@ -357,7 +357,7 @@ function LoginForm() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       disabled={loading}
-                      className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 transition-all"
+                      className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 transition-all placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground"
                       autoFocus
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
@@ -521,7 +521,7 @@ function LoginForm() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       disabled={loading}
-                      className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 text-base transition-all font-sans"
+                      className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 text-base transition-all font-sans placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80"
                       autoFocus
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">

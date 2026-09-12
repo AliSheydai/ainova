@@ -153,7 +153,7 @@ export function DashboardModal({
           side="bottom"
           showCloseButton={false}
           dir="rtl"
-          className="h-[88vh] max-h-[92vh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl overflow-hidden shadow-2xl gap-0"
+          className="h-[80vh] max-h-[82dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl overflow-hidden shadow-2xl gap-0"
         >
           {/* Pull Handle Indicator */}
           <div className="flex justify-center pt-2.5 pb-1 shrink-0">

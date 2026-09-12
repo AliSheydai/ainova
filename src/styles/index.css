@@ -44,12 +44,41 @@
     cursor: pointer;
   }
 
-  /* Prevent focus zoom on mobile devices */
+  /* Prevent focus zoom on mobile devices while maintaining comfortable placeholder size */
   @media screen and (max-width: 767px) {
     input,
     select,
     textarea {
       font-size: 16px !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      font-size: 0.8125rem !important; /* 13px on mobile: fits Persian text cleanly without overflow */
+      line-height: normal !important;
+      opacity: 1 !important;
+      text-overflow: ellipsis;
+    }
+
+    [data-slot='select-trigger'][data-placeholder],
+    [data-slot='select-trigger'][data-placeholder] [data-slot='select-value'] {
+      font-size: 0.8125rem !important;
+      opacity: 1 !important;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    input::placeholder,
+    textarea::placeholder {
+      font-size: 0.875rem !important; /* 14px on desktop/tablets */
+      line-height: normal !important;
+      opacity: 1 !important;
+    }
+
+    [data-slot='select-trigger'][data-placeholder],
+    [data-slot='select-trigger'][data-placeholder] [data-slot='select-value'] {
+      font-size: 0.875rem !important;
+      opacity: 1 !important;
     }
   }
 }

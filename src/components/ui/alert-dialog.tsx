@@ -57,7 +57,7 @@ function AlertDialogContent({
         className={cn(
           'fixed z-50 grid w-full gap-4 border bg-background shadow-2xl duration-200',
           // Mobile Bottom Sheet styles
-          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-5 pt-3 pb-6 max-h-[90vh] max-h-[90dvh] overflow-y-auto',
+          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-5 pt-3 pb-7 max-h-[75vh] max-h-[75dvh] overflow-y-auto',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom',
           // Desktop Centered Dialog styles
           'sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:inset-x-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border sm:p-6 sm:max-w-lg',

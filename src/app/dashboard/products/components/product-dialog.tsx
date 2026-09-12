@@ -57,8 +57,8 @@ export function ProductDialog({
 }: ProductDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-xl'>
-        <DialogHeader className='pb-3 border-b border-border/50'>
+      <DialogContent className='sm:max-w-xl p-4 sm:p-6'>
+        <DialogHeader className='pb-3 border-b border-border/50 pe-7'>
           <div className='flex items-center gap-2.5'>
             <div className='size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
               <ShoppingBag className='size-4' />
@@ -74,8 +74,8 @@ export function ProductDialog({
           </div>
         </DialogHeader>
 
-        <div className='space-y-4 py-2'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
+        <div className='space-y-3.5 py-1 sm:py-2'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div>
               <span className='text-xs font-medium text-foreground block mb-1'>
                 عنوان رسمی محصول: <span className='text-rose-500'>*</span>
@@ -102,7 +102,7 @@ export function ProductDialog({
             </div>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div>
               <span className='text-xs font-medium text-foreground block mb-1'>
                 قیمت پایه / شروع از (تومان):
@@ -153,7 +153,7 @@ export function ProductDialog({
             <Input
               value={formProdShortDesc}
               onChange={(e) => setFormProdShortDesc(e.target.value)}
-              placeholder='اشتراک اختصاصی ۱۸ ماهه هوش مصنوعی گوگل با ۲ ترابایت فضا'
+              placeholder='اشتراک ۱۸ ماهه هوش مصنوعی با ۲TB فضا'
               className='text-xs h-9 rounded-xl'
             />
           </div>

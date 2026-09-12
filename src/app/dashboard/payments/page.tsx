@@ -145,7 +145,7 @@ export default function AdminPaymentsPage() {
               <div className='relative flex-1 w-full'>
                 <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
                 <Input
-                  placeholder='جستجو با Authority، کد پیگیری RefId، شماره موبایل یا شماره سفارش...'
+                  placeholder='جستجو با Authority، کد RefId، موبایل یا شماره سفارش...'
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className='ps-9 text-xs sm:text-sm h-10'

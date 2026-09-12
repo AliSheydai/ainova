@@ -33,7 +33,7 @@ export function ProductPlansAccordion({
           className='h-7 px-2 text-xs text-primary hover:text-primary gap-1 font-semibold'
         >
           <Plus className='size-3' />
-          <span>+ پلن جدید</span>
+          <span>پلن جدید</span>
         </Button>
       </div>
 

@@ -106,20 +106,20 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
   }
 
   return (
-    <div className='bg-card rounded-2xl border border-border/70 p-4 sm:p-5 shadow-xs space-y-3.5'>
-      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/40'>
-        <div>
-          <div className='flex items-center gap-1.5'>
-            <CreditCard className='size-4 text-primary' />
-            <span className='text-xs font-bold text-foreground'>
-              اطلاعات مورد نیاز در صفحه پرداخت (Checkout Fields)
+    <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full overflow-hidden'>
+      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-border/40 min-w-0 w-full'>
+        <div className='min-w-0 flex-1'>
+          <div className='flex items-center gap-1.5 flex-wrap'>
+            <CreditCard className='size-4 text-primary shrink-0' />
+            <span className='text-xs font-bold text-foreground break-words'>
+              اطلاعات تسویه‌حساب (Checkout Fields)
             </span>
-            <Badge variant='secondary' className='text-[10px] font-mono'>
+            <Badge variant='secondary' className='text-[10px] font-mono shrink-0'>
               {fields.length} فیلد
             </Badge>
           </div>
-          <span className='text-[11px] text-muted-foreground block mt-0.5'>
-            فیلدهایی که کاربر حین تسویه‌حساب باید پر کند (مانند ایمیل گوگل، شماره تماس و...)
+          <span className='text-[10px] sm:text-[11px] text-muted-foreground block mt-0.5 leading-relaxed break-words'>
+            فیلدهایی که خریدار حین پرداخت پر می‌کند (ایمیل، شماره تماس و...)
           </span>
         </div>
 
@@ -128,7 +128,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
           variant='outline'
           size='sm'
           onClick={handleAddField}
-          className='h-8 px-3 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10 rounded-xl font-semibold self-start sm:self-auto'
+          className='h-8 px-3 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10 rounded-xl font-semibold w-full sm:w-auto shrink-0 justify-center'
         >
           <Plus className='size-3.5' />
           <span>افزودن فیلد سفارشی</span>
@@ -136,72 +136,72 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
       </div>
 
       {/* Preset Shortcuts */}
-      <div className='flex items-center gap-1.5 flex-wrap p-2 rounded-xl bg-muted/30 border border-border/40'>
-        <span className='text-[11px] font-medium text-muted-foreground flex items-center gap-1 me-1'>
+      <div className='flex items-center gap-1 sm:gap-1.5 flex-wrap p-2 rounded-xl bg-muted/30 border border-border/40 min-w-0 w-full overflow-hidden'>
+        <span className='text-[10px] sm:text-[10.5px] font-medium text-muted-foreground flex items-center gap-1 shrink-0'>
           <Sparkles className='size-3 text-primary' />
-          <span>افزودن سریع:</span>
+          <span>سریع:</span>
         </span>
         <button
           type='button'
           onClick={() => handleAddPresetField('email')}
-          className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs'
+          className='inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs shrink-0'
         >
-          <Mail className='size-3 text-blue-500' />
-          <span>+ ایمیل گوگل</span>
+          <Mail className='size-2.5 sm:size-3 text-blue-500 shrink-0' />
+          <span>+ ایمیل</span>
         </button>
         <button
           type='button'
           onClick={() => handleAddPresetField('phone')}
-          className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs'
+          className='inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs shrink-0'
         >
-          <Phone className='size-3 text-emerald-500' />
-          <span>+ شماره تماس</span>
+          <Phone className='size-2.5 sm:size-3 text-emerald-500 shrink-0' />
+          <span>+ تماس</span>
         </button>
         <button
           type='button'
           onClick={() => handleAddPresetField('note')}
-          className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs'
+          className='inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs shrink-0'
         >
-          <FileText className='size-3 text-purple-500' />
-          <span>+ توضیحات سفارش</span>
+          <FileText className='size-2.5 sm:size-3 text-purple-500 shrink-0' />
+          <span>+ یادداشت</span>
         </button>
       </div>
 
       {/* Fields List */}
       {fields.length === 0 ? (
-        <div className='p-6 rounded-xl border border-dashed border-border/80 text-center bg-muted/20 space-y-1.5'>
+        <div className='p-4 sm:p-6 rounded-xl border border-dashed border-border/80 text-center bg-muted/20 space-y-1.5 min-w-0 w-full'>
           <Info className='size-5 text-muted-foreground mx-auto opacity-70' />
           <span className='text-xs font-semibold text-foreground block'>
             هیچ فیلد ورودی تعریف نشده است
           </span>
-          <p className='text-[11px] text-muted-foreground max-w-sm mx-auto'>
+          <p className='text-[10.5px] sm:text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed break-words'>
             سفارش به‌صورت پرداخت سریع و بدون نیاز به فرم ثبت خواهد شد. برای دریافت ایمیل اکانت یا اطلاعات مشتری، از دکمه‌های بالا فیلد اضافه فرمایید.
           </p>
         </div>
       ) : (
-        <div className='space-y-3 max-h-[360px] overflow-y-auto pe-1.5'>
+        <div className='space-y-3 max-h-[360px] overflow-y-auto min-w-0 w-full pe-0.5'>
           {fields.map((field, idx) => (
             <div
               key={idx}
-              className='p-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all space-y-3 shadow-2xs'
+              className='p-3 sm:p-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all space-y-3 shadow-2xs min-w-0 w-full overflow-hidden'
             >
-              {/* Field Item Header */}
-              <div className='flex items-center justify-between pb-2 border-b border-border/40'>
-                <div className='flex items-center gap-2'>
-                  <div className='size-5 rounded-md bg-muted text-foreground flex items-center justify-center font-mono text-[10px] font-bold'>
+              {/* Field Item Header - Protected against overflow on small screens */}
+              <div className='flex items-center justify-between gap-2 pb-2 border-b border-border/40 min-w-0 w-full'>
+                <div className='flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden'>
+                  <div className='size-5 rounded-md bg-muted text-foreground flex items-center justify-center font-mono text-[10px] font-bold shrink-0'>
                     {idx + 1}
                   </div>
-                  <span className='text-xs font-bold text-foreground'>
+                  <span className='text-xs font-bold text-foreground truncate'>
                     {field.label || 'فیلد بدون عنوان'}
                   </span>
                   {field.required && (
-                    <Badge variant='destructive' className='text-[9px] px-1.5 py-0'>
+                    <Badge variant='destructive' className='text-[8.5px] px-1 py-0 shrink-0'>
                       الزامی
                     </Badge>
                   )}
                 </div>
 
-                <div className='flex items-center gap-1'>
+                <div className='flex items-center gap-0.5 shrink-0'>
                   {/* Reorder Buttons */}
                   <button
                     type='button'
@@ -222,7 +222,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                     <ArrowDown className='size-3.5' />
                   </button>
 
-                  <div className='h-3 w-px bg-border mx-1' />
+                  <div className='h-3 w-px bg-border mx-0.5' />
 
                   {/* Delete Button */}
                   <button
@@ -237,8 +237,8 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
               </div>
 
               {/* Field Properties Grid */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5'>
-                <div>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 min-w-0 w-full'>
+                <div className='min-w-0 w-full'>
                   <span className='text-[11px] font-medium text-muted-foreground block mb-1'>
                     عنوان فارسی: <span className='text-rose-500'>*</span>
                   </span>
@@ -246,11 +246,11 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                     value={field.label}
                     onChange={(e) => handleUpdateField(idx, { label: e.target.value })}
                     placeholder='مثال: ایمیل اکانت'
-                    className='text-xs h-8.5 rounded-lg'
+                    className='text-xs h-8.5 rounded-lg w-full min-w-0'
                   />
                 </div>
 
-                <div>
+                <div className='min-w-0 w-full'>
                   <span className='text-[11px] font-medium text-muted-foreground block mb-1'>
                     کلید سیستمی (Key): <span className='text-rose-500'>*</span>
                   </span>
@@ -258,12 +258,12 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                     value={field.key}
                     onChange={(e) => handleUpdateField(idx, { key: e.target.value })}
                     placeholder='email'
-                    className='text-xs h-8.5 rounded-lg font-mono'
+                    className='text-xs h-8.5 rounded-lg font-mono w-full min-w-0'
                     dir='ltr'
                   />
                 </div>
 
-                <div>
+                <div className='min-w-0 w-full'>
                   <span className='text-[11px] font-medium text-muted-foreground block mb-1'>
                     نوع داده ورودی:
                   </span>
@@ -271,7 +271,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                     value={field.type}
                     onValueChange={(val: any) => handleUpdateField(idx, { type: val })}
                   >
-                    <SelectTrigger className='h-8.5 text-xs rounded-lg w-full'>
+                    <SelectTrigger className='h-8.5 text-xs rounded-lg w-full min-w-0 max-w-full overflow-hidden'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -284,7 +284,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                   </Select>
                 </div>
 
-                <div>
+                <div className='min-w-0 w-full'>
                   <span className='text-[11px] font-medium text-muted-foreground block mb-1'>
                     متن راهنما (Placeholder):
                   </span>
@@ -292,7 +292,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
                     value={field.placeholder || ''}
                     onChange={(e) => handleUpdateField(idx, { placeholder: e.target.value })}
                     placeholder='مثال: user@gmail.com'
-                    className='text-xs h-8.5 rounded-lg'
+                    className='text-xs h-8.5 rounded-lg w-full min-w-0'
                   />
                 </div>
               </div>

@@ -219,7 +219,7 @@ export default function AdminUsersPage() {
                 <div className='relative flex-1 w-full'>
                   <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
                   <Input
-                    placeholder='جستجو با شماره موبایل، نام یا نام کاربری تلگرام...'
+                    placeholder='جستجو با موبایل، نام یا تلگرام...'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className='ps-9 text-xs sm:text-sm h-10'
