@@ -25,6 +25,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer, scaleIn } from '@/lib/motion'
 import { formatPrice, formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
+import { cn } from '@/lib/utils'
 
 interface OrderItem {
   id: string
@@ -70,6 +71,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedRefId, setCopiedRefId] = useState<string | null>(null)
   const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({})
 
   const fetchOrders = async () => {
@@ -98,6 +100,13 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
     setCopiedId(id)
     toast.success('کپی شد.')
     setTimeout(() => setCopiedId(null), 2500)
+  }
+
+  const copyRefToClipboard = (refId: string, orderId: string) => {
+    navigator.clipboard.writeText(refId)
+    setCopiedRefId(orderId)
+    toast.success('کد پیگیری با موفقیت کپی شد.')
+    setTimeout(() => setCopiedRefId(null), 2500)
   }
 
   const toggleShowPassword = (orderId: string) => {
@@ -259,17 +268,52 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       </div>
 
                       {/* Price & Ref info */}
-                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
-                        <div className="text-muted-foreground">
-                          مبلغ پرداختی:{' '}
-                          <span className="font-bold text-foreground font-sans">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 border-t border-border/40 pt-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground text-xs">مبلغ پرداختی:</span>
+                          <Badge
+                            variant="secondary"
+                            className="bg-secondary/70 hover:bg-secondary/70 text-foreground border border-border/60 font-sans font-bold text-xs px-2.5 py-0.5 rounded-lg shadow-2xs"
+                          >
                             {formatPrice(order.amount)}
-                          </span>
+                          </Badge>
                         </div>
+
                         {order.payment?.refId && (
-                          <div className="text-[11px] text-muted-foreground">
-                            کد پیگیری:{' '}
-                            <span className="font-sans font-medium text-foreground">{toPersianDigits(order.payment.refId)}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground text-xs">کد پیگیری:</span>
+                            <button
+                              type="button"
+                              onClick={() => copyRefToClipboard(order.payment!.refId!, order.id)}
+                              className="group inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg cursor-pointer"
+                              title={copiedRefId === order.id ? 'کپی شد!' : 'برای کپی کد پیگیری کلیک کنید'}
+                              aria-label={`کپی کد پیگیری ${order.payment.refId}`}
+                            >
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  'cursor-pointer select-none font-sans text-xs px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1.5 active:scale-95 border',
+                                  copiedRefId === order.id
+                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
+                                    : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
+                                )}
+                              >
+                                {copiedRefId === order.id ? (
+                                  <>
+                                    <Check className="size-3 text-emerald-600 dark:text-emerald-400 animate-in zoom-in-75" />
+                                    <span className="font-medium font-sans">{toPersianDigits(order.payment.refId)}</span>
+                                    <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                      کپی شد
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="font-medium font-sans">{toPersianDigits(order.payment.refId)}</span>
+                                    <Copy className="size-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                  </>
+                                )}
+                              </Badge>
+                            </button>
                           </div>
                         )}
                       </div>

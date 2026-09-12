@@ -11,14 +11,15 @@ interface MobileBottomNavProps {
   hidden?: boolean
 }
 
+const SCROLL_THRESHOLD = 160
+
 export function MobileBottomNav({ onOpenDashboard, hidden = false }: MobileBottomNavProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const updateVisibility = () => {
       const scrollY = window.scrollY || window.pageYOffset || 0
-      // Appear after a small, comfortable scroll down (~220px)
-      setIsVisible(scrollY > 160)
+      setIsVisible(scrollY > SCROLL_THRESHOLD)
     }
 
     // Initial check

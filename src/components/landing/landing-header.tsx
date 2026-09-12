@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { motion, useScroll, useMotionValueEvent, useSpring } from 'framer-motion'
 import {
   LogIn,
   Menu,
@@ -16,6 +17,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -58,6 +60,7 @@ interface UserDropdownProps {
   onOpenDashboard: () => void
   onLogout: () => void
   isMobile?: boolean
+  isCompact?: boolean
 }
 
 function UserDropdown({
@@ -68,6 +71,7 @@ function UserDropdown({
   onOpenDashboard,
   onLogout,
   isMobile,
+  isCompact = false,
 }: UserDropdownProps) {
   return (
     <DropdownMenu>
@@ -76,11 +80,19 @@ function UserDropdown({
           <Button
             variant='ghost'
             size='icon'
-            className='size-9 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer'
+            className={cn(
+              'rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer transition-all duration-200',
+              isCompact ? 'size-8' : 'size-9'
+            )}
             aria-label='منوی کاربری'
             title={displayName}
           >
-            <div className='flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+            <div
+              className={cn(
+                'flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold transition-all',
+                isCompact ? 'size-5 text-[10px]' : 'size-6 text-xs'
+              )}
+            >
               {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3.5' />}
             </div>
           </Button>
@@ -88,12 +100,20 @@ function UserDropdown({
           <Button
             variant='outline'
             size='sm'
-            className='group items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer rounded-xl h-9 px-3'
+            className={cn(
+              'group items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer rounded-xl',
+              isCompact ? 'h-8 px-2.5 text-xs' : 'h-9 px-3 text-sm'
+            )}
           >
-            <div className='flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold'>
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold transition-all',
+                isCompact ? 'size-4.5 text-[10px]' : 'size-5 text-xs'
+              )}
+            >
               {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
             </div>
-            <span className='max-w-[140px] truncate text-sm font-medium'>
+            <span className='max-w-[130px] truncate font-medium'>
               {displayName}
             </span>
             <ChevronDown className='size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180' />
@@ -209,6 +229,25 @@ export function LandingHeader() {
   const [user, setUser] = useState<AuthUserData | null>(null)
   const [openingTg, setOpeningTg] = useState(false)
 
+  const SCROLL_THRESHOLD = 160
+  const { scrollY, scrollYProgress } = useScroll()
+  const [isScrolled, setIsScrolled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.scrollY > SCROLL_THRESHOLD
+    }
+    return false
+  })
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setIsScrolled(latest > SCROLL_THRESHOLD)
+  })
+
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 200,
+    damping: 30,
+    restDelta: 0.001,
+  })
+
   useEffect(() => {
     let isMounted = true
     fetch('/api/auth/me')
@@ -294,235 +333,330 @@ export function LandingHeader() {
 
   return (
     <>
-      <header className='sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md [direction:ltr] md:[direction:rtl]'>
-        <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
-          {/* Logo */}
-          <Link href='/' className='flex items-center gap-2.5 select-none'>
-            <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-              <Sparkles className='size-4' />
-            </div>
-            <span className='text-base font-bold text-foreground leading-tight'>آریوچت</span>
-          </Link>
+      <header
+        className={cn(
+          'sticky top-0 z-50 w-full pointer-events-none transition-all duration-300',
+          isScrolled ? 'pt-2 sm:pt-3' : 'pt-0'
+        )}
+      >
+        {/* Full-width baseline bar at the top (fades out smoothly when scrolled) */}
+        <div
+          className={cn(
+            'absolute inset-0 border-b border-border/50 bg-background/80 backdrop-blur-md transition-opacity duration-300 pointer-events-none',
+            isScrolled ? 'opacity-0' : 'opacity-100'
+          )}
+        />
 
-          {/* Desktop Nav */}
-          <nav className='hidden items-center gap-6 md:flex'>
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className='text-sm text-muted-foreground transition-colors hover:text-foreground'
+        {/* Dynamic Floating Pill Island */}
+        <div className='container mx-auto flex justify-center px-3 sm:px-4 md:px-6'>
+          <motion.div
+            layout
+            transition={{
+              type: 'spring',
+              stiffness: 280,
+              damping: 28,
+              mass: 0.6,
+            }}
+            className={cn(
+              'pointer-events-auto relative flex items-center justify-between w-full [direction:ltr] md:[direction:rtl] transition-all duration-300',
+              isScrolled
+                ? 'max-w-5xl h-14 px-3.5 sm:px-5 rounded-2xl border border-border/80 dark:border-white/10 bg-background/90 dark:bg-background/85 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] ring-1 ring-border/20'
+                : 'max-w-full h-16 px-0 sm:px-2 rounded-none border-none bg-transparent shadow-none ring-0'
+            )}
+          >
+            {/* Logo */}
+            <Link
+              href='/'
+              className='group flex items-center gap-2.5 select-none transition-transform active:scale-[0.98]'
+            >
+              <div
+                className={cn(
+                  'flex items-center justify-center bg-primary text-primary-foreground shadow-sm transition-all duration-300',
+                  isScrolled ? 'size-7.5 rounded-lg' : 'size-8 rounded-xl'
+                )}
               >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+                <Sparkles
+                  className={cn(
+                    'transition-all duration-300',
+                    isScrolled ? 'size-3.5' : 'size-4'
+                  )}
+                />
+              </div>
+              <span
+                className={cn(
+                  'font-bold text-foreground leading-tight transition-all duration-300',
+                  isScrolled ? 'text-sm sm:text-base' : 'text-base'
+                )}
+              >
+                آریوچت
+              </span>
+            </Link>
 
-          {/* Actions */}
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
+            {/* Desktop Nav */}
+            <nav
+              className={cn(
+                'hidden items-center md:flex transition-all duration-300',
+                isScrolled ? 'gap-1 lg:gap-2' : 'gap-1.5 lg:gap-3'
+              )}
+            >
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'relative rounded-full text-xs lg:text-sm font-medium text-muted-foreground transition-all duration-200',
+                    'hover:text-foreground hover:bg-accent/60 active:scale-95',
+                    isScrolled ? 'px-2.5 py-1' : 'px-3 py-1.5'
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
 
-            {/* Desktop User Section */}
-            {user ? (
-              <div className='hidden md:flex items-center gap-2'>
-                {/* دکمه سفارش‌های من در هدر باقی می‌ماند */}
+            {/* Actions */}
+            <div
+              className={cn(
+                'flex items-center transition-all duration-300',
+                isScrolled ? 'gap-1.5 sm:gap-2' : 'gap-2'
+              )}
+            >
+              <ThemeSwitch />
+
+              {/* Desktop User Section */}
+              {user ? (
+                <div className='hidden md:flex items-center gap-2'>
+                  {/* دکمه سفارش‌های من در هدر باقی می‌ماند */}
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={openOrdersModal}
+                    className={cn(
+                      'items-center gap-1.5 border-primary/25 bg-primary/5 hover:bg-primary/10 text-foreground font-medium rounded-xl cursor-pointer transition-all duration-200',
+                      isScrolled ? 'h-8 px-2.5 text-xs' : 'h-9 px-3 text-xs'
+                    )}
+                  >
+                    <Package className='size-3.5 text-primary' />
+                    <span>سفارش‌های من</span>
+                  </Button>
+
+                  {/* دراپ‌داون نام کاربری با گزینه‌های داشبورد، پنل ادمین، ربات تلگرام، اعلانات و خروج */}
+                  <UserDropdown
+                    user={user}
+                    displayName={displayName}
+                    openingTg={openingTg}
+                    handleTelegramCta={handleTelegramCta}
+                    onOpenDashboard={() => setDashboardModalOpen(true)}
+                    onLogout={handleLogout}
+                    isCompact={isScrolled}
+                  />
+                </div>
+              ) : (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => setAuthModalOpen(true)}
+                  className={cn(
+                    'hidden md:flex cursor-pointer transition-all duration-200',
+                    isScrolled ? 'h-8 px-2.5 text-xs' : 'h-9 px-3 text-sm'
+                  )}
+                >
+                  ورود
+                </Button>
+              )}
+
+              <Button
+                asChild
+                size='sm'
+                className={cn(
+                  'hidden md:inline-flex rounded-xl font-semibold shadow-xs transition-all duration-200 cursor-pointer',
+                  isScrolled ? 'h-8 px-3 text-xs' : 'h-9 px-4 text-sm'
+                )}
+              >
+                <Link href='/#products'>
+                  مشاهده محصولات
+                </Link>
+              </Button>
+
+              {/* Mobile User Quick Icon / Dropdown */}
+              {user ? (
+                <div className='md:hidden flex items-center'>
+                  <UserDropdown
+                    user={user}
+                    displayName={displayName}
+                    openingTg={openingTg}
+                    handleTelegramCta={handleTelegramCta}
+                    onOpenDashboard={() => setDashboardModalOpen(true)}
+                    onLogout={handleLogout}
+                    isMobile
+                    isCompact={isScrolled}
+                  />
+                </div>
+              ) : (
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={openOrdersModal}
-                  className='items-center gap-1.5 border-primary/25 bg-primary/5 hover:bg-primary/10 text-foreground text-xs font-medium h-9 px-3 rounded-xl cursor-pointer'
+                  onClick={() => setAuthModalOpen(true)}
+                  className='md:hidden h-8 gap-1.5 px-3 text-xs font-medium rounded-lg border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer'
                 >
-                  <Package className='size-3.5 text-primary' />
-                  <span>سفارش‌های من</span>
+                  <LogIn className='size-3.5' />
+                  <span>ورود</span>
                 </Button>
+              )}
 
-                {/* دراپ‌داون نام کاربری با گزینه‌های داشبورد، پنل ادمین، ربات تلگرام، اعلانات و خروج */}
-                <UserDropdown
-                  user={user}
-                  displayName={displayName}
-                  openingTg={openingTg}
-                  handleTelegramCta={handleTelegramCta}
-                  onOpenDashboard={() => setDashboardModalOpen(true)}
-                  onLogout={handleLogout}
-                />
-              </div>
-            ) : (
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => setAuthModalOpen(true)}
-                className='hidden md:flex text-sm cursor-pointer'
-              >
-                ورود
-              </Button>
-            )}
-
-            <Button asChild size='sm' className='hidden text-sm md:inline-flex'>
-              <Link href='/#products'>
-                مشاهده محصولات
-              </Link>
-            </Button>
-
-            {/* Mobile User Quick Icon / Dropdown */}
-            {user ? (
-              <div className='md:hidden flex items-center'>
-                <UserDropdown
-                  user={user}
-                  displayName={displayName}
-                  openingTg={openingTg}
-                  handleTelegramCta={handleTelegramCta}
-                  onOpenDashboard={() => setDashboardModalOpen(true)}
-                  onLogout={handleLogout}
-                  isMobile
-                />
-              </div>
-            ) : (
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => setAuthModalOpen(true)}
-                className='md:hidden h-8 gap-1.5 px-3 text-xs font-medium rounded-lg border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer'
-              >
-                <LogIn className='size-3.5' />
-                <span>ورود</span>
-              </Button>
-            )}
-
-            {/* Mobile Drawer Menu */}
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='md:hidden'
-                  aria-label='منو'
-                >
-                  <Menu className='size-5' />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent
-                side='right'
-                className='flex w-[290px] flex-col justify-between p-6 sm:w-[320px] overflow-y-auto overscroll-contain max-h-screen touch-pan-y'
-                dir='rtl'
-              >
-                <div>
-                  <SheetHeader className='border-b border-border/50 p-0 pb-4 text-start'>
-                    <div className='flex items-center gap-2.5 select-none'>
-                      <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-                        <Sparkles className='size-4' />
-                      </div>
-                      <div className='flex flex-col text-start'>
-                        <SheetTitle className='text-base font-bold text-foreground leading-tight'>
-                          آریوچت
-                        </SheetTitle>
-                        <SheetDescription className='sr-only'>
-                          منوی دسترسی سریع و ناوبری بخش‌های فروشگاه
-                        </SheetDescription>
-                      </div>
-                    </div>
-                  </SheetHeader>
-
-                  {/* Mobile Links */}
-                  <nav className='mt-6 flex flex-col gap-1'>
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={() => setOpen(false)}
-                        className='rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                    {user && (
-                      <button
-                        onClick={() => {
-                          setOpen(false)
-                          openOrdersModal()
-                        }}
-                        className='rounded-lg px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-accent flex items-center gap-2 w-full text-start cursor-pointer'
-                      >
-                        <Package className='size-4' />
-                        <span>سفارش‌های من</span>
-                      </button>
-                    )}
-                  </nav>
-                </div>
-
-                {/* Mobile CTA */}
-                <div className='flex flex-col gap-2.5 border-t border-border/50 pt-4'>
-                  {/* Telegram Bot Button in Mobile Drawer */}
+              {/* Mobile Drawer Menu */}
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
                   <Button
-                    variant='outline'
-                    onClick={() => {
-                      setOpen(false)
-                      handleTelegramCta()
-                    }}
-                    className='w-full justify-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium py-2.5 rounded-xl'
+                    variant='ghost'
+                    size='icon'
+                    className={cn(
+                      'md:hidden rounded-lg transition-all',
+                      isScrolled ? 'size-8' : 'size-9'
+                    )}
+                    aria-label='منو'
                   >
-                    <TelegramIcon className='size-4.5 text-primary shrink-0' />
-                    <span>🤖 ورود به ربات تلگرام</span>
+                    <Menu className={cn('transition-all', isScrolled ? 'size-4.5' : 'size-5')} />
                   </Button>
+                </SheetTrigger>
 
-                  {user ? (
-                    <>
-                      {user.role === 'ADMIN' && (
-                        <Link href='/dashboard' onClick={() => setOpen(false)}>
-                          <Button
-                            variant='outline'
-                            className='w-full justify-center gap-2 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-semibold'
-                          >
-                            <Shield className='size-4' />
-                            <span>ورود به پنل مدیریت</span>
-                          </Button>
-                        </Link>
-                      )}
-                      <Button
-                        variant='outline'
-                        onClick={() => {
-                          setOpen(false)
-                          openOrdersModal()
-                        }}
-                        className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium cursor-pointer'
-                      >
-                        <Package className='size-4' />
-                        <span>سفارش‌های من</span>
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        onClick={() => {
-                          setOpen(false)
-                          setDashboardModalOpen(true)
-                        }}
-                        className='w-full justify-center gap-2 text-xs text-muted-foreground'
-                      >
-                        <div className='flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold'>
-                          {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-2.5' />}
+                <SheetContent
+                  side='right'
+                  className='flex w-[290px] flex-col justify-between p-6 sm:w-[320px] overflow-y-auto overscroll-contain max-h-screen touch-pan-y'
+                  dir='rtl'
+                >
+                  <div>
+                    <SheetHeader className='border-b border-border/50 p-0 pb-4 text-start'>
+                      <div className='flex items-center gap-2.5 select-none'>
+                        <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
+                          <Sparkles className='size-4' />
                         </div>
-                        <span className='truncate'>{displayName} (تنظیمات حساب)</span>
-                      </Button>
-                    </>
-                  ) : (
+                        <div className='flex flex-col text-start'>
+                          <SheetTitle className='text-base font-bold text-foreground leading-tight'>
+                            آریوچت
+                          </SheetTitle>
+                          <SheetDescription className='sr-only'>
+                            منوی دسترسی سریع و ناوبری بخش‌های فروشگاه
+                          </SheetDescription>
+                        </div>
+                      </div>
+                    </SheetHeader>
+
+                    {/* Mobile Links */}
+                    <nav className='mt-6 flex flex-col gap-1'>
+                      {navLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setOpen(false)}
+                          className='rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                      {user && (
+                        <button
+                          onClick={() => {
+                            setOpen(false)
+                            openOrdersModal()
+                          }}
+                          className='rounded-lg px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-accent flex items-center gap-2 w-full text-start cursor-pointer'
+                        >
+                          <Package className='size-4' />
+                          <span>سفارش‌های من</span>
+                        </button>
+                      )}
+                    </nav>
+                  </div>
+
+                  {/* Mobile CTA */}
+                  <div className='flex flex-col gap-2.5 border-t border-border/50 pt-4'>
+                    {/* Telegram Bot Button in Mobile Drawer */}
                     <Button
                       variant='outline'
                       onClick={() => {
                         setOpen(false)
-                        setAuthModalOpen(true)
+                        handleTelegramCta()
                       }}
-                      className='w-full justify-center text-sm'
+                      className='w-full justify-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium py-2.5 rounded-xl'
                     >
-                      ورود به حساب
+                      <TelegramIcon className='size-4.5 text-primary shrink-0' />
+                      <span>🤖 ورود به ربات تلگرام</span>
                     </Button>
-                  )}
-                  <Link href='/#products' onClick={() => setOpen(false)}>
-                    <Button className='w-full justify-center text-sm'>
-                      مشاهده و خرید محصولات
-                    </Button>
-                  </Link>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+
+                    {user ? (
+                      <>
+                        {user.role === 'ADMIN' && (
+                          <Link href='/dashboard' onClick={() => setOpen(false)}>
+                            <Button
+                              variant='outline'
+                              className='w-full justify-center gap-2 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-semibold'
+                            >
+                              <Shield className='size-4' />
+                              <span>ورود به پنل مدیریت</span>
+                            </Button>
+                          </Link>
+                        )}
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            setOpen(false)
+                            openOrdersModal()
+                          }}
+                          className='w-full justify-center gap-2 border-primary/25 bg-primary/5 text-sm font-medium cursor-pointer'
+                        >
+                          <Package className='size-4' />
+                          <span>سفارش‌های من</span>
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          onClick={() => {
+                            setOpen(false)
+                            setDashboardModalOpen(true)
+                          }}
+                          className='w-full justify-center gap-2 text-xs text-muted-foreground'
+                        >
+                          <div className='flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold'>
+                            {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-2.5' />}
+                          </div>
+                          <span className='truncate'>{displayName} (تنظیمات حساب)</span>
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant='outline'
+                        onClick={() => {
+                          setOpen(false)
+                          setAuthModalOpen(true)
+                        }}
+                        className='w-full justify-center text-sm'
+                      >
+                        ورود به حساب
+                      </Button>
+                    )}
+                    <Link href='/#products' onClick={() => setOpen(false)}>
+                      <Button className='w-full justify-center text-sm'>
+                        مشاهده و خرید محصولات
+                      </Button>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Scroll Progress Bar at bottom of the floating capsule */}
+            <motion.div
+              className='absolute inset-x-4 -bottom-[1px] h-[2px] overflow-hidden rounded-full pointer-events-none'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isScrolled ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                className='h-full w-full bg-gradient-to-r from-primary/30 via-primary to-primary/30 origin-right'
+                style={{ scaleX }}
+              />
+            </motion.div>
+          </motion.div>
         </div>
       </header>
 
