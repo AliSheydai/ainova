@@ -81,8 +81,19 @@ export function ProductTable({
             <div className='p-3.5 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border/40'>
               {/* Product Header Info */}
               <div className='flex items-start gap-3 min-w-0 w-full md:flex-1'>
-                <div className='size-11 sm:size-12 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 font-bold mt-0.5'>
-                  <Package className='size-5 sm:size-6' />
+                <div className='size-11 sm:size-12 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 font-bold mt-0.5 overflow-hidden shadow-xs'>
+                  {prod.image ? (
+                    <img
+                      src={prod.image}
+                      alt={prod.title}
+                      className='size-full object-cover'
+                      onError={(e) => {
+                        ;(e.target as HTMLElement).style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <Package className='size-5 sm:size-6' />
+                  )}
                 </div>
                 <div className='min-w-0 flex-1 space-y-1.5'>
                   {/* Product Title - Multi-line word-wrap for mobile */}

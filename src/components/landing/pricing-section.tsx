@@ -26,6 +26,7 @@ export interface PricingProduct {
   price: number
   minPrice?: number
   hasMultiplePlans?: boolean
+  image?: string | null
   features?: string[] | null
   plans?: {
     id: string
@@ -113,7 +114,20 @@ export function PricingSection({
                     />
 
                     <CardHeader className='pb-4 pt-7 text-center'>
-                      <div className='mb-2 flex justify-center'>
+                      <div className='mb-2.5 flex items-center justify-center gap-2'>
+                        {prod.image && (
+                          <div className='size-8 rounded-lg overflow-hidden border border-border/80 bg-muted/30 shrink-0 shadow-xs'>
+                            <img
+                              src={prod.image}
+                              alt={prod.title}
+                              className='size-full object-cover'
+                              loading='lazy'
+                              onError={(e) => {
+                                ;(e.target as HTMLElement).style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        )}
                         {isPopular ? (
                           <Badge className='rounded-full px-3 py-0.5 text-xs bg-primary text-primary-foreground font-semibold'>
                             <Sparkles className='me-1 size-3' />

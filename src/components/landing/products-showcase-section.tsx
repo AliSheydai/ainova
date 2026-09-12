@@ -64,16 +64,19 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                   <CardHeader className='pb-3'>
                     <div className='flex items-start justify-between gap-2 mb-2'>
                       {prod.image ? (
-                        <div className='size-11 rounded-xl overflow-hidden border border-border/60 bg-muted shrink-0 shadow-xs'>
+                        <div className='size-12 rounded-xl overflow-hidden border border-border/70 bg-muted/30 shrink-0 shadow-xs transition-transform duration-200'>
                           <img
                             src={prod.image}
                             alt={prod.title}
                             className='size-full object-cover'
                             loading='lazy'
+                            onError={(e) => {
+                              ;(e.target as HTMLElement).style.display = 'none'
+                            }}
                           />
                         </div>
                       ) : (
-                        <div className='size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0'>
+                        <div className='size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0 border border-primary/15 shadow-xs'>
                           <Package className='size-5' />
                         </div>
                       )}

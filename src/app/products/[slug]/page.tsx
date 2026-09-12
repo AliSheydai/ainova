@@ -7,6 +7,7 @@ import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { LandingHeader } from '@/components/landing/landing-header'
 import { LandingFooter } from '@/components/landing/landing-footer'
 import { ProductBuyCard } from '@/components/product/product-buy-card'
+import { ProductDetailVisual } from '@/components/product/product-detail-visual'
 import { MarkdownView } from '@/components/ui/markdown-view'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -15,7 +16,6 @@ import {
   Check,
   Zap,
   ArrowRight,
-  Package,
   Clock,
   HelpCircle,
 } from 'lucide-react'
@@ -26,9 +26,13 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>
 }
 
-const getProductBySlug = cache(async (slug: string) => {
-  return await prisma.product.findUnique({
-    where: { slug },
+const getProductBySlug = cache(async (rawSlug: string) => {
+  if (!rawSlug) return null
+  const decodedSlug = decodeURIComponent(rawSlug)
+  return await prisma.product.findFirst({
+    where: {
+      OR: [{ slug: rawSlug }, { slug: decodedSlug }],
+    },
     include: {
       plans: {
         where: { active: true },
@@ -157,27 +161,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
               </div>
 
               {/* Product Visual / Image */}
-              <div className='relative rounded-2xl overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-muted/30 to-background p-4 sm:p-6 flex items-center justify-center shadow-inner'>
-                {product.image ? (
-                  <div className='relative w-full aspect-16/9 max-w-lg rounded-xl overflow-hidden shadow-md border border-border/50 bg-card'>
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className='w-full h-full object-cover transition-transform duration-300 hover:scale-102'
-                      loading='lazy'
-                    />
-                  </div>
-                ) : (
-                  <div className='text-center space-y-3 py-6'>
-                    <div className='size-20 sm:size-24 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto shadow-md border border-primary/20'>
-                      <Package className='size-10 sm:size-12' />
-                    </div>
-                    <div className='text-xs font-semibold text-muted-foreground'>
-                      {product.title}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ProductDetailVisual image={product.image} title={product.title} />
 
               {/* Full Description */}
               {product.description && (

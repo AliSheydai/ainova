@@ -222,7 +222,7 @@ function LoginForm() {
                 <span className="text-2xl font-black tracking-tight text-foreground">
                   آریوچت
                 </span>
-                <span className="text-xs font-semibold text-primary">ArioChat</span>
+                {/* <span className="text-xs font-semibold text-primary">ArioChat</span> */}
               </div>
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
