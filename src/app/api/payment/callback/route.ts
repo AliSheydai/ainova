@@ -158,18 +158,69 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Success with activation link assigned!
-    const assignedLinkUrl = fulfillment.activationLink?.url
+    // If manual fulfillment awaiting admin:
+    if (fulfillment.status === 'AWAITING_MANUAL_DELIVERY') {
+      if (targetChatId) {
+        const manualMsg =
+          `🎉 **پرداخت سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت انجام شد!**\n\n` +
+          `📦 **محصول:** ${productTitle}\n\n` +
+          `⏳ این محصول نیازمند تحویل دستی توسط پشتیبانی است. به زودی اطلاعات دسترسی برای شما ارسال و در پنل کاربری درج خواهد شد.`
 
-    if (targetChatId && assignedLinkUrl) {
-      await sendTelegramNotification(
-        targetChatId,
-        MESSAGES.paymentSuccess(payment.orderId, productTitle, assignedLinkUrl),
-        new InlineKeyboard()
-          .url('🔗 فعال‌سازی اشتراک در گوگل', assignedLinkUrl)
-          .row()
-          .text('📖 راهنمای فعال‌سازی', 'guide')
-      ).catch((err) => console.error('Telegram notification error:', err))
+        await sendTelegramNotification(targetChatId, manualMsg).catch((err) =>
+          console.error('Telegram notification error:', err)
+        )
+      }
+
+      if (isTelegram) {
+        return NextResponse.redirect(
+          `${appUrl}/telegram-return?status=awaiting_manual&orderId=${payment.orderId}`
+        )
+      }
+
+      return NextResponse.redirect(
+        `${appUrl}/checkout/success?orderId=${payment.orderId}&status=awaiting_manual`
+      )
+    }
+
+    // Success with generic delivery!
+    const delivery = fulfillment.delivery
+    const deliveryType = delivery?.type || 'ACTIVATION_LINK'
+    const deliveryData = (delivery?.data as Record<string, any>) || {}
+
+    if (targetChatId) {
+      if (deliveryType === 'ACTIVATION_LINK') {
+        const assignedLinkUrl = deliveryData.url || fulfillment.activationLink?.url
+        if (assignedLinkUrl) {
+          await sendTelegramNotification(
+            targetChatId,
+            MESSAGES.paymentSuccess(payment.orderId, productTitle, assignedLinkUrl),
+            new InlineKeyboard()
+              .url('🔗 فعال‌سازی اشتراک در گوگل', assignedLinkUrl)
+              .row()
+              .text('📖 راهنمای فعال‌سازی', 'guide')
+          ).catch((err) => console.error('Telegram notification error:', err))
+        }
+      } else if (deliveryType === 'PRE_CREATED_ACCOUNT') {
+        const accountMsg =
+          `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
+          `📦 **محصول:** ${productTitle}\n` +
+          `👤 **نام کاربری / ایمیل:** \`${deliveryData.email || deliveryData.username}\`\n` +
+          `🔑 **رمز عبور:** \`${deliveryData.password || '••••••'}\`\n\n` +
+          `⚠️ ${deliveryData.note || 'لطفاً بلافاصله پس از ورود، کلمه عبور را تغییر دهید.'}`
+
+        await sendTelegramNotification(targetChatId, accountMsg).catch((err) =>
+          console.error('Telegram notification error:', err)
+        )
+      } else {
+        const successMsg =
+          `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
+          `📦 **محصول:** ${productTitle}\n` +
+          `✅ اشتراک شما آماده است و جزئیات آن در پنل کاربری در دسترس می‌باشد.`
+
+        await sendTelegramNotification(targetChatId, successMsg).catch((err) =>
+          console.error('Telegram notification error:', err)
+        )
+      }
     }
 
     if (isTelegram) {

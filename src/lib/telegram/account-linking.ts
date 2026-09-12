@@ -7,9 +7,13 @@ const PHONE_HASH_PREFIX = 'tg_hash_'
 const LINK_TOKEN_EXPIRY_MINUTES = 15
 
 export interface BotLoginSession {
-  step: 'AWAITING_PHONE' | 'AWAITING_OTP'
+  step: 'AWAITING_PHONE' | 'AWAITING_OTP' | 'AWAITING_CHECKOUT_FIELD'
   phone?: string
   lastSentAt?: number
+  planId?: string
+  currentFieldKey?: string
+  currentFieldLabel?: string
+  checkoutData?: Record<string, any>
 }
 
 // In-memory cache for quick response in long-running processes

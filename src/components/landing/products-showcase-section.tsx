@@ -39,13 +39,13 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
         >
           <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold mb-3'>
             <Sparkles className='size-3.5' />
-            <span>فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی</span>
+            <span>محصولات و اشتراک‌های برگزیده</span>
           </div>
           <h2 className='text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight'>
-            محصولات و اشتراک‌های فعال
+            ویترین اشتراک‌های هوش مصنوعی و دیجیتال
           </h2>
-          <p className='text-xs sm:text-sm text-muted-foreground mt-2'>
-            تمامی محصولات با فعال‌سازی رسمی، تحویل فوری پس از پرداخت و ضمانت کامل پشتیبانی ارائه می‌شوند.
+          <p className='text-xs sm:text-sm text-muted-foreground mt-2 max-w-xl mx-auto leading-relaxed'>
+            تمامی اشتراک‌ها با فعال‌سازی قانونی روی حساب کاربری شما، تحویل ۱۰۰٪ خودکار بلافاصله پس از پرداخت و گارانتی کامل پشتیبانی ارائه می‌شوند.
           </p>
         </motion.div>
 

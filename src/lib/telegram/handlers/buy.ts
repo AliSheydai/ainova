@@ -1,58 +1,54 @@
-import { Context } from 'grammy'
+import { Context, InlineKeyboard } from 'grammy'
 import { prisma } from '@/lib/prisma'
-import { PaymentService } from '@/lib/payment'
-import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
+import { BotStoreService } from '@/lib/bot/bot-store-service'
 import { MESSAGES } from '../messages'
 import {
-  productsListInlineKeyboard,
-  productDetailsKeyboard,
-  orderPaymentKeyboard,
-} from '../keyboards'
+  setBotLoginSession,
+  getBotLoginSession,
+  clearBotLoginSession,
+} from '../account-linking'
+
+function getFulfillmentLabel(type?: string) {
+  switch (type) {
+    case 'ACTIVATION_LINK':
+      return 'لینک فعال‌سازی آنی'
+    case 'PRE_CREATED_ACCOUNT':
+      return 'اکانت از پیش آماده'
+    case 'CUSTOMER_PROVISIONING':
+      return 'ساخت روی ایمیل شخصی'
+    case 'MANUAL':
+      return 'تحویل دستی پشتیبانی'
+    default:
+      return 'تحویل دیجیتال'
+  }
+}
 
 export async function handleShowProducts(ctx: Context) {
   try {
-    const products = await prisma.product.findMany({
-      where: { status: 'ACTIVE', active: true },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    })
+    const products = await BotStoreService.getActiveProducts()
 
     if (!products || products.length === 0) {
       await ctx.reply('در حال حاضر محصول فعالی در فروشگاه موجود نیست. لطفاً بعداً مراجعه فرمایید.')
       return
     }
 
-    const enriched = await Promise.all(
-      products.map(async (p) => {
-        const stock = await FulfillmentService.getProductStock(p.id)
-        return {
-          id: p.id,
-          title: p.title || p.name,
-          price: p.price,
-          stock,
-        }
-      })
-    )
+    let text = `🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\nلطفاً محصول مورد نظر خود را جهت مشاهده پلن‌ها و خرید انتخاب فرمایید:`
 
-    const text =
-      `🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\n` +
-      `لطفاً محصول مورد نظر خود را جهت مشاهده جزئیات و خرید انتخاب فرمایید:`
+    const keyboard = new InlineKeyboard()
+    for (const p of products) {
+      const stockBadge = p.stock > 0 ? `✅ موجود (${p.stock.toLocaleString('fa-IR')})` : '❌ ناموجود'
+      keyboard
+        .text(`📦 ${p.title} — ${p.price.toLocaleString('fa-IR')} ت (${stockBadge})`, `product:select:${p.id}`)
+        .row()
+    }
 
     if (ctx.callbackQuery) {
-      await ctx.editMessageText(text, {
-        parse_mode: 'Markdown',
-        reply_markup: productsListInlineKeyboard(enriched),
-      }).catch(async () => {
-        await ctx.reply(text, {
-          parse_mode: 'Markdown',
-          reply_markup: productsListInlineKeyboard(enriched),
-        })
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard }).catch(async () => {
+        await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard })
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
-      await ctx.reply(text, {
-        parse_mode: 'Markdown',
-        reply_markup: productsListInlineKeyboard(enriched),
-      })
+      await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard })
     }
   } catch (error) {
     console.error('Error in handleShowProducts:', error)
@@ -62,49 +58,54 @@ export async function handleShowProducts(ctx: Context) {
 
 export async function handleSelectProduct(ctx: Context, productId: string) {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    })
+    const data = await BotStoreService.getProductPlans(productId)
 
-    if (!product || product.status !== 'ACTIVE') {
+    if (!data) {
       await ctx.answerCallbackQuery({ text: 'محصول یافت نشد یا غیرفعال است.', show_alert: true }).catch(() => {})
       return
     }
 
-    const [stock, purchaseCount] = await Promise.all([
-      FulfillmentService.getProductStock(product.id),
-      FulfillmentService.getProductPurchaseCount(product.id),
-    ])
-
-    const isAvailable = stock > 0
+    const { product, plans } = data
     const title = product.title || product.name
 
     let detailsText = `✨ **${title}** ✨\n\n`
-
     if (product.shortDescription) {
       detailsText += `📝 ${product.shortDescription}\n\n`
     }
-
     if (product.description) {
-      detailsText += `📋 **توضیحات کامل:**\n${product.description}\n\n`
+      detailsText += `📋 **توضیحات:**\n${product.description.slice(0, 300)}...\n\n`
     }
 
     detailsText += `━━━━━━━━━━━━━━━━━━━━\n`
-    detailsText += `💵 **قیمت:** ${product.price.toLocaleString('fa-IR')} تومان\n`
-    detailsText += `📦 **وضعیت موجودی:** ${isAvailable ? `✅ موجود (${stock.toLocaleString('fa-IR')} عدد)` : '❌ اتمام موجودی موقت'}\n`
-    if (purchaseCount > 0) {
-      detailsText += `👥 **خریداران راضی:** ${purchaseCount.toLocaleString('fa-IR')} خریدار\n`
+    detailsText += `📦 **پلن‌های قابل سفارش این محصول:**\n\n`
+
+    const keyboard = new InlineKeyboard()
+
+    for (const plan of plans) {
+      const isAvailable = plan.stock > 0
+      const fulfillmentBadge = getFulfillmentLabel(plan.fulfillmentType)
+
+      detailsText += `🔹 **پلن ${plan.name}**\n`
+      detailsText += `   💵 قیمت: **${plan.price.toLocaleString('fa-IR')} تومان**\n`
+      detailsText += `   🚀 روش تحویل: ${fulfillmentBadge}\n`
+      detailsText += `   📦 وضعیت: ${isAvailable ? `موجود (${plan.stock.toLocaleString('fa-IR')} عدد)` : '❌ موقتاً ناموجود'}\n\n`
+
+      if (isAvailable) {
+        keyboard
+          .text(`🛒 خرید ${plan.name} (${plan.price.toLocaleString('fa-IR')} ت)`, `plan:buy:${plan.id}`)
+          .row()
+      }
     }
-    detailsText += `🚀 **نوع تحویل:** آنی و خودکار پس از پرداخت آنلاین\n`
-    detailsText += `🔐 **امنیت:** بدون نیاز به پسورد یا اطلاعات حساس`
+
+    keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products')
 
     await ctx.editMessageText(detailsText, {
       parse_mode: 'Markdown',
-      reply_markup: productDetailsKeyboard(product.id, product.price, isAvailable),
+      reply_markup: keyboard,
     }).catch(async () => {
       await ctx.reply(detailsText, {
         parse_mode: 'Markdown',
-        reply_markup: productDetailsKeyboard(product.id, product.price, isAvailable),
+        reply_markup: keyboard,
       })
     })
 
@@ -115,110 +116,121 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
   }
 }
 
-export async function handleBuyProduct(ctx: Context, productId: string) {
+export async function handleBuyPlan(ctx: Context, planId: string) {
   const from = ctx.from
   if (!from || !ctx.chat) return
 
   const telegramId = String(from.id)
   const chatId = String(ctx.chat.id)
 
-  await ctx.answerCallbackQuery({ text: 'در حال صدور فاکتور خرید...' }).catch(() => {})
+  await ctx.answerCallbackQuery({ text: 'در حال بررسی سفارش...' }).catch(() => {})
 
   try {
+    // 1. User Auth check
     const user = await prisma.user.findUnique({
       where: { telegramId },
     })
 
     if (!user || !user.phone) {
       const { startLoginFlow } = await import('./auth')
-      await startLoginFlow(ctx, '⚠️ برای خرید اشتراک و دریافت لینک فعال‌سازی، ابتدا باید با شماره موبایل خود وارد شوید:')
+      await startLoginFlow(ctx, '⚠️ برای خرید اشتراک و دریافت آنی، ابتدا باید با شماره موبایل خود وارد شوید:')
       return
     }
 
-    const product = await prisma.product.findUnique({
-      where: { id: productId, status: 'ACTIVE', active: true },
-      include: { plans: true },
+    // 2. Fetch plan details
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+      include: { product: true },
     })
 
-    if (!product) {
-      await ctx.reply('محصول انتخاب‌شده یافت نشد یا غیرفعال شده است.')
+    if (!plan || !plan.active) {
+      await ctx.reply('پلن انتخاب‌شده یافت نشد یا غیرفعال است.')
       return
     }
 
-    const stock = await FulfillmentService.getProductStock(product.id)
-    if (stock <= 0) {
-      await ctx.reply(MESSAGES.stockExhausted, { parse_mode: 'Markdown' })
-      return
-    }
+    // 3. Check if plan requires checkout fields from user
+    const fields = (Array.isArray(plan.checkoutFields)
+      ? plan.checkoutFields
+      : []) as any[]
 
-    // Create Order referencing productId and snapshot amount
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        productId: product.id,
-        planId: product.plans?.[0]?.id || null,
-        amount: product.price, // SNAPSHOT: will not change if product price is changed later
-        status: 'PENDING_PAYMENT',
-        source: 'telegram',
-        telegramChatId: chatId,
-      },
-    })
+    const requiredFields = fields.filter((f) => f.required)
 
-    // Request Payment via PaymentService
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const callbackUrl = `${appUrl}/api/payment/callback?source=telegram&orderId=${order.id}`
-    const productTitle = product.title || product.name
+    if (requiredFields.length > 0) {
+      // Prompt user for the first field
+      const firstField = requiredFields[0]
+      await setBotLoginSession(telegramId, {
+        step: 'AWAITING_CHECKOUT_FIELD',
+        planId: plan.id,
+        currentFieldKey: firstField.key,
+        currentFieldLabel: firstField.label,
+        checkoutData: {},
+      })
 
-    const paymentResult = await PaymentService.createPayment({
-      orderId: order.id,
-      amount: product.price,
-      description: `خرید تلگرام: ${productTitle}`,
-      callbackUrl,
-      mobile: user.phone,
-    })
-
-    if (!paymentResult.success || !paymentResult.paymentUrl) {
       await ctx.reply(
-        `خطا در اتصال به درگاه پرداخت: ${paymentResult.error || 'لطفاً دقایقی دیگر مجدداً تلاش نمایید.'}`
+        `📝 **تکمیل اطلاعات سفارش برای پلن «${plan.name}»:**\n\n` +
+        `لطفاً **${firstField.label}** خود را در چت ارسال فرمایید:`
       )
       return
     }
 
-    let messageText = MESSAGES.orderCreated(order.id, productTitle, product.price)
-
-    const fullPaymentUrl = paymentResult.paymentUrl.startsWith('http')
-      ? paymentResult.paymentUrl
-      : `${appUrl}${paymentResult.paymentUrl}`
-
-    const isLocalhost =
-      fullPaymentUrl.includes('localhost') || fullPaymentUrl.includes('127.0.0.1')
-
-    if (isLocalhost) {
-      messageText += `\n\n💳 **لینک مستقیم درگاه پرداخت (توسعه):**\n\`${fullPaymentUrl}\``
-    }
-
-    await ctx.reply(messageText, {
-      parse_mode: 'Markdown',
-      reply_markup: orderPaymentKeyboard(fullPaymentUrl),
-    })
-  } catch (error) {
-    console.error('Error in handleBuyProduct:', error)
-    await ctx.reply('متأسفانه در پردازش سفارش خطایی رخ داد. لطفاً دوباره تلاش کنید.')
+    // 4. No extra fields required; proceed directly to order creation
+    await executeBotOrderCreation(ctx, user, plan.id, {}, chatId)
+  } catch (error: any) {
+    console.error('Error in handleBuyPlan:', error)
+    await ctx.reply(`متأسفانه در پردازش سفارش خطایی رخ داد: ${error.message || 'لطفاً دوباره تلاش کنید.'}`)
   }
 }
 
+export async function executeBotOrderCreation(
+  ctx: Context,
+  user: any,
+  planId: string,
+  checkoutData: Record<string, any>,
+  chatId: string
+) {
+  const result = await BotStoreService.createBotOrder({
+    userId: user.id,
+    planId,
+    checkoutData,
+    source: 'telegram',
+    chatId,
+    mobile: user.phone,
+  })
+
+  let messageText = MESSAGES.orderCreated(
+    result.order.id,
+    `${result.productTitle} (${result.planName})`,
+    result.amount
+  )
+
+  const isLocalhost =
+    result.paymentUrl.includes('localhost') || result.paymentUrl.includes('127.0.0.1')
+
+  if (isLocalhost) {
+    messageText += `\n\n💳 **لینک مستقیم درگاه پرداخت (توسعه):**\n\`${result.paymentUrl}\``
+  }
+
+  const keyboard = new InlineKeyboard()
+    .url('💳 پرداخت آنلاین شاپرک', result.paymentUrl)
+    .row()
+    .text('🔙 بازگشت به لیست محصولات', 'nav:products')
+
+  await ctx.reply(messageText, {
+    parse_mode: 'Markdown',
+    reply_markup: keyboard,
+  })
+}
+
+export async function handleBuyProduct(ctx: Context, productId: string) {
+  return handleSelectProduct(ctx, productId)
+}
+
 export async function handleBuyCallback(ctx: Context, planOrProductId: string) {
-  // Check if it's a product
-  const product = await prisma.product.findUnique({ where: { id: planOrProductId } })
-  if (product) {
-    return handleBuyProduct(ctx, product.id)
-  }
-
-  // Fallback to plan
-  const plan = await prisma.plan.findUnique({ where: { id: planOrProductId }, include: { product: true } })
+  const plan = await prisma.plan.findUnique({
+    where: { id: planOrProductId },
+  })
   if (plan) {
-    return handleBuyProduct(ctx, plan.productId)
+    return handleBuyPlan(ctx, planOrProductId)
   }
-
-  await ctx.reply('محصول یا پلن انتخاب‌شده یافت نشد.')
+  return handleSelectProduct(ctx, planOrProductId)
 }

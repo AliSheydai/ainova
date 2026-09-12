@@ -111,10 +111,17 @@ export function registerHandlers(bot: Bot) {
     await handleSelectProduct(ctx, productId)
   })
 
-  // Callback Queries: Buy specific product
+  // Callback Queries: Buy specific plan
+  bot.callbackQuery(/^plan:buy:(.+)$/, async (ctx) => {
+    const { handleBuyPlan } = await import('./buy')
+    const planId = ctx.match[1]
+    await handleBuyPlan(ctx, planId)
+  })
+
+  // Callback Queries: Buy specific product (legacy fallback)
   bot.callbackQuery(/^buy:product:(.+)$/, async (ctx) => {
     const productId = ctx.match[1]
-    await handleBuyProduct(ctx, productId)
+    await handleSelectProduct(ctx, productId)
   })
 
   // Callback Queries: Navigation - Back to products list
@@ -162,7 +169,7 @@ export function registerHandlers(bot: Bot) {
     await ctx.answerCallbackQuery().catch(() => {})
   })
 
-  // Text message handler for Auth and Fallback
+  // Text message handler for Auth, Checkout fields, and Fallback
   bot.on('message:text', async (ctx) => {
     const telegramId = ctx.from?.id ? String(ctx.from.id) : null
     const text = ctx.msg?.text?.trim() || ''
@@ -170,13 +177,46 @@ export function registerHandlers(bot: Bot) {
     if (telegramId) {
       const session = await getBotLoginSession(telegramId)
 
-      // 1. If currently waiting for OTP code
+      // 1. If currently waiting for dynamic checkout field
+      if (session?.step === 'AWAITING_CHECKOUT_FIELD' && session.planId && session.currentFieldKey) {
+        const checkoutData = session.checkoutData || {}
+        checkoutData[session.currentFieldKey] = text
+
+        // Check if there are other required fields for this plan
+        const plan = await prisma.plan.findUnique({ where: { id: session.planId } })
+        const fields = (Array.isArray(plan?.checkoutFields) ? plan.checkoutFields : []) as any[]
+        const remaining = fields.filter((f) => f.required && !checkoutData[f.key])
+
+        if (remaining.length > 0) {
+          const nextField = remaining[0]
+          const { setBotLoginSession } = await import('../account-linking')
+          await setBotLoginSession(telegramId, {
+            ...session,
+            currentFieldKey: nextField.key,
+            currentFieldLabel: nextField.label,
+            checkoutData,
+          })
+          await ctx.reply(`لطفاً **${nextField.label}** خود را وارد فرمایید:`)
+          return
+        }
+
+        // All fields collected!
+        await clearBotLoginSession(telegramId)
+        const u = await prisma.user.findUnique({ where: { telegramId } })
+        if (u && ctx.chat) {
+          const { executeBotOrderCreation } = await import('./buy')
+          await executeBotOrderCreation(ctx, u, session.planId, checkoutData, String(ctx.chat.id))
+          return
+        }
+      }
+
+      // 2. If currently waiting for OTP code
       if (session?.step === 'AWAITING_OTP') {
         const handled = await processOtpInput(ctx, text)
         if (handled) return
       }
 
-      // 2. If waiting for phone OR message looks like an Iranian phone number
+      // 3. If waiting for phone OR message looks like an Iranian phone number
       const normalized = normalizePhone(text)
       if (session?.step === 'AWAITING_PHONE' || isValidIranianPhone(normalized)) {
         await processPhoneInput(ctx, text)

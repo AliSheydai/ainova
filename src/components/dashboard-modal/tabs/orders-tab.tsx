@@ -13,6 +13,11 @@ import {
   Loader2,
   RefreshCw,
   Sparkles,
+  User,
+  Key,
+  Eye,
+  EyeOff,
+  Clock,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,6 +30,7 @@ interface OrderItem {
   id: string
   amount: number
   status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  fulfillmentStatus?: string
   source?: string | null
   createdAt: string
   product?: {
@@ -48,6 +54,12 @@ interface OrderItem {
     url: string
     status: string
   } | null
+  delivery?: {
+    type: string
+    status: string
+    data: any
+    deliveredAt: string | null
+  } | null
 }
 
 interface OrdersTabProps {
@@ -58,6 +70,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({})
 
   const fetchOrders = async () => {
     setLoading(true)
@@ -83,24 +96,31 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
     setCopiedId(id)
-    toast.success('لینک اختصاصی فعال‌سازی با موفقیت کپی شد.')
+    toast.success('کپی شد.')
     setTimeout(() => setCopiedId(null), 2500)
   }
 
-  const renderStatusBadge = (status: OrderItem['status']) => {
+  const toggleShowPassword = (orderId: string) => {
+    setShowPasswordIds((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }))
+  }
+
+  const renderStatusBadge = (status: OrderItem['status'], fulfillmentStatus?: string) => {
     switch (status) {
       case 'COMPLETED':
         return (
           <Badge className="bg-primary/10 text-primary border border-primary/20 font-medium gap-1 text-[11px]">
             <CheckCircle2 className="size-3" />
-            تحویل‌شده و فعال
+            تکمیل و تحویل شده
           </Badge>
         )
       case 'PAID':
         return (
-          <Badge className="bg-primary/15 text-primary border border-primary/25 font-medium gap-1 text-[11px]">
-            <AlertCircle className="size-3" />
-            پرداخت‌شده (در حال صدور)
+          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 font-medium gap-1 text-[11px]">
+            <Clock className="size-3" />
+            پرداخت‌شده (در حال آماده‌سازی)
           </Badge>
         )
       case 'PENDING_PAYMENT':
@@ -128,9 +148,9 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
       {/* Header bar */}
       <div className="flex items-center justify-between pb-2">
         <div>
-          <h3 className="text-base font-bold text-foreground">تاریخچه سفارش‌ها</h3>
+          <h3 className="text-base font-bold text-foreground">تاریخچه سفارش‌های من</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            مشاهده وضعیت، فاکتور و لینک‌های اختصاصی فعال‌سازی
+            مشاهده وضعیت، فاکتورها و اطلاعات تحویل اشتراک
           </p>
         </div>
         <Button
@@ -183,9 +203,10 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           animate="visible"
         >
           {orders.map((order) => {
-            const hasActivationLink = Boolean(
-              order.status === 'COMPLETED' && order.activationLink?.url
-            )
+            const delivery = order.delivery
+            const deliveryType = delivery?.type || (order.activationLink ? 'ACTIVATION_LINK' : 'MANUAL')
+            const deliveryData = (delivery?.data as Record<string, any>) || {}
+            const linkUrl = deliveryData.url || order.activationLink?.url
 
             return (
               <motion.div
@@ -194,9 +215,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card
-                  className="overflow-hidden border border-border/70 shadow-xs transition-colors hover:border-primary/30"
-                >
+                <Card className="overflow-hidden border border-border/70 shadow-xs transition-colors hover:border-primary/30">
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex flex-col gap-3">
                       {/* Top Row: Product info + status */}
@@ -231,7 +250,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               🤖 تلگرام
                             </Badge>
                           )}
-                          {renderStatusBadge(order.status)}
+                          {renderStatusBadge(order.status, order.fulfillmentStatus)}
                         </div>
                       </div>
 
@@ -239,7 +258,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
                         <div className="text-muted-foreground">
                           مبلغ پرداختی:{' '}
-                          <span className="font-bold text-foreground tabular-nums">
+                          <span className="font-bold text-foreground tabular-nums font-sans">
                             {new Intl.NumberFormat('fa-IR').format(order.amount)} تومان
                           </span>
                         </div>
@@ -251,65 +270,127 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         )}
                       </div>
 
-                      {/* Activation Link Box if COMPLETED */}
-                      {hasActivationLink && (
+                      {/* DELIVERY RENDERING */}
+
+                      {/* 1. ACTIVATION LINK */}
+                      {order.status === 'COMPLETED' && (deliveryType === 'ACTIVATION_LINK' || linkUrl) && (
                         <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5">
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                               <Sparkles className="size-3.5" />
-                              <span>لینک اختصاصی دعوت و فعال‌سازی اشتراک:</span>
+                              <span>لینک اختصاصی فعال‌سازی:</span>
                             </div>
-                            <span className="text-[10px] text-muted-foreground">
-                              نیازمند VPN با آی‌پی پایدار
-                            </span>
+                            <span className="text-[10px] text-muted-foreground">تحویل آنی</span>
                           </div>
-
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <div
                               dir="ltr"
-                              className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-lg border border-border/80 bg-background/80 px-3 py-2 text-xs font-sans text-foreground select-all"
+                              className="flex-1 overflow-x-auto rounded-lg border border-primary/20 bg-background/80 p-2 text-xs font-mono select-all truncate"
                             >
-                              {order.activationLink!.url}
+                              {linkUrl}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(linkUrl!, order.id)}
+                              className="size-8 shrink-0 rounded-lg"
+                              title="کپی لینک"
+                            >
+                              {copiedId === order.id ? (
+                                <Check className="size-3.5 text-primary" />
+                              ) : (
+                                <Copy className="size-3.5" />
+                              )}
+                            </Button>
+                            <a href={linkUrl} target="_blank" rel="noopener noreferrer">
+                              <Button size="icon" className="size-8 shrink-0 rounded-lg" title="فعال‌سازی در گوگل">
+                                <ExternalLink className="size-3.5" />
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 2. PRE-CREATED ACCOUNT */}
+                      {order.status === 'COMPLETED' && deliveryType === 'PRE_CREATED_ACCOUNT' && (
+                        <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5 space-y-2.5">
+                          <div className="flex items-center justify-between text-xs font-semibold text-primary">
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles className="size-3.5" />
+                              اطلاعات ورود به اکانت:
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">تحویل فوری</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <User className="size-3 text-primary" />
+                                ایمیل:
+                              </span>
+                              <span className="font-mono font-semibold truncate select-all" dir="ltr">
+                                {deliveryData.email || deliveryData.username}
+                              </span>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  copyToClipboard(order.activationLink!.url, order.id)
-                                }
-                                className="h-9 gap-1.5 text-xs flex-1 sm:flex-none border-border/80 hover:bg-primary/10 hover:text-primary"
-                              >
-                                {copiedId === order.id ? (
-                                  <>
-                                    <Check className="size-3.5 text-primary" />
-                                    کپی شد
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="size-3.5" />
-                                    کپی لینک
-                                  </>
-                                )}
-                              </Button>
-
-                              <a
-                                href={order.activationLink!.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 sm:flex-none"
-                              >
-                                <Button
-                                  size="sm"
-                                  className="w-full h-9 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-background/80 border border-border/60">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <Key className="size-3 text-primary" />
+                                رمز عبور:
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono font-semibold select-all" dir="ltr">
+                                  {showPasswordIds[order.id] ? deliveryData.password || '—' : '••••••••'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleShowPassword(order.id)}
+                                  className="text-muted-foreground hover:text-foreground"
                                 >
-                                  <ExternalLink className="size-3.5" />
-                                  فعال‌سازی
-                                </Button>
-                              </a>
+                                  {showPasswordIds[order.id] ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                                </button>
+                              </div>
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* 3. CUSTOMER PROVISIONING */}
+                      {order.status === 'COMPLETED' && deliveryType === 'CUSTOMER_PROVISIONING' && (
+                        <div className="mt-1 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="size-3.5" />
+                            <span>اشتراک روی حساب شما فعال گردید</span>
+                          </div>
+                          <p className="text-muted-foreground">
+                            {deliveryData.provisionDetails || 'فعال‌سازی با موفقیت انجام شد.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 4. MANUAL DELIVERY */}
+                      {order.status === 'COMPLETED' && deliveryType === 'MANUAL' && (
+                        <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-primary">
+                            <CheckCircle2 className="size-3.5" />
+                            <span>تحویل پشتیبانی:</span>
+                          </div>
+                          <p className="text-foreground whitespace-pre-line">
+                            {deliveryData.manualNote || 'سفارش شما با موفقیت انجام و تحویل داده شد.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 5. MANUAL PENDING */}
+                      {order.status === 'PAID' && (
+                        <div className="mt-1 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                            <Clock className="size-3.5" />
+                            <span>در حال آماده‌سازی و تحویل</span>
+                          </div>
+                          <p className="text-muted-foreground">
+                            پرداخت شما تایید شده و سفارش در دست اقدام توسط پشتیبانی یا سیستم تامین است.
+                          </p>
                         </div>
                       )}
                     </div>

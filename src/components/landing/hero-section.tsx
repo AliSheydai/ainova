@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { fadeUp, fadeIn, staggerContainer } from '@/lib/motion'
 
 const trustItems = [
-  { icon: ShieldCheck, text: 'فعال‌سازی روی حساب شخصی گوگل شما' },
-  { icon: ShieldCheck, text: 'کاملاً امن و بدون نیاز به رمز عبور' },
-  { icon: Zap, text: 'تحویل فوری بلافاصله پس از پرداخت' },
+  { icon: Zap, text: 'تحویل ۱۰۰٪ آنی و خودکار پس از پرداخت' },
+  { icon: ShieldCheck, text: 'فعال‌سازی قانونی روی اکانت شخصی شما' },
+  { icon: ShieldCheck, text: 'امنیت کامل بدون نیاز به رمز عبور' },
 ]
 
 interface HeroSectionProps {
@@ -45,7 +45,7 @@ export function HeroSection({ price }: HeroSectionProps) {
               className='rounded-full px-4 py-1.5 text-sm font-medium'
             >
               <Sparkles className='me-1.5 size-3.5 text-primary' />
-              پیشنهاد ویژه — اشتراک ۱۸ ماهه جمینای
+              مرجع تخصصی اشتراک‌های هوش مصنوعی و دیجیتال
             </Badge>
           </motion.div>
 
@@ -55,7 +55,7 @@ export function HeroSection({ price }: HeroSectionProps) {
             className='mb-5 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl'
           >
             کارهایتان را با قدرت{' '}
-            <span className='text-primary'>جمینای</span> متحول کنید
+            <span className='text-primary'>هوش مصنوعی</span> متحول کنید
           </motion.h1>
 
           {/* Subtitle */}
@@ -63,8 +63,8 @@ export function HeroSection({ price }: HeroSectionProps) {
             variants={fadeUp}
             className='mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg'
           >
-            دسترسی ۱۸ ماهه به قوی‌ترین هوش مصنوعی گوگل، مستقیم روی حساب شخصی
-            خودتان؛ بدون نیاز به رمز عبور، با بیشترین سرعت و تحویل آنی.
+            دسترسی قانونی و بی‌واسطه به برترین سرویس‌های هوش مصنوعی جهان؛ فعال‌سازی سریع روی
+            حساب شخصی شما، کاملاً امن، بدون نیاز به پسورد و با ضمانت اصالت.
           </motion.p>
 
           {/* CTAs */}
@@ -72,14 +72,10 @@ export function HeroSection({ price }: HeroSectionProps) {
             variants={fadeUp}
             className='mb-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'
           >
-            <Link href='/checkout'>
+            <Link href='#products'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
-                خرید و فعال‌سازی جمینای
-                {price && (
-                  <span className='opacity-80 text-sm font-normal'>
-                    — {price}
-                  </span>
-                )}
+                <Sparkles className='size-4' />
+                مشاهده و خرید محصولات
               </Button>
             </Link>
             <Link href='#how-it-works'>
@@ -89,7 +85,7 @@ export function HeroSection({ price }: HeroSectionProps) {
                 className='h-12 gap-2 px-6 text-base transition-transform active:scale-[0.98]'
               >
                 <BookOpen className='size-4' />
-                مراحل فعال‌سازی
+                نحوه تحویل و فعال‌سازی
                 <ArrowLeft className='size-4 rtl:rotate-180' />
               </Button>
             </Link>

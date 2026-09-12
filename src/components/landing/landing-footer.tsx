@@ -6,6 +6,8 @@ import { Separator } from '@/components/ui/separator'
 
 const footerLinks = [
   { label: 'صفحه اصلی', href: '/' },
+  { label: 'محصولات و اشتراک‌ها', href: '#products' },
+  { label: 'امکانات و مزایا', href: '#features' },
   { label: 'نحوه فعال‌سازی', href: '#how-it-works' },
   { label: 'سوالات متداول', href: '#faq' },
 ]
@@ -22,11 +24,14 @@ export function LandingFooter() {
               <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
                 <Sparkles className='size-4' />
               </div>
-              <span className='text-sm font-bold text-foreground'>جمینای</span>
+              <div className='flex flex-col text-start'>
+                <span className='text-sm font-bold text-foreground leading-tight'>آینوا</span>
+                <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
+              </div>
             </Link>
             <p className='max-w-xs text-xs leading-relaxed text-muted-foreground'>
-              فعال‌سازی سریع و امن اشتراک ۱۸ ماهه هوش مصنوعی جمینای روی حساب شخصی گوگل شما،
-              کاملاً مطمئن و بدون نیاز به ارسال رمز عبور.
+              مرجع تخصصی خرید و فعال‌سازی قانونی انواع اشتراک‌های هوش مصنوعی و سرویس‌های دیجیتال.
+              تحویل ۱۰۰٪ خودکار، کاملاً مطمئن و بدون نیاز به ارسال رمز عبور.
             </p>
           </div>
 
@@ -62,10 +67,10 @@ export function LandingFooter() {
         {/* Bottom */}
         <div className='flex flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row'>
           <p>
-            © {new Date().getFullYear()} جمینای — تمامی حقوق محفوظ است
+            © {new Date().getFullYear()} آینوا (AiNova) — تمامی حقوق محفوظ است.
           </p>
           <p className='text-center text-xs text-muted-foreground'>
-            این سرویس بستری امن و آسان برای فعال‌سازی اشتراک رسمی هوش مصنوعی روی حساب‌های کاربری گوگل است.
+            بستری امن و آسان برای دسترسی مستقیم و قانونی به ابزارهای بین‌المللی هوش مصنوعی روی حساب‌های شخصی.
           </p>
         </div>
       </div>

@@ -63,11 +63,14 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         },
         payment: true,
         activationLink: true,
+        delivery: true,
       },
       orderBy: { createdAt: 'desc' },
       skip,
       take: PAGE_SIZE,
     })
+
+    const { BotStoreService } = await import('@/lib/bot/bot-store-service')
 
     let messageText = `📦 **لیست سفارش‌های شما (تعداد کل: ${totalOrders})**\n`
     messageText += `━━━━━━━━━━━━━━━━━━━━\n\n`
@@ -89,13 +92,10 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       messageText += `📦 **محصول:** ${productTitle}\n`
       messageText += `💰 **مبلغ:** ${order.amount.toLocaleString('fa-IR')} تومان\n`
       messageText += `📅 **تاریخ:** ${dateStr}\n`
-      messageText += `📊 **وضعیت:** ${getStatusBadge(order.status)}\n`
+      messageText += `📊 **وضعیت:** ${getStatusBadge(order.status)}\n\n`
 
-      if (order.activationLink?.url) {
-        messageText += `🔗 **لینک فعال‌سازی:**\n\`${order.activationLink.url}\`\n`
-      } else if (order.status === 'COMPLETED' || order.status === 'PAID') {
-        messageText += `⚠️ لینک فعال‌سازی در حال آماده‌سازی است.\n`
-      }
+      const deliveryMessage = BotStoreService.formatDeliveryMessage(order)
+      messageText += `${deliveryMessage}\n`
 
       messageText += `\n────────────────────\n\n`
     }

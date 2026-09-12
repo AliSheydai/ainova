@@ -414,7 +414,7 @@ export default function AdminActivationLinksPage() {
                       return (
                         <tr key={link.id} className='hover:bg-muted/30 transition-colors'>
                           <td className='py-3 font-semibold text-foreground whitespace-nowrap'>
-                            {link.product?.title || link.product?.name || link.plan?.product?.name || 'محصول'}
+                            {link.plan?.product?.name || link.plan?.name || 'محصول'}
                           </td>
 
                           {/* Protected / Masked URL */}

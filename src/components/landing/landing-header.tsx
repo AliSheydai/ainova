@@ -29,7 +29,8 @@ function TelegramIcon({ className = 'size-4' }: { className?: string }) {
 }
 
 const navLinks = [
-  { label: 'امکانات', href: '#features' },
+  { label: 'محصولات', href: '#products' },
+  { label: 'امکانات و مزایا', href: '#features' },
   { label: 'نحوه فعال‌سازی', href: '#how-it-works' },
   { label: 'سوالات متداول', href: '#faq' },
 ]
@@ -104,7 +105,10 @@ export function LandingHeader() {
             <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Sparkles className='size-4' />
             </div>
-            <span className='text-base font-bold text-foreground'>جمینای</span>
+            <div className='flex flex-col text-start'>
+              <span className='text-base font-bold text-foreground leading-tight'>آینوا</span>
+              <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
@@ -196,9 +200,9 @@ export function LandingHeader() {
                 ورود
               </Button>
             )}
-            <Link href='/checkout'>
+            <Link href='#products'>
               <Button size='sm' className='hidden text-sm md:flex'>
-                خرید اشتراک جمینای
+                مشاهده محصولات
               </Button>
             </Link>
 
@@ -252,9 +256,12 @@ export function LandingHeader() {
                       <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
                         <Sparkles className='size-4' />
                       </div>
-                      <SheetTitle className='text-base font-bold text-foreground'>
-                        جمینای
-                      </SheetTitle>
+                      <div className='flex flex-col text-start'>
+                        <SheetTitle className='text-base font-bold text-foreground leading-tight'>
+                          آینوا
+                        </SheetTitle>
+                        <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
+                      </div>
                     </div>
                   </SheetHeader>
 
@@ -327,9 +334,9 @@ export function LandingHeader() {
                       ورود به حساب
                     </Button>
                   )}
-                  <Link href='/checkout' onClick={() => setOpen(false)}>
+                  <Link href='#products' onClick={() => setOpen(false)}>
                     <Button className='w-full justify-center text-sm'>
-                      خرید اشتراک جمینای
+                      مشاهده و خرید محصولات
                     </Button>
                   </Link>
                 </div>

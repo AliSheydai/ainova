@@ -58,9 +58,30 @@ enum ProductStatus {
 
 enum FulfillmentType {
   ACTIVATION_LINK
+  PRE_CREATED_ACCOUNT
+  CUSTOMER_PROVISIONING
+  MANUAL
   ACTIVATION_CODE
   DOWNLOAD
-  MANUAL
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum DeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+enum InventoryType {
+  ACTIVATION_LINK
+  PRE_CREATED_ACCOUNT
+  LICENSE_KEY
 }
 
 model Product {
@@ -85,23 +106,29 @@ model Product {
   orders          Order[]
   activationLinks ActivationLink[]
   plans           Plan[]
+  inventoryItems  InventoryItem[]
 
   @@map("products")
 }
 
 model Plan {
-  id          String   @id @default(cuid())
-  productId   String
-  name        String
-  duration    Int      // duration in months
-  price       Int      // price in Toman (Rials / 10)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String          @id @default(cuid())
+  productId         String
+  name              String
+  duration          Int             // duration in months
+  price             Int             // price in Toman (Rials / 10)
+  active            Boolean         @default(true)
+  fulfillmentType   FulfillmentType @default(ACTIVATION_LINK)
+  checkoutFields    Json?           // Array of CheckoutFieldDefinition [{ key, label, type, required, placeholder, order }]
+  fulfillmentConfig Json?           // Custom config for fulfillment
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   product         Product          @relation(fields: [productId], references: [id])
   orders          Order[]
   activationLinks ActivationLink[]
+  inventoryItems  InventoryItem[]
 
   @@map("plans")
 }
@@ -118,22 +145,26 @@ enum OrderStatus {
 }
 
 model Order {
-  id             String      @id @default(cuid())
-  userId         String
-  productId      String?
-  planId         String?
-  amount         Int         // in Toman
-  status         OrderStatus @default(PENDING_PAYMENT)
-  source         String?     @default("web") // "web" | "telegram"
-  telegramChatId String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                String            @id @default(cuid())
+  userId            String
+  productId         String?
+  planId            String?
+  amount            Int               // in Toman
+  status            OrderStatus       @default(PENDING_PAYMENT)
+  fulfillmentStatus FulfillmentStatus @default(PENDING)
+  checkoutData      Json?             // Snapshot of customer answers at checkout
+  source            String?           @default("web") // "web" | "telegram" | "bale" | "rubika" | "soroush"
+  telegramChatId    String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   user            User            @relation(fields: [userId], references: [id])
   product         Product?        @relation(fields: [productId], references: [id])
   plan            Plan?           @relation(fields: [planId], references: [id])
   payment         Payment?
   activationLink  ActivationLink?
+  delivery        Delivery?
+  inventoryItem   InventoryItem?
   supportTickets  SupportTicket[]
 
   @@map("orders")
@@ -233,4 +264,46 @@ model SystemSetting {
 
   @@map("system_settings")
 }
+
+// =====================
+// Generic Deliveries
+// =====================
+model Delivery {
+  id          String          @id @default(cuid())
+  orderId     String          @unique
+  type        FulfillmentType
+  status      DeliveryStatus  @default(DELIVERED)
+  data        Json            // { link?: string, email?: string, password?: string, manualNote?: string, ... }
+  deliveredAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("deliveries")
+}
+
+// =====================
+// Generic Inventory Items (Links, Accounts, etc.)
+// =====================
+model InventoryItem {
+  id         String        @id @default(cuid())
+  productId  String?
+  planId     String?
+  type       InventoryType
+  status     LinkStatus    @default(AVAILABLE) // AVAILABLE, RESERVED, USED, INVALID
+  data       Json          // { url?: string } or { email?: string, password?: string, note?: string }
+  orderId    String?       @unique
+  assignedAt DateTime?
+  usedAt     DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  product    Product?      @relation(fields: [productId], references: [id])
+  plan       Plan?         @relation(fields: [planId], references: [id])
+  order      Order?        @relation(fields: [orderId], references: [id])
+
+  @@map("inventory_items")
+}
+
 

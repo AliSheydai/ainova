@@ -1,51 +1,101 @@
 import { prisma } from '@/lib/prisma'
-import { Order, ActivationLink, Payment, Product, FulfillmentType } from '@prisma/client'
-
-export interface FulfillOrderOptions {
-  orderId: string
-  refId?: string
-  rawResponse?: unknown
-}
-
-export interface FulfillOrderResult {
-  success: boolean
-  order: Order & {
-    product?: Product | null
-    activationLink?: ActivationLink | null
-    payment?: Payment | null
-  }
-  activationLink: ActivationLink | null
-  status: 'COMPLETED' | 'STOCK_EXHAUSTED' | 'ALREADY_COMPLETED' | 'ORDER_NOT_FOUND' | 'AWAITING_MANUAL_DELIVERY'
-  message: string
-}
+import { FulfillmentType, OrderStatus, FulfillmentStatus, DeliveryStatus } from '@prisma/client'
+import { FulfillmentRegistry } from './registry'
+import { FulfillOrderOptions, FulfillOrderResult, ManualDeliveryData } from './types'
 
 export class FulfillmentService {
   /**
-   * Calculates the available stock for any product based on its fulfillment type.
-   * For ACTIVATION_LINK products, stock equals available activation links.
+   * Calculates real-time available stock for a product or specific plan.
+   */
+  static async getPlanStock(planId: string): Promise<number> {
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+      include: { product: true },
+    })
+
+    if (!plan) return 0
+
+    const fulfillmentType = plan.fulfillmentType || plan.product?.fulfillmentType || 'ACTIVATION_LINK'
+
+    switch (fulfillmentType) {
+      case 'ACTIVATION_LINK': {
+        const [linksCount, inventoryCount] = await Promise.all([
+          prisma.activationLink.count({
+            where: {
+              OR: [
+                { planId: plan.id, status: 'AVAILABLE' },
+                { productId: plan.productId, planId: null, status: 'AVAILABLE' },
+              ],
+            },
+          }),
+          prisma.inventoryItem.count({
+            where: {
+              type: 'ACTIVATION_LINK',
+              OR: [
+                { planId: plan.id, status: 'AVAILABLE' },
+                { productId: plan.productId, planId: null, status: 'AVAILABLE' },
+              ],
+            },
+          }),
+        ])
+        return linksCount + inventoryCount
+      }
+
+      case 'PRE_CREATED_ACCOUNT': {
+        return await prisma.inventoryItem.count({
+          where: {
+            type: 'PRE_CREATED_ACCOUNT',
+            status: 'AVAILABLE',
+            OR: [
+              { planId: plan.id },
+              { productId: plan.productId, planId: null },
+            ],
+          },
+        })
+      }
+
+      case 'CUSTOMER_PROVISIONING':
+      case 'MANUAL':
+      default: {
+        // Digital on-demand services: always available
+        return 999
+      }
+    }
+  }
+
+  /**
+   * Calculates overall stock for a product across all its plans.
    */
   static async getProductStock(productId: string): Promise<number> {
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: { fulfillmentType: true, stock: true },
+      include: {
+        plans: { where: { active: true } },
+      },
     })
 
     if (!product) return 0
 
+    if (product.plans && product.plans.length > 0) {
+      // Sum available stock across active plans
+      const planStocks = await Promise.all(
+        product.plans.map((p) => FulfillmentService.getPlanStock(p.id))
+      )
+      return planStocks.reduce((sum, s) => sum + s, 0)
+    }
+
+    // Fallback if no plans: check activation links or product stock
     if (product.fulfillmentType === 'ACTIVATION_LINK') {
       return await prisma.activationLink.count({
-        where: {
-          productId,
-          status: 'AVAILABLE',
-        },
+        where: { productId, status: 'AVAILABLE' },
       })
     }
 
-    return product.stock || 0
+    return product.stock || 999
   }
 
   /**
-   * Calculates dynamic purchase count for a product based on successful (PAID/COMPLETED) orders.
+   * Calculates verified purchase count for a product.
    */
   static async getProductPurchaseCount(productId: string): Promise<number> {
     return await prisma.order.count({
@@ -57,26 +107,28 @@ export class FulfillmentService {
   }
 
   /**
-   * Atomically fulfills an order based on the Product's FulfillmentType upon payment verification.
-   * Uses PostgreSQL "FOR UPDATE SKIP LOCKED" to guarantee race-condition safety under high concurrency.
-   * Links belonging to Product A can NEVER be assigned to Product B.
+   * Atomically fulfills an order based on Plan's FulfillmentType upon payment verification or admin action.
    */
   static async fulfillOrder({
     orderId,
     refId,
     rawResponse,
+    manualDeliveryData,
+    adminUserId,
   }: FulfillOrderOptions): Promise<FulfillOrderResult> {
     return await prisma.$transaction(async (tx) => {
-      // 1. Fetch order with product and existing associations
+      // 1. Fetch order with product, plan, delivery and payment
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: {
           product: true,
-          activationLink: true,
-          payment: true,
           plan: {
             include: { product: true },
           },
+          payment: true,
+          activationLink: true,
+          delivery: true,
+          user: true,
         },
       })
 
@@ -84,22 +136,21 @@ export class FulfillmentService {
         throw new Error(`ORDER_NOT_FOUND: Order ${orderId} does not exist.`)
       }
 
-      // Determine the definitive product for this order
+      // Determine effective fulfillment type from Plan, fallback to Product
+      const effectivePlan = order.plan
       const effectiveProduct = order.product || order.plan?.product
 
-      if (!effectiveProduct) {
-        throw new Error(`PRODUCT_NOT_FOUND: Order ${orderId} is not associated with any product.`)
-      }
-
-      const productId = effectiveProduct.id
       const fulfillmentType: FulfillmentType =
-        effectiveProduct.fulfillmentType || 'ACTIVATION_LINK'
+        effectivePlan?.fulfillmentType ||
+        effectiveProduct?.fulfillmentType ||
+        'ACTIVATION_LINK'
 
-      // 2. Idempotency check: Already completed with delivery?
-      if (order.status === 'COMPLETED' && (order.activationLink || fulfillmentType !== 'ACTIVATION_LINK')) {
+      // 2. Idempotency check
+      if (order.status === 'COMPLETED' && order.delivery?.status === 'DELIVERED') {
         return {
           success: true,
           order,
+          delivery: order.delivery,
           activationLink: order.activationLink,
           status: 'ALREADY_COMPLETED',
           message: 'سفارش قبلاً با موفقیت تکمیل و تحویل داده شده است.',
@@ -108,180 +159,140 @@ export class FulfillmentService {
 
       const now = new Date()
 
-      // 3. Dispatch based on product FulfillmentType
-      switch (fulfillmentType) {
-        case 'ACTIVATION_LINK': {
-          // Find one available activation link for THIS SPECIFIC PRODUCT using SKIP LOCKED
-          // Links for other products will NEVER be selected
-          const availableRows = await tx.$queryRaw<Array<{ id: string; url: string }>>`
-            SELECT id, url 
-            FROM activation_links 
-            WHERE ("productId" = ${productId} OR ("planId" = ${order.planId} AND "productId" IS NULL))
-              AND status = 'AVAILABLE'::"LinkStatus"
-            LIMIT 1 
-            FOR UPDATE SKIP LOCKED
-          `
+      // 3. Mark payment as SUCCESS if not already
+      if (order.payment && order.payment.status !== 'SUCCESS') {
+        await tx.payment.update({
+          where: { id: order.payment.id },
+          data: {
+            status: 'SUCCESS',
+            refId: refId || order.payment.refId,
+            paidAt: now,
+            gatewayResponse: (rawResponse as object) || order.payment.gatewayResponse || {},
+          },
+        })
+      }
 
-          const chosenLinkRow = availableRows[0]
+      // 4. Get appropriate handler from registry
+      const handler = FulfillmentRegistry.getHandler(fulfillmentType)
 
-          if (!chosenLinkRow) {
-            // STOCK EXHAUSTION SCENARIO:
-            // Payment is confirmed (SUCCESS), but Order transitions to PAID (awaiting inventory/fulfillment)
-            if (order.payment) {
-              await tx.payment.update({
-                where: { id: order.payment.id },
-                data: {
-                  status: 'SUCCESS',
-                  refId: refId || order.payment.refId,
-                  paidAt: now,
-                  gatewayResponse: (rawResponse as object) || order.payment.gatewayResponse || {},
-                },
-              })
-            }
+      const result = await handler.fulfill({
+        tx,
+        order,
+        now,
+        refId,
+        rawResponse,
+        manualDeliveryData,
+        adminUserId,
+      })
 
-            const updatedOrder = await tx.order.update({
-              where: { id: order.id },
-              data: { status: 'PAID' },
-              include: {
-                product: true,
-                activationLink: true,
-                payment: true,
-              },
-            })
+      // 5. Process Handler Outcome
+      if (result.status === 'COMPLETED') {
+        // Upsert Delivery record
+        const deliveryRecord = await tx.delivery.upsert({
+          where: { orderId: order.id },
+          create: {
+            orderId: order.id,
+            type: fulfillmentType,
+            status: 'DELIVERED' as DeliveryStatus,
+            data: (result.deliveryData as object) || {},
+            deliveredAt: now,
+          },
+          update: {
+            type: fulfillmentType,
+            status: 'DELIVERED' as DeliveryStatus,
+            data: (result.deliveryData as object) || {},
+            deliveredAt: now,
+          },
+        })
 
-            return {
-              success: false,
-              order: updatedOrder,
-              activationLink: null,
-              status: 'STOCK_EXHAUSTED',
-              message:
-                'پرداخت تایید شد، اما موجودی لینک‌های فعال‌سازی این محصول به پایان رسیده است. سفارش در وضعیت پرداخت‌شده (PAID) قرار گرفت.',
-            }
-          }
+        // Update Order to COMPLETED
+        const updatedOrder = await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'COMPLETED' as OrderStatus,
+            fulfillmentStatus: 'COMPLETED' as FulfillmentStatus,
+          },
+          include: {
+            product: true,
+            plan: { include: { product: true } },
+            payment: true,
+            activationLink: true,
+            delivery: true,
+          },
+        })
 
-          // Stock is available: Assign link atomically to this order
-          const updatedLink = await tx.activationLink.update({
-            where: { id: chosenLinkRow.id },
-            data: {
-              productId,
-              status: 'USED',
-              orderId: order.id,
-              assignedAt: now,
-            },
-          })
-
-          // Update Payment to SUCCESS
-          if (order.payment) {
-            await tx.payment.update({
-              where: { id: order.payment.id },
-              data: {
-                status: 'SUCCESS',
-                refId: refId || order.payment.refId,
-                paidAt: now,
-                gatewayResponse: (rawResponse as object) || order.payment.gatewayResponse || {},
-              },
-            })
-          }
-
-          // Update Order to COMPLETED
-          const updatedOrder = await tx.order.update({
-            where: { id: order.id },
-            data: { status: 'COMPLETED' },
-            include: {
-              product: true,
-              activationLink: true,
-              payment: true,
-            },
-          })
-
-          // Update product purchase count
+        // Increment purchase count
+        if (effectiveProduct?.id) {
           await tx.product.update({
-            where: { id: productId },
+            where: { id: effectiveProduct.id },
             data: { purchaseCount: { increment: 1 } },
           }).catch(() => {})
-
-          return {
-            success: true,
-            order: updatedOrder,
-            activationLink: updatedLink,
-            status: 'COMPLETED',
-            message: 'سفارش با موفقیت تکمیل و لینک فعال‌سازی اختصاص داده شد.',
-          }
         }
 
-        case 'MANUAL': {
-          // Manual fulfillment: mark payment as SUCCESS, order as PAID
-          if (order.payment) {
-            await tx.payment.update({
-              where: { id: order.payment.id },
-              data: {
-                status: 'SUCCESS',
-                refId: refId || order.payment.refId,
-                paidAt: now,
-                gatewayResponse: (rawResponse as object) || order.payment.gatewayResponse || {},
-              },
-            })
-          }
-
-          const updatedOrder = await tx.order.update({
-            where: { id: order.id },
-            data: { status: 'PAID' },
-            include: {
-              product: true,
-              activationLink: true,
-              payment: true,
-            },
-          })
-
-          return {
-            success: true,
-            order: updatedOrder,
-            activationLink: null,
-            status: 'AWAITING_MANUAL_DELIVERY',
-            message: 'پرداخت تایید شد. این محصول نیازمند تحویل دستی توسط ادمین است.',
-          }
-        }
-
-        case 'ACTIVATION_CODE':
-        case 'DOWNLOAD':
-        default: {
-          // Extensible generic handler
-          if (order.payment) {
-            await tx.payment.update({
-              where: { id: order.payment.id },
-              data: {
-                status: 'SUCCESS',
-                refId: refId || order.payment.refId,
-                paidAt: now,
-                gatewayResponse: (rawResponse as object) || order.payment.gatewayResponse || {},
-              },
-            })
-          }
-
-          const updatedOrder = await tx.order.update({
-            where: { id: order.id },
-            data: { status: 'COMPLETED' },
-            include: {
-              product: true,
-              activationLink: true,
-              payment: true,
-            },
-          })
-
-          await tx.product.update({
-            where: { id: productId },
-            data: { purchaseCount: { increment: 1 } },
-          }).catch(() => {})
-
-          return {
-            success: true,
-            order: updatedOrder,
-            activationLink: null,
-            status: 'COMPLETED',
-            message: 'سفارش با موفقیت پرداخت و ثبت گردید.',
-          }
+        return {
+          success: true,
+          order: updatedOrder,
+          delivery: deliveryRecord,
+          activationLink: result.activationLink || order.activationLink,
+          status: 'COMPLETED',
+          message: result.message,
         }
       }
+
+      // If Stock Exhausted or Awaiting Manual Delivery:
+      // Order transitions to PAID with fulfillmentStatus PENDING
+      const deliveryRecord = await tx.delivery.upsert({
+        where: { orderId: order.id },
+        create: {
+          orderId: order.id,
+          type: fulfillmentType,
+          status: 'PENDING' as DeliveryStatus,
+          data: {},
+        },
+        update: {
+          type: fulfillmentType,
+          status: 'PENDING' as DeliveryStatus,
+        },
+      })
+
+      const updatedOrder = await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: 'PAID' as OrderStatus,
+          fulfillmentStatus: 'PENDING' as FulfillmentStatus,
+        },
+        include: {
+          product: true,
+          plan: { include: { product: true } },
+          payment: true,
+          activationLink: true,
+          delivery: true,
+        },
+      })
+
+      return {
+        success: false,
+        order: updatedOrder,
+        delivery: deliveryRecord,
+        activationLink: null,
+        status: result.status,
+        message: result.message,
+      }
+    })
+  }
+
+  /**
+   * Allows an Admin to fulfill an order manually.
+   */
+  static async fulfillManualOrder(
+    orderId: string,
+    manualData: ManualDeliveryData,
+    adminUserId?: string
+  ): Promise<FulfillOrderResult> {
+    return await this.fulfillOrder({
+      orderId,
+      manualDeliveryData: manualData,
+      adminUserId,
     })
   }
 }

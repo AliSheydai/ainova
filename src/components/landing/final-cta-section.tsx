@@ -27,24 +27,22 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
             </div>
           </div>
           <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
-            آماده‌اید سرعت کارهایتان را چند برابر کنید؟
+            آماده‌اید سرعت و بهره‌وری کارهایتان را چند برابر کنید؟
           </h2>
-          <p className='mb-2 text-sm text-muted-foreground sm:text-base'>
-            دسترسی کامل ۱۸ ماهه به هوش مصنوعی جمینای
+          <p className='mb-6 text-sm text-muted-foreground sm:text-base'>
+            دسترسی آنی و قانونی به کامل‌ترین مجموعه اشتراک‌های پیشرفته هوش مصنوعی جهان
           </p>
-          {price && (
-            <p className='mb-8 text-2xl font-bold text-primary'>{price}</p>
-          )}
           <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-            <Link href='/checkout'>
+            <Link href='#products'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
-                خرید و شروع با جمینای
+                <Sparkles className='size-4' />
+                مشاهده محصولات و شروع خرید
               </Button>
             </Link>
           </div>
           <div className='mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground'>
             <ShieldCheck className='size-3.5 text-primary' />
-            <span>فعال‌سازی آنی • کاملاً امن و بدون نیاز به رمز عبور</span>
+            <span>تحویل ۱۰۰٪ آنی و خودکار • فعال‌سازی قانونی و امن • پشتیبانی دائمی</span>
           </div>
         </motion.div>
       </div>

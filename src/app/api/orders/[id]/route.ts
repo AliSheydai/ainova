@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
+import { decryptCredential } from '@/lib/security/crypto'
 
 export async function GET(
   req: NextRequest,
@@ -28,6 +29,7 @@ export async function GET(
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        product: true,
         plan: {
           include: { product: true },
         },
@@ -51,6 +53,7 @@ export async function GET(
             assignedAt: true,
           },
         },
+        delivery: true,
       },
     })
 
@@ -72,9 +75,27 @@ export async function GET(
       )
     }
 
+    // Decrypt sensitive credentials in delivery data if present
+    let safeDelivery = order.delivery
+    if (order.delivery && order.delivery.data) {
+      const rawData = order.delivery.data as Record<string, any>
+      if (rawData.password) {
+        safeDelivery = {
+          ...order.delivery,
+          data: {
+            ...rawData,
+            password: decryptCredential(rawData.password),
+          },
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      order,
+      order: {
+        ...order,
+        delivery: safeDelivery,
+      },
     })
   } catch (error: unknown) {
     console.error('Error fetching order by id:', error)

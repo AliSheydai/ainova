@@ -58,15 +58,34 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
   const product = await prisma.product.findUnique({
     where: { slug },
+    include: {
+      plans: {
+        where: { active: true },
+        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+      },
+    },
   })
 
   if (!product || product.status === 'ARCHIVED') {
     notFound()
   }
 
-  const [stock, purchaseCount] = await Promise.all([
+  const [stock, purchaseCount, enrichedPlans] = await Promise.all([
     FulfillmentService.getProductStock(product.id),
     FulfillmentService.getProductPurchaseCount(product.id),
+    Promise.all(
+      (product.plans || []).map(async (plan) => {
+        const planStock = await FulfillmentService.getPlanStock(plan.id)
+        return {
+          id: plan.id,
+          name: plan.name,
+          price: plan.price,
+          duration: plan.duration,
+          fulfillmentType: plan.fulfillmentType,
+          stock: planStock,
+        }
+      })
+    ),
   ])
 
   const defaultFeatures = [
@@ -184,6 +203,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                 purchaseCount={purchaseCount}
                 fulfillmentType={product.fulfillmentType}
                 shortDescription={product.shortDescription}
+                plans={enrichedPlans}
               />
             </div>
           </div>

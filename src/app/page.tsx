@@ -13,9 +13,9 @@ import { LandingFooter } from '@/components/landing/landing-footer'
 import { ProductsShowcaseSection } from '@/components/landing/products-showcase-section'
 
 export const metadata: Metadata = {
-  title: 'فروشگاه اشتراک‌های هوش مصنوعی و دیجیتال — تحویل فوری',
+  title: 'آینوا (AiNova) | فروشگاه رسمی اشتراک‌های هوش مصنوعی و دیجیتال',
   description:
-    'خرید انواع اشتراک‌های هوش مصنوعی رسمی مانند Google AI Pro (Gemini)، فعال‌سازی روی حساب شخصی، تحویل آنی پس از پرداخت، ۱۰۰٪ امن و بدون نیاز به رمز عبور.',
+    'خرید مطمئن و قانونی انواع اشتراک‌های هوش مصنوعی بین‌المللی (Google AI Pro، ابزارهای تولید محتوا و فضای ابری) با فعال‌سازی روی حساب شخصی، تحویل آنی و بدون نیاز به رمز عبور.',
 }
 
 function formatPrice(amount: number): string {
@@ -70,7 +70,11 @@ export default async function LandingPage() {
         <ProductsShowcaseSection products={products} />
         <FeaturesSection />
         <HowItWorksSection />
-        <PricingSection price={formattedPrice} />
+        <PricingSection
+          price={formattedPrice}
+          productTitle={primaryProduct?.title}
+          productSlug={primaryProduct?.slug}
+        />
         <SecuritySection />
         <FaqSection />
         <FinalCtaSection price={formattedPrice} />
