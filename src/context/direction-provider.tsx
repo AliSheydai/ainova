@@ -53,8 +53,7 @@ export function DirectionProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useDirection() {
+export const useDirection = () => {
   const context = useContext(DirectionContext)
   if (!context) {
     throw new Error('useDirection must be used within a DirectionProvider')

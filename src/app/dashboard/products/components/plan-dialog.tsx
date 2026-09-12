@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { CheckoutFieldDefinition, FulfillmentType } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
 import { CheckoutFieldEditor } from './checkout-field-editor'
 
@@ -349,10 +349,11 @@ export function PlanDialog({
             type='button'
             size='sm'
             disabled={submitting}
+            aria-busy={submitting}
             onClick={onSave}
             className='rounded-xl text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
           >
-            {submitting && <Loader2 className='size-3.5 animate-spin' />}
+            {submitting && <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />}
             <span>{isEditing ? 'بروزرسانی پلن' : 'ثبت و فعال‌سازی پلن'}</span>
           </Button>
         </DialogFooter>

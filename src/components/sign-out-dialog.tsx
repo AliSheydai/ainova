@@ -1,7 +1,6 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
-import { useAuthStore } from '@/stores/auth-store'
+import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface SignOutDialogProps {
@@ -11,8 +10,6 @@ interface SignOutDialogProps {
 
 export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const router = useRouter()
-  const pathname = usePathname()
-  const { auth } = useAuthStore()
 
   const handleSignOut = async () => {
     try {
@@ -20,8 +17,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     } catch {
       // ignore
     }
-    auth.reset()
-    router.replace(`/login`)
+    router.replace('/login')
   }
 
   return (

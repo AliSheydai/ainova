@@ -10,9 +10,9 @@ import {
   Microscope,
   Palette,
   Play,
+  Sparkles,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { fadeUp, staggerContainer, viewportOnce } from '@/lib/motion'

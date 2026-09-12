@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getBot } from '@/lib/telegram/bot'
 
 export async function GET(req: NextRequest) {
@@ -53,10 +53,10 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: false, error: 'Invalid action. Use info, set, or delete.' })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in telegram setup route:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Setup error' },
+      { success: false, error: error instanceof Error ? error.message : 'Setup error' },
       { status: 500 }
     )
   }

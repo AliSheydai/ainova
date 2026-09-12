@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { InventoryType, LinkStatus } from '@prisma/client'
+import { InventoryType, LinkStatus, type Prisma } from '@prisma/client'
 import { encryptCredential } from '@/lib/security/crypto'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type') as InventoryType | null
     const status = searchParams.get('status') as LinkStatus | null
 
-    const where: any = {}
+    const where: Prisma.InventoryItemWhereInput = {}
     if (productId) where.productId = productId
     if (planId) where.planId = planId
     if (type && Object.values(InventoryType).includes(type)) where.type = type
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       planId?: string | null
       type: InventoryType
       status: LinkStatus
-      data: any
+      data: Prisma.InputJsonValue
     }> = []
 
     if (Array.isArray(items) && items.length > 0) {

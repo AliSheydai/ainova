@@ -1,4 +1,4 @@
-import { Context } from 'grammy'
+import { type Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUserWithRole } from '@/lib/auth/user-role'
 import { MESSAGES } from '../messages'

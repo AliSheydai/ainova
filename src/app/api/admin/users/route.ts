@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { Role } from '@prisma/client'
+import { type Role, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const orderFilter = searchParams.get('orderFilter')?.trim() || 'ALL' // 'HAS_ORDERS' | 'NO_ORDERS'
     const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
-    const where: any = {}
+    const where: Prisma.UserWhereInput = {}
 
     // Role filter
     if (roleFilter === 'ADMIN' || roleFilter === 'USER') {
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Sorting
-    let orderBy: any = { createdAt: 'desc' }
+    let orderBy: Prisma.UserOrderByWithRelationInput = { createdAt: 'desc' }
     if (sortBy === 'OLDEST') {
       orderBy = { createdAt: 'asc' }
     } else if (sortBy === 'MOST_ORDERS') {

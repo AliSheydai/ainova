@@ -50,6 +50,20 @@ function LoginForm() {
   const [devCode, setDevCode] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
 
+  const phoneInputRef = React.useRef<HTMLInputElement>(null)
+  const nameInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Manage programmatic focus when transitioning between steps
+  useEffect(() => {
+    if (step === 'phone') {
+      const timer = setTimeout(() => phoneInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
+    } else if (step === 'name') {
+      const timer = setTimeout(() => nameInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
+    }
+  }, [step])
+
   const getDestination = (role?: string | null) => {
     const custom = searchParams.get('redirect')
     if (role === 'ADMIN') {
@@ -335,6 +349,13 @@ function LoginForm() {
           </CardHeader>
 
           <CardContent className="pt-2">
+            {/* Live Region for Screen Readers */}
+            <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {step === 'phone' && 'مرحله ۱ از ۳: لطفاً شماره تلفن همراه خود را وارد نمایید.'}
+              {step === 'otp' && `مرحله ۲ از ۳: کد تأیید ۵ رقمی ارسال‌شده به شماره ${phone} را وارد نمایید.`}
+              {step === 'name' && 'مرحله ۳ از ۳: لطفاً نام و نام خانوادگی خود را برای تکمیل حساب کاربری وارد نمایید.'}
+            </div>
+
             {/* ================= STEP 1: PHONE ================= */}
             {step === 'phone' && (
               <form onSubmit={handleSendOtp} className="space-y-4">
@@ -350,6 +371,7 @@ function LoginForm() {
 
                   <div className="relative group">
                     <Input
+                      ref={phoneInputRef}
                       id="phone"
                       type="tel"
                       placeholder="۰۹۱۲۳۴۵۶۷۸۹"
@@ -357,6 +379,7 @@ function LoginForm() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       disabled={loading}
+                      aria-required="true"
                       className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 transition-all placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground"
                       autoFocus
                     />
@@ -371,12 +394,13 @@ function LoginForm() {
 
                 <Button
                   type="submit"
-                  className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99]"
+                  aria-busy={loading}
+                  className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99] cursor-pointer"
                   disabled={loading}
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                       در حال ارسال کد تأیید...
                     </>
                   ) : (
@@ -406,8 +430,10 @@ function LoginForm() {
                       setStep('phone')
                       setOtpCode('')
                       setDevCode(null)
+                      setTimeout(() => phoneInputRef.current?.focus(), 50)
                     }}
-                    className="font-medium text-primary hover:underline hover:text-primary/80 transition-colors text-xs"
+                    className="font-medium text-primary hover:underline hover:text-primary/80 transition-colors text-xs cursor-pointer"
+                    aria-label="ویرایش شماره تلفن وارد شده"
                   >
                     ویرایش شماره
                   </button>
@@ -431,6 +457,8 @@ function LoginForm() {
                   </Label>
                   <div dir="ltr" className="focus-within:scale-[1.02] transition-transform">
                     <InputOTP
+                      id="otp"
+                      aria-label="کد ۵ رقمی تأیید پیامک‌شده"
                       maxLength={5}
                       value={otpCode}
                       onChange={(val) => setOtpCode(val)}
@@ -488,12 +516,13 @@ function LoginForm() {
 
                 <Button
                   type="submit"
-                  className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99]"
+                  aria-busy={loading}
+                  className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99] cursor-pointer"
                   disabled={loading || otpCode.length < 5}
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                       در حال اعتبارسنجی کد...
                     </>
                   ) : (
@@ -515,12 +544,14 @@ function LoginForm() {
                   </Label>
                   <div className="relative group">
                     <Input
+                      ref={nameInputRef}
                       id="fullName"
                       type="text"
                       placeholder="مثال: علی رضایی"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       disabled={loading}
+                      aria-required="true"
                       className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 text-base transition-all font-sans placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80"
                       autoFocus
                     />
@@ -536,12 +567,13 @@ function LoginForm() {
                 <div className="space-y-2 pt-2">
                   <Button
                     type="submit"
-                    className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99]"
+                    aria-busy={loading}
+                    className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 transition-all active:scale-[0.99] cursor-pointer"
                     disabled={loading || !fullName.trim()}
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                         در حال ذخیره و ورود...
                       </>
                     ) : (

@@ -1,4 +1,4 @@
-import { Context } from 'grammy'
+import { type Context } from 'grammy'
 import { normalizePhone, isValidIranianPhone, requestOtp, verifyOtpCode } from '@/lib/auth/otp'
 import { prisma } from '@/lib/prisma'
 import { MESSAGES } from '../messages'

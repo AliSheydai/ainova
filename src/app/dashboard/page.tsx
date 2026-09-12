@@ -185,8 +185,13 @@ export default function AdminOverviewPage() {
 
           {/* KPI Cards Grid */}
           {loading && !stats ? (
-            <div className='flex items-center justify-center py-20'>
-              <Loader2 className='size-8 animate-spin text-primary' />
+            <div
+              className='flex flex-col items-center justify-center py-20 gap-2 text-muted-foreground'
+              role='status'
+              aria-live='polite'
+            >
+              <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
+              <span className='text-xs'>در حال بارگذاری آمار و اطلاعات داشبورد...</span>
             </div>
           ) : stats ? (
             <motion.div

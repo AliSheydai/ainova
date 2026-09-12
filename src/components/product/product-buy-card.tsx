@@ -107,32 +107,44 @@ export function ProductBuyCard({
           {/* Plan Selection if multiple plans available */}
           {plans.length > 1 && (
             <div className='space-y-2 pb-2'>
-              <span className='text-xs text-muted-foreground block font-medium'>
+              <span id='plan-selection-label' className='text-xs text-muted-foreground block font-medium'>
                 پلن‌های قابل سفارش:
               </span>
-              <div className='grid grid-cols-1 gap-2'>
-                {plans.map((p) => (
-                  <button
-                    key={p.id}
-                    type='button'
-                    onClick={() => setSelectedPlanId(p.id)}
-                    className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer ${
-                      selectedPlan?.id === p.id
-                        ? 'border-primary bg-primary/10 text-foreground font-bold shadow-xs'
-                        : 'border-border/60 hover:bg-muted/40 text-muted-foreground'
-                    }`}
-                  >
-                    <div className='flex items-center gap-2'>
-                      <div className={`size-3.5 rounded-full border flex items-center justify-center ${selectedPlan?.id === p.id ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
-                        {selectedPlan?.id === p.id && <div className='size-1.5 rounded-full bg-background' />}
+              <div
+                className='grid grid-cols-1 gap-2'
+                role='radiogroup'
+                aria-labelledby='plan-selection-label'
+              >
+                {plans.map((p) => {
+                  const isSelected = selectedPlan?.id === p.id
+                  return (
+                    <button
+                      key={p.id}
+                      type='button'
+                      role='radio'
+                      aria-checked={isSelected}
+                      onClick={() => setSelectedPlanId(p.id)}
+                      className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-foreground font-bold shadow-xs'
+                          : 'border-border/60 hover:bg-muted/40 text-muted-foreground'
+                      }`}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <div
+                          className={`size-3.5 rounded-full border flex items-center justify-center ${isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'}`}
+                          aria-hidden='true'
+                        >
+                          {isSelected && <div className='size-1.5 rounded-full bg-background' />}
+                        </div>
+                        <span>{p.name}</span>
                       </div>
-                      <span>{p.name}</span>
-                    </div>
-                    <strong className='font-sans text-primary'>
-                      {formatPrice(p.price)}
-                    </strong>
-                  </button>
-                ))}
+                      <strong className='font-sans text-primary'>
+                        {formatPrice(p.price)}
+                      </strong>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -149,7 +161,7 @@ export function ProductBuyCard({
             </div>
             {isAvailable ? (
               <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 gap-1'>
-                <Zap className='size-3 text-emerald-500' />
+                <Zap className='size-3 text-emerald-500' aria-hidden='true' />
                 <span>{getFulfillmentLabel(effectiveFulfillmentType)}</span>
               </Badge>
             ) : (
@@ -181,19 +193,20 @@ export function ProductBuyCard({
             <Button
               onClick={handleBuy}
               disabled={buying || !isAvailable}
+              aria-busy={buying}
               size='lg'
               className='w-full py-6 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200 cursor-pointer'
             >
               {buying ? (
                 <>
-                  <Loader2 className='size-5 animate-spin me-2' />
+                  <Loader2 className='size-5 animate-spin me-2' aria-hidden='true' />
                   <span>در حال انتقال...</span>
                 </>
               ) : isAvailable ? (
                 <>
-                  <ShoppingCart className='size-5 me-2' />
+                  <ShoppingCart className='size-5 me-2' aria-hidden='true' />
                   <span>ثبت سفارش و ادامه خرید</span>
-                  <ArrowLeft className='size-4 ms-2 transition-transform group-hover:-translate-x-1' />
+                  <ArrowLeft className='size-4 ms-2 transition-transform group-hover:-translate-x-1' aria-hidden='true' />
                 </>
               ) : (
                 <span>موقتاً ناموجود</span>
@@ -201,7 +214,7 @@ export function ProductBuyCard({
             </Button>
 
             <p className='text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5'>
-              <Lock className='size-3 text-primary' />
+              <Lock className='size-3 text-primary' aria-hidden='true' />
               <span>پرداخت امن شتابی با درگاه شاپرک — تحویل بلافاصله پس از پرداخت</span>
             </p>
           </div>

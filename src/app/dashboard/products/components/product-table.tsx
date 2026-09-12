@@ -14,7 +14,7 @@ import {
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ProductItem, PlanItem, formatPrice } from '../types'
+import { type ProductItem, type PlanItem, formatPrice } from '../types'
 import { ProductStatusBadge, StockBadge } from './product-badges'
 import { ProductPlansAccordion } from './product-plans-accordion'
 
@@ -45,8 +45,12 @@ export function ProductTable({
 }: ProductTableProps) {
   if (loading) {
     return (
-      <div className='flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground'>
-        <Loader2 className='size-8 animate-spin text-primary' />
+      <div
+        className='flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground'
+        role='status'
+        aria-live='polite'
+      >
+        <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
         <span className='text-xs'>در حال بارگذاری اطلاعات محصولات...</span>
       </div>
     )

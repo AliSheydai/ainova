@@ -1,5 +1,4 @@
-import { IFulfillmentHandler, ActivationLinkDeliveryData } from '../types'
-import { Prisma } from '@prisma/client'
+import { type IFulfillmentHandler, type ActivationLinkDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
 
 export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
   type = 'ACTIVATION_LINK' as const
@@ -9,8 +8,8 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
     order,
     now,
   }: {
-    tx: Prisma.TransactionClient
-    order: any
+    tx: PrismaTransactionClient
+    order: OrderWithFulfillmentDetails
     now: Date
   }) {
     const effectiveProduct = order.product || order.plan?.product
@@ -47,7 +46,7 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
 
     // 2. Fallback: If no item was pre-reserved, allocate an AVAILABLE item dynamically
     if (!linkUrl) {
-      const inventoryRows = await tx.$queryRaw<Array<{ id: string; data: any }>>`
+      const inventoryRows = await tx.$queryRaw<Array<{ id: string; data: Record<string, unknown> | string }>>`
         SELECT id, data
         FROM inventory_items
         WHERE type = 'ACTIVATION_LINK'::"InventoryType"

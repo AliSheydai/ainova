@@ -1,4 +1,4 @@
-import { CheckoutFieldDefinition, FulfillmentType } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 
 export interface PlanItem {
   id: string

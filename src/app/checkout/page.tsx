@@ -30,10 +30,11 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { LoadingState } from '@/components/ui/loading-state'
 import { toast } from 'sonner'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
-import { CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 
 interface PlanData {
   id: string
@@ -349,10 +350,7 @@ function CheckoutContent() {
         </div>
 
         {loading ? (
-          <div className='flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground'>
-            <Loader2 className='size-8 animate-spin text-primary' />
-            <span className='text-xs'>در حال آماده‌سازی اطلاعات سفارش...</span>
-          </div>
+          <LoadingState message='در حال آماده‌سازی اطلاعات سفارش...' />
         ) : !product ? (
           <Card className='p-8 text-center border-border/70'>
             <p className='text-muted-foreground mb-4 text-xs'>محصولی برای خرید در دسترس نیست.</p>
@@ -378,22 +376,32 @@ function CheckoutContent() {
                   <span className='text-xs text-muted-foreground block mb-2 font-medium'>
                     انتخاب مدت و پلن اشتراک:
                   </span>
-                  <div className='flex flex-wrap items-center justify-center gap-2'>
-                    {activePlans.map((p) => (
-                      <button
-                        key={p.id}
-                        type='button'
-                        onClick={() => setSelectedPlanId(p.id)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-150 cursor-pointer ${
-                          selectedPlan?.id === p.id
-                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                            : 'bg-muted/40 hover:bg-muted text-muted-foreground border-border/60'
-                        }`}
-                      >
-                        <span>{p.name}</span>
-                        <span className='ms-1.5 opacity-80'>— {formatPrice(p.price)}</span>
-                      </button>
-                    ))}
+                  <div
+                    className='flex flex-wrap items-center justify-center gap-2'
+                    role='radiogroup'
+                    aria-label='انتخاب مدت و پلن اشتراک'
+                  >
+                    {activePlans.map((p) => {
+                      const isSelected = selectedPlan?.id === p.id
+                      return (
+                        <button
+                          key={p.id}
+                          type='button'
+                          role='radio'
+                          aria-checked={isSelected}
+                          tabIndex={isSelected ? 0 : -1}
+                          onClick={() => setSelectedPlanId(p.id)}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-150 cursor-pointer ${
+                            isSelected
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                              : 'bg-muted/40 hover:bg-muted text-muted-foreground border-border/60'
+                          }`}
+                        >
+                          <span>{p.name}</span>
+                          <span className='ms-1.5 opacity-80'>— {formatPrice(p.price)}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -475,6 +483,7 @@ function CheckoutContent() {
                   <div className='flex items-center gap-2'>
                     <Input
                       placeholder='کد تخفیف را وارد کنید...'
+                      aria-label='کد تخفیف'
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                       onKeyDown={(e) => {
@@ -493,10 +502,14 @@ function CheckoutContent() {
                       size='sm'
                       onClick={handleApplyCoupon}
                       disabled={validatingCoupon || !couponInput.trim() || buying}
+                      aria-busy={validatingCoupon}
                       className='h-9 px-3.5 text-xs font-semibold shrink-0 cursor-pointer'
                     >
                       {validatingCoupon ? (
-                        <Loader2 className='size-3.5 animate-spin' />
+                        <>
+                          <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />
+                          <span className='sr-only'>در حال بررسی کد تخفیف...</span>
+                        </>
                       ) : (
                         'اعمال'
                       )}
@@ -531,11 +544,15 @@ function CheckoutContent() {
                   className='w-full py-6 text-base font-bold shadow-md cursor-pointer'
                   onClick={handleBuy}
                   disabled={buying}
+                  aria-busy={buying}
                 >
                   {buying ? (
-                    <Loader2 className='me-2 size-5 animate-spin' />
+                    <>
+                      <Loader2 className='me-2 size-5 animate-spin' aria-hidden='true' />
+                      <span className='sr-only'>در حال اتصال به درگاه پرداخت...</span>
+                    </>
                   ) : (
-                    <ShoppingCart className='me-2 size-5' />
+                    <ShoppingCart className='me-2 size-5' aria-hidden='true' />
                   )}
                   اتصال به درگاه پرداخت و دریافت اشتراک
                 </Button>
@@ -566,8 +583,9 @@ export default function CheckoutPage() {
   return (
     <Suspense
       fallback={
-        <div className='min-h-screen flex items-center justify-center'>
-          <Loader2 className='size-8 animate-spin text-primary' />
+        <div className='min-h-screen flex items-center justify-center' role='status' aria-live='polite'>
+          <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
+          <span className='sr-only'>در حال بارگذاری صفحه پرداخت...</span>
         </div>
       }
     >

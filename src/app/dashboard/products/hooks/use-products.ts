@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { ProductItem, PlanItem } from '../types'
-import { CheckoutFieldDefinition, FulfillmentType } from '@/lib/fulfillment/types'
+import { type ProductItem, type PlanItem } from '../types'
+import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 
 export function useProducts() {
   const [products, setProducts] = useState<ProductItem[]>([])

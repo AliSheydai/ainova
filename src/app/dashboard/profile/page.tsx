@@ -118,8 +118,13 @@ export default function ProfilePage() {
         <Separator />
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="size-6 animate-spin text-primary" />
+          <div
+            className="flex flex-col items-center justify-center py-16 gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="size-6 animate-spin text-primary" aria-hidden="true" />
+            <span className="text-xs text-muted-foreground">در حال بارگذاری مشخصات کاربر...</span>
           </div>
         ) : (
           <Card className="border-border/80 shadow-xs">
@@ -186,16 +191,17 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   disabled={saving}
+                  aria-busy={saving}
                   className="w-full sm:w-auto text-xs font-semibold h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/20"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="ml-2 size-4 animate-spin" />
+                      <Loader2 className="ml-2 size-4 animate-spin" aria-hidden="true" />
                       در حال ذخیره اطلاعات...
                     </>
                   ) : (
                     <>
-                      <Check className="ml-2 size-4" />
+                      <Check className="ml-2 size-4" aria-hidden="true" />
                       ذخیره و به‌روزرسانی
                     </>
                   )}

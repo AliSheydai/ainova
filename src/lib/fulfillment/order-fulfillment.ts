@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { FulfillmentType, OrderStatus, FulfillmentStatus, DeliveryStatus } from '@prisma/client'
+import { type FulfillmentType, type OrderStatus, type FulfillmentStatus, type DeliveryStatus } from '@prisma/client'
 import { FulfillmentRegistry } from './registry'
-import { FulfillOrderOptions, FulfillOrderResult, ManualDeliveryData } from './types'
+import { type FulfillOrderOptions, type FulfillOrderResult, type ManualDeliveryData } from './types'
 import { memoryCache } from '@/lib/cache/memory-cache'
 
 export interface EnrichedProductMetrics {

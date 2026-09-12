@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { verifyOtpCode } from '@/lib/auth/otp'
 import { AUTH_COOKIE_NAME } from '@/lib/auth/jwt'
 import { getClientIp } from '@/lib/security/rate-limit'

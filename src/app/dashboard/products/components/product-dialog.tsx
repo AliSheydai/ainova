@@ -186,10 +186,11 @@ export function ProductDialog({
             type='button'
             size='sm'
             disabled={submitting}
+            aria-busy={submitting}
             onClick={onSave}
             className='rounded-xl text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
           >
-            {submitting && <Loader2 className='size-3.5 animate-spin' />}
+            {submitting && <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />}
             <span>{isEditing ? 'بروزرسانی محصول' : 'ایجاد محصول'}</span>
           </Button>
         </DialogFooter>

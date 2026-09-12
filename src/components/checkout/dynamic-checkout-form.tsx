@@ -3,7 +3,7 @@
 import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 
 interface DynamicCheckoutFormProps {
   fields: CheckoutFieldDefinition[]

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
-import { Role, User } from '@prisma/client'
+import { Role, type User } from '@prisma/client'
 
 /**
  * Server Component Guard for Admin Pages.

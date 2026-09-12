@@ -25,6 +25,8 @@ import {
   ExternalLink,
   Calendar,
 } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -132,7 +134,10 @@ export default function AdminPaymentsPage() {
 
   // UI state
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
+  const isMobile = useIsMobile()
+  const [userViewMode, setUserViewMode] = useState<'table' | 'cards' | null>(null)
+  const viewMode = userViewMode ?? (isMobile ? 'cards' : 'table')
+  const setViewMode = (mode: 'table' | 'cards') => setUserViewMode(mode)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [availableGateways, setAvailableGateways] = useState<string[]>([])
   const [counts, setCounts] = useState({
@@ -643,14 +648,11 @@ export default function AdminPaymentsPage() {
 
             <CardContent className='p-0'>
               {loading ? (
-                <div className='flex flex-col items-center justify-center py-20 gap-3'>
-                  <Loader2 className='size-8 animate-spin text-primary' />
-                  <span className='text-xs text-muted-foreground'>در حال دریافت تراکنش‌ها...</span>
-                </div>
+                <LoadingState message='در حال دریافت تراکنش‌ها...' />
               ) : payments.length === 0 ? (
                 <div className='py-16 text-center space-y-3'>
                   <div className='size-12 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground'>
-                    <CreditCard className='size-6' />
+                    <CreditCard className='size-6' aria-hidden='true' />
                   </div>
                   <p className='text-sm font-semibold text-foreground'>تراکنشی با این مشخصات یافت نشد.</p>
                   {activeFiltersCount > 0 && (
@@ -661,7 +663,12 @@ export default function AdminPaymentsPage() {
                 </div>
               ) : viewMode === 'table' ? (
                 /* Desktop Table View */
-                <div className='overflow-x-auto'>
+                <div
+                  className='overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
+                  tabIndex={0}
+                  role='region'
+                  aria-label='جدول تراکنش‌های بانکی'
+                >
                   <table className='w-full min-w-[1150px] text-xs text-start'>
                     <thead>
                       <tr className='border-b border-border/60 bg-muted/30 text-muted-foreground font-medium'>

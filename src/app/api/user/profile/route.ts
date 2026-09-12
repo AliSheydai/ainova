@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
 

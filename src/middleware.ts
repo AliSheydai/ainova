@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const AUTH_COOKIE_NAME = 'auth_token'

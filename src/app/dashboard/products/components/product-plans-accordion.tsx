@@ -2,7 +2,7 @@ import React from 'react'
 import { Layers, Plus, Edit3, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { PlanItem, formatPrice, getFulfillmentBadge } from '../types'
+import { type PlanItem, formatPrice, getFulfillmentBadge } from '../types'
 
 interface ProductPlansAccordionProps {
   plans: PlanItem[]

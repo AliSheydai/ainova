@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { PaymentStatus } from '@prisma/client'
+import { PaymentStatus, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const dateRange = searchParams.get('dateRange')?.trim() || 'ALL'
     const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
-    const where: any = {}
+    const where: Prisma.PaymentWhereInput = {}
 
     // Status Filter
     if (statusFilter && statusFilter !== 'ALL') {
@@ -38,26 +38,27 @@ export async function GET(req: NextRequest) {
     // Date Range Filter
     if (dateRange && dateRange !== 'ALL') {
       const now = new Date()
+      const existingCreatedAt = typeof where.createdAt === 'object' && where.createdAt !== null ? where.createdAt : {}
       if (dateRange === 'TODAY') {
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        where.createdAt = { ...(where.createdAt || {}), gte: startOfToday }
+        where.createdAt = { ...existingCreatedAt, gte: startOfToday }
       } else if (dateRange === 'YESTERDAY') {
         const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
         const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         where.createdAt = {
-          ...(where.createdAt || {}),
+          ...existingCreatedAt,
           gte: startOfYesterday,
           lt: endOfYesterday,
         }
       } else if (dateRange === 'LAST_7_DAYS') {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        where.createdAt = { ...(where.createdAt || {}), gte: sevenDaysAgo }
+        where.createdAt = { ...existingCreatedAt, gte: sevenDaysAgo }
       } else if (dateRange === 'LAST_30_DAYS') {
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        where.createdAt = { ...(where.createdAt || {}), gte: thirtyDaysAgo }
+        where.createdAt = { ...existingCreatedAt, gte: thirtyDaysAgo }
       } else if (dateRange === 'THIS_MONTH') {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        where.createdAt = { ...(where.createdAt || {}), gte: startOfMonth }
+        where.createdAt = { ...existingCreatedAt, gte: startOfMonth }
       }
     }
 
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Sorting
-    let orderBy: any = { createdAt: 'desc' }
+    let orderBy: Prisma.PaymentOrderByWithRelationInput = { createdAt: 'desc' }
     if (sortBy === 'OLDEST') {
       orderBy = { createdAt: 'asc' }
     } else if (sortBy === 'HIGHEST_AMOUNT') {

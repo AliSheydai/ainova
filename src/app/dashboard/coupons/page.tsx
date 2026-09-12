@@ -18,7 +18,11 @@ import {
   AlertCircle,
   Clock,
   X,
+  LayoutGrid,
+  Table as TableIcon,
 } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { LoadingState } from '@/components/ui/loading-state'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -98,6 +102,10 @@ function formatDate(dateStr: string): string {
 }
 
 export default function AdminCouponsPage() {
+  const isMobile = useIsMobile()
+  const [userViewMode, setUserViewMode] = useState<'table' | 'cards' | null>(null)
+  const viewMode = userViewMode ?? (isMobile ? 'cards' : 'table')
+
   const [coupons, setCoupons] = useState<CouponItem[]>([])
   const [products, setProducts] = useState<ProductOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -302,6 +310,34 @@ export default function AdminCouponsPage() {
             <span>ایجاد کد جدید</span>
           </Button>
 
+          {/* View Mode Toggle (Desktop) */}
+          <div className='hidden sm:flex items-center rounded-lg border border-border/70 p-0.5 bg-muted/30'>
+            <button
+              onClick={() => setUserViewMode('table')}
+              className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title='نمای جدول'
+              aria-label='نمای جدول'
+            >
+              <TableIcon className='size-3.5' />
+            </button>
+            <button
+              onClick={() => setUserViewMode('cards')}
+              className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                viewMode === 'cards'
+                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title='نمای کارتی'
+              aria-label='نمای کارتی'
+            >
+              <LayoutGrid className='size-3.5' />
+            </button>
+          </div>
+
           <Button
             variant='outline'
             size='sm'
@@ -344,28 +380,51 @@ export default function AdminCouponsPage() {
             </CardContent>
           </Card>
 
-          {/* Coupons Table */}
+          {/* Coupons Table / Cards */}
           <Card className='border-border/70 shadow-xs overflow-hidden'>
             <CardHeader className='p-4 sm:p-5 border-b border-border/60 bg-muted/10'>
-              <div className='flex items-center justify-between'>
-                <CardTitle className='text-sm sm:text-base font-bold flex items-center gap-2'>
-                  <span>لیست کوپن‌ها و کدهای فعال</span>
-                </CardTitle>
-                <span className='text-xs text-muted-foreground font-sans'>
-                  {coupons.length} مورد
-                </span>
+              <div className='flex items-center justify-between gap-2'>
+                <div className='flex items-center gap-2'>
+                  <CardTitle className='text-sm sm:text-base font-bold flex items-center gap-2'>
+                    <span>لیست کوپن‌ها و کدهای فعال</span>
+                  </CardTitle>
+                  <Badge variant='outline' className='font-sans text-xs'>
+                    {coupons.length.toLocaleString('fa-IR')} مورد
+                  </Badge>
+                </div>
+
+                {/* Mobile View Toggle */}
+                <div className='flex sm:hidden items-center rounded-lg border border-border/70 p-0.5 bg-muted/30'>
+                  <button
+                    onClick={() => setUserViewMode('table')}
+                    className={`px-2 py-1 rounded-md text-xs transition-colors cursor-pointer ${
+                      viewMode === 'table'
+                        ? 'bg-background text-foreground shadow-xs font-semibold'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    جدول
+                  </button>
+                  <button
+                    onClick={() => setUserViewMode('cards')}
+                    className={`px-2 py-1 rounded-md text-xs transition-colors cursor-pointer ${
+                      viewMode === 'cards'
+                        ? 'bg-background text-foreground shadow-xs font-semibold'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    کارت‌ها
+                  </button>
+                </div>
               </div>
             </CardHeader>
 
             <CardContent className='p-0'>
               {loading ? (
-                <div className='py-16 flex flex-col items-center justify-center gap-3 text-muted-foreground'>
-                  <Loader2 className='size-8 animate-spin text-primary' />
-                  <span className='text-xs'>در حال بارگذاری کدهای تخفیف...</span>
-                </div>
+                <LoadingState message='در حال بارگذاری کدهای تخفیف...' />
               ) : coupons.length === 0 ? (
                 <div className='py-16 text-center text-muted-foreground space-y-3'>
-                  <Tag className='size-10 mx-auto text-muted-foreground/40' />
+                  <Tag className='size-10 mx-auto text-muted-foreground/40' aria-hidden='true' />
                   <p className='text-xs'>هیچ کد تخفیفی یافت نشد.</p>
                   <Button
                     size='sm'
@@ -377,8 +436,14 @@ export default function AdminCouponsPage() {
                     <span>اولین کد تخفیف را ایجاد کنید</span>
                   </Button>
                 </div>
-              ) : (
-                <div className='overflow-x-auto'>
+              ) : viewMode === 'table' ? (
+                /* Desktop Table View */
+                <div
+                  className='overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
+                  tabIndex={0}
+                  role='region'
+                  aria-label='جدول کدهای تخفیف'
+                >
                   <table className='w-full text-xs text-start border-collapse'>
                     <thead>
                       <tr className='border-b border-border/70 bg-muted/40 text-muted-foreground font-medium'>
@@ -411,8 +476,9 @@ export default function AdminCouponsPage() {
                                 <button
                                   type='button'
                                   onClick={() => handleCopyCode(item.code)}
-                                  className='text-muted-foreground hover:text-foreground p-1 rounded-md'
+                                  className='text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer'
                                   title='کپی کد'
+                                  aria-label={`کپی کد تخفیف ${item.code}`}
                                 >
                                   {copiedCode === item.code ? (
                                     <Check className='size-3.5 text-emerald-500' />
@@ -507,7 +573,7 @@ export default function AdminCouponsPage() {
                               <Switch
                                 checked={item.active}
                                 onCheckedChange={() => handleToggleActive(item)}
-                                aria-label='فعال / غیرفعال'
+                                aria-label={`فعال بودن کد ${item.code}`}
                               />
                             </td>
 
@@ -517,8 +583,9 @@ export default function AdminCouponsPage() {
                                 variant='ghost'
                                 size='icon'
                                 onClick={() => setDeleteTarget(item)}
-                                className='size-8 text-muted-foreground hover:text-destructive'
+                                className='size-8 text-muted-foreground hover:text-destructive cursor-pointer'
                                 title='حذف کد تخفیف'
+                                aria-label={`حذف کد تخفیف ${item.code}`}
                               >
                                 <Trash2 className='size-3.5' />
                               </Button>
@@ -528,6 +595,145 @@ export default function AdminCouponsPage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              ) : (
+                /* Mobile Cards View */
+                <div className='p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-3'>
+                  {coupons.map((item) => {
+                    const isExpired = item.expiresAt && new Date() > new Date(item.expiresAt)
+                    const isMaxedOut = item.maxUses !== null && item.usedCount >= item.maxUses
+
+                    return (
+                      <div
+                        key={item.id}
+                        className='rounded-2xl border border-border/70 p-4 bg-card/70 hover:border-primary/40 transition-all space-y-3 shadow-xs'
+                      >
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <Badge
+                              variant='outline'
+                              className='font-mono font-bold text-xs py-1 px-2.5 bg-primary/5 text-primary border-primary/30 tracking-wider'
+                            >
+                              {item.code}
+                            </Badge>
+                            <button
+                              type='button'
+                              onClick={() => handleCopyCode(item.code)}
+                              className='text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer'
+                              title='کپی کد'
+                              aria-label={`کپی کد تخفیف ${item.code}`}
+                            >
+                              {copiedCode === item.code ? (
+                                <Check className='size-3.5 text-emerald-500' />
+                              ) : (
+                                <Copy className='size-3.5' />
+                              )}
+                            </button>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-[11px] text-muted-foreground'>
+                              {item.active ? 'فعال' : 'غیرفعال'}
+                            </span>
+                            <Switch
+                              checked={item.active}
+                              onCheckedChange={() => handleToggleActive(item)}
+                              aria-label={`وضعیت کد تخفیف ${item.code}`}
+                            />
+                          </div>
+                        </div>
+
+                        {item.description && (
+                          <p className='text-xs text-muted-foreground leading-relaxed'>
+                            {item.description}
+                          </p>
+                        )}
+
+                        <div className='rounded-xl bg-muted/40 p-2.5 space-y-1.5 text-xs'>
+                          <div className='flex items-center justify-between'>
+                            <span className='text-muted-foreground'>مقدار تخفیف:</span>
+                            <div className='flex items-center gap-1.5 font-bold text-foreground'>
+                              {item.discountType === 'PERCENTAGE' ? (
+                                <>
+                                  <Percent className='size-3.5 text-primary shrink-0' />
+                                  <span>%{item.discountValue} تخفیف</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Coins className='size-3.5 text-amber-500 shrink-0' />
+                                  <span>{formatPrice(item.discountValue)} تخفیف</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {item.maxDiscountAmount && item.discountType === 'PERCENTAGE' && (
+                            <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+                              <span>سقف تخفیف:</span>
+                              <span className='font-sans'>{formatPrice(item.maxDiscountAmount)}</span>
+                            </div>
+                          )}
+
+                          <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+                            <span>حداقل خرید:</span>
+                            <span>
+                              {item.minOrderAmount
+                                ? formatPrice(item.minOrderAmount)
+                                : 'بدون حداقل'}
+                            </span>
+                          </div>
+
+                          <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+                            <span>دفعات استفاده:</span>
+                            <span className='font-sans font-medium text-foreground'>
+                              {item.usedCount} از {item.maxUses !== null ? item.maxUses : 'نامحدود'}
+                              {isMaxedOut && (
+                                <Badge variant='outline' className='text-[9px] text-rose-600 border-rose-500/30 ms-1.5'>
+                                  تکمیل
+                                </Badge>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className='flex items-center justify-between text-xs pt-1 border-t border-border/40 text-muted-foreground'>
+                          <div className='flex items-center gap-1'>
+                            <span>محصول:</span>
+                            {item.product ? (
+                              <Badge variant='secondary' className='text-[10px] max-w-[120px] truncate'>
+                                {item.product.title}
+                              </Badge>
+                            ) : (
+                              <span className='text-[11px] font-medium text-foreground/80'>همه</span>
+                            )}
+                          </div>
+
+                          <div className='flex items-center gap-1 text-[11px]'>
+                            <span>انقضا:</span>
+                            {item.expiresAt ? (
+                              <span className={isExpired ? 'text-rose-600 font-bold line-through' : 'text-foreground font-sans'}>
+                                {formatDate(item.expiresAt)}
+                              </span>
+                            ) : (
+                              <span>نامحدود</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className='pt-1 flex justify-end'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => setDeleteTarget(item)}
+                            className='h-8 text-xs text-destructive hover:bg-destructive/10 gap-1.5 rounded-xl cursor-pointer'
+                            aria-label={`حذف کد تخفیف ${item.code}`}
+                          >
+                            <Trash2 className='size-3.5' />
+                            <span>حذف کد</span>
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </CardContent>

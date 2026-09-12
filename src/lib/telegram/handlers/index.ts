@@ -1,4 +1,4 @@
-import { Bot } from 'grammy'
+import { type Bot } from 'grammy'
 import { BUTTONS, mainMenuKeyboard } from '../keyboards'
 import { MESSAGES } from '../messages'
 import { handleStart } from './start'

@@ -1,4 +1,4 @@
-import { Context } from 'grammy'
+import { type Context } from 'grammy'
 import { MESSAGES } from '../messages'
 import { supportKeyboard } from '../keyboards'
 

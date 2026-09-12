@@ -268,10 +268,10 @@ export class AdminNotificationService {
       }
 
       return { success: true }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err?.message || 'خطای ناشناخته در ارسال پیام تلگرام.',
+        error: err instanceof Error ? err.message : 'خطای ناشناخته در ارسال پیام تلگرام.',
       }
     }
   }

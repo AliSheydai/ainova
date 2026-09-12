@@ -67,6 +67,21 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
   const [devCode, setDevCode] = useState<string | null>(null)
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUserData | null>(null)
 
+  const phoneInputRef = React.useRef<HTMLInputElement>(null)
+  const nameInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Programmatic focus management on step transitions
+  useEffect(() => {
+    if (!open) return
+    if (step === 'phone') {
+      const timer = setTimeout(() => phoneInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
+    } else if (step === 'name') {
+      const timer = setTimeout(() => nameInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
+    }
+  }, [step, open])
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -335,6 +350,13 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
   const renderStepForms = () => (
     <>
+      {/* Live Region for Screen Readers */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {step === 'phone' && 'مرحله ۱ از ۳: لطفاً شماره تلفن همراه خود را وارد نمایید.'}
+        {step === 'otp' && `مرحله ۲ از ۳: کد تأیید ۵ رقمی ارسال‌شده به شماره ${phone} را وارد نمایید.`}
+        {step === 'name' && 'مرحله ۳ از ۳: لطفاً نام و نام خانوادگی خود را وارد نمایید.'}
+      </div>
+
       {/* ================= STEP 1: PHONE ================= */}
       {step === 'phone' && (
         <form onSubmit={handleSendOtp} className="space-y-4 pt-1">
@@ -350,6 +372,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
             <div className="relative group">
               <Input
+                ref={phoneInputRef}
                 id="modal-phone"
                 type="tel"
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
@@ -357,6 +380,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}
+                aria-required="true"
                 className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground"
                 autoFocus
               />
@@ -371,12 +395,13 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
           <Button
             type="submit"
-            className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
+            aria-busy={loading}
+            className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 cursor-pointer"
             disabled={loading}
           >
             {loading ? (
               <>
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                 در حال ارسال کد تأیید...
               </>
             ) : (
@@ -406,8 +431,10 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                 setStep('phone')
                 setOtpCode('')
                 setDevCode(null)
+                setTimeout(() => phoneInputRef.current?.focus(), 50)
               }}
-              className="font-medium text-primary hover:underline transition-colors text-xs"
+              className="font-medium text-primary hover:underline transition-colors text-xs cursor-pointer"
+              aria-label="ویرایش شماره تلفن وارد شده"
             >
               ویرایش شماره
             </button>
@@ -430,6 +457,8 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
             </Label>
             <div dir="ltr">
               <InputOTP
+                id="modal-otp"
+                aria-label="کد ۵ رقمی تأیید پیامک‌شده"
                 maxLength={5}
                 value={otpCode}
                 onChange={(val) => setOtpCode(val)}
@@ -487,18 +516,19 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
           <Button
             type="submit"
+            aria-busy={loading}
             className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
             disabled={loading || otpCode.length < 5}
           >
             {loading ? (
               <>
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                 در حال اعتبارسنجی...
               </>
             ) : (
               <>
                 تأیید و ورود
-                <CheckCircle2 className="mr-2 h-4 w-4" />
+                <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
               </>
             )}
           </Button>
@@ -514,12 +544,14 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
             </Label>
             <div className="relative group">
               <Input
+                ref={nameInputRef}
                 id="modal-name"
                 type="text"
                 placeholder="مثال: علی رضایی"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={loading}
+                aria-required="true"
                 className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 font-sans text-sm placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80"
                 autoFocus
               />
@@ -535,12 +567,13 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
           <div className="space-y-2 pt-2">
             <Button
               type="submit"
-              className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25"
+              aria-busy={loading}
+              className="w-full text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/25 cursor-pointer"
               disabled={loading || !fullName.trim()}
             >
               {loading ? (
                 <>
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   در حال ذخیره...
                 </>
               ) : (
@@ -573,7 +606,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         <SheetContent
           side="bottom"
           dir="rtl"
-          className="max-h-[82vh] max-h-[82dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
+          className="max-h-[85vh] max-h-[85dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
         >
           {/* Pull Handle Indicator */}
           <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -584,7 +617,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
           {renderStepper()}
 
           {/* Scrollable Form Body */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-10 overscroll-contain touch-pan-y">
             <SheetHeader className="text-center pb-3 space-y-1 p-0">
               <div className="flex justify-center mb-1">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">

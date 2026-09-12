@@ -267,8 +267,13 @@ export default function AdminSupportPage() {
           </CardHeader>
           <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
-              <div className='flex items-center justify-center py-16'>
-                <Loader2 className='size-8 animate-spin text-primary' />
+              <div
+                className='flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground'
+                role='status'
+                aria-live='polite'
+              >
+                <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
+                <span className='text-xs'>در حال بارگذاری تیکت‌های پشتیبانی...</span>
               </div>
             ) : tickets.length === 0 ? (
               <div className='py-12 text-center text-xs text-muted-foreground'>
@@ -422,9 +427,14 @@ export default function AdminSupportPage() {
             <Button
               onClick={handleSaveResponse}
               disabled={submitting}
+              aria-busy={submitting}
               className='text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
             >
-              {submitting ? <Loader2 className='size-3.5 animate-spin' /> : <Send className='size-3.5' />}
+              {submitting ? (
+                <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />
+              ) : (
+                <Send className='size-3.5' aria-hidden='true' />
+              )}
               ذخیره پاسخ و وضعیت
             </Button>
           </DialogFooter>

@@ -1,4 +1,4 @@
-import { Context } from 'grammy'
+import { type Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { MESSAGES } from '../messages'
 import { mainMenuKeyboard } from '../keyboards'

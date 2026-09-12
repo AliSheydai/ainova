@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { TicketStatus } from '@prisma/client'
+import { TicketStatus, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const statusFilter = searchParams.get('status') as TicketStatus | null
 
-    const where: any = {}
+    const where: Prisma.SupportTicketWhereInput = {}
     if (statusFilter && Object.values(TicketStatus).includes(statusFilter)) {
       where.status = statusFilter
     }
@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const data: any = {}
+    const data: Prisma.SupportTicketUpdateInput = {}
     if (status && Object.values(TicketStatus).includes(status)) {
       data.status = status
     }

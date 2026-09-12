@@ -1,6 +1,8 @@
-import { FulfillmentType, DeliveryStatus, FulfillmentStatus, Order, Product, Plan, Payment, ActivationLink, Delivery, InventoryItem } from '@prisma/client'
+import { type Prisma, FulfillmentType, DeliveryStatus, FulfillmentStatus, type Order, type Product, type Plan, type Payment, type ActivationLink, type Delivery } from '@prisma/client'
 
 export { FulfillmentType, DeliveryStatus, FulfillmentStatus }
+
+export type PrismaTransactionClient = Prisma.TransactionClient
 
 export type CheckoutFieldType = 'text' | 'email' | 'phone' | 'textarea' | 'number' | 'select' | 'checkbox'
 
@@ -59,6 +61,14 @@ export interface FulfillOrderOptions {
   adminUserId?: string
 }
 
+export type OrderWithFulfillmentDetails = Order & {
+  product: Product | null
+  plan: (Plan & { product?: Product | null }) | null
+  payment: Payment | null
+  activationLink: ActivationLink | null
+  delivery: Delivery | null
+}
+
 export interface FulfillOrderResult {
   success: boolean
   order: Order & {
@@ -77,14 +87,8 @@ export interface FulfillOrderResult {
 export interface IFulfillmentHandler {
   type: FulfillmentType
   fulfill(options: {
-    tx: any
-    order: Order & {
-      product: Product | null
-      plan: (Plan & { product?: Product | null }) | null
-      payment: Payment | null
-      activationLink: ActivationLink | null
-      delivery: Delivery | null
-    }
+    tx: PrismaTransactionClient
+    order: OrderWithFulfillmentDetails
     now: Date
     refId?: string
     rawResponse?: unknown

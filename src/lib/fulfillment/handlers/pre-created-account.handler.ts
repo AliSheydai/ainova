@@ -1,15 +1,15 @@
-import { IFulfillmentHandler, AccountCredentialsDeliveryData } from '../types'
+import { type IFulfillmentHandler, type AccountCredentialsDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
 import { encryptCredential, decryptCredential } from '@/lib/security/crypto'
 
 export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler {
   type = 'PRE_CREATED_ACCOUNT' as const
 
-  async fulfill({ tx, order, now }: { tx: any; order: any; now: Date }) {
+  async fulfill({ tx, order, now }: { tx: PrismaTransactionClient; order: OrderWithFulfillmentDetails; now: Date }) {
     const effectiveProduct = order.product || order.plan?.product
     const productId = effectiveProduct?.id
     const planId = order.planId
 
-    let chosenAccount: { id: string; data: any } | null = null
+    let chosenAccount: { id: string; data: Record<string, unknown> | string } | null = null
 
     // 1. Check if an account was already RESERVED for this order
     const reservedAccount = await tx.inventoryItem.findFirst({
@@ -23,7 +23,7 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
     if (reservedAccount) {
       chosenAccount = {
         id: reservedAccount.id,
-        data: reservedAccount.data,
+        data: reservedAccount.data as Record<string, unknown> | string,
       }
 
       await tx.inventoryItem.update({
@@ -36,7 +36,7 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
       })
     } else {
       // 2. Fallback: Find available account in inventory_items with FOR UPDATE SKIP LOCKED
-      const availableRows = await tx.$queryRaw<Array<{ id: string; data: any }>>`
+      const availableRows = await tx.$queryRaw<Array<{ id: string; data: Record<string, unknown> | string }>>`
         SELECT id, data
         FROM inventory_items
         WHERE type = 'PRE_CREATED_ACCOUNT'::"InventoryType"

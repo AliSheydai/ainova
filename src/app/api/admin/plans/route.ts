@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
-import { FulfillmentType } from '@prisma/client'
+import { FulfillmentType, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const productId = searchParams.get('productId')
 
-    const where: any = {}
+    const where: Prisma.PlanWhereInput = {}
     if (productId) {
       where.productId = productId
     }
@@ -142,7 +142,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.PlanUpdateInput = {}
 
     if (name !== undefined) updateData.name = name.trim()
     if (duration !== undefined) updateData.duration = parseInt(String(duration), 10) || 1

@@ -145,8 +145,12 @@ function SuccessContent() {
 
   if (loading) {
     return (
-      <div className='flex min-h-[60vh] flex-col items-center justify-center gap-3'>
-        <Loader2 className='size-10 animate-spin text-primary' />
+      <div
+        className='flex min-h-[60vh] flex-col items-center justify-center gap-3'
+        role='status'
+        aria-live='polite'
+      >
+        <Loader2 className='size-10 animate-spin text-primary' aria-hidden='true' />
         <p className='text-sm text-muted-foreground'>در حال دریافت اطلاعات سفارش و تحویل اشتراک...</p>
       </div>
     )
@@ -524,8 +528,13 @@ export default function CheckoutSuccessPage() {
       <main className='flex-1 flex items-center justify-center'>
         <Suspense
           fallback={
-            <div className='flex min-h-[60vh] items-center justify-center'>
-              <Loader2 className='size-8 animate-spin text-primary' />
+            <div
+              className='flex min-h-[60vh] items-center justify-center'
+              role='status'
+              aria-live='polite'
+            >
+              <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
+              <span className='sr-only'>در حال بارگذاری اطلاعات پرداخت...</span>
             </div>
           }
         >

@@ -369,7 +369,7 @@ export async function linkUserByVerifiedPhone(
   try {
     return await prisma.$transaction(async (tx) => {
       // Find user by phone
-      let phoneUser = await tx.user.findUnique({
+      const phoneUser = await tx.user.findUnique({
         where: { phone },
       })
 

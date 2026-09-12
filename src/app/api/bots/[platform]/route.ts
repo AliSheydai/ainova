@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { MultiBotController } from '@/lib/bot/adapters/multi-bot'
 
 export async function POST(

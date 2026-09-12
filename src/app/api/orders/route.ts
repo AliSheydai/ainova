@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { PaymentService } from '@/lib/payment'
-import { CheckoutFieldDefinition, FulfillmentType } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
 
@@ -209,8 +209,8 @@ export async function POST(req: NextRequest) {
 
         return newOrder
       })
-    } catch (txError: any) {
-      if (txError?.message === 'STOCK_EXHAUSTED') {
+    } catch (txError: unknown) {
+      if (txError instanceof Error && txError.message === 'STOCK_EXHAUSTED') {
         return NextResponse.json(
           {
             success: false,

@@ -1,17 +1,17 @@
-import { IFulfillmentHandler, ManualDeliveryData } from '../types'
+import { type IFulfillmentHandler, type ManualDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
 
 export class ManualFulfillmentHandler implements IFulfillmentHandler {
   type = 'MANUAL' as const
 
   async fulfill({
-    tx,
-    order,
+    tx: _tx,
+    order: _order,
     now,
     manualDeliveryData,
     adminUserId,
   }: {
-    tx: any
-    order: any
+    tx: PrismaTransactionClient
+    order: OrderWithFulfillmentDetails
     now: Date
     manualDeliveryData?: ManualDeliveryData
     adminUserId?: string

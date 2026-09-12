@@ -14,16 +14,20 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { AuthUserData } from '@/components/auth/auth-modal'
+import { type AuthUserData } from '@/components/auth/auth-modal'
 import { OrdersTab } from './tabs/orders-tab'
 import { ActivationGuideTab } from './tabs/activation-guide-tab'
 import { SupportTab } from './tabs/support-tab'
@@ -153,7 +157,7 @@ export function DashboardModal({
           side="bottom"
           showCloseButton={false}
           dir="rtl"
-          className="h-[80vh] max-h-[82dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl overflow-hidden shadow-2xl gap-0"
+          className="h-[85vh] max-h-[85dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl overflow-hidden shadow-2xl gap-0"
         >
           {/* Pull Handle Indicator */}
           <div className="flex justify-center pt-2.5 pb-1 shrink-0">
@@ -170,6 +174,9 @@ export function DashboardModal({
                 <SheetTitle className="text-xs font-bold text-foreground truncate">
                   {displayName}
                 </SheetTitle>
+                <SheetDescription className="sr-only">
+                  پنل کاربری جهت مشاهده سفارش‌ها و مدیریت حساب
+                </SheetDescription>
                 <p dir="ltr" className="text-[10px] text-muted-foreground font-sans tabular-nums truncate text-right">
                   {user.phone}
                 </p>
@@ -183,7 +190,7 @@ export function DashboardModal({
                   onOpenChange(false)
                   window.location.href = '/checkout'
                 }}
-                className="h-8 text-[11px] gap-1 px-2.5 rounded-xl bg-primary text-primary-foreground shadow-xs"
+                className="h-8 text-[11px] gap-1 px-2.5 rounded-xl bg-primary text-primary-foreground shadow-xs cursor-pointer"
               >
                 <ShoppingBag className="size-3" />
                 خرید اشتراک
@@ -193,7 +200,7 @@ export function DashboardModal({
                 variant="ghost"
                 size="icon"
                 onClick={() => onOpenChange(false)}
-                className="size-8 rounded-xl text-muted-foreground hover:text-foreground"
+                className="size-8 rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
                 aria-label="بستن"
               >
                 <X className="size-4" />
@@ -203,7 +210,11 @@ export function DashboardModal({
 
           {/* Navigation Bar (Tabs) */}
           <div className="px-3 py-2 border-b border-border/50 shrink-0 bg-muted/25">
-            <div className="grid grid-cols-4 gap-1 p-1 bg-muted/60 rounded-xl">
+            <div
+              className="grid grid-cols-4 gap-1 p-1 bg-muted/60 rounded-xl"
+              role="tablist"
+              aria-label="بخش‌های داشبورد کاربری"
+            >
               {menuItems.map((item) => {
                 const Icon = item.icon
                 const isActive = activeTab === item.id
@@ -212,6 +223,10 @@ export function DashboardModal({
                   <button
                     key={item.id}
                     type="button"
+                    role="tab"
+                    id={`mobile-tab-${item.id}`}
+                    aria-controls={`mobile-panel-${item.id}`}
+                    aria-selected={isActive}
                     onClick={() => setActiveTab(item.id)}
                     className={cn(
                       'flex flex-col items-center justify-center py-2 px-1 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer select-none',
@@ -229,7 +244,13 @@ export function DashboardModal({
           </div>
 
           {/* Scrollable Content Body */}
-          <div className="flex-1 overflow-y-auto p-4 pb-12">
+          <div
+            className="flex-1 min-h-0 overflow-y-auto p-4 pb-14 focus-visible:outline-none overscroll-contain touch-pan-y"
+            role="tabpanel"
+            id={`mobile-panel-${activeTab}`}
+            aria-labelledby={`mobile-tab-${activeTab}`}
+            tabIndex={0}
+          >
             {renderTabContent()}
           </div>
         </SheetContent>
@@ -259,7 +280,9 @@ export function DashboardModal({
                   <DialogTitle className="text-sm font-bold text-foreground">
                     جمینای
                   </DialogTitle>
-                  <p className="text-[11px] text-muted-foreground">پنل کاربری و اشتراک</p>
+                  <DialogDescription className="text-[11px] text-muted-foreground">
+                    پنل کاربری و اشتراک
+                  </DialogDescription>
                 </div>
               </div>
             </div>
@@ -275,7 +298,7 @@ export function DashboardModal({
             </div>
 
             {/* Vertical Menu Navigation (از بالا به پایین) */}
-            <nav className="space-y-1.5 pt-1">
+            <nav className="space-y-1.5 pt-1" role="tablist" aria-label="منوی اصلی داشبورد کاربری">
               <div className="text-[10px] font-bold text-muted-foreground px-2 pb-1">
                 منوی اصلی داشبورد
               </div>
@@ -288,6 +311,10 @@ export function DashboardModal({
                   <button
                     key={item.id}
                     type="button"
+                    role="tab"
+                    id={`tab-${item.id}`}
+                    aria-controls={`desktop-panel-${item.id}`}
+                    aria-selected={isActive}
                     onClick={() => setActiveTab(item.id)}
                     className={cn(
                       'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 text-right group cursor-pointer',
@@ -344,7 +371,7 @@ export function DashboardModal({
                 onOpenChange(false)
                 window.location.href = '/checkout'
               }}
-              className="w-full gap-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-xs"
+              className="w-full gap-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-xs cursor-pointer"
             >
               <ShoppingBag className="size-3.5" />
               خرید اشتراک جدید
@@ -369,7 +396,7 @@ export function DashboardModal({
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              className="size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
               aria-label="بستن"
             >
               <X className="size-4" />
@@ -377,7 +404,13 @@ export function DashboardModal({
           </div>
 
           {/* Content Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div
+            className="flex-1 overflow-y-auto p-4 sm:p-6 focus-visible:outline-none"
+            role="tabpanel"
+            id={`desktop-panel-${activeTab}`}
+            aria-labelledby={`tab-${activeTab}`}
+            tabIndex={0}
+          >
             {renderTabContent()}
           </div>
         </main>

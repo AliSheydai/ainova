@@ -1,5 +1,5 @@
-import { FulfillmentType } from '@prisma/client'
-import { IFulfillmentHandler } from './types'
+import { type FulfillmentType } from '@prisma/client'
+import { type IFulfillmentHandler } from './types'
 import { ActivationLinkFulfillmentHandler } from './handlers/activation-link.handler'
 import { PreCreatedAccountFulfillmentHandler } from './handlers/pre-created-account.handler'
 import { CustomerProvisioningFulfillmentHandler } from './handlers/customer-provisioning.handler'

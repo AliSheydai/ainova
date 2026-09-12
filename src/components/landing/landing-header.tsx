@@ -8,11 +8,12 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { AuthModal, AuthUserData } from '@/components/auth/auth-modal'
+import { AuthModal, type AuthUserData } from '@/components/auth/auth-modal'
 import { DashboardModal } from '@/components/dashboard-modal/dashboard-modal'
 
 function TelegramIcon({ className = 'size-4' }: { className?: string }) {
@@ -150,11 +151,12 @@ export function LandingHeader() {
               size='sm'
               onClick={handleTelegramCta}
               disabled={openingTg}
+              aria-busy={openingTg}
               className='hidden sm:inline-flex items-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 font-medium text-xs md:text-sm px-3.5 h-9 rounded-xl shadow-xs transition-all duration-200 cursor-pointer'
               title='ورود مستقیم به ربات تلگرام'
             >
               {openingTg ? (
-                <Loader2 className='size-4 animate-spin text-primary' />
+                <Loader2 className='size-4 animate-spin text-primary' aria-hidden='true' />
               ) : (
                 <TelegramIcon className='size-4 text-primary shrink-0' />
               )}
@@ -167,12 +169,13 @@ export function LandingHeader() {
               size='icon'
               onClick={handleTelegramCta}
               disabled={openingTg}
+              aria-busy={openingTg}
               className='sm:hidden size-8 rounded-lg border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
               aria-label='ورود به ربات تلگرام'
               title='ورود به ربات تلگرام'
             >
               {openingTg ? (
-                <Loader2 className='size-3.5 animate-spin text-primary' />
+                <Loader2 className='size-3.5 animate-spin text-primary' aria-hidden='true' />
               ) : (
                 <TelegramIcon className='size-4 text-primary' />
               )}
@@ -272,7 +275,7 @@ export function LandingHeader() {
 
               <SheetContent
                 side='right'
-                className='flex w-[290px] flex-col justify-between p-6 sm:w-[320px]'
+                className='flex w-[290px] flex-col justify-between p-6 sm:w-[320px] overflow-y-auto overscroll-contain max-h-screen touch-pan-y'
                 dir='rtl'
               >
                 <div>
@@ -285,6 +288,9 @@ export function LandingHeader() {
                         <SheetTitle className='text-base font-bold text-foreground leading-tight'>
                           آینوا
                         </SheetTitle>
+                        <SheetDescription className='sr-only'>
+                          منوی دسترسی سریع و ناوبری بخش‌های فروشگاه
+                        </SheetDescription>
                         <span className='text-[10px] text-muted-foreground font-medium leading-none'>AiNova Store</span>
                       </div>
                     </div>

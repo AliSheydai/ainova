@@ -1,4 +1,4 @@
-import { PaymentProvider, CreatePaymentOptions, CreatePaymentResult, VerifyPaymentOptions, VerifyPaymentResult } from '../types'
+import { type PaymentProvider, type CreatePaymentOptions, type CreatePaymentResult, type VerifyPaymentOptions, type VerifyPaymentResult } from '../types'
 
 /**
  * MockPaymentProvider

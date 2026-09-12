@@ -1,4 +1,4 @@
-import { Context, InlineKeyboard } from 'grammy'
+import { type Context, InlineKeyboard } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { BotStoreService } from '@/lib/bot/bot-store-service'
 import { MESSAGES } from '../messages'
@@ -32,7 +32,7 @@ export async function handleShowProducts(ctx: Context) {
       return
     }
 
-    let text = `🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\nلطفاً محصول مورد نظر خود را جهت مشاهده پلن‌ها و خرید انتخاب فرمایید:`
+    const text = `🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\nلطفاً محصول مورد نظر خود را جهت مشاهده پلن‌ها و خرید انتخاب فرمایید:`
 
     const keyboard = new InlineKeyboard()
     for (const p of products) {
@@ -175,17 +175,17 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
 
     // 4. No extra fields required; proceed directly to order creation
     await executeBotOrderCreation(ctx, user, plan.id, {}, chatId)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in handleBuyPlan:', error)
-    await ctx.reply(`متأسفانه در پردازش سفارش خطایی رخ داد: ${error.message || 'لطفاً دوباره تلاش کنید.'}`)
+    await ctx.reply(`متأسفانه در پردازش سفارش خطایی رخ داد: ${error instanceof Error ? error.message : 'لطفاً دوباره تلاش کنید.'}`)
   }
 }
 
 export async function executeBotOrderCreation(
   ctx: Context,
-  user: any,
+  user: { id: string; name?: string | null; phone?: string | null },
   planId: string,
-  checkoutData: Record<string, any>,
+  checkoutData: Record<string, unknown>,
   chatId: string
 ) {
   const result = await BotStoreService.createBotOrder({

@@ -1,10 +1,10 @@
 import axios from 'axios'
 import {
-  PaymentProvider,
-  CreatePaymentOptions,
-  CreatePaymentResult,
-  VerifyPaymentOptions,
-  VerifyPaymentResult,
+  type PaymentProvider,
+  type CreatePaymentOptions,
+  type CreatePaymentResult,
+  type VerifyPaymentOptions,
+  type VerifyPaymentResult,
 } from '../types'
 
 export class ZarinpalPaymentProvider implements PaymentProvider {

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
-import { ProductStatus } from '@prisma/client'
+import { ProductStatus, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const includeArchived = searchParams.get('includeArchived') === 'true'
 
-    const whereClause: any = {}
+    const whereClause: Prisma.ProductWhereInput = {}
     if (!includeArchived) {
       whereClause.status = { not: 'ARCHIVED' }
     }
@@ -153,7 +153,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.ProductUpdateInput = {}
 
     if (title !== undefined) {
       updateData.title = (title || '').trim()

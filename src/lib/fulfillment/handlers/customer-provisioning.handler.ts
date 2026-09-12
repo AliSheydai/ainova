@@ -1,14 +1,22 @@
-import { IFulfillmentHandler, CustomerProvisioningDeliveryData } from '../types'
+import { type IFulfillmentHandler, type CustomerProvisioningDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
 
 export class CustomerProvisioningFulfillmentHandler implements IFulfillmentHandler {
   type = 'CUSTOMER_PROVISIONING' as const
 
-  async fulfill({ tx, order, now }: { tx: any; order: any; now: Date }) {
-    const checkoutData = (order.checkoutData as Record<string, any>) || {}
+  async fulfill({
+    tx: _tx,
+    order,
+    now: _now,
+  }: {
+    tx: PrismaTransactionClient
+    order: OrderWithFulfillmentDetails & { user?: { phone?: string | null } | null }
+    now: Date
+  }) {
+    const checkoutData = (order.checkoutData as Record<string, unknown>) || {}
     const customerEmail =
-      checkoutData.email ||
-      checkoutData.customer_email ||
-      checkoutData.user_email ||
+      (typeof checkoutData.email === 'string' && checkoutData.email) ||
+      (typeof checkoutData.customer_email === 'string' && checkoutData.customer_email) ||
+      (typeof checkoutData.user_email === 'string' && checkoutData.user_email) ||
       order.user?.phone ||
       'مشتری'
 

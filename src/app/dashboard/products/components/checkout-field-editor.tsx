@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 
 interface CheckoutFieldEditorProps {
   fields: CheckoutFieldDefinition[]

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { PaymentProvider, CreatePaymentOptions, VerifyPaymentOptions } from './types'
+import { type PaymentProvider, type CreatePaymentOptions, type VerifyPaymentOptions } from './types'
 import { MockPaymentProvider } from './providers/mock.provider'
 import { ZarinpalPaymentProvider } from './providers/zarinpal.provider'
 

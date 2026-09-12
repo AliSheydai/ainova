@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AuthUserData } from '@/components/auth/auth-modal'
+import { type AuthUserData } from '@/components/auth/auth-modal'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 
@@ -245,17 +245,18 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                 <Button
                   type="submit"
                   disabled={saving}
+                  aria-busy={saving}
                   size="sm"
                   className="text-xs font-semibold h-10 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="ml-2 size-3.5 animate-spin" />
+                      <Loader2 className="ml-2 size-3.5 animate-spin" aria-hidden="true" />
                       در حال ذخیره...
                     </>
                   ) : (
                     <>
-                      <Check className="ml-2 size-3.5" />
+                      <Check className="ml-2 size-3.5" aria-hidden="true" />
                       ذخیره تغییرات
                     </>
                   )}
@@ -317,9 +318,10 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                     size="sm"
                     onClick={handleUnlinkTelegram}
                     disabled={unlinkingTg}
+                    aria-busy={unlinkingTg}
                     className="h-8 text-xs text-muted-foreground hover:text-red-600 rounded-xl"
                   >
-                    {unlinkingTg ? <Loader2 className="size-3 animate-spin" /> : 'قطع اتصال'}
+                    {unlinkingTg ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : 'قطع اتصال'}
                   </Button>
                 </div>
               </div>
@@ -329,17 +331,18 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                   type="button"
                   onClick={handleConnectTelegram}
                   disabled={connectingTg}
+                  aria-busy={connectingTg}
                   size="sm"
                   className="h-9 px-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-sm shadow-sky-500/20 transition-transform active:scale-[0.98]"
                 >
                   {connectingTg ? (
                     <>
-                      <Loader2 className="size-3.5 animate-spin" />
+                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                       در حال تولید لینک اتصال...
                     </>
                   ) : (
                     <>
-                      <TelegramIcon className="size-3.5" />
+                      <TelegramIcon className="size-3.5" aria-hidden="true" />
                       🤖 اتصال به ربات تلگرام
                     </>
                   )}
@@ -367,12 +370,13 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
               size="sm"
               onClick={handleLogoutClick}
               disabled={loggingOut}
+              aria-busy={loggingOut}
               className="h-9 gap-1.5 text-xs text-red-600 hover:bg-red-500/10 hover:text-red-700 border-red-500/30 rounded-xl transition-transform active:scale-[0.98]"
             >
               {loggingOut ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
               ) : (
-                <LogOut className="size-3.5" />
+                <LogOut className="size-3.5" aria-hidden="true" />
               )}
               خروج از حساب
             </Button>

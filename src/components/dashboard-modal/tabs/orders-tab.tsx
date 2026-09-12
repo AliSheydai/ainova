@@ -158,16 +158,21 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           size="sm"
           onClick={fetchOrders}
           disabled={loading}
+          aria-busy={loading}
           className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           به‌روزرسانی
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Loader2 className="size-7 animate-spin text-primary mb-2" />
+        <div
+          className="flex flex-col items-center justify-center py-16 text-muted-foreground"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="size-7 animate-spin text-primary mb-2" aria-hidden="true" />
           <p className="text-xs">در حال بارگذاری سفارش‌ها...</p>
         </div>
       ) : orders.length === 0 ? (

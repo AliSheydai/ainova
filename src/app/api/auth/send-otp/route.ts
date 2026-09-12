@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { requestOtp } from '@/lib/auth/otp'
 import { getClientIp } from '@/lib/security/rate-limit'
 

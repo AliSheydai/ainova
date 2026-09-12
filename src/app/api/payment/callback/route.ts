@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { InlineKeyboard } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { PaymentService } from '@/lib/payment'

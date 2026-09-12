@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Role, User } from '@prisma/client'
+import { Role, type User } from '@prisma/client'
 
 // Unique 64-bit integer identifier for PostgreSQL advisory lock
 const ADVISORY_LOCK_ID = 982341235

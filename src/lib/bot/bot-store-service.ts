@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { PaymentService } from '@/lib/payment'
-import { CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 import { decryptCredential } from '@/lib/security/crypto'
 
 export interface BotProductSummary {

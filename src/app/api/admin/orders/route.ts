@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { OrderStatus, FulfillmentType, DeliveryStatus } from '@prisma/client'
+import { OrderStatus, type FulfillmentType, DeliveryStatus, type Prisma } from '@prisma/client'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { decryptCredential } from '@/lib/security/crypto'
 import { AdminNotificationService } from '@/lib/notifications/admin-notification'
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     const dateRange = searchParams.get('dateRange')?.trim() || 'ALL'
     const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
-    const where: any = {}
+    const where: Prisma.OrderWhereInput = {}
 
     // Status Filter
     if (statusFilter && statusFilter !== 'ALL') {
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
           { delivery: { status: { not: 'DELIVERED' } } },
         ]
       } else if (Object.values(OrderStatus).includes(statusFilter as OrderStatus)) {
-        where.status = statusFilter
+        where.status = statusFilter as OrderStatus
       }
     }
 
@@ -49,18 +49,19 @@ export async function GET(req: NextRequest) {
       if (deliveryStatusFilter === 'NO_DELIVERY') {
         where.delivery = null
       } else if (Object.values(DeliveryStatus).includes(deliveryStatusFilter as DeliveryStatus)) {
-        where.delivery = { status: deliveryStatusFilter }
+        where.delivery = { status: deliveryStatusFilter as DeliveryStatus }
       }
     }
 
     // Fulfillment Type Filter
     if (fulfillmentTypeFilter && fulfillmentTypeFilter !== 'ALL') {
-      const fulfillmentCondition = [
-        { delivery: { type: fulfillmentTypeFilter } },
+      const fulfillmentCondition: Prisma.OrderWhereInput[] = [
+        { delivery: { type: fulfillmentTypeFilter as FulfillmentType } },
         { plan: { fulfillmentType: fulfillmentTypeFilter as FulfillmentType } },
       ]
       if (where.OR) {
-        where.AND = [...(where.AND || []), { OR: fulfillmentCondition }]
+        const existingAnd = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []
+        where.AND = [...existingAnd, { OR: fulfillmentCondition }]
       } else {
         where.OR = fulfillmentCondition
       }
@@ -73,8 +74,9 @@ export async function GET(req: NextRequest) {
 
     // Product Filter
     if (productIdFilter && productIdFilter !== 'ALL') {
+      const existingOr = Array.isArray(where.OR) ? where.OR : where.OR ? [where.OR] : []
       where.OR = [
-        ...(where.OR || []),
+        ...existingOr,
         { productId: productIdFilter },
         { plan: { productId: productIdFilter } },
       ]
@@ -83,32 +85,33 @@ export async function GET(req: NextRequest) {
     // Date Range Filter
     if (dateRange && dateRange !== 'ALL') {
       const now = new Date()
+      const existingCreatedAt = typeof where.createdAt === 'object' && where.createdAt !== null ? where.createdAt : {}
       if (dateRange === 'TODAY') {
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        where.createdAt = { ...(where.createdAt || {}), gte: startOfToday }
+        where.createdAt = { ...existingCreatedAt, gte: startOfToday }
       } else if (dateRange === 'YESTERDAY') {
         const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
         const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         where.createdAt = {
-          ...(where.createdAt || {}),
+          ...existingCreatedAt,
           gte: startOfYesterday,
           lt: endOfYesterday,
         }
       } else if (dateRange === 'LAST_7_DAYS') {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        where.createdAt = { ...(where.createdAt || {}), gte: sevenDaysAgo }
+        where.createdAt = { ...existingCreatedAt, gte: sevenDaysAgo }
       } else if (dateRange === 'LAST_30_DAYS') {
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        where.createdAt = { ...(where.createdAt || {}), gte: thirtyDaysAgo }
+        where.createdAt = { ...existingCreatedAt, gte: thirtyDaysAgo }
       } else if (dateRange === 'THIS_MONTH') {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        where.createdAt = { ...(where.createdAt || {}), gte: startOfMonth }
+        where.createdAt = { ...existingCreatedAt, gte: startOfMonth }
       }
     }
 
     // Search Query across multiple fields
     if (search) {
-      const searchCondition = [
+      const searchCondition: Prisma.OrderWhereInput[] = [
         { id: { contains: search, mode: 'insensitive' } },
         { user: { phone: { contains: search, mode: 'insensitive' } } },
         { user: { name: { contains: search, mode: 'insensitive' } } },
@@ -120,7 +123,8 @@ export async function GET(req: NextRequest) {
       ]
 
       if (where.OR) {
-        where.AND = [...(where.AND || []), { OR: where.OR }, { OR: searchCondition }]
+        const existingAnd = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []
+        where.AND = [...existingAnd, { OR: where.OR }, { OR: searchCondition }]
         delete where.OR
       } else {
         where.OR = searchCondition
@@ -128,7 +132,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Sorting
-    let orderBy: any = { createdAt: 'desc' }
+    let orderBy: Prisma.OrderOrderByWithRelationInput = { createdAt: 'desc' }
     if (sortBy === 'OLDEST') {
       orderBy = { createdAt: 'asc' }
     } else if (sortBy === 'HIGHEST_AMOUNT') {

@@ -179,8 +179,13 @@ export default function AdminSettingsPage() {
         </div>
 
         {loading ? (
-          <div className='flex items-center justify-center py-20'>
-            <Loader2 className='size-8 animate-spin text-primary' />
+          <div
+            className='flex flex-col items-center justify-center py-20 gap-2.5 text-muted-foreground'
+            role='status'
+            aria-live='polite'
+          >
+            <Loader2 className='size-8 animate-spin text-primary' aria-hidden='true' />
+            <span className='text-xs'>در حال بارگذاری تنظیمات سیستم...</span>
           </div>
         ) : (
           <form onSubmit={handleSaveSettings} className='space-y-6'>
@@ -344,11 +349,15 @@ export default function AdminSettingsPage() {
                         size='sm'
                         onClick={handleTestTelegram}
                         disabled={testingTelegram || !adminChatId.trim()}
+                        aria-busy={testingTelegram}
                         className='h-10 px-3.5 text-xs font-semibold shrink-0 cursor-pointer'
                         title='ارسال پیام تستی'
                       >
                         {testingTelegram ? (
-                          <Loader2 className='size-3.5 animate-spin' />
+                          <>
+                            <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />
+                            <span className='sr-only'>در حال بررسی اتصال به تلگرام...</span>
+                          </>
                         ) : (
                           'تست اتصال'
                         )}
@@ -384,12 +393,13 @@ export default function AdminSettingsPage() {
               <Button
                 type='submit'
                 disabled={saving}
+                aria-busy={saving}
                 className='h-11 px-6 text-xs font-bold gap-2 shadow-md'
               >
                 {saving ? (
-                  <Loader2 className='size-4 animate-spin' />
+                  <Loader2 className='size-4 animate-spin' aria-hidden='true' />
                 ) : (
-                  <Save className='size-4' />
+                  <Save className='size-4' aria-hidden='true' />
                 )}
                 ذخیره تنظیمات سیستم
               </Button>

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { DiscountType } from '@prisma/client'
+import { type DiscountType, type Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search')?.trim() || ''
 
-    const where: any = {}
+    const where: Prisma.CouponWhereInput = {}
     if (search) {
       where.OR = [
         { code: { contains: search, mode: 'insensitive' } },
@@ -153,7 +153,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.CouponUpdateInput = {}
     if (active !== undefined) updateData.active = Boolean(active)
     if (description !== undefined) updateData.description = description?.trim() || null
     if (minOrderAmount !== undefined) {

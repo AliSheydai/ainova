@@ -61,7 +61,7 @@ export function ConfigDrawer() {
             شخصی‌سازی ظاهر، پوسته و نحوه نمایش پنل مدیریت.
           </SheetDescription>
         </SheetHeader>
-        <div className='space-y-6 overflow-y-auto px-4'>
+        <div className='flex-1 min-h-0 space-y-6 overflow-y-auto px-4 overscroll-contain touch-pan-y'>
           <ThemeConfig />
           <SidebarConfig />
           <LayoutConfig />
