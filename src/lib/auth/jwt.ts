@@ -1,8 +1,13 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-at-least-32-chars-long-for-google-ai-pro'
-const secretKey = new TextEncoder().encode(JWT_SECRET)
+function getSecretKey(): Uint8Array {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not defined!')
+  }
+  return new TextEncoder().encode(secret)
+}
 
 export const AUTH_COOKIE_NAME = 'auth_token'
 export const TOKEN_EXPIRY = '30d'
@@ -19,12 +24,12 @@ export async function signToken(payload: UserJwtPayload): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(TOKEN_EXPIRY)
-    .sign(secretKey)
+    .sign(getSecretKey())
 }
 
 export async function verifyToken(token: string): Promise<UserJwtPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secretKey)
+    const { payload } = await jwtVerify(token, getSecretKey())
     return {
       userId: payload.userId as string,
       phone: payload.phone as string,

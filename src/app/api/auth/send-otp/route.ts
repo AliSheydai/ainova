@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requestOtp } from '@/lib/auth/otp'
+import { getClientIp } from '@/lib/security/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await requestOtp(phone)
+    const ip = getClientIp(req.headers)
+    const result = await requestOtp(phone, ip)
 
     return NextResponse.json(result, {
       status: result.success ? 200 : 400,

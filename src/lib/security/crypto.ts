@@ -4,10 +4,12 @@ const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12
 
 function getEncryptionKey(): Buffer {
-  const secret =
-    process.env.CREDENTIALS_ENCRYPTION_KEY ||
-    process.env.JWT_SECRET ||
-    'fallback-secret-at-least-32-chars-long-for-google-ai-pro'
+  const secret = process.env.CREDENTIALS_ENCRYPTION_KEY || process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: Neither CREDENTIALS_ENCRYPTION_KEY nor JWT_SECRET environment variable is defined!'
+    )
+  }
   return crypto.createHash('sha256').update(secret).digest()
 }
 

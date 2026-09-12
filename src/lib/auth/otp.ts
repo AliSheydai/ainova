@@ -1,7 +1,9 @@
+import crypto from 'node:crypto'
 import { prisma } from '@/lib/prisma'
 import { sendOtpSms } from './sms'
-import { signToken, AUTH_COOKIE_NAME, TOKEN_EXPIRY } from './jwt'
+import { signToken } from './jwt'
 import { getOrCreateUserWithRole } from './user-role'
+import { otpSendRateLimiter, otpVerifyRateLimiter } from '@/lib/security/rate-limit'
 
 export function normalizePhone(rawPhone: string): string {
   if (!rawPhone) return ''
@@ -34,6 +36,27 @@ export function normalizePhone(rawPhone: string): string {
   return clean
 }
 
+/**
+ * Normalizes OTP code: converts Persian/Arabic numbers to English digits.
+ * Preserves leading zeros and does NOT modify length or apply phone normalization rules.
+ */
+export function normalizeOtpCode(rawCode: string): string {
+  if (!rawCode) return ''
+
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']
+
+  let clean = rawCode.trim()
+
+  for (let i = 0; i < 10; i++) {
+    clean = clean.split(persianDigits[i]).join(i.toString())
+    clean = clean.split(arabicDigits[i]).join(i.toString())
+  }
+
+  // Strip any non-digit character (preserves leading zeros and exact numeric digits)
+  return clean.replace(/\D/g, '')
+}
+
 export function isValidIranianPhone(phone: string): boolean {
   return /^09\d{9}$/.test(phone)
 }
@@ -45,7 +68,22 @@ export interface RequestOtpResult {
   devCode?: string
 }
 
-export async function requestOtp(rawPhone: string): Promise<RequestOtpResult> {
+// In-memory tracker for failed verify attempts per OTP token ID (max 5)
+const MAX_VERIFY_ATTEMPTS = 5
+const verifyAttemptsMap = new Map<string, number>()
+
+export async function requestOtp(rawPhone: string, ip?: string): Promise<RequestOtpResult> {
+  // IP-based Rate Limiting
+  if (ip) {
+    const ipCheck = otpSendRateLimiter.check(ip)
+    if (!ipCheck.success) {
+      return {
+        success: false,
+        message: 'تعداد درخواست‌های کد تأیید از این آدرس به سقف مجاز رسیده است. لطفاً دقایقی دیگر تلاش فرمایید.',
+      }
+    }
+  }
+
   const phone = normalizePhone(rawPhone)
 
   if (!isValidIranianPhone(phone)) {
@@ -59,7 +97,23 @@ export async function requestOtp(rawPhone: string): Promise<RequestOtpResult> {
   const expireMinutes = parseInt(process.env.OTP_EXPIRE_MINUTES || '5', 10)
   const otpLength = parseInt(process.env.OTP_LENGTH || '5', 10)
 
-  // Rate limiting check
+  // Hourly Rate Limit Check: max 10 requests per hour per phone number
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+  const hourlyCount = await prisma.otpToken.count({
+    where: {
+      phone,
+      createdAt: { gte: oneHourAgo },
+    },
+  })
+
+  if (hourlyCount >= 10) {
+    return {
+      success: false,
+      message: 'تعداد درخواست‌های کد تایید برای این شماره به سقف مجاز (۱۰ بار در ساعت) رسیده است. لطفاً یک ساعت دیگر مجدداً تلاش فرمایید.',
+    }
+  }
+
+  // Cooldown check based on the last issued token
   const lastOtp = await prisma.otpToken.findFirst({
     where: {
       phone,
@@ -82,10 +136,10 @@ export async function requestOtp(rawPhone: string): Promise<RequestOtpResult> {
     }
   }
 
-  // Generate random numeric OTP
+  // Generate cryptographically secure random numeric OTP
   let code = ''
   for (let i = 0; i < otpLength; i++) {
-    code += Math.floor(Math.random() * 10).toString()
+    code += crypto.randomInt(0, 10).toString()
   }
 
   const expiresAt = new Date(Date.now() + expireMinutes * 60 * 1000)
@@ -140,9 +194,24 @@ export interface VerifyOtpResult {
   }
 }
 
-export async function verifyOtpCode(rawPhone: string, rawCode: string): Promise<VerifyOtpResult> {
+export async function verifyOtpCode(
+  rawPhone: string,
+  rawCode: string,
+  ip?: string
+): Promise<VerifyOtpResult> {
+  // IP-based Rate Limiting
+  if (ip) {
+    const ipCheck = otpVerifyRateLimiter.check(ip)
+    if (!ipCheck.success) {
+      return {
+        success: false,
+        message: 'تعداد تلاش‌های مکرر از این آدرس به سقف مجاز رسیده است. لطفاً کمی بعد تلاش کنید.',
+      }
+    }
+  }
+
   const phone = normalizePhone(rawPhone)
-  const code = normalizePhone(rawCode)
+  const code = normalizeOtpCode(rawCode)
 
   if (!isValidIranianPhone(phone)) {
     return {
@@ -158,11 +227,10 @@ export async function verifyOtpCode(rawPhone: string, rawCode: string): Promise<
     }
   }
 
-  // Find token
+  // Find active token
   const otpRecord = await prisma.otpToken.findFirst({
     where: {
       phone,
-      code,
       used: false,
     },
     orderBy: {
@@ -184,7 +252,35 @@ export async function verifyOtpCode(rawPhone: string, rawCode: string): Promise<
     }
   }
 
-  // Mark token as used
+  // Check code match with max attempts rate limiting
+  const attempts = (verifyAttemptsMap.get(otpRecord.id) || 0) + 1
+
+  if (otpRecord.code !== code) {
+    verifyAttemptsMap.set(otpRecord.id, attempts)
+
+    if (attempts >= MAX_VERIFY_ATTEMPTS) {
+      // Invalidate token after 5 failed attempts to prevent brute force
+      await prisma.otpToken.update({
+        where: { id: otpRecord.id },
+        data: { used: true },
+      })
+      verifyAttemptsMap.delete(otpRecord.id)
+      return {
+        success: false,
+        message: 'تعداد تلاش‌های ناموفق شما به سقف مجاز (۵ بار) رسید. کد تأیید ابطال شد؛ لطفاً مجدداً کد دریافت فرمایید.',
+      }
+    }
+
+    const remaining = MAX_VERIFY_ATTEMPTS - attempts
+    return {
+      success: false,
+      message: `کد تأیید نادرست است. (${remaining} تلاش مجاز دیگر باقی مانده است)`,
+    }
+  }
+
+  // Success: clean attempts map and mark token as used
+  verifyAttemptsMap.delete(otpRecord.id)
+
   await prisma.otpToken.update({
     where: { id: otpRecord.id },
     data: { used: true },

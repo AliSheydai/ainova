@@ -53,18 +53,51 @@ export async function GET(req: NextRequest) {
     payment.order.source === 'telegram' ||
     Boolean(payment.order.telegramChatId)
 
-  // 1. If bank/provider returned cancelled or error status
+  // 1. Idempotency Check: Already processed & paid/completed?
+  if (
+    payment.status === 'SUCCESS' ||
+    payment.order.status === 'COMPLETED' ||
+    payment.order.status === 'PAID'
+  ) {
+    if (isTelegram) {
+      return NextResponse.redirect(
+        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
+      )
+    }
+
+    if (payment.order.status === 'PAID' && payment.order.fulfillmentStatus === 'PENDING') {
+      return NextResponse.redirect(
+        `${appUrl}/checkout/success?orderId=${payment.orderId}&status=stock_waiting`
+      )
+    }
+
+    return NextResponse.redirect(
+      `${appUrl}/checkout/success?orderId=${payment.orderId}`
+    )
+  }
+
+  // 2. If bank/provider returned cancelled or error status
   if (status && status !== 'OK' && status !== 'success') {
-    await prisma.$transaction([
-      prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: 'FAILED' },
-      }),
-      prisma.order.update({
-        where: { id: payment.orderId },
-        data: { status: 'CANCELLED' },
-      }),
-    ])
+    if (payment.status === 'PENDING') {
+      await prisma.$transaction([
+        prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: 'FAILED' },
+        }),
+        prisma.order.update({
+          where: { id: payment.orderId },
+          data: { status: 'CANCELLED' },
+        }),
+        prisma.activationLink.updateMany({
+          where: { orderId: payment.orderId, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        }),
+        prisma.inventoryItem.updateMany({
+          where: { orderId: payment.orderId, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        }),
+      ])
+    }
 
     if (isTelegram) {
       return NextResponse.redirect(
@@ -73,18 +106,6 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.redirect(`${appUrl}/?payment=cancelled`)
-  }
-
-  // 2. Already processed & completed?
-  if (payment.status === 'SUCCESS' && payment.order.status === 'COMPLETED') {
-    if (isTelegram) {
-      return NextResponse.redirect(
-        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
-      )
-    }
-    return NextResponse.redirect(
-      `${appUrl}/checkout/success?orderId=${payment.orderId}`
-    )
   }
 
   // 3. Verify payment via PaymentService
@@ -106,6 +127,14 @@ export async function GET(req: NextRequest) {
       prisma.order.update({
         where: { id: payment.orderId },
         data: { status: 'FAILED' },
+      }),
+      prisma.activationLink.updateMany({
+        where: { orderId: payment.orderId, status: 'RESERVED' },
+        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+      }),
+      prisma.inventoryItem.updateMany({
+        where: { orderId: payment.orderId, status: 'RESERVED' },
+        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
       }),
     ])
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyOtpCode } from '@/lib/auth/otp'
 import { AUTH_COOKIE_NAME } from '@/lib/auth/jwt'
+import { getClientIp } from '@/lib/security/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await verifyOtpCode(phone, code)
+    const ip = getClientIp(req.headers)
+    const result = await verifyOtpCode(phone, code, ip)
 
     if (!result.success || !result.token) {
       return NextResponse.json(

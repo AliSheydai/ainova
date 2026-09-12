@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const AUTH_COOKIE_NAME = 'auth_token'
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-at-least-32-chars-long-for-google-ai-pro'
-const secretKey = new TextEncoder().encode(JWT_SECRET)
+
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    console.error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not defined!')
+    return null
+  }
+  return new TextEncoder().encode(secret)
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -11,7 +18,8 @@ export async function middleware(request: NextRequest) {
 
   let payload: Record<string, unknown> | null = null
 
-  if (token) {
+  const secretKey = getSecretKey()
+  if (token && secretKey) {
     try {
       const verified = await jwtVerify(token, secretKey)
       payload = verified.payload as Record<string, unknown>

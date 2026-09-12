@@ -9,26 +9,66 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
     const productId = effectiveProduct?.id
     const planId = order.planId
 
-    // Find available account in inventory_items with FOR UPDATE SKIP LOCKED
-    const availableRows = await tx.$queryRaw<Array<{ id: string; data: any }>>`
-      SELECT id, data
-      FROM inventory_items
-      WHERE type = 'PRE_CREATED_ACCOUNT'::"InventoryType"
-        AND (
-          ("planId" = ${planId} AND "planId" IS NOT NULL) OR 
-          ("productId" = ${productId} AND ("planId" IS NULL OR "planId" = ${planId}))
-        )
-        AND status = 'AVAILABLE'::"LinkStatus"
-      LIMIT 1
-      FOR UPDATE SKIP LOCKED
-    `
+    let chosenAccount: { id: string; data: any } | null = null
 
-    const chosenAccount = availableRows[0]
+    // 1. Check if an account was already RESERVED for this order
+    const reservedAccount = await tx.inventoryItem.findFirst({
+      where: {
+        orderId: order.id,
+        status: 'RESERVED',
+        type: 'PRE_CREATED_ACCOUNT',
+      },
+    })
+
+    if (reservedAccount) {
+      chosenAccount = {
+        id: reservedAccount.id,
+        data: reservedAccount.data,
+      }
+
+      await tx.inventoryItem.update({
+        where: { id: reservedAccount.id },
+        data: {
+          status: 'USED',
+          assignedAt: reservedAccount.assignedAt || now,
+          usedAt: now,
+        },
+      })
+    } else {
+      // 2. Fallback: Find available account in inventory_items with FOR UPDATE SKIP LOCKED
+      const availableRows = await tx.$queryRaw<Array<{ id: string; data: any }>>`
+        SELECT id, data
+        FROM inventory_items
+        WHERE type = 'PRE_CREATED_ACCOUNT'::"InventoryType"
+          AND (
+            ("planId" = ${planId} AND "planId" IS NOT NULL) OR 
+            ("productId" = ${productId} AND ("planId" IS NULL OR "planId" = ${planId}))
+          )
+          AND status = 'AVAILABLE'::"LinkStatus"
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      `
+
+      if (availableRows && availableRows.length > 0) {
+        chosenAccount = availableRows[0]
+
+        await tx.inventoryItem.update({
+          where: { id: chosenAccount.id },
+          data: {
+            status: 'USED',
+            orderId: order.id,
+            assignedAt: now,
+            usedAt: now,
+          },
+        })
+      }
+    }
 
     if (!chosenAccount) {
       return {
         status: 'STOCK_EXHAUSTED' as const,
-        message: 'پرداخت تایید شد، اما موجودی اکانت‌های آماده این پلن به پایان رسیده است. سفارش در وضعیت پرداخت‌شده (PAID) قرار گرفت.',
+        message:
+          'پرداخت تایید شد، اما موجودی اکانت‌های آماده این پلن به پایان رسیده است. سفارش در وضعیت پرداخت‌شده (PAID) قرار گرفت.',
       }
     }
 
@@ -41,17 +81,6 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
     // Ensure password is safe
     const rawPassword = rawData?.password ? decryptCredential(rawData.password) : ''
     const encryptedPassword = encryptCredential(rawPassword)
-
-    // Mark inventory item as USED
-    await tx.inventoryItem.update({
-      where: { id: chosenAccount.id },
-      data: {
-        status: 'USED',
-        orderId: order.id,
-        assignedAt: now,
-        usedAt: now,
-      },
-    })
 
     const deliveryData: AccountCredentialsDeliveryData = {
       email,

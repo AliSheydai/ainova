@@ -100,22 +100,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Check inventory
-    const availableStock = plan
-      ? await FulfillmentService.getPlanStock(plan.id)
-      : await FulfillmentService.getProductStock(product.id)
-
-    if (availableStock <= 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'موجودی این پلن موقتاً به پایان رسیده است. لطفاً بعداً مراجعه فرمایید.',
-        },
-        { status: 400 }
-      )
-    }
-
-    // 5. Determine final snapshot amount
+    // 4. Determine final snapshot amount
     const orderAmount = plan?.price || product.price || 0
 
     if (orderAmount <= 0) {
@@ -125,19 +110,122 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 6. Create Order with snapshot amount and snapshot checkoutData
-    const order = await prisma.order.create({
-      data: {
-        userId: session.userId,
-        productId: product.id,
-        planId: plan?.id || null,
-        amount: orderAmount, // SNAPSHOT
-        checkoutData: submittedData, // SNAPSHOT of customer data at purchase
-        status: 'PENDING_PAYMENT',
-        fulfillmentStatus: 'PENDING',
-        source: source || 'web',
-      },
-    })
+    // 5. Determine fulfillment type
+    const fulfillmentType = plan?.fulfillmentType || product.fulfillmentType || 'ACTIVATION_LINK'
+
+    // 6. Atomic stock reservation & Order creation with FOR UPDATE SKIP LOCKED
+    let order
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        const planId = plan?.id
+        const productId = product.id
+        let reservedActivationLinkId: string | null = null
+        let reservedInventoryItemId: string | null = null
+
+        if (fulfillmentType === 'ACTIVATION_LINK') {
+          // Check activation_links table first
+          const linkRows = await tx.$queryRaw<Array<{ id: string }>>`
+            SELECT id FROM activation_links
+            WHERE (
+              ("planId" = ${planId} AND "planId" IS NOT NULL) OR
+              ("productId" = ${productId} AND ("planId" IS NULL OR "planId" = ${planId}))
+            )
+            AND status = 'AVAILABLE'::"LinkStatus"
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          `
+
+          if (linkRows && linkRows.length > 0) {
+            reservedActivationLinkId = linkRows[0].id
+          } else {
+            // Check inventory_items table
+            const invRows = await tx.$queryRaw<Array<{ id: string }>>`
+              SELECT id FROM inventory_items
+              WHERE type = 'ACTIVATION_LINK'::"InventoryType"
+                AND (
+                  ("planId" = ${planId} AND "planId" IS NOT NULL) OR
+                  ("productId" = ${productId})
+                )
+                AND status = 'AVAILABLE'::"LinkStatus"
+              LIMIT 1
+              FOR UPDATE SKIP LOCKED
+            `
+
+            if (invRows && invRows.length > 0) {
+              reservedInventoryItemId = invRows[0].id
+            } else {
+              throw new Error('STOCK_EXHAUSTED')
+            }
+          }
+        } else if (fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+          const invRows = await tx.$queryRaw<Array<{ id: string }>>`
+            SELECT id FROM inventory_items
+            WHERE type = 'PRE_CREATED_ACCOUNT'::"InventoryType"
+              AND (
+                ("planId" = ${planId} AND "planId" IS NOT NULL) OR
+                ("productId" = ${productId} AND ("planId" IS NULL OR "planId" = ${planId}))
+              )
+              AND status = 'AVAILABLE'::"LinkStatus"
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          `
+
+          if (invRows && invRows.length > 0) {
+            reservedInventoryItemId = invRows[0].id
+          } else {
+            throw new Error('STOCK_EXHAUSTED')
+          }
+        }
+
+        // Create Order record
+        const newOrder = await tx.order.create({
+          data: {
+            userId: session.userId,
+            productId: product.id,
+            planId: plan?.id || null,
+            amount: orderAmount,
+            checkoutData: submittedData,
+            status: 'PENDING_PAYMENT',
+            fulfillmentStatus: 'PENDING',
+            source: source || 'web',
+          },
+        })
+
+        // Reserve inventory item atomically
+        if (reservedActivationLinkId) {
+          await tx.activationLink.update({
+            where: { id: reservedActivationLinkId },
+            data: {
+              status: 'RESERVED',
+              orderId: newOrder.id,
+              assignedAt: new Date(),
+            },
+          })
+        } else if (reservedInventoryItemId) {
+          await tx.inventoryItem.update({
+            where: { id: reservedInventoryItemId },
+            data: {
+              status: 'RESERVED',
+              orderId: newOrder.id,
+              assignedAt: new Date(),
+            },
+          })
+        }
+
+        return newOrder
+      })
+    } catch (txError: any) {
+      if (txError?.message === 'STOCK_EXHAUSTED') {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'موجودی این پلن موقتاً به پایان رسیده است. لطفاً بعداً مراجعه فرمایید.',
+          },
+          { status: 400 }
+        )
+      }
+      throw txError
+    }
 
     // 7. Request payment via PaymentService
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -154,6 +242,22 @@ export async function POST(req: NextRequest) {
     })
 
     if (!paymentResult.success || !paymentResult.paymentUrl) {
+      // Release reservation and mark order FAILED
+      await prisma.$transaction([
+        prisma.activationLink.updateMany({
+          where: { orderId: order.id, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        }),
+        prisma.inventoryItem.updateMany({
+          where: { orderId: order.id, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        }),
+        prisma.order.update({
+          where: { id: order.id },
+          data: { status: 'FAILED' },
+        }),
+      ]).catch((cleanupErr) => console.error('Error rolling back reservation:', cleanupErr))
+
       return NextResponse.json(
         { success: false, message: paymentResult.error || 'خطا در اتصال به درگاه پرداخت.' },
         { status: 500 }
@@ -201,7 +305,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Decrypt credentials for delivery if needed
+    // Security: Mask sensitive credentials in bulk order list
     const safeOrders = orders.map((ord) => {
       if (ord.delivery && ord.delivery.data) {
         const rawData = ord.delivery.data as Record<string, any>
@@ -212,7 +316,7 @@ export async function GET(req: NextRequest) {
               ...ord.delivery,
               data: {
                 ...rawData,
-                password: decryptCredential(rawData.password),
+                password: '••••••••',
               },
             },
           }
