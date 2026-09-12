@@ -15,9 +15,12 @@ import {
   Zap,
   Package,
   User as UserIcon,
+  Tag,
+  X,
 } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Card,
   CardContent,
@@ -98,6 +101,15 @@ function CheckoutContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<{ id: string; name?: string; phone?: string } | null>(null)
 
+  // Coupon states (Section 4.3)
+  const [couponInput, setCouponInput] = useState('')
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string
+    discountAmount: number
+    finalAmount: number
+  } | null>(null)
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
@@ -156,6 +168,51 @@ function CheckoutContent() {
   const effectivePrice = selectedPlan ? selectedPlan.price : product?.price || 0
   const productTitle = product?.title || product?.name || 'اشتراک ویژه'
 
+  const payablePrice = appliedCoupon
+    ? Math.max(1000, effectivePrice - appliedCoupon.discountAmount)
+    : effectivePrice
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) {
+      toast.error('لطفاً کد تخفیف را وارد نمایید.')
+      return
+    }
+
+    setValidatingCoupon(true)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponInput.trim(),
+          amount: effectivePrice,
+          productId: product?.id,
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.coupon) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          discountAmount: data.discountAmount || 0,
+          finalAmount: data.finalAmount || effectivePrice,
+        })
+        toast.success(data.message || 'کد تخفیف با موفقیت اعمال گردید.')
+      } else {
+        toast.error(data.error || 'کد تخفیف معتبر نیست.')
+      }
+    } catch {
+      toast.error('خطای سرور در اعتبارسنجی کد تخفیف.')
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput('')
+    toast.info('کد تخفیف حذف گردید.')
+  }
+
   const handleFieldChange = (key: string, value: any) => {
     setCheckoutData((prev) => ({ ...prev, [key]: value }))
     if (formErrors[key]) {
@@ -207,6 +264,7 @@ function CheckoutContent() {
           slug: product.slug,
           planId: selectedPlan?.id,
           checkoutData,
+          couponCode: appliedCoupon?.code || undefined,
           source: 'web',
         }),
       })
@@ -342,10 +400,20 @@ function CheckoutContent() {
 
               {/* Price Display */}
               <div className='mt-3 rounded-2xl bg-primary/5 border border-primary/15 py-4 px-4'>
-                <div className='flex items-baseline justify-center gap-1.5'>
-                  <span className='text-3xl sm:text-4xl font-extrabold text-foreground font-sans'>
-                    {formatPrice(effectivePrice)}
-                  </span>
+                <div className='flex flex-col items-center justify-center gap-1'>
+                  {appliedCoupon && (
+                    <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                      <span className='line-through'>{formatPrice(effectivePrice)}</span>
+                      <Badge variant='outline' className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[11px] font-bold'>
+                        {formatPrice(appliedCoupon.discountAmount)} تخفیف
+                      </Badge>
+                    </div>
+                  )}
+                  <div className='flex items-baseline justify-center gap-1.5'>
+                    <span className='text-3xl sm:text-4xl font-extrabold text-foreground font-sans'>
+                      {formatPrice(payablePrice)}
+                    </span>
+                  </div>
                 </div>
                 <div className='mt-1.5 flex items-center justify-center gap-2'>
                   <Badge variant='outline' className='text-[10px] bg-background/80 text-primary border-primary/30'>
@@ -373,6 +441,69 @@ function CheckoutContent() {
                   />
                 </div>
               )}
+
+              {/* Coupon Box (Section 4.3) */}
+              <div className='p-3.5 rounded-2xl bg-muted/25 border border-border/70 space-y-2.5'>
+                <div className='flex items-center justify-between text-xs font-semibold text-foreground/90'>
+                  <span className='flex items-center gap-1.5'>
+                    <Tag className='size-3.5 text-primary' />
+                    <span>کد تخفیف دارید؟</span>
+                  </span>
+                </div>
+
+                {appliedCoupon ? (
+                  <div className='flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs'>
+                    <div className='flex items-center gap-2'>
+                      <Check className='size-4 text-emerald-600 dark:text-emerald-400 shrink-0' />
+                      <span className='font-mono font-bold text-foreground'>{appliedCoupon.code}</span>
+                      <span className='text-emerald-700 dark:text-emerald-400 font-medium'>
+                        ({formatPrice(appliedCoupon.discountAmount)} تخفیف اعمال شد)
+                      </span>
+                    </div>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      onClick={handleRemoveCoupon}
+                      className='h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive'
+                      title='حذف کد تخفیف'
+                    >
+                      <X className='size-3.5' />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      placeholder='کد تخفیف را وارد کنید...'
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleApplyCoupon()
+                        }
+                      }}
+                      className='h-9 text-xs font-mono uppercase bg-background/90'
+                      disabled={validatingCoupon || buying}
+                      dir='ltr'
+                    />
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={handleApplyCoupon}
+                      disabled={validatingCoupon || !couponInput.trim() || buying}
+                      className='h-9 px-3.5 text-xs font-semibold shrink-0 cursor-pointer'
+                    >
+                      {validatingCoupon ? (
+                        <Loader2 className='size-3.5 animate-spin' />
+                      ) : (
+                        'اعمال'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               {/* Features list */}
               <div>

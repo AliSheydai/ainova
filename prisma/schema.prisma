@@ -105,6 +105,7 @@ model Product {
   activationLinks ActivationLink[]
   plans           Plan[]
   inventoryItems  InventoryItem[]
+  coupons         Coupon[]
 
   @@map("products")
 }
@@ -141,6 +142,37 @@ enum OrderStatus {
   COMPLETED
   FAILED
   CANCELLED
+  EXPIRED
+  REFUNDED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model Coupon {
+  id                String       @id @default(cuid())
+  code              String       @unique
+  description       String?
+  discountType      DiscountType @default(PERCENTAGE)
+  discountValue     Int          // percentage (e.g. 20 for 20%) or fixed Toman (e.g. 50000)
+  minOrderAmount    Int?         // minimum order amount in Toman required to apply
+  maxDiscountAmount Int?         // maximum discount amount in Toman for percentage coupons
+  maxUses           Int?         // maximum total times coupon can be used across system
+  usedCount         Int          @default(0)
+  expiresAt         DateTime?    // expiration date
+  active            Boolean      @default(true)
+  productId         String?      // optional: limit to specific product
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  orders            Order[]
+  product           Product?     @relation(fields: [productId], references: [id])
+
+  @@index([code])
+  @@index([productId])
+  @@map("coupons")
 }
 
 model Order {
@@ -148,18 +180,28 @@ model Order {
   userId            String
   productId         String?
   planId            String?
-  amount            Int               // in Toman
+  couponId          String?
+  amount            Int               // in Toman (final payable amount after discount)
+  discountAmount    Int               @default(0) // total discount amount in Toman
   status            OrderStatus       @default(PENDING_PAYMENT)
   fulfillmentStatus FulfillmentStatus @default(PENDING)
   checkoutData      Json?             // Snapshot of customer answers at checkout
   source            String?           @default("web") // "web" | "telegram" | "bale" | "rubika" | "soroush"
   telegramChatId    String?
+
+  // Refund metadata (Section 4.1)
+  refundAmount      Int?              // Refunded amount in Toman
+  refundReason      String?           // Reason for refund
+  refundRefId       String?           // Bank / Sheba tracking reference ID
+  refundedAt        DateTime?         // Timestamp of refund
+
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
   user            User            @relation(fields: [userId], references: [id])
   product         Product?        @relation(fields: [productId], references: [id])
   plan            Plan?           @relation(fields: [planId], references: [id])
+  coupon          Coupon?         @relation(fields: [couponId], references: [id])
   payment         Payment?
   activationLink  ActivationLink?
   delivery        Delivery?
@@ -169,6 +211,7 @@ model Order {
   @@index([userId])
   @@index([productId])
   @@index([planId])
+  @@index([couponId])
   @@index([status])
   @@map("orders")
 }
@@ -180,6 +223,7 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+  REFUNDED
 }
 
 model Payment {

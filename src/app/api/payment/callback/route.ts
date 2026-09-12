@@ -5,6 +5,8 @@ import { PaymentService } from '@/lib/payment'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
 import { MESSAGES } from '@/lib/telegram/messages'
+import { AdminNotificationService } from '@/lib/notifications/admin-notification'
+import { CouponService } from '@/lib/discounts/coupon-service'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -152,14 +154,44 @@ export async function GET(req: NextRequest) {
       rawResponse: verifyResult.rawResponse,
     })
 
+    // Track coupon usage if order used a coupon
+    if (payment.order.couponId) {
+      await CouponService.incrementCouponUsage(payment.order.couponId).catch((err) =>
+        console.error('Failed to increment coupon usage:', err)
+      )
+    }
+
+    // Send Realtime Notification to Admin for Paid Order
+    AdminNotificationService.notifyOrderPaid({
+      id: payment.order.id,
+      amount: payment.order.amount,
+      discountAmount: payment.order.discountAmount,
+      source: payment.order.source,
+      user: payment.order.user,
+      product: payment.order.product,
+      plan: payment.order.plan,
+      payment: {
+        refId: verifyResult.refId,
+        gatewayName: payment.gatewayName,
+      },
+    }).catch((err) => console.error('Admin order paid notification error:', err))
+
     const targetChatId =
       payment.order.telegramChatId || payment.order.user?.telegramId
     const productTitle =
       payment.order.product?.title ||
       (payment.order.plan ? `${payment.order.plan.product.title} — ${payment.order.plan.name}` : 'محصول')
+    const planName = payment.order.plan?.name || ''
 
     // If stock ran out:
     if (fulfillment.status === 'STOCK_EXHAUSTED') {
+      // Alert admin urgently about out of stock
+      AdminNotificationService.notifyStockExhausted(
+        payment.orderId,
+        productTitle,
+        planName
+      ).catch((err) => console.error('Admin stock exhausted alert error:', err))
+
       if (targetChatId) {
         await sendTelegramNotification(
           targetChatId,
@@ -180,6 +212,18 @@ export async function GET(req: NextRequest) {
 
     // If manual fulfillment awaiting admin:
     if (fulfillment.status === 'AWAITING_MANUAL_DELIVERY') {
+      const customerInfo =
+        payment.order.user?.name ||
+        payment.order.user?.phone ||
+        (payment.order.user?.telegramUsername ? `@${payment.order.user.telegramUsername}` : 'مشتری')
+
+      AdminNotificationService.notifyManualDeliveryNeeded(
+        payment.orderId,
+        productTitle,
+        planName,
+        customerInfo
+      ).catch((err) => console.error('Admin manual delivery alert error:', err))
+
       if (targetChatId) {
         const manualMsg =
           `🎉 **پرداخت سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت انجام شد!**\n\n` +
@@ -200,6 +244,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(
         `${appUrl}/checkout/success?orderId=${payment.orderId}&status=awaiting_manual`
       )
+    }
+
+    // Check for Low Stock and warn admin if below threshold
+    if (payment.order.planId) {
+      FulfillmentService.getPlanStock(payment.order.planId)
+        .then((remaining) => {
+          AdminNotificationService.notifyLowStock(productTitle, planName, remaining).catch(() => {})
+        })
+        .catch(() => {})
     }
 
     // Success with generic delivery!

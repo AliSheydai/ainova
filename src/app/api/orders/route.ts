@@ -3,9 +3,14 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { PaymentService } from '@/lib/payment'
 import { CheckoutFieldDefinition, FulfillmentType } from '@/lib/fulfillment/types'
+import { CouponService } from '@/lib/discounts/coupon-service'
+import { OrderExpirationService } from '@/lib/orders/order-expiration'
 
 export async function POST(req: NextRequest) {
   try {
+    // Trigger non-blocking lazy cleanup for stale orders
+    OrderExpirationService.triggerBackgroundCleanup()
+
     const session = await getCurrentUser()
 
     if (!session) {
@@ -16,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { productId, slug, planId, checkoutData, source } = body
+    const { productId, slug, planId, checkoutData, source, couponCode } = body
 
     // 1. Resolve product and plan
     let product = null
@@ -105,14 +110,41 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Determine final snapshot amount using nullish coalescing (Section 2.5)
-    const orderAmount = plan?.price ?? product.price ?? 0
+    // 4. Determine base price using nullish coalescing (Section 2.5)
+    const baseAmount = plan?.price ?? product.price ?? 0
 
-    if (orderAmount < 0) {
+    if (baseAmount < 0) {
       return NextResponse.json(
         { success: false, message: 'قیمت محصول یا پلن نامعتبر است.' },
         { status: 400 }
       )
+    }
+
+    // 4.1 Validate and apply coupon if provided (Section 4.3)
+    let appliedCouponId: string | null = null
+    let appliedDiscountAmount = 0
+    let payableAmount = baseAmount
+
+    if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
+      const couponValidation = await CouponService.validateAndCalculate(
+        couponCode,
+        baseAmount,
+        product.id
+      )
+
+      if (!couponValidation.valid) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: couponValidation.error || 'کد تخفیف وارد شده معتبر نیست.',
+          },
+          { status: 400 }
+        )
+      }
+
+      appliedCouponId = couponValidation.coupon?.id || null
+      appliedDiscountAmount = couponValidation.discountAmount || 0
+      payableAmount = Math.max(1000, baseAmount - appliedDiscountAmount)
     }
 
     // 5. Determine fulfillment type from Plan (Section 2.4)
@@ -147,13 +179,15 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Create Order record
+        // Create Order record with coupon discount
         const newOrder = await tx.order.create({
           data: {
             userId: session.userId,
             productId: product.id,
             planId: plan.id,
-            amount: orderAmount,
+            couponId: appliedCouponId,
+            amount: payableAmount,
+            discountAmount: appliedDiscountAmount,
             checkoutData: submittedData,
             status: 'PENDING_PAYMENT',
             fulfillmentStatus: 'PENDING',
@@ -196,7 +230,7 @@ export async function POST(req: NextRequest) {
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
-      amount: orderAmount,
+      amount: payableAmount,
       description: `خرید: ${fullTitle}`,
       callbackUrl,
       mobile: session.phone,

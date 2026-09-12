@@ -68,6 +68,17 @@ import { toast } from 'sonner'
 interface AdminOrder {
   id: string
   amount: number
+  discountAmount?: number | null
+  coupon?: {
+    id?: string
+    code: string
+    discountType: string
+    discountValue: number
+  } | null
+  refundAmount?: number | null
+  refundReason?: string | null
+  refundRefId?: string | null
+  refundedAt?: string | null
   status: string
   fulfillmentStatus?: string
   source: string | null
@@ -145,6 +156,8 @@ interface OrdersResponse {
     completed: number
     pendingPayment: number
     failedOrCancelled: number
+    refunded: number
+    expired: number
   }
   filterOptions: {
     products: ProductOption[]
@@ -270,6 +283,20 @@ function getOrderStatusBadge(status: string) {
         className: 'bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 border-zinc-500/30',
         icon: XCircle,
       }
+    case 'REFUNDED':
+      return {
+        label: 'استرداد شده',
+        variant: 'outline' as const,
+        className: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/20',
+        icon: Receipt,
+      }
+    case 'EXPIRED':
+      return {
+        label: 'منقضی شده',
+        variant: 'outline' as const,
+        className: 'bg-stone-500/15 text-stone-600 dark:text-stone-400 border-stone-500/30',
+        icon: Clock,
+      }
     default:
       return {
         label: status,
@@ -314,6 +341,8 @@ export default function AdminOrdersPage() {
     completed: 0,
     pendingPayment: 0,
     failedOrCancelled: 0,
+    refunded: 0,
+    expired: 0,
   })
 
   // Selected Order & Modals
@@ -323,6 +352,17 @@ export default function AdminOrdersPage() {
   const [manualNote, setManualNote] = useState('')
   const [manualInfo, setManualInfo] = useState('')
   const [deliveringManual, setDeliveringManual] = useState(false)
+
+  // Refund Modal States (Section 4.1)
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false)
+  const [refundOrderTarget, setRefundOrderTarget] = useState<AdminOrder | null>(null)
+  const [refundAmount, setRefundAmount] = useState('')
+  const [refundReason, setRefundReason] = useState('')
+  const [refundRefId, setRefundRefId] = useState('')
+  const [refunding, setRefunding] = useState(false)
+
+  // Stale Orders Expiration State (Section 4.2)
+  const [expiringStale, setExpiringStale] = useState(false)
 
   // Search Debounce Handler
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -493,6 +533,82 @@ export default function AdminOrdersPage() {
     }
   }
 
+  // Open Refund Dialog (Section 4.1)
+  const handleOpenRefund = (order: AdminOrder) => {
+    setRefundOrderTarget(order)
+    setRefundAmount(String(order.amount))
+    setRefundReason('')
+    setRefundRefId('')
+    setRefundDialogOpen(true)
+  }
+
+  // Process Refund Action (Section 4.1)
+  const handleProcessRefund = async () => {
+    if (!refundOrderTarget) return
+    const amt = parseInt(refundAmount, 10)
+    if (isNaN(amt) || amt <= 0) {
+      toast.error('لطفاً مبلغ معتبر برای استرداد وارد فرمایید.')
+      return
+    }
+
+    setRefunding(true)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: refundOrderTarget.id,
+          action: 'REFUND',
+          refundAmount: amt,
+          refundReason: refundReason.trim(),
+          refundRefId: refundRefId.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message || 'استرداد وجه با موفقیت ثبت شد.')
+        setRefundDialogOpen(false)
+        setRefundOrderTarget(null)
+        fetchOrders()
+        if (selectedOrder && selectedOrder.id === refundOrderTarget.id) {
+          setSelectedOrder({ ...selectedOrder, status: 'REFUNDED', refundAmount: amt })
+        }
+      } else {
+        toast.error(data.error || 'خطا در ثبت استرداد وجه.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور در استرداد وجه.')
+    } finally {
+      setRefunding(false)
+    }
+  }
+
+  // Expire Stale Pending Orders Action (Section 4.2)
+  const handleExpireStaleOrders = async () => {
+    setExpiringStale(true)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'EXPIRE_STALE',
+          olderThanMinutes: 30,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        fetchOrders()
+      } else {
+        toast.error(data.error || 'خطا در انقضای سفارش‌ها.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setExpiringStale(false)
+    }
+  }
+
   // Copy Full Invoice/Message for Customer Support
   const handleCopyCustomerReceipt = (ord: AdminOrder) => {
     const productName = ord.product?.title || ord.plan?.product?.title || 'اشتراک'
@@ -560,6 +676,19 @@ export default function AdminOrdersPage() {
               <LayoutGrid className='size-3.5' />
             </button>
           </div>
+
+          {/* Expire Stale Pending Orders Button (Section 4.2) */}
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleExpireStaleOrders}
+            disabled={expiringStale || loading}
+            className='gap-1.5 text-xs h-8 px-2.5 sm:px-3 text-stone-700 dark:text-stone-300 border-stone-500/30 hover:bg-stone-500/10 cursor-pointer'
+            title='انقضا و آزادسازی خودکار سفارش‌های پرداخت‌نشده بالای ۳۰ دقیقه'
+          >
+            <Clock className={`size-3.5 ${expiringStale ? 'animate-spin' : ''}`} />
+            <span className='hidden md:inline'>انقضای معوق‌ها</span>
+          </Button>
 
           <Button
             variant='outline'
@@ -696,7 +825,7 @@ export default function AdminOrdersPage() {
               setStatusFilter(statusFilter === 'CANCELLED' ? 'ALL' : 'CANCELLED')
               setPage(1)
             }}
-            className={`col-span-2 sm:col-span-1 text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
+            className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'CANCELLED' || statusFilter === 'FAILED'
                 ? 'bg-rose-500/10 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
                 : 'bg-card border-border/70 hover:border-rose-500/30 hover:bg-rose-500/5'
@@ -715,6 +844,60 @@ export default function AdminOrdersPage() {
               <span className='text-[10px] text-rose-600/80 dark:text-rose-400/80'>مورد</span>
             </div>
           </button>
+
+          {/* Refunded (Section 4.1) */}
+          <button
+            type='button'
+            onClick={() => {
+              setStatusFilter(statusFilter === 'REFUNDED' ? 'ALL' : 'REFUNDED')
+              setPage(1)
+            }}
+            className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
+              statusFilter === 'REFUNDED'
+                ? 'bg-purple-500/10 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
+                : 'bg-card border-border/70 hover:border-purple-500/30 hover:bg-purple-500/5'
+            }`}
+          >
+            <div className='flex items-center justify-between'>
+              <span className='text-[11px] text-purple-600 dark:text-purple-400 font-medium'>
+                استرداد شده
+              </span>
+              <Receipt className='size-4 text-purple-500' />
+            </div>
+            <div className='mt-2 flex items-baseline gap-1.5'>
+              <span className='text-lg sm:text-xl font-bold font-sans text-purple-600 dark:text-purple-400'>
+                {(counts.refunded || 0).toLocaleString('fa-IR')}
+              </span>
+              <span className='text-[10px] text-purple-600/80 dark:text-purple-400/80'>مورد</span>
+            </div>
+          </button>
+
+          {/* Expired (Section 4.2) */}
+          <button
+            type='button'
+            onClick={() => {
+              setStatusFilter(statusFilter === 'EXPIRED' ? 'ALL' : 'EXPIRED')
+              setPage(1)
+            }}
+            className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
+              statusFilter === 'EXPIRED'
+                ? 'bg-stone-500/10 border-stone-500/50 shadow-xs ring-1 ring-stone-500/30'
+                : 'bg-card border-border/70 hover:border-stone-500/30 hover:bg-stone-500/5'
+            }`}
+          >
+            <div className='flex items-center justify-between'>
+              <span className='text-[11px] text-stone-600 dark:text-stone-400 font-medium'>
+                منقضی شده
+              </span>
+              <Clock className='size-4 text-stone-500' />
+            </div>
+            <div className='mt-2 flex items-baseline gap-1.5'>
+              <span className='text-lg sm:text-xl font-bold font-sans text-stone-600 dark:text-stone-400'>
+                {(counts.expired || 0).toLocaleString('fa-IR')}
+              </span>
+              <span className='text-[10px] text-stone-600/80 dark:text-stone-400/80'>مورد</span>
+            </div>
+          </button>
         </div>
 
         {/* Search & Filter Bar */}
@@ -723,19 +906,18 @@ export default function AdminOrdersPage() {
             <div className='flex flex-col sm:flex-row items-center gap-2.5'>
               {/* Live Search Input */}
               <div className='relative flex-1 w-full'>
-                <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none' />
+                <Search className='absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
                 <Input
-                  placeholder='جستجو با شناسه سفارش، شماره همراه، نام، کد پیگیری (RefId) یا محصول...'
+                  placeholder='جستجوی شماره سفارش، شماره موبایل خریدار، کد پیگیری بانکی، نام محصول...'
                   value={search}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className='ps-9 pe-8 text-xs sm:text-sm h-10 rounded-xl bg-background/80 border-border/80 focus-visible:ring-primary/20'
+                  className='ps-9 pe-8 h-10 text-xs rounded-xl bg-background/80 border-border/80'
                 />
                 {search && (
                   <button
                     type='button'
                     onClick={handleClearSearch}
-                    className='absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted transition-colors'
-                    title='پاک کردن جستجو'
+                    className='absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
                   >
                     <X className='size-3.5' />
                   </button>
@@ -760,6 +942,8 @@ export default function AdminOrdersPage() {
                     <SelectItem value='PAID'>پرداخت شده (PAID)</SelectItem>
                     <SelectItem value='COMPLETED'>تکمیل شده (COMPLETED)</SelectItem>
                     <SelectItem value='PENDING_PAYMENT'>در انتظار پرداخت</SelectItem>
+                    <SelectItem value='REFUNDED'>استرداد شده (REFUNDED)</SelectItem>
+                    <SelectItem value='EXPIRED'>منقضی شده (EXPIRED)</SelectItem>
                     <SelectItem value='FAILED'>ناموفق (FAILED)</SelectItem>
                     <SelectItem value='CANCELLED'>لغو شده (CANCELLED)</SelectItem>
                   </SelectContent>
@@ -1852,26 +2036,71 @@ export default function AdminOrdersPage() {
                   </p>
                 )}
 
-                {/* If order is PAID, provide button for Manual Delivery */}
-                {selectedOrder.status === 'PAID' && (
-                  <Button
-                    size='sm'
-                    onClick={() => {
-                      setManualNote(
-                        selectedOrder.checkoutData?.email
-                          ? `اشتراک روی ایمیل ${selectedOrder.checkoutData.email} با موفقیت فعال گردید.`
-                          : ''
-                      )
-                      setManualInfo('')
-                      setManualDialogOpen(true)
-                    }}
-                    className='w-full text-xs font-semibold gap-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-9'
-                  >
-                    <Send className='size-3.5' />
-                    <span>تکمیل و تحویل دستی سفارش (Manual Fulfillment)</span>
-                  </Button>
-                )}
+                {/* Action Buttons in Detail Modal */}
+                <div className='flex flex-col sm:flex-row gap-2 pt-1'>
+                  {/* If order is PAID, provide button for Manual Delivery */}
+                  {selectedOrder.status === 'PAID' && (
+                    <Button
+                      size='sm'
+                      onClick={() => {
+                        setManualNote(
+                          selectedOrder.checkoutData?.email
+                            ? `اشتراک روی ایمیل ${selectedOrder.checkoutData.email} با موفقیت فعال گردید.`
+                            : ''
+                        )
+                        setManualInfo('')
+                        setManualDialogOpen(true)
+                      }}
+                      className='flex-1 text-xs font-semibold gap-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-9'
+                    >
+                      <Send className='size-3.5' />
+                      <span>تکمیل و تحویل دستی (Manual Delivery)</span>
+                    </Button>
+                  )}
+
+                  {/* Refund Button for PAID or COMPLETED orders */}
+                  {(selectedOrder.status === 'PAID' || selectedOrder.status === 'COMPLETED') && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleOpenRefund(selectedOrder)}
+                      className='text-xs font-semibold gap-1.5 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/10 rounded-xl h-9'
+                    >
+                      <Receipt className='size-3.5' />
+                      <span>استرداد وجه (Refund)</span>
+                    </Button>
+                  )}
+                </div>
               </div>
+
+              {/* Refund Info Banner if order is REFUNDED */}
+              {selectedOrder.status === 'REFUNDED' && (
+                <div className='p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 space-y-1.5 text-xs text-purple-700 dark:text-purple-300'>
+                  <div className='flex items-center gap-1.5 font-bold'>
+                    <Receipt className='size-4 text-purple-600 dark:text-purple-400' />
+                    <span>اطلاعات استرداد وجه:</span>
+                  </div>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] pt-1'>
+                    <div>مبلغ بازگشتی: <strong className='font-mono'>{formatPrice(selectedOrder.refundAmount || selectedOrder.amount)}</strong></div>
+                    {selectedOrder.refundRefId && <div>کد پیگیری شبا/بانک: <code className='font-mono font-bold'>{selectedOrder.refundRefId}</code></div>}
+                    {selectedOrder.refundReason && <div className='col-span-1 sm:col-span-2'>علت: {selectedOrder.refundReason}</div>}
+                    {selectedOrder.refundedAt && <div className='col-span-1 sm:col-span-2 text-muted-foreground'>زمان استرداد: {formatDate(selectedOrder.refundedAt)}</div>}
+                  </div>
+                </div>
+              )}
+
+              {/* Coupon / Discount Info if applied */}
+              {selectedOrder.discountAmount && selectedOrder.discountAmount > 0 && (
+                <div className='p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-300'>
+                  <span className='flex items-center gap-1.5 font-semibold'>
+                    <Tag className='size-3.5 text-emerald-600' />
+                    <span>کد تخفیف اعمال‌شده: {selectedOrder.coupon?.code || 'کد اختصاصی'}</span>
+                  </span>
+                  <span className='font-mono font-bold'>
+                    {formatPrice(selectedOrder.discountAmount)} تخفیف
+                  </span>
+                </div>
+              )}
 
               {/* Payment Details */}
               <div className='p-3.5 rounded-xl border border-border/70 bg-card space-y-2'>
@@ -1984,6 +2213,79 @@ export default function AdminOrdersPage() {
             >
               {deliveringManual && <Loader2 className='size-3.5 animate-spin me-1.5' />}
               ثبت تحویل و تکمیل سفارش
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Order Dialog (Section 4.1) */}
+      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+        <DialogContent className='sm:max-w-md rounded-2xl'>
+          <DialogHeader>
+            <DialogTitle className='text-base font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400'>
+              <Receipt className='size-4' />
+              <span>استرداد وجه سفارش #{refundOrderTarget?.id.slice(-6).toUpperCase()}</span>
+            </DialogTitle>
+            <DialogDescription className='text-xs'>
+              با استرداد وجه، وضعیت سفارش به REFUNDED تغییر یافته، هرگونه موجودی قفل شده آزاد گردیده و اعلان ثبت استرداد برای خریدار و ادمین ارسال خواهد شد.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-3 py-2 text-xs'>
+            <div>
+              <label className='font-semibold block mb-1'>مبلغ قابل عودت (تومان): *</label>
+              <Input
+                type='number'
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                placeholder='مبلغ به تومان'
+                className='text-xs font-mono h-10 rounded-xl'
+                dir='ltr'
+              />
+            </div>
+
+            <div>
+              <label className='font-semibold block mb-1'>شماره پیگیری شبا / پایا / کارت بانکی (اختیاری):</label>
+              <Input
+                value={refundRefId}
+                onChange={(e) => setRefundRefId(e.target.value)}
+                placeholder='مثلاً: IR120... یا شماره تراکنش پایا'
+                className='text-xs font-mono h-10 rounded-xl'
+                dir='ltr'
+              />
+            </div>
+
+            <div>
+              <label className='font-semibold block mb-1'>علت استرداد وجه: (اختیاری)</label>
+              <Textarea
+                rows={2}
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                placeholder='مثلاً: عدم موجودی لایسنس / انصراف مشتری طبق ضمانت بازگشت وجه'
+                className='text-xs rounded-xl'
+              />
+            </div>
+          </div>
+
+          <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setRefundDialogOpen(false)}
+              disabled={refunding}
+              className='text-xs w-full sm:w-auto h-9 rounded-xl'
+            >
+              انصراف
+            </Button>
+            <Button
+              variant='destructive'
+              size='sm'
+              onClick={handleProcessRefund}
+              disabled={refunding}
+              className='text-xs font-semibold w-full sm:w-auto h-9 rounded-xl gap-1.5 cursor-pointer'
+            >
+              {refunding && <Loader2 className='size-3.5 animate-spin' />}
+              تأیید و ثبت استرداد وجه
             </Button>
           </DialogFooter>
         </DialogContent>

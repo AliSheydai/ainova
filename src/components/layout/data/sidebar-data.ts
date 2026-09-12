@@ -7,6 +7,7 @@ import {
   Settings,
   ShoppingBag,
   Users,
+  Tag,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -56,6 +57,11 @@ export const sidebarData: SidebarData = {
           title: 'محصولات و پلن‌ها',
           url: '/dashboard/products',
           icon: ShoppingBag,
+        },
+        {
+          title: 'کدهای تخفیف',
+          url: '/dashboard/coupons',
+          icon: Tag,
         },
         {
           title: 'پشتیبانی',

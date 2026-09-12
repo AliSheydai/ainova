@@ -4,6 +4,9 @@ import { requireAdminApi } from '@/lib/auth/admin'
 import { OrderStatus, FulfillmentType, DeliveryStatus } from '@prisma/client'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { decryptCredential } from '@/lib/security/crypto'
+import { AdminNotificationService } from '@/lib/notifications/admin-notification'
+import { OrderExpirationService } from '@/lib/orders/order-expiration'
+import { sendTelegramNotification } from '@/lib/telegram/bot'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -150,6 +153,9 @@ export async function GET(req: NextRequest) {
           plan: {
             include: { product: true },
           },
+          coupon: {
+            select: { id: true, code: true, discountType: true, discountValue: true },
+          },
           payment: true,
           activationLink: {
             select: { id: true, url: true, status: true, assignedAt: true, usedAt: true },
@@ -174,6 +180,8 @@ export async function GET(req: NextRequest) {
         prisma.order.count({
           where: { status: { in: [OrderStatus.FAILED, OrderStatus.CANCELLED] } },
         }),
+        prisma.order.count({ where: { status: OrderStatus.REFUNDED } }),
+        prisma.order.count({ where: { status: OrderStatus.EXPIRED } }),
       ]),
       prisma.product.findMany({
         select: { id: true, title: true, slug: true },
@@ -221,6 +229,8 @@ export async function GET(req: NextRequest) {
         completed: counts[3],
         pendingPayment: counts[4],
         failedOrCancelled: counts[5],
+        refunded: counts[6],
+        expired: counts[7],
       },
       filterOptions: {
         products,
@@ -243,11 +253,123 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const { orderId, status, action, manualNote, deliveredInfo } = body
 
+    // Special Action: Expire Stale Pending Orders (Section 4.2)
+    if (action === 'EXPIRE_STALE') {
+      const olderThan = parseInt(String(body.olderThanMinutes), 10) || 30
+      const expireResult = await OrderExpirationService.expirePendingOrders(olderThan)
+      return NextResponse.json({
+        success: true,
+        result: expireResult,
+        message: `${expireResult.expiredOrdersCount} سفارش معوق منقضی و ${expireResult.releasedInventoryCount} کالای رزرو شده آزاد گردید.`,
+      })
+    }
+
     if (!orderId) {
       return NextResponse.json(
         { success: false, error: 'شناسه سفارش الزامی است.' },
         { status: 400 }
       )
+    }
+
+    // Special Action: Refund Order (Section 4.1)
+    if (action === 'REFUND') {
+      const targetOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          plan: { include: { product: true } },
+          product: true,
+          payment: true,
+        },
+      })
+
+      if (!targetOrder) {
+        return NextResponse.json(
+          { success: false, error: 'سفارش مورد نظر یافت نشد.' },
+          { status: 404 }
+        )
+      }
+
+      if (targetOrder.status === OrderStatus.REFUNDED) {
+        return NextResponse.json(
+          { success: false, error: 'این سفارش قبلاً استرداد شده است.' },
+          { status: 400 }
+        )
+      }
+
+      const parsedRefundAmount = parseInt(String(body.refundAmount), 10)
+      const refundAmount = !isNaN(parsedRefundAmount) && parsedRefundAmount > 0 ? parsedRefundAmount : targetOrder.amount
+      const refundReason = body.refundReason?.trim() || null
+      const refundRefId = body.refundRefId?.trim() || null
+      const now = new Date()
+
+      const refundedOrder = await prisma.$transaction(async (tx) => {
+        // 1. Release any reserved or assigned inventory items back to AVAILABLE
+        await tx.inventoryItem.updateMany({
+          where: { orderId: targetOrder.id, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+
+        // 2. Mark payment as REFUNDED if existing
+        if (targetOrder.payment) {
+          await tx.payment.update({
+            where: { id: targetOrder.payment.id },
+            data: { status: 'REFUNDED' },
+          })
+        }
+
+        // 3. Mark order as REFUNDED with audit metadata
+        return await tx.order.update({
+          where: { id: targetOrder.id },
+          data: {
+            status: OrderStatus.REFUNDED,
+            refundAmount,
+            refundReason,
+            refundRefId,
+            refundedAt: now,
+          },
+          include: {
+            user: true,
+            plan: { include: { product: true } },
+            product: true,
+            delivery: true,
+            payment: true,
+            coupon: true,
+          },
+        })
+      })
+
+      // Send telegram alert to Admin
+      AdminNotificationService.notifyOrderRefunded(refundedOrder.id, {
+        refundAmount,
+        refundReason: refundReason || undefined,
+        refundRefId: refundRefId || undefined,
+        adminUserName: user.name || user.phone || 'مدیر سیستم',
+      }).catch((err) => console.error('Failed to send admin refund notification:', err))
+
+      // Send telegram notification to customer if available
+      const customerTelegram = refundedOrder.telegramChatId || refundedOrder.user?.telegramId
+      if (customerTelegram) {
+        const productTitle =
+          refundedOrder.product?.title || refundedOrder.plan?.product?.title || 'اشتراک'
+        const refundFormatted = new Intl.NumberFormat('fa-IR').format(refundAmount)
+
+        const customerMsg =
+          `💸 **مشتری گرامی، مبلغ سفارش #${refundedOrder.id.slice(-6).toUpperCase()} استرداد شد.**\n\n` +
+          `📦 **محصول:** ${productTitle}\n` +
+          `💰 **مبلغ استرداد یافته:** ${refundFormatted} تومان\n` +
+          (refundRefId ? `🧾 **کد رهگیری شبا / بانکی:** \`${refundRefId}\`\n` : '') +
+          (refundReason ? `📝 **علت:** ${refundReason}\n` : '') +
+          `\nباتشکر از شکیبایی و همراهی شما.`
+
+        sendTelegramNotification(customerTelegram, customerMsg).catch(() => {})
+      }
+
+      return NextResponse.json({
+        success: true,
+        order: refundedOrder,
+        message: 'استرداد وجه با موفقیت ثبت و وضعیت سفارش بروزرسانی شد.',
+      })
     }
 
     // Special Action: Fulfill Manual Delivery
