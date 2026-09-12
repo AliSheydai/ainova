@@ -9,15 +9,32 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
+
+    // Pagination
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10) || 20))
+
+    // Filters
     const search = searchParams.get('search')?.trim() || ''
-    const roleFilter = searchParams.get('role') as Role | null
+    const roleFilter = searchParams.get('role')?.trim() || 'ALL'
+    const orderFilter = searchParams.get('orderFilter')?.trim() || 'ALL' // 'HAS_ORDERS' | 'NO_ORDERS'
+    const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
     const where: any = {}
 
-    if (roleFilter && (roleFilter === 'ADMIN' || roleFilter === 'USER')) {
-      where.role = roleFilter
+    // Role filter
+    if (roleFilter === 'ADMIN' || roleFilter === 'USER') {
+      where.role = roleFilter as Role
     }
 
+    // Order activity filter
+    if (orderFilter === 'HAS_ORDERS') {
+      where.orders = { some: {} }
+    } else if (orderFilter === 'NO_ORDERS') {
+      where.orders = { none: {} }
+    }
+
+    // Search filter
     if (search) {
       where.OR = [
         { phone: { contains: search, mode: 'insensitive' } },
@@ -26,19 +43,39 @@ export async function GET(req: NextRequest) {
       ]
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { orders: true },
+    // Sorting
+    let orderBy: any = { createdAt: 'desc' }
+    if (sortBy === 'OLDEST') {
+      orderBy = { createdAt: 'asc' }
+    } else if (sortBy === 'MOST_ORDERS') {
+      orderBy = { orders: { _count: 'desc' } }
+    }
+
+    // Parallel fetch: total filtered, paginated users, KPI counts
+    const [totalFiltered, users, counts] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          _count: {
+            select: { orders: true },
+          },
+          orders: {
+            where: { status: { in: ['PAID', 'COMPLETED'] } },
+            select: { amount: true },
+          },
         },
-        orders: {
-          where: { status: { in: ['PAID', 'COMPLETED'] } },
-          select: { amount: true },
-        },
-      },
-    })
+      }),
+      Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { orders: { some: {} } } }),
+        prisma.user.count({ where: { role: 'ADMIN' } }),
+        prisma.user.count({ where: { orders: { none: {} } } }),
+      ]),
+    ])
 
     const formattedUsers = users.map((u) => {
       const totalSpent = u.orders.reduce((acc, o) => acc + o.amount, 0)
@@ -55,9 +92,25 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    const totalPages = Math.ceil(totalFiltered / limit) || 1
+
     return NextResponse.json({
       success: true,
       users: formattedUsers,
+      pagination: {
+        page,
+        limit,
+        total: totalFiltered,
+        totalPages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+      counts: {
+        all: counts[0],
+        buyers: counts[1],
+        admins: counts[2],
+        noOrders: counts[3],
+      },
     })
   } catch (error: unknown) {
     console.error('Error in GET /api/admin/users:', error)

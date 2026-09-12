@@ -9,26 +9,57 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
+
+    // Pagination
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10) || 20))
+
+    // Filters
+    const search = searchParams.get('search')?.trim() || ''
     const statusFilter = searchParams.get('status') as LinkStatus | null
     const productIdFilter = searchParams.get('productId')
     const planIdFilter = searchParams.get('planId')
+    const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
     const where: any = {
       type: InventoryType.ACTIVATION_LINK,
     }
+
     if (statusFilter && Object.values(LinkStatus).includes(statusFilter)) {
       where.status = statusFilter
     }
-    if (productIdFilter) {
+
+    if (productIdFilter && productIdFilter !== 'ALL') {
       where.productId = productIdFilter
-    } else if (planIdFilter) {
+    }
+
+    if (planIdFilter && planIdFilter !== 'ALL') {
       where.planId = planIdFilter
     }
 
-    const [items, total, available, reserved, used, invalid, products] = await Promise.all([
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { orderId: { contains: search, mode: 'insensitive' } },
+        { order: { user: { phone: { contains: search, mode: 'insensitive' } } } },
+        { order: { user: { name: { contains: search, mode: 'insensitive' } } } },
+        { product: { title: { contains: search, mode: 'insensitive' } } },
+        { plan: { name: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+
+    let orderBy: any = { createdAt: 'desc' }
+    if (sortBy === 'OLDEST') {
+      orderBy = { createdAt: 'asc' }
+    }
+
+    const [totalFiltered, items, total, available, reserved, used, invalid, products] = await Promise.all([
+      prisma.inventoryItem.count({ where }),
       prisma.inventoryItem.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           product: true,
           plan: {
@@ -56,7 +87,7 @@ export async function GET(req: NextRequest) {
       }),
     ])
 
-    // Format items to provide backwards-compatible activationLink shape (with .url property)
+    // Format items
     const formattedLinks = items.map((item) => {
       const dataObj =
         typeof item.data === 'string'
@@ -78,9 +109,19 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    const totalPages = Math.ceil(totalFiltered / limit) || 1
+
     return NextResponse.json({
       success: true,
       links: formattedLinks,
+      pagination: {
+        page,
+        limit,
+        total: totalFiltered,
+        totalPages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
       stats: {
         total,
         available,
