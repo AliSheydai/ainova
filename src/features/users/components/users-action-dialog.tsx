@@ -151,7 +151,7 @@ export function UsersActionDialog({
             Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
-        <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
+        <div className='max-h-[65vh] sm:h-105 w-full overflow-y-auto py-1 pe-1 sm:pe-3'>
           <Form {...form}>
             <form
               id='user-form'
@@ -162,19 +162,19 @@ export function UsersActionDialog({
                 control={form.control}
                 name='firstName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       First Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='John'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         autoComplete='off'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -182,19 +182,19 @@ export function UsersActionDialog({
                 control={form.control}
                 name='lastName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       Last Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='Doe'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         autoComplete='off'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -202,18 +202,18 @@ export function UsersActionDialog({
                 control={form.control}
                 name='username'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       Username
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='john_doe'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -221,16 +221,16 @@ export function UsersActionDialog({
                 control={form.control}
                 name='email'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Email</FormLabel>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder='john.doe@gmail.com'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -238,18 +238,18 @@ export function UsersActionDialog({
                 control={form.control}
                 name='phoneNumber'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       Phone Number
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='+123456789'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -257,19 +257,19 @@ export function UsersActionDialog({
                 control={form.control}
                 name='role'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Role</FormLabel>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>Role</FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
                       onValueChange={field.onChange}
                       placeholder='Select a role'
-                      className='col-span-4'
+                      className='sm:col-span-4'
                       items={roles.map(({ label, value }) => ({
                         label,
                         value,
                       }))}
                     />
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -277,18 +277,18 @@ export function UsersActionDialog({
                 control={form.control}
                 name='password'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       Password
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
                         placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
@@ -296,27 +296,27 @@ export function UsersActionDialog({
                 control={form.control}
                 name='confirmPassword'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
+                  <FormItem className='flex flex-col sm:grid sm:grid-cols-6 sm:items-center space-y-1 sm:space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='sm:col-span-2 text-start sm:text-end'>
                       Confirm Password
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
                         disabled={!isPasswordTouched}
                         placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
+                        className='sm:col-span-4'
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage className='sm:col-span-4 sm:col-start-3' />
                   </FormItem>
                 )}
               />
             </form>
           </Form>
         </div>
-        <DialogFooter>
-          <Button type='submit' form='user-form'>
+        <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
+          <Button type='submit' form='user-form' className='w-full sm:w-auto h-9'>
             Save changes
           </Button>
         </DialogFooter>

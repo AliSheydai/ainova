@@ -355,9 +355,9 @@ export default function AdminUsersPage() {
           }
         }}
       >
-        <DialogContent className='max-w-2xl max-h-[85vh] overflow-y-auto p-6'>
+        <DialogContent className='sm:max-w-2xl'>
           <DialogHeader>
-            <DialogTitle className='text-lg font-bold flex items-center gap-2'>
+            <DialogTitle className='text-base sm:text-lg font-bold flex items-center gap-2'>
               <UserIcon className='size-5 text-primary' />
               <span>پروفایل و تاریخچه سفارش‌های کاربر</span>
             </DialogTitle>

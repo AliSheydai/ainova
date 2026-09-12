@@ -136,12 +136,12 @@ export function UsersInviteDialog({
             />
           </form>
         </Form>
-        <DialogFooter className='gap-y-2'>
+        <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
           <DialogClose asChild>
-            <Button variant='outline'>Cancel</Button>
+            <Button variant='outline' className='w-full sm:w-auto h-9'>Cancel</Button>
           </DialogClose>
-          <Button type='submit' form='user-invite-form'>
-            Invite <Send />
+          <Button type='submit' form='user-invite-form' className='w-full sm:w-auto h-9'>
+            Invite <Send className='size-3.5 ms-1' />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -215,7 +215,7 @@ export default function AdminProductsPage() {
 
       {/* Delete Product Confirmation Alert Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className='rounded-2xl max-w-md'>
+        <AlertDialogContent className='sm:max-w-md'>
           <AlertDialogHeader>
             <AlertDialogTitle className='text-base font-bold'>
               حذف یا بایگانی محصول
@@ -224,14 +224,14 @@ export default function AdminProductsPage() {
               آیا از حذف یا خارج‌سازی محصول «{productToDelete?.title}» از ویترین فروشگاه اطمینان دارید؟ در صورت داشتن سوابق سفارش، محصول جهت حفظ سوابق مالی به صورت خودکار بایگانی (Archive) خواهد شد.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className='gap-2 sm:gap-0'>
-            <AlertDialogCancel disabled={deletingProduct} className='rounded-xl text-xs'>
+          <AlertDialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
+            <AlertDialogCancel disabled={deletingProduct} className='rounded-xl text-xs w-full sm:w-auto h-9'>
               انصراف
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deletingProduct}
               onClick={handleConfirmDeleteProduct}
-              className='rounded-xl text-xs bg-rose-600 hover:bg-rose-700 text-white font-semibold gap-1.5'
+              className='rounded-xl text-xs bg-rose-600 hover:bg-rose-700 text-white font-semibold gap-1.5 w-full sm:w-auto h-9'
             >
               {deletingProduct && <Loader2 className='size-3.5 animate-spin' />}
               <span>تأیید و حذف</span>

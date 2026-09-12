@@ -49,9 +49,11 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  showHandle = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  showHandle?: boolean
 }) {
   return (
     <DialogPortal data-slot='dialog-portal'>
@@ -59,11 +61,22 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot='dialog-content'
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg',
+          'fixed z-50 grid w-full gap-4 border bg-background shadow-2xl duration-200',
+          // Mobile Bottom Sheet styles
+          'inset-x-0 bottom-0 top-auto max-w-none translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none border-t border-x-0 border-b-0 p-5 pt-3 pb-6 max-h-[92vh] max-h-[92dvh] overflow-y-auto',
+          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom',
+          // Desktop Centered Dialog styles
+          'sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:inset-x-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border sm:p-6 sm:max-w-lg sm:max-h-[85vh]',
+          'sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95',
           className
         )}
         {...props}
       >
+        {showHandle && (
+          <div className='flex justify-center -mt-1 pb-1 sm:hidden shrink-0 select-none' aria-hidden='true'>
+            <div className='h-1.5 w-12 rounded-full bg-muted-foreground/30' />
+          </div>
+        )}
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
@@ -83,7 +96,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot='dialog-header'
-      className={cn('flex flex-col gap-2 text-center sm:text-start', className)}
+      className={cn('flex flex-col gap-2 text-start', className)}
       {...props}
     />
   )

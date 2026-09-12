@@ -456,9 +456,9 @@ export default function AdminOrdersPage() {
           if (!open) setSelectedOrder(null)
         }}
       >
-        <DialogContent className='max-w-xl p-6 max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='sm:max-w-xl'>
           <DialogHeader>
-            <DialogTitle className='text-lg font-bold flex items-center gap-2'>
+            <DialogTitle className='text-base sm:text-lg font-bold flex items-center gap-2'>
               <Package className='size-5 text-primary' />
               <span>جزئیات کامل سفارش</span>
             </DialogTitle>
@@ -470,7 +470,7 @@ export default function AdminOrdersPage() {
           {selectedOrder && (
             <div className='space-y-4 pt-2 text-xs'>
               {/* Info Grid */}
-              <div className='grid grid-cols-2 gap-3 p-4 rounded-xl border border-border/60 bg-muted/20'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-border/60 bg-muted/20'>
                 <div>
                   <span className='text-muted-foreground block text-[10px]'>مشتری:</span>
                   <span className='font-bold text-foreground text-sm'>
@@ -643,7 +643,7 @@ export default function AdminOrdersPage() {
 
       {/* Manual Delivery Dialog */}
       <Dialog open={manualDialogOpen} onOpenChange={setManualDialogOpen}>
-        <DialogContent className='max-w-md p-6'>
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='text-base font-bold flex items-center gap-2'>
               <Send className='size-4 text-primary' />
@@ -667,13 +667,13 @@ export default function AdminOrdersPage() {
             </div>
           </div>
 
-          <DialogFooter className='gap-2 pt-2'>
+          <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
             <Button
               variant='outline'
               size='sm'
               onClick={() => setManualDialogOpen(false)}
               disabled={deliveringManual}
-              className='text-xs'
+              className='text-xs w-full sm:w-auto h-9'
             >
               انصراف
             </Button>
@@ -681,7 +681,7 @@ export default function AdminOrdersPage() {
               size='sm'
               onClick={handleFulfillManual}
               disabled={deliveringManual}
-              className='text-xs font-semibold'
+              className='text-xs font-semibold w-full sm:w-auto h-9'
             >
               {deliveringManual && <Loader2 className='size-3.5 animate-spin me-1.5' />}
               ثبت تحویل و تکمیل سفارش

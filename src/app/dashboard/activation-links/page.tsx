@@ -509,9 +509,9 @@ export default function AdminActivationLinksPage() {
 
       {/* Bulk Add Links Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-        <DialogContent className='max-w-xl p-6'>
+        <DialogContent className='sm:max-w-xl'>
           <DialogHeader>
-            <DialogTitle className='text-lg font-bold flex items-center gap-2'>
+            <DialogTitle className='text-base sm:text-lg font-bold flex items-center gap-2'>
               <Plus className='size-5 text-primary' />
               <span>افزودن دسته‌ای لینک‌های فعال‌سازی (Bulk Import)</span>
             </DialogTitle>
@@ -542,7 +542,7 @@ export default function AdminActivationLinksPage() {
                 لیست لینک‌ها (هر خط یک لینک):
               </label>
               <Textarea
-                rows={8}
+                rows={6}
                 placeholder={`https://one.google.com/promo/invite/...\nhttps://one.google.com/promo/invite/...`}
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
@@ -561,19 +561,19 @@ export default function AdminActivationLinksPage() {
             </div>
           </div>
 
-          <DialogFooter className='gap-2 pt-2'>
+          <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
             <Button
               variant='outline'
               onClick={() => setBulkDialogOpen(false)}
               disabled={importing}
-              className='text-xs'
+              className='text-xs w-full sm:w-auto h-9'
             >
               انصراف
             </Button>
             <Button
               onClick={handleBulkImport}
               disabled={importing}
-              className='text-xs font-semibold'
+              className='text-xs font-semibold w-full sm:w-auto h-9'
             >
               {importing ? (
                 <Loader2 className='size-3.5 animate-spin me-1.5' />

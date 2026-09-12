@@ -335,7 +335,7 @@ export default function AdminSupportPage() {
           if (!open) setSelectedTicket(null)
         }}
       >
-        <DialogContent className='max-w-xl p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-full max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='sm:max-w-xl'>
           <DialogHeader>
             <DialogTitle className='text-base font-bold flex items-center gap-2'>
               <MessageSquare className='size-4 text-primary' />
@@ -415,14 +415,14 @@ export default function AdminSupportPage() {
               variant='outline'
               onClick={() => setSelectedTicket(null)}
               disabled={submitting}
-              className='text-xs w-full sm:w-auto'
+              className='text-xs w-full sm:w-auto h-9'
             >
               انصراف
             </Button>
             <Button
               onClick={handleSaveResponse}
               disabled={submitting}
-              className='text-xs font-semibold gap-1.5 w-full sm:w-auto'
+              className='text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
             >
               {submitting ? <Loader2 className='size-3.5 animate-spin' /> : <Send className='size-3.5' />}
               ذخیره پاسخ و وضعیت

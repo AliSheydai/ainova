@@ -52,8 +52,8 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         {children}
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>
+        <AlertDialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
+          <AlertDialogCancel disabled={isLoading} className='w-full sm:w-auto h-9'>
             {cancelBtnText ?? 'انصراف'}
           </AlertDialogCancel>
           <Button
@@ -62,6 +62,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             onClick={handleConfirm}
             variant={destructive ? 'destructive' : 'default'}
             disabled={disabled || isLoading}
+            className='w-full sm:w-auto h-9 font-semibold'
           >
             {confirmText ?? 'ادامه'}
           </Button>

@@ -119,29 +119,29 @@ export function PlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-3xl max-h-[92vh] overflow-y-auto p-4 sm:p-6'>
+      <DialogContent className='sm:max-w-3xl'>
         <DialogHeader className='pb-3 border-b border-border/50'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
-              <div className='size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
+          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
+            <div className='flex items-center gap-2.5'>
+              <div className='size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
                 <Zap className='size-4' />
               </div>
-              <div>
-                <DialogTitle className='text-base font-bold'>
+              <div className='min-w-0 text-start'>
+                <DialogTitle className='text-sm sm:text-base font-bold'>
                   {isEditing ? 'ویرایش مشخصات پلن فروش' : 'ایجاد پلن جدید برای محصول'}
                 </DialogTitle>
-                <DialogDescription className='text-xs text-muted-foreground'>
+                <DialogDescription className='text-xs text-muted-foreground truncate'>
                   محصول هدف: <strong className='text-foreground'>{planTargetProductTitle}</strong>
                 </DialogDescription>
               </div>
             </div>
 
             {/* Mode Switch Tabs */}
-            <div className='flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs'>
+            <div className='grid grid-cols-2 sm:flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs shrink-0 w-full sm:w-auto'>
               <button
                 type='button'
                 onClick={() => setModalTab('config')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
                   modalTab === 'config'
                     ? 'bg-background text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
@@ -153,7 +153,7 @@ export function PlanDialog({
               <button
                 type='button'
                 onClick={() => setModalTab('preview')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
                   modalTab === 'preview'
                     ? 'bg-background text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
@@ -335,13 +335,13 @@ export function PlanDialog({
           </div>
         )}
 
-        <DialogFooter className='pt-3 border-t border-border/50 gap-2 sm:gap-0'>
+        <DialogFooter className='pt-3 border-t border-border/50 flex flex-col-reverse sm:flex-row gap-2'>
           <Button
             type='button'
             variant='outline'
             size='sm'
             onClick={() => onOpenChange(false)}
-            className='rounded-xl text-xs'
+            className='rounded-xl text-xs w-full sm:w-auto h-9'
           >
             انصراف
           </Button>
@@ -350,7 +350,7 @@ export function PlanDialog({
             size='sm'
             disabled={submitting}
             onClick={onSave}
-            className='rounded-xl text-xs font-semibold gap-1.5'
+            className='rounded-xl text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
           >
             {submitting && <Loader2 className='size-3.5 animate-spin' />}
             <span>{isEditing ? 'بروزرسانی پلن' : 'ثبت و فعال‌سازی پلن'}</span>

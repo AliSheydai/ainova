@@ -57,14 +57,14 @@ export function ProductDialog({
 }: ProductDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto p-4 sm:p-6'>
+      <DialogContent className='sm:max-w-xl'>
         <DialogHeader className='pb-3 border-b border-border/50'>
-          <div className='flex items-center gap-2'>
-            <div className='size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
+          <div className='flex items-center gap-2.5'>
+            <div className='size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
               <ShoppingBag className='size-4' />
             </div>
-            <div>
-              <DialogTitle className='text-base font-bold'>
+            <div className='min-w-0 text-start'>
+              <DialogTitle className='text-sm sm:text-base font-bold'>
                 {isEditing ? 'ویرایش مشخصات محصول' : 'ایجاد محصول جدید'}
               </DialogTitle>
               <DialogDescription className='text-xs text-muted-foreground'>
@@ -172,13 +172,13 @@ export function ProductDialog({
           </div>
         </div>
 
-        <DialogFooter className='pt-3 border-t border-border/50 gap-2 sm:gap-0'>
+        <DialogFooter className='pt-3 border-t border-border/50 flex flex-col-reverse sm:flex-row gap-2'>
           <Button
             type='button'
             variant='outline'
             size='sm'
             onClick={() => onOpenChange(false)}
-            className='rounded-xl text-xs'
+            className='rounded-xl text-xs w-full sm:w-auto h-9'
           >
             انصراف
           </Button>
@@ -187,7 +187,7 @@ export function ProductDialog({
             size='sm'
             disabled={submitting}
             onClick={onSave}
-            className='rounded-xl text-xs font-semibold gap-1.5'
+            className='rounded-xl text-xs font-semibold gap-1.5 w-full sm:w-auto h-9'
           >
             {submitting && <Loader2 className='size-3.5 animate-spin' />}
             <span>{isEditing ? 'بروزرسانی محصول' : 'ایجاد محصول'}</span>
