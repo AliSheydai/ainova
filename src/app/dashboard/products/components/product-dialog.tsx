@@ -329,7 +329,7 @@ export function ProductDialog({
                     </div>
                     <div className='min-w-0 flex-1 space-y-0.5'>
                       <div className='flex items-center gap-1 text-xs font-semibold text-foreground'>
-                        <CheckCircle2 className='size-3.5 text-emerald-500' />
+                        <CheckCircle2 className='size-3.5 text-primary' />
                         <span>تصویر با موفقیت انتخاب شد</span>
                       </div>
                       <p className='text-[11px] font-mono text-muted-foreground truncate' dir='ltr'>

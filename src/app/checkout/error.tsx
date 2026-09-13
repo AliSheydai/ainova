@@ -19,7 +19,7 @@ export default function CheckoutError({
   return (
     <div className='min-h-[70vh] flex items-center justify-center p-4' dir='rtl'>
       <div className='max-w-md w-full bg-card border border-border rounded-2xl p-6 md:p-8 text-center shadow-lg space-y-6'>
-        <div className='w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center'>
+        <div className='w-16 h-16 mx-auto rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center'>
           <AlertCircle className='w-8 h-8' />
         </div>
 

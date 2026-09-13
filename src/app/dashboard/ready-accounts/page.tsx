@@ -70,13 +70,13 @@ interface InventoryResponse {
 function getStatusBadge(status: string) {
   switch (status) {
     case 'AVAILABLE':
-      return { label: 'آزاد', className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30', icon: CheckCircle2 }
+      return { label: 'آزاد', className: 'bg-primary/15 text-primary border-primary/30', icon: CheckCircle2 }
     case 'RESERVED':
-      return { label: 'رزرو شده', className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30', icon: Clock }
+      return { label: 'رزرو شده', className: 'bg-muted text-muted-foreground border-border', icon: Clock }
     case 'USED':
-      return { label: 'استفاده شده', className: 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30', icon: Check }
+      return { label: 'استفاده شده', className: 'bg-primary/10 text-primary/80 border-primary/20', icon: Check }
     default:
-      return { label: 'نامعتبر', className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30', icon: XCircle }
+      return { label: 'نامعتبر', className: 'bg-destructive/15 text-destructive border-destructive/30', icon: XCircle }
   }
 }
 
@@ -231,13 +231,13 @@ export default function ReadyAccountsPage() {
               <div className='text-lg sm:text-2xl font-black text-foreground font-sans'>{toPersianDigits(stats.total)}</div>
               <div className='text-[10.5px] text-muted-foreground mt-0.5'>کل اکانت‌ها</div>
             </div>
-            <div className='p-3 sm:p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-center'>
-              <div className='text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-sans'>{toPersianDigits(stats.available)}</div>
-              <div className='text-[10.5px] text-emerald-700 dark:text-emerald-400 mt-0.5'>آزاد (موجود)</div>
+            <div className='p-3 sm:p-4 rounded-xl border border-primary/30 bg-primary/5 text-center'>
+              <div className='text-lg sm:text-2xl font-black text-primary font-sans'>{toPersianDigits(stats.available)}</div>
+              <div className='text-[10.5px] text-primary mt-0.5'>آزاد (موجود)</div>
             </div>
-            <div className='p-3 sm:p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 text-center'>
-              <div className='text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400 font-sans'>{toPersianDigits(stats.used)}</div>
-              <div className='text-[10.5px] text-blue-700 dark:text-blue-400 mt-0.5'>استفاده‌شده</div>
+            <div className='p-3 sm:p-4 rounded-xl border border-border/70 bg-card text-center'>
+              <div className='text-lg sm:text-2xl font-black text-foreground font-sans'>{toPersianDigits(stats.used)}</div>
+              <div className='text-[10.5px] text-muted-foreground mt-0.5'>استفاده‌شده</div>
             </div>
           </div>
 

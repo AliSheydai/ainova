@@ -161,7 +161,7 @@ function SuccessContent() {
     return (
       <div className='container mx-auto max-w-md py-16 px-4 text-center'>
         <Card className='p-8 border-border/70 shadow-lg'>
-          <AlertCircle className='mx-auto size-12 text-amber-500 mb-4' />
+          <AlertCircle className='mx-auto size-12 text-primary mb-4' />
           <h2 className='text-lg font-bold'>سفارش یافت نشد</h2>
           <p className='text-xs text-muted-foreground mt-2 mb-6'>
             شناسه سفارش معتبر نیست یا دسترسی به آن امکان‌پذیر نمی‌باشد.
@@ -398,8 +398,8 @@ function SuccessContent() {
 
           {/* 3. CUSTOMER PROVISIONING */}
           {isCompleted && deliveryType === 'CUSTOMER_PROVISIONING' && (
-            <div className='rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 sm:p-5 space-y-3'>
-              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400'>
+            <div className='rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:p-5 space-y-3'>
+              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>
                 <CheckCircle2 className='size-5 shrink-0' />
                 <span>اشتراک با موفقیت روی حساب شما فعال شد</span>
               </div>
@@ -407,7 +407,7 @@ function SuccessContent() {
                 {deliveryData.provisionDetails || 'اشتراک مورد نظر بر اساس اطلاعات حساب شما فعال گردید.'}
               </p>
               {deliveryData.accountInfo && (
-                <div className='p-3 rounded-xl bg-background/80 border border-emerald-500/20 text-xs sm:text-sm font-mono' dir='ltr'>
+                <div className='p-3 rounded-xl bg-background/80 border border-primary/20 text-xs sm:text-sm font-mono' dir='ltr'>
                   {deliveryData.accountInfo}
                 </div>
               )}
@@ -429,8 +429,8 @@ function SuccessContent() {
 
           {/* 5. MANUAL FULFILLMENT: AWAITING ADMIN */}
           {isManualPending && (
-            <div className='rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 text-start space-y-3'>
-              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400'>
+            <div className='rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:p-5 text-start space-y-3'>
+              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>
                 <Clock className='size-5 shrink-0' />
                 <span>پرداخت با موفقیت انجام شد — در حال آماده‌سازی و فعال‌سازی سفارش</span>
               </div>
@@ -440,7 +440,7 @@ function SuccessContent() {
                   cdata?.customer_email || cdata?.customer_gmail || deliveryData.email
                 if (customerEmail) {
                   return (
-                    <div className='p-3 sm:p-3.5 rounded-xl bg-background/80 border border-amber-500/20 text-xs sm:text-sm space-y-2'>
+                    <div className='p-3 sm:p-3.5 rounded-xl bg-background/80 border border-primary/20 text-xs sm:text-sm space-y-2'>
                       <div className='flex items-center justify-between'>
                         <span className='text-muted-foreground'>آدرس جیمیل ثبت شده شما:</span>
                         <span className='font-mono font-bold text-foreground' dir='ltr'>
@@ -463,7 +463,7 @@ function SuccessContent() {
                 variant='outline'
                 size='sm'
                 onClick={fetchOrder}
-                className='text-xs sm:text-sm gap-1.5 border-amber-500/40 text-amber-600 rounded-xl'
+                className='text-xs sm:text-sm gap-1.5 border-primary/30 text-primary hover:bg-primary/10 rounded-xl'
               >
                 <RefreshCw className='size-3.5' />
                 بررسی مجدد وضعیت سفارش

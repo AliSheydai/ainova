@@ -108,7 +108,7 @@ export function PricingSection({
                     <div
                       className={`absolute left-0 right-0 top-0 h-1.5 ${
                         isPopular
-                          ? 'bg-gradient-to-r from-primary via-emerald-500 to-primary'
+                          ? 'bg-gradient-to-r from-primary/40 via-primary to-primary/40'
                           : 'bg-border/60'
                       }`}
                     />
@@ -159,7 +159,7 @@ export function PricingSection({
                         </span>
                       </div>
                       <p className='mt-1 text-[10px] sm:text-[11px] text-muted-foreground flex items-center justify-center gap-1'>
-                        <Zap className='size-3 text-emerald-500 shrink-0' />
+                        <Zap className='size-3 text-primary shrink-0' />
                         <span>تحویل آنی و خودکار پس از پرداخت</span>
                       </p>
                     </CardHeader>

@@ -277,21 +277,21 @@ export default function AdminProductsPage() {
               }}
               className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
                 statusFilter === 'ACTIVE'
-                  ? 'bg-emerald-500/10 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
-                  : 'bg-card border-border/70 hover:border-emerald-500/30 hover:bg-emerald-500/5'
+                  ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                  : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
               }`}
             >
               <div className='flex items-center justify-between'>
-                <span className='text-[11px] text-emerald-600 dark:text-emerald-400 font-medium'>
+                <span className='text-[11px] text-muted-foreground font-medium'>
                   محصولات فعال
                 </span>
-                <CheckCircle2 className='size-4 text-emerald-500' />
+                <CheckCircle2 className='size-4 text-primary' />
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
-                <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
+                <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
                   {toPersianDigits(activeProductsCount)}
                 </span>
-                <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>فعال</span>
+                <span className='text-[10px] text-muted-foreground'>فعال</span>
               </div>
             </button>
 

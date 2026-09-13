@@ -127,7 +127,7 @@ function PreCreatedAccountSection({
       {/* Header Banner */}
       <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-border/60 bg-muted/30'>
         <div className='flex items-center gap-2.5 min-w-0'>
-          <div className='size-8 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs'>
+          <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs'>
             <Package className='size-4' />
           </div>
           <div className='min-w-0'>
@@ -144,8 +144,8 @@ function PreCreatedAccountSection({
         <div className='shrink-0 self-start sm:self-auto'>
           {!inventoryUnknown ? (
             hasInventory ? (
-              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs'>
-                <span className='size-2 rounded-full bg-emerald-500 animate-pulse' />
+              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs font-semibold bg-primary/10 text-primary border border-primary/25 shadow-2xs'>
+                <span className='size-2 rounded-full bg-primary animate-pulse' />
                 <Warehouse className='size-3.5 shrink-0' />
                 <span>انبار: {availableCount} اکانت آماده تحویل فوری</span>
               </div>
@@ -167,11 +167,11 @@ function PreCreatedAccountSection({
       <div className='p-3.5 sm:p-5 space-y-4'>
         {/* Notice if warehouse is exhausted */}
         {isInventoryExhausted && (
-          <div className='flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs sm:text-sm leading-relaxed animate-in fade-in duration-300'>
-            <AlertTriangle className='size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5' />
+          <div className='flex items-start gap-2.5 p-3 rounded-xl bg-primary/5 border border-primary/20 text-foreground text-xs sm:text-sm leading-relaxed animate-in fade-in duration-300'>
+            <AlertTriangle className='size-4 text-primary shrink-0 mt-0.5' />
             <div>
               <span className='font-bold'>موجودی اکانت‌های آماده در انبار موقتاً تمام شده است.</span>
-              <p className='text-[11px] sm:text-xs text-amber-700/90 dark:text-amber-400/90 mt-0.5'>
+              <p className='text-[11px] sm:text-xs text-muted-foreground mt-0.5'>
                 هیچ جای نگرانی نیست! این سفارش به صورت اختصاصی مستقیماً روی آدرس جیمیل و اکانت شخصی شما توسط کارشناس پشتیبانی فعال خواهد شد.
               </p>
             </div>
@@ -194,7 +194,7 @@ function PreCreatedAccountSection({
             }}
             className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 transition-all select-none ${
               mode === 'inventory' && !isInventoryExhausted
-                ? 'border-purple-500/70 bg-purple-500/8 ring-2 ring-purple-500/20 shadow-xs'
+                ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
                 : isInventoryExhausted
                 ? 'border-border/40 bg-muted/20 opacity-55 cursor-not-allowed'
                 : 'border-border/70 bg-card hover:border-border hover:bg-muted/30 cursor-pointer'
@@ -206,7 +206,7 @@ function PreCreatedAccountSection({
                   <div
                     className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                       mode === 'inventory' && !isInventoryExhausted
-                        ? 'border-purple-600 bg-purple-600 text-white'
+                        ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-border'
                     }`}
                   >
@@ -223,7 +223,7 @@ function PreCreatedAccountSection({
                   className={`text-[10px] sm:text-[11px] font-semibold ${
                     isInventoryExhausted
                       ? 'bg-muted text-muted-foreground border-border'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      : 'bg-primary/10 text-primary border-primary/20'
                   }`}
                 >
                   <Zap className='size-2.5 me-1' />
@@ -238,15 +238,15 @@ function PreCreatedAccountSection({
 
             <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[11px] sm:text-xs text-muted-foreground'>
               <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-emerald-500 shrink-0' />
+                <Check className='size-3.5 text-primary shrink-0' />
                 <span>تحویل ۱۰۰٪ خودکار بلافاصله پس از پرداخت</span>
               </div>
               <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-emerald-500 shrink-0' />
+                <Check className='size-3.5 text-primary shrink-0' />
                 <span>اکانت کاملاً جدید و اختصاصی شما</span>
               </div>
               <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-emerald-500 shrink-0' />
+                <Check className='size-3.5 text-primary shrink-0' />
                 <span>امکان تغییر رمز عبور و افزودن بازیابی</span>
               </div>
             </div>
@@ -269,7 +269,7 @@ function PreCreatedAccountSection({
             }}
             className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 transition-all cursor-pointer select-none ${
               mode === 'own'
-                ? 'border-blue-500/70 bg-blue-500/8 ring-2 ring-blue-500/20 shadow-xs'
+                ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
                 : 'border-border/70 bg-card hover:border-border hover:bg-muted/30'
             }`}
           >
@@ -278,7 +278,7 @@ function PreCreatedAccountSection({
                 <div className='flex items-center gap-2'>
                   <div
                     className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                      mode === 'own' ? 'border-blue-600 bg-blue-600 text-white' : 'border-border'
+                      mode === 'own' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
                     }`}
                   >
                     {mode === 'own' && <div className='size-2 rounded-full bg-white' />}
@@ -289,7 +289,7 @@ function PreCreatedAccountSection({
                 </div>
                 <Badge
                   variant='outline'
-                  className='text-[10px] sm:text-[11px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-semibold'
+                  className='text-[10px] sm:text-[11px] bg-primary/10 text-primary border-primary/20 font-semibold'
                 >
                   <UserIcon className='size-2.5 me-1' />
                   اکانت شخصی
@@ -303,15 +303,15 @@ function PreCreatedAccountSection({
 
             <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[11px] sm:text-xs text-muted-foreground'>
               <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-blue-500 shrink-0' />
+                <Check className='size-3.5 text-primary shrink-0' />
                 <span>حفظ کامل اطلاعات و تاریخچه قبلی شما</span>
               </div>
               <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-blue-500 shrink-0' />
+                <Check className='size-3.5 text-primary shrink-0' />
                 <span>بدون نیاز به تعویض حساب کاربری</span>
               </div>
-              <div className='flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium'>
-                <span className='size-1.5 rounded-full bg-amber-500 shrink-0' />
+              <div className='flex items-center gap-1.5 text-muted-foreground font-medium'>
+                <span className='size-1.5 rounded-full bg-primary shrink-0' />
                 <span>زمان فعال‌سازی: ۱ الی ۲۴ ساعت کاری توسط ادمین</span>
               </div>
             </div>
@@ -320,8 +320,8 @@ function PreCreatedAccountSection({
 
         {/* Input fields for Option B (Customer's own account) */}
         {mode === 'own' && (
-          <div className='rounded-xl border border-blue-500/30 bg-blue-500/5 p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200'>
-            <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300'>
+          <div className='rounded-xl border border-primary/25 bg-primary/5 p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200'>
+            <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>
               <Mail className='size-4 shrink-0' />
               <span>مشخصات حساب شخصی شما جهت فعال‌سازی</span>
             </div>
@@ -772,7 +772,7 @@ function CheckoutContent() {
           </Card>
         ) : (
           <Card className='relative overflow-hidden border border-primary/30 shadow-2xl shadow-primary/5 bg-card/95 backdrop-blur-xl rounded-2xl'>
-            <div className='absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-primary via-emerald-500 to-primary' />
+            <div className='absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-primary/30 via-primary to-primary/30' />
 
             <CardHeader className='pb-4 pt-5 sm:pt-6 px-4 sm:px-6 text-center space-y-3'>
               <CardTitle className='text-lg sm:text-xl md:text-2xl font-bold'>{productTitle}</CardTitle>
@@ -824,7 +824,7 @@ function CheckoutContent() {
                   {appliedCoupon && (
                     <div className='flex items-center gap-2 text-xs sm:text-sm text-muted-foreground'>
                       <span className='line-through'>{formatPrice(effectivePrice)}</span>
-                      <Badge variant='outline' className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] sm:text-xs font-bold'>
+                      <Badge variant='outline' className='bg-primary/10 text-primary border-primary/30 text-[10px] sm:text-xs font-bold'>
                         {formatPrice(appliedCoupon.discountAmount)} تخفیف
                       </Badge>
                     </div>
@@ -887,11 +887,11 @@ function CheckoutContent() {
                 </div>
 
                 {appliedCoupon ? (
-                  <div className='flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs sm:text-sm'>
+                  <div className='flex items-center justify-between p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-xs sm:text-sm'>
                     <div className='flex items-center gap-2 min-w-0'>
-                      <Check className='size-4 text-emerald-600 dark:text-emerald-400 shrink-0' />
+                      <Check className='size-4 text-primary shrink-0' />
                       <span className='font-mono font-bold text-foreground'>{appliedCoupon.code}</span>
-                      <span className='text-emerald-700 dark:text-emerald-400 font-medium truncate'>
+                      <span className='text-primary font-medium truncate'>
                         ({formatPrice(appliedCoupon.discountAmount)} تخفیف اعمال شد)
                       </span>
                     </div>

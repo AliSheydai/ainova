@@ -53,10 +53,10 @@ export function SupportTab() {
           <Card className="border-border/70 shadow-xs hover:border-primary/40 transition-colors h-full">
             <CardHeader className="pb-3 pt-5 px-5">
               <div className="flex items-center justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <MessageCircle className="size-5" />
                 </div>
-                <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-none text-[10px]">
+                <Badge className="bg-primary/10 text-primary border-none text-[10px]">
                   روش پیشنهادی
                 </Badge>
               </div>
@@ -72,7 +72,7 @@ export function SupportTab() {
                 rel="noopener noreferrer"
                 className="block"
               >
-                <Button className="w-full gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs transition-transform active:scale-[0.98]">
+                <Button className="w-full gap-2 text-xs font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-transform active:scale-[0.98]">
                   <ExternalLink className="size-3.5" />
                   گفتگو در تلگرام
                 </Button>

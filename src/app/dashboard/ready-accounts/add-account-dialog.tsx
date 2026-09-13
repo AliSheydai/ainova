@@ -678,7 +678,7 @@ export function AddAccountDialog({
                   )}
 
                   {validBulkAccounts.length > 0 ? (
-                    <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'>
+                    <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-primary/10 text-primary border border-primary/20'>
                       <CheckCircle2 className='size-3' />
                       <span>{toPersianDigits(validBulkAccounts.length)} اکانت معتبر</span>
                     </span>

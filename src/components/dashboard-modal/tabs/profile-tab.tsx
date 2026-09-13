@@ -180,13 +180,13 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
             <div className="flex items-center justify-between sm:justify-start gap-2.5 rounded-xl border border-sky-500/25 bg-sky-500/5 dark:bg-sky-500/10 px-3 py-2 transition-colors">
               <div className="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
                 <TelegramIcon className="size-4" />
-                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-1 ring-card" />
+                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary ring-1 ring-card" />
               </div>
 
               <div className="flex flex-col min-w-0 text-start">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-foreground">تلگرام متصل</span>
-                  <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] px-1 py-0 h-4 gap-0.5 font-medium">
+                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1 py-0 h-4 gap-0.5 font-medium">
                     <CheckCircle2 className="size-2.5" />
                     همگام
                   </Badge>

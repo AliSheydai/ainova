@@ -373,21 +373,21 @@ export default function AdminUsersPage() {
               }}
               className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
                 orderFilter === 'HAS_ORDERS'
-                  ? 'bg-emerald-500/10 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
-                  : 'bg-card border-border/70 hover:border-emerald-500/30 hover:bg-emerald-500/5'
+                  ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                  : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
               }`}
             >
               <div className='flex items-center justify-between'>
-                <span className='text-[11px] text-emerald-600 dark:text-emerald-400 font-medium'>
+                <span className='text-[11px] text-muted-foreground font-medium'>
                   خریداران فعال
                 </span>
-                <ShoppingBag className='size-4 text-emerald-500' />
+                <ShoppingBag className='size-4 text-primary' />
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
-                <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
+                <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
                   {toPersianDigits(counts.buyers)}
                 </span>
-                <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>نفر</span>
+                <span className='text-[10px] text-muted-foreground'>نفر</span>
               </div>
             </button>
 
@@ -1096,9 +1096,9 @@ export default function AdminUsersPage() {
                             variant='outline'
                             className={`text-[9px] mt-1 ${
                               ord.status === 'COMPLETED'
-                                ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
+                                ? 'border-primary/30 text-primary bg-primary/10'
                                 : ord.status === 'PAID'
-                                  ? 'border-amber-500/30 text-amber-600 bg-amber-500/10'
+                                  ? 'border-primary/20 text-primary/90 bg-primary/5'
                                   : 'border-border text-muted-foreground'
                             }`}
                           >

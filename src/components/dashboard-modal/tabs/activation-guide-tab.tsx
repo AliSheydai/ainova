@@ -151,14 +151,14 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
             onClick={() => setSelectedPlan('link')}
             className={`flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border text-start transition-all duration-200 cursor-pointer ${
               selectedPlan === 'link'
-                ? 'border-blue-500/70 bg-blue-500/10 text-foreground ring-2 ring-blue-500/20 shadow-xs'
+                ? 'border-primary bg-primary/8 text-foreground ring-2 ring-primary/20 shadow-xs'
                 : 'border-border/70 bg-card hover:bg-muted/40 text-foreground'
             }`}
           >
             <div
               className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 selectedPlan === 'link'
-                  ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
@@ -171,7 +171,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                   variant="outline"
                   className={`text-[10px] px-1.5 py-0 ${
                     selectedPlan === 'link'
-                      ? 'border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold'
+                      ? 'border-primary/30 bg-primary/10 text-primary font-bold'
                       : 'text-muted-foreground'
                   }`}
                 >
@@ -190,14 +190,14 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
             onClick={() => setSelectedPlan('email-account')}
             className={`flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border text-start transition-all duration-200 cursor-pointer ${
               selectedPlan === 'email-account'
-                ? 'border-purple-500/70 bg-purple-500/10 text-foreground ring-2 ring-purple-500/20 shadow-xs'
+                ? 'border-primary bg-primary/8 text-foreground ring-2 ring-primary/20 shadow-xs'
                 : 'border-border/70 bg-card hover:bg-muted/40 text-foreground'
             }`}
           >
             <div
               className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 selectedPlan === 'email-account'
-                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-xs'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
@@ -210,7 +210,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                   variant="outline"
                   className={`text-[10px] px-1.5 py-0 ${
                     selectedPlan === 'email-account'
-                      ? 'border-purple-500/40 bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold'
+                      ? 'border-primary/30 bg-primary/10 text-primary font-bold'
                       : 'text-muted-foreground'
                   }`}
                 >
@@ -240,10 +240,10 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
               <div className="border-b border-border/50 pb-3 space-y-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h5 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <span className="flex size-2.5 rounded-full bg-blue-500" />
+                    <span className="flex size-2.5 rounded-full bg-primary" />
                     پلن اول: لینک فعال‌سازی آنی (Google One / فمیلی)
                   </h5>
-                  <Badge variant="outline" className="text-[11px] bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 font-medium">
+                  <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/30 font-medium">
                     بدون نیاز به رمز عبور • تحویل آنی
                   </Badge>
                 </div>
@@ -255,7 +255,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
               {/* 3 Steps */}
               <div className="space-y-3">
                 <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                     ۱
                   </div>
                   <div className="flex-1 space-y-1 min-w-0">
@@ -270,7 +270,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       وارد تب «سفارش‌های من» شوید. در کارت سفارش، روی دکمه «کپی لینک» یا «فعال‌سازی در گوگل» کلیک کنید.
                     </p>
-                    <div className="flex items-start gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 bg-blue-500/5 rounded-lg p-2 mt-1.5 border border-blue-500/15">
+                    <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                       <Info className="size-3.5 shrink-0 mt-0.5" />
                       <span>هر لینک منحصراً متعلق به سفارش شما صادر شده و کاملاً ایمن و یک‌بار مصرف است.</span>
                     </div>
@@ -278,7 +278,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                 </div>
 
                 <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                     ۲
                   </div>
                   <div className="flex-1 space-y-1 min-w-0">
@@ -293,7 +293,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       به دلیل تحریم‌های شرکت گوگل، پیش از باز کردن لینک فیلترشکن خود را با آی‌پی پایدار فعال کنید و لینک را ترجیحاً در پنجره ناشناس (Incognito) مرورگر باز نمایید.
                     </p>
-                    <div className="flex items-start gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 bg-blue-500/5 rounded-lg p-2 mt-1.5 border border-blue-500/15">
+                    <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                       <Info className="size-3.5 shrink-0 mt-0.5" />
                       <span>پنجره ناشناس (Incognito) از تداخل جیمیل‌ها و کوکی‌های قبلی مرورگر به طور کامل جلوگیری می‌کند.</span>
                     </div>
@@ -301,7 +301,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                 </div>
 
                 <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                     ۳
                   </div>
                   <div className="flex-1 space-y-1 min-w-0">
@@ -316,7 +316,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       در صفحه رسمی باز شده گوگل، با جیمیل مدنظر خود وارد شوید و دکمه عضویت یا پذیرش طرح را بزنید.
                     </p>
-                    <div className="flex items-start gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 bg-blue-500/5 rounded-lg p-2 mt-1.5 border border-blue-500/15">
+                    <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                       <Info className="size-3.5 shrink-0 mt-0.5" />
                       <span>پس از مشاهده پیام خوش‌آمدگویی، اشتراک و حجم ابری بلافاصله روی همان اکانت شخصی فعال شده است.</span>
                     </div>
@@ -332,16 +332,16 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="rounded-2xl border border-purple-500/30 bg-card p-4 sm:p-5 space-y-4 shadow-xs"
+              className="rounded-2xl border border-border/70 bg-card p-4 sm:p-5 space-y-4 shadow-xs"
             >
               {/* Header Info */}
               <div className="border-b border-border/50 pb-3 space-y-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h5 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <span className="flex size-2.5 rounded-full bg-purple-500" />
+                    <span className="flex size-2.5 rounded-full bg-primary" />
                     پلن دوم: اکانت اختصاصی روی ایمیل
                   </h5>
-                  <Badge variant="outline" className="text-[11px] bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 font-medium">
+                  <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/30 font-medium">
                     شامل ۲ حالت تحویل (انتخابی در خرید)
                   </Badge>
                 </div>
@@ -357,7 +357,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                   onClick={() => setEmailSubMode('inventory')}
                   className={`flex items-center justify-center gap-2 py-2 px-2.5 rounded-lg font-bold transition-all cursor-pointer ${
                     emailSubMode === 'inventory'
-                      ? 'bg-background text-purple-700 dark:text-purple-300 shadow-xs border border-purple-500/30'
+                      ? 'bg-background text-primary shadow-xs border border-primary/30'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -369,7 +369,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                   onClick={() => setEmailSubMode('own')}
                   className={`flex items-center justify-center gap-2 py-2 px-2.5 rounded-lg font-bold transition-all cursor-pointer ${
                     emailSubMode === 'own'
-                      ? 'bg-background text-purple-700 dark:text-purple-300 shadow-xs border border-purple-500/30'
+                      ? 'bg-background text-primary shadow-xs border border-primary/30'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -389,13 +389,13 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     transition={{ duration: 0.15 }}
                     className="space-y-3"
                   >
-                    <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs leading-relaxed text-purple-900 dark:text-purple-200">
-                      <strong>شیوه اکانت آماده:</strong> بلافاصله پس از پرداخت، مشخصات ورود شامل ایمیل (جیمیل اختصاصی) و رمز عبور یک اکانت نو در تب سفارش‌ها تحویل داده می‌شود و قابلیت تغییر رمز دارد.
+                    <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs leading-relaxed text-foreground">
+                      <strong className="text-primary">شیوه اکانت آماده:</strong> بلافاصله پس از پرداخت، مشخصات ورود شامل ایمیل (جیمیل اختصاصی) و رمز عبور یک اکانت نو در تب سفارش‌ها تحویل داده می‌شود و قابلیت تغییر رمز دارد.
                     </div>
 
                     {/* Steps for Ready Account */}
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۱
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -410,7 +410,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           در کارت سفارش شما، ایمیل و رمز عبور اختصاصی قرار دارد. با کلیک روی آیکون‌های کپی، مشخصات را بردارید.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 mt-1.5 border border-purple-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>با زدن آیکون چشم در کنار کادر پسورد می‌توانید رمز عبور را مشاهده فرمایید.</span>
                         </div>
@@ -418,7 +418,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     </div>
 
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۲
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -433,7 +433,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           VPN خود را روی لوکیشن مناسب روشن کرده و وارد سایت رسمی سرویس مربوطه شوید و با ایمیل و رمز عبور دریافتی وارد شوید.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 mt-1.5 border border-purple-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>پیشنهاد می‌شود برای اولین لاگین از پنجره ناشناس (Incognito) مرورگر استفاده کنید.</span>
                         </div>
@@ -441,7 +441,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     </div>
 
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۳
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -456,7 +456,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           پلن پرمیوم از پیش روی این اکانت فعال است. شما می‌توانید پس از اولین لاگین، رمز عبور را به دلخواه تغییر داده و ایمیل یا شماره بازیابی شخصی خود را روی اکانت ثبت نمایید.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 mt-1.5 border border-purple-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>این اکانت کاملاً در انحصار شما بوده و تاریخچه و فایل‌های آن ۱۰۰٪ محرمانه است.</span>
                         </div>
@@ -472,13 +472,13 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     transition={{ duration: 0.15 }}
                     className="space-y-3"
                   >
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs leading-relaxed text-emerald-900 dark:text-emerald-200">
-                      <strong>شیوه فعال‌سازی روی ایمیل شما:</strong> شما در زمان خرید جیمیل شخصی خود را ثبت کرده‌اید. اشتراک مستقیماً توسط تیم پشتیبانی روی همان اکانت شخصی شما شارژ و اعمال می‌گردد.
+                    <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs leading-relaxed text-foreground">
+                      <strong className="text-primary">شیوه فعال‌سازی روی ایمیل شما:</strong> شما در زمان خرید جیمیل شخصی خود را ثبت کرده‌اید. اشتراک مستقیماً توسط تیم پشتیبانی روی همان اکانت شخصی شما شارژ و اعمال می‌گردد.
                     </div>
 
                     {/* Steps for User's Own Email */}
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۱
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -493,7 +493,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           در زمان خرید، شما جیمیل شخصی خود را در فرم تسویه‌حساب وارد کرده‌اید و سفارش در مرحله اعمال اختصاصی قرار گرفته است.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 mt-1.5 border border-emerald-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>اطمینان حاصل کنید که به صندوق ورودی جیمیل ثبت‌شده دسترسی کامل دارید.</span>
                         </div>
@@ -501,7 +501,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     </div>
 
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۲
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -516,7 +516,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           اشتراک توسط کارشناسان فنی روی جیمیل شما شارژ شده و وضعیت سفارش در بخش «سفارش‌های من» به «تکمیل شده» تغییر می‌یابد.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 mt-1.5 border border-emerald-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>در صورت نیاز به تایید ایمیلی از طرف گوگل، ایمیل رسمی فعال‌سازی برای شما ارسال می‌گردد.</span>
                         </div>
@@ -524,7 +524,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     </div>
 
                     <div className="group flex items-start gap-3 p-3.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-xs shadow-xs">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-xs">
                         ۳
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
@@ -539,7 +539,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           با همان جیمیل شخصی خود وارد سرویس مدنظر شوید؛ اشتراک شما فعال است و به تمام قابلیت‌ها و حجم ابری دسترسی دارید.
                         </p>
-                        <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 mt-1.5 border border-emerald-500/15">
+                        <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 mt-1.5 border border-primary/15">
                           <Info className="size-3.5 shrink-0 mt-0.5" />
                           <span>در صورت عدم مشاهده تغییر، یک‌بار از اکانت خود خارج شده و مجدداً لاگین فرمایید.</span>
                         </div>

@@ -136,7 +136,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
         )
       case 'PAID':
         return (
-          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 font-medium gap-1 text-[11px]">
+          <Badge className="bg-primary/10 text-primary border border-primary/25 font-medium gap-1 text-[11px]">
             <Clock className="size-3" />
             پرداخت‌شده (در حال آماده‌سازی)
           </Badge>
@@ -306,15 +306,15 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               className={cn(
                                 'cursor-pointer select-none font-sans text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1 sm:gap-1.5 active:scale-95 border',
                                 copiedOrderId === order.id
-                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
+                                  ? 'bg-primary/15 text-primary border-primary/30 ring-1 ring-primary/20'
                                   : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
                               )}
                             >
                               {copiedOrderId === order.id ? (
                                 <>
-                                  <Check className="size-3 text-emerald-600 dark:text-emerald-400 animate-in zoom-in-75" />
+                                  <Check className="size-3 text-primary animate-in zoom-in-75" />
                                   <span className="font-medium font-sans">{toPersianDigits(order.id.slice(0, 8))}</span>
-                                  <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                  <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-primary/20 text-primary">
                                     کپی شد
                                   </span>
                                 </>
@@ -344,15 +344,15 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                                 className={cn(
                                   'cursor-pointer select-none font-sans text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1 sm:gap-1.5 active:scale-95 border',
                                   copiedRefId === order.id
-                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
+                                    ? 'bg-primary/15 text-primary border-primary/30 ring-1 ring-primary/20'
                                     : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
                                 )}
                               >
                                 {copiedRefId === order.id ? (
                                   <>
-                                    <Check className="size-3 text-emerald-600 dark:text-emerald-400 animate-in zoom-in-75" />
+                                    <Check className="size-3 text-primary animate-in zoom-in-75" />
                                     <span className="font-medium font-sans">{toPersianDigits(order.payment.refId)}</span>
-                                    <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                    <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-primary/20 text-primary">
                                       کپی شد
                                     </span>
                                   </>
@@ -451,7 +451,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                                     title="کپی ایمیل"
                                   >
                                     {copiedId === `email-${order.id}` ? (
-                                      <Check className="size-3 text-emerald-500 animate-in zoom-in-75" />
+                                      <Check className="size-3 text-primary animate-in zoom-in-75" />
                                     ) : (
                                       <Copy className="size-3" />
                                     )}
@@ -485,7 +485,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                                     title="کپی رمز عبور"
                                   >
                                     {copiedId === `pass-${order.id}` ? (
-                                      <Check className="size-3 text-emerald-500 animate-in zoom-in-75" />
+                                      <Check className="size-3 text-primary animate-in zoom-in-75" />
                                     ) : (
                                       <Copy className="size-3" />
                                     )}
@@ -505,8 +505,8 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
 
                       {/* 3. CUSTOMER PROVISIONING */}
                       {order.status === 'COMPLETED' && deliveryType === 'CUSTOMER_PROVISIONING' && (
-                        <div className="mt-1 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-xs space-y-1">
-                          <div className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                        <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-primary">
                             <CheckCircle2 className="size-3.5" />
                             <span>اشتراک روی حساب شما فعال گردید</span>
                           </div>
@@ -531,8 +531,8 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
 
                       {/* 5. MANUAL PENDING */}
                       {order.status === 'PAID' && (
-                        <div className="mt-1 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs space-y-1">
-                          <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                        <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-primary">
                             <Clock className="size-3.5" />
                             <span>در حال آماده‌سازی و تحویل</span>
                           </div>

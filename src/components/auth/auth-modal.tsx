@@ -263,7 +263,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
               'flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
               step === 'phone'
                 ? 'bg-primary text-primary-foreground ring-3 sm:ring-4 ring-primary/20 shadow-sm'
-                : 'bg-emerald-500 text-white'
+                : 'bg-primary text-primary-foreground'
             )}
           >
             {step !== 'phone' ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : '۱'}
@@ -295,7 +295,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
               step === 'otp'
                 ? 'bg-primary text-primary-foreground ring-3 sm:ring-4 ring-primary/20 shadow-sm'
                 : step === 'name'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
             )}
           >
@@ -441,9 +441,9 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
           {/* Dev Mode Banner */}
           {devCode && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs text-amber-700 dark:text-amber-300">
+            <div className="rounded-xl border border-primary/20 bg-primary/8 p-2.5 text-center text-xs text-primary">
               <span className="font-semibold">کد تستی:</span>{' '}
-              <span className="font-sans font-bold text-sm tracking-widest bg-amber-500/20 px-2 py-0.5 rounded-md text-amber-800 dark:text-amber-200">
+              <span className="font-sans font-bold text-sm tracking-widest bg-primary/15 px-2 py-0.5 rounded-md text-primary">
                 {devCode}
               </span>
             </div>
@@ -641,7 +641,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         className="max-w-md p-0 overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
       >
         {/* Top Decorative Gradient Accent */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-primary" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-primary/30 via-primary to-primary/30" />
 
         {/* Stepper Progress Bar */}
         {renderStepper()}

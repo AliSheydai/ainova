@@ -339,7 +339,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                 className={cn(
                   'h-9 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer select-none font-sans shrink-0',
                   onlyInStock
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    ? 'bg-primary/10 text-primary border-primary/30'
                     : 'bg-background/80 text-muted-foreground border-border/80 hover:bg-accent/60 hover:text-foreground'
                 )}
               >
@@ -347,7 +347,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                   className={cn(
                     'size-3.5 rounded flex items-center justify-center border transition-colors',
                     onlyInStock
-                      ? 'bg-emerald-600 dark:bg-emerald-500 border-transparent text-white'
+                      ? 'bg-primary border-transparent text-primary-foreground'
                       : 'border-muted-foreground/40'
                   )}
                 >
@@ -428,12 +428,12 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
               )}
 
               {onlyInStock && (
-                <span className='inline-flex items-center gap-1.5 ps-2.5 pe-1.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium border border-emerald-500/20'>
+                <span className='inline-flex items-center gap-1.5 ps-2.5 pe-1.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium border border-primary/20'>
                   <span>فقط محصولات موجود</span>
                   <button
                     type='button'
                     onClick={() => handleFilterChange(() => setOnlyInStock(false))}
-                    className='size-4 rounded-full flex items-center justify-center hover:bg-emerald-500/20 transition-colors'
+                    className='size-4 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors'
                     title='حذف فیلتر موجودی'
                   >
                     <X className='size-3' />
@@ -529,7 +529,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
 
                     <div className='flex flex-col items-end gap-1.5'>
                       {isAvailable ? (
-                        <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-sans font-medium'>
+                        <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] font-sans font-medium'>
                           <Zap className='size-2.5 me-1' />
                           تحویل آنی
                         </Badge>

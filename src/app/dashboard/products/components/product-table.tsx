@@ -170,7 +170,7 @@ export function ProductTable({
                   onClick={() => onToggleStatus(prod)}
                   className={`h-8 px-2.5 text-xs gap-1 rounded-xl font-medium transition-all ${
                     prod.status === 'ACTIVE'
-                      ? 'text-emerald-700 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 dark:text-emerald-400'
+                      ? 'text-primary bg-primary/10 border-primary/30 hover:bg-primary/20'
                       : 'text-muted-foreground bg-muted/40 border-border/70 hover:bg-muted'
                   }`}
                   title={
@@ -179,7 +179,7 @@ export function ProductTable({
                       : 'محصول غیرفعال است (کلیک جهت فعال‌سازی)'
                   }
                 >
-                  <Power className={`size-3.5 ${prod.status === 'ACTIVE' ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                  <Power className={`size-3.5 ${prod.status === 'ACTIVE' ? 'text-primary' : 'text-muted-foreground'}`} />
                   <span>{prod.status === 'ACTIVE' ? 'فعال' : 'غیرفعال'}</span>
                 </Button>
 

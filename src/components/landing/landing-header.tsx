@@ -138,7 +138,7 @@ function UserDropdown({
               {displayName}
             </p>
             {user.role === 'ADMIN' && (
-              <span className='rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0'>
+              <span className='rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary border border-primary/20 shrink-0'>
                 مدیر
               </span>
             )}
@@ -173,10 +173,10 @@ function UserDropdown({
         {user.role === 'ADMIN' && (
           <DropdownMenuItem
             asChild
-            className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-amber-600 dark:text-amber-400 focus:text-amber-600 focus:bg-amber-500/10 transition-colors'
+            className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium focus:bg-primary/10 transition-colors'
           >
             <Link href='/dashboard' className='flex items-center gap-2.5 w-full'>
-              <Shield className='size-4 text-amber-500 shrink-0' />
+              <Shield className='size-4 text-primary shrink-0' />
               <span>پنل ادمین</span>
             </Link>
           </DropdownMenuItem>
@@ -186,7 +186,7 @@ function UserDropdown({
         <DropdownMenuItem
           onClick={handleTelegramCta}
           disabled={openingTg}
-          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-primary focus:text-primary focus:bg-primary/10 transition-colors'
+          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium focus:bg-primary/10 transition-colors'
         >
           {openingTg ? (
             <Loader2 className='size-4 animate-spin shrink-0' />
@@ -625,9 +625,9 @@ export function LandingHeader() {
                           <Link href='/dashboard' onClick={() => setOpen(false)}>
                             <Button
                               variant='outline'
-                              className='w-full justify-center gap-2 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-semibold'
+                              className='w-full justify-center gap-2 border-primary/30 bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/15'
                             >
-                              <Shield className='size-4' />
+                              <Shield className='size-4 text-primary' />
                               <span>ورود به پنل مدیریت</span>
                             </Button>
                           </Link>

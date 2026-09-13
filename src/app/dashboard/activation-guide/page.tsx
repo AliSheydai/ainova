@@ -93,7 +93,7 @@ export default function ActivationGuidePage() {
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8 shadow-sm">
           <div className="absolute -top-24 -left-24 size-72 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 size-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 size-72 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="space-y-3">
@@ -156,10 +156,10 @@ export default function ActivationGuidePage() {
 
           <div className="space-y-6">
             {/* PLAN 1: INSTANT ACTIVATION LINK */}
-            <div className="rounded-3xl border border-blue-500/30 bg-card p-5 sm:p-7 space-y-4 shadow-xs">
+            <div className="rounded-3xl border border-primary/25 bg-card p-5 sm:p-7 space-y-4 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/50 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs">
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-xs">
                     <Zap className="size-5" />
                   </div>
                   <div>
@@ -171,7 +171,7 @@ export default function ActivationGuidePage() {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs font-semibold px-3 py-1 w-fit bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30">
+                <Badge variant="outline" className="text-xs font-semibold px-3 py-1 w-fit bg-primary/10 text-primary border-primary/30">
                   تحویل ۰ ثانیه • بدون نیاز به پسورد
                 </Badge>
               </div>
@@ -244,10 +244,10 @@ export default function ActivationGuidePage() {
             </div>
 
             {/* PLAN 2: ON EMAIL (READY ACCOUNT OR USER EMAIL) */}
-            <div className="rounded-3xl border border-purple-500/30 bg-card p-5 sm:p-7 space-y-4 shadow-xs">
+            <div className="rounded-3xl border border-primary/25 bg-card p-5 sm:p-7 space-y-4 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/50 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-xs">
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-xs">
                     <Mail className="size-5" />
                   </div>
                   <div>
@@ -259,7 +259,7 @@ export default function ActivationGuidePage() {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs font-semibold px-3 py-1 w-fit bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30">
+                <Badge variant="outline" className="text-xs font-semibold px-3 py-1 w-fit bg-primary/10 text-primary border-primary/30">
                   ۲ حالت تحویل به انتخاب خریدار
                 </Badge>
               </div>
@@ -275,7 +275,7 @@ export default function ActivationGuidePage() {
                   onClick={() => setEmailPlanTab('inventory')}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     emailPlanTab === 'inventory'
-                      ? 'bg-background text-purple-700 dark:text-purple-300 shadow-xs border border-purple-500/30'
+                      ? 'bg-background text-primary shadow-xs border border-primary/30'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -287,7 +287,7 @@ export default function ActivationGuidePage() {
                   onClick={() => setEmailPlanTab('own')}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     emailPlanTab === 'own'
-                      ? 'bg-background text-purple-700 dark:text-purple-300 shadow-xs border border-purple-500/30'
+                      ? 'bg-background text-primary shadow-xs border border-primary/30'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -298,15 +298,15 @@ export default function ActivationGuidePage() {
 
               {emailPlanTab === 'inventory' ? (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs leading-relaxed text-purple-900 dark:text-purple-200">
-                    <strong>آموزش اکانت آماده:</strong> بلافاصله پس از پرداخت، مشخصات ورود (ایمیل و رمز عبور اختصاصی) در کارت سفارش به شما نشان داده می‌شود.
+                  <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs leading-relaxed text-foreground">
+                    <strong className="text-primary">آموزش اکانت آماده:</strong> بلافاصله پس از پرداخت، مشخصات ورود (ایمیل و رمز عبور اختصاصی) در کارت سفارش به شما نشان داده می‌شود.
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۱
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -317,7 +317,7 @@ export default function ActivationGuidePage() {
                           در کارت سفارش، نام کاربری و پسورد قرار دارد. با کلیک روی آیکون کپی، مشخصات را بردارید.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 border border-purple-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>با زدن آیکون چشم رمز عبور نمایان می‌شود.</span>
                       </div>
@@ -326,7 +326,7 @@ export default function ActivationGuidePage() {
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۲
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -337,7 +337,7 @@ export default function ActivationGuidePage() {
                           VPN پایدار را روشن کرده و وارد سایت رسمی سرویس مربوطه شوید و با مشخصات دریافتی لاگین فرمایید.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 border border-purple-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>همواره از آدرس‌های رسمی برای ورود استفاده نمایید.</span>
                       </div>
@@ -346,7 +346,7 @@ export default function ActivationGuidePage() {
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۳
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -357,7 +357,7 @@ export default function ActivationGuidePage() {
                           پلن فعال است. می‌توانید پس از اولین ورود، رمز عبور را به دلخواه خود تغییر داده و شماره بازیابی اضافه کنید.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-purple-600 dark:text-purple-400 bg-purple-500/5 rounded-lg p-2 border border-purple-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>اکانت کاملاً در انحصار شما و تاریخچه آن محفوظ است.</span>
                       </div>
@@ -366,15 +366,15 @@ export default function ActivationGuidePage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs leading-relaxed text-emerald-900 dark:text-emerald-200">
-                    <strong>آموزش فعال‌سازی روی ایمیل شما:</strong> در زمان خرید جیمیل خودتان را ثبت کرده‌اید و اشتراک مستقیماً توسط پشتیبانی روی همان اکانت شارژ می‌شود.
+                  <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs leading-relaxed text-foreground">
+                    <strong className="text-primary">آموزش فعال‌سازی روی ایمیل شما:</strong> در زمان خرید جیمیل خودتان را ثبت کرده‌اید و اشتراک مستقیماً توسط پشتیبانی روی همان اکانت شارژ می‌شود.
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۱
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -385,7 +385,7 @@ export default function ActivationGuidePage() {
                           در مرحله تسویه‌حساب، ایمیل شخصی خودتان را ثبت کرده‌اید و سفارش در مرحله اعمال قرار گرفته است.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 border border-emerald-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>اطمینان حاصل کنید که به صندوق این ایمیل دسترسی دارید.</span>
                       </div>
@@ -394,7 +394,7 @@ export default function ActivationGuidePage() {
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۲
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -405,7 +405,7 @@ export default function ActivationGuidePage() {
                           طرح توسط کارشناسان روی اکانت شما فعال شده و وضعیت سفارش در پنل به «تکمیل شده» تغییر می‌یابد.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 border border-emerald-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>در صورت نیاز، ایمیل تاییدیه رسمی ارسال خواهد شد.</span>
                       </div>
@@ -414,7 +414,7 @@ export default function ActivationGuidePage() {
                     <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs">
+                          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xs">
                             ۳
                           </span>
                           <h4 className="text-xs font-bold text-foreground">
@@ -425,7 +425,7 @@ export default function ActivationGuidePage() {
                           با همان ایمیل شخصی خود به سرویس وارد شوید؛ اشتراک شما فعال و آماده استفاده است.
                         </p>
                       </div>
-                      <div className="flex items-start gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 rounded-lg p-2 border border-emerald-500/15 mt-2">
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 rounded-lg p-2 border border-primary/15 mt-2">
                         <Info className="size-3.5 shrink-0 mt-0.5" />
                         <span>در صورت عدم مشاهده تغییر، یک‌بار خارج و مجدداً وارد شوید.</span>
                       </div>

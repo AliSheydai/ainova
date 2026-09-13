@@ -296,21 +296,21 @@ export default function AdminPaymentsPage() {
               }}
               className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
                 statusFilter === 'SUCCESS'
-                  ? 'bg-emerald-500/10 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
-                  : 'bg-card border-border/70 hover:border-emerald-500/30 hover:bg-emerald-500/5'
+                  ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                  : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
               }`}
             >
               <div className='flex items-center justify-between'>
-                <span className='text-[11px] text-emerald-600 dark:text-emerald-400 font-medium'>
+                <span className='text-[11px] text-muted-foreground font-medium'>
                   تراکنش‌های موفق
                 </span>
-                <CheckCircle2 className='size-4 text-emerald-500' />
+                <CheckCircle2 className='size-4 text-primary' />
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
-                <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
+                <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
                   {toPersianDigits(counts.success)}
                 </span>
-                <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>تراکنش</span>
+                <span className='text-[10px] text-muted-foreground'>تراکنش</span>
               </div>
             </button>
 
@@ -323,15 +323,15 @@ export default function AdminPaymentsPage() {
               }}
               className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
                 statusFilter === 'PENDING'
-                  ? 'bg-amber-500/10 border-amber-500/50 shadow-xs ring-1 ring-amber-500/30'
+                  ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
                   : 'bg-card border-border/70 hover:border-border hover:bg-muted/30'
               }`}
             >
               <div className='flex items-center justify-between'>
-                <span className='text-[11px] text-amber-600 dark:text-amber-400 font-medium'>
+                <span className='text-[11px] text-muted-foreground font-medium'>
                   در انتظار پرداخت
                 </span>
-                <Clock className='size-4 text-amber-500' />
+                <Clock className='size-4 text-muted-foreground' />
               </div>
               <div className='mt-2 flex items-baseline gap-1.5'>
                 <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
@@ -744,17 +744,17 @@ export default function AdminPaymentsPage() {
                           {/* Status */}
                           <td className='py-3.5 px-4 whitespace-nowrap min-w-[120px]'>
                             {p.status === 'SUCCESS' ? (
-                              <Badge className='bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] gap-1 font-semibold'>
+                              <Badge className='bg-primary/15 text-primary border-primary/30 text-[10px] gap-1 font-semibold'>
                                 <CheckCircle2 className='size-3' />
                                 پرداخت موفق
                               </Badge>
                             ) : p.status === 'PENDING' ? (
-                              <Badge variant='outline' className='bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1 font-semibold'>
+                              <Badge variant='outline' className='bg-muted text-muted-foreground border-border text-[10px] gap-1 font-semibold'>
                                 <Clock className='size-3' />
                                 در انتظار
                               </Badge>
                             ) : (
-                              <Badge variant='destructive' className='bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 text-[10px] gap-1 font-semibold'>
+                              <Badge variant='destructive' className='bg-destructive/15 text-destructive border-destructive/30 text-[10px] gap-1 font-semibold'>
                                 <XCircle className='size-3' />
                                 ناموفق
                               </Badge>
@@ -788,12 +788,12 @@ export default function AdminPaymentsPage() {
                           #{p.id.slice(-8).toUpperCase()}
                         </span>
                         {p.status === 'SUCCESS' ? (
-                          <Badge className='bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[9px] gap-1'>
+                          <Badge className='bg-primary/15 text-primary border-primary/30 text-[9px] gap-1'>
                             <CheckCircle2 className='size-2.5' />
                             موفق
                           </Badge>
                         ) : p.status === 'PENDING' ? (
-                          <Badge variant='outline' className='bg-amber-500/15 text-amber-700 border-amber-500/30 text-[9px] gap-1'>
+                          <Badge variant='outline' className='bg-muted text-muted-foreground border-border text-[9px] gap-1'>
                             <Clock className='size-2.5' />
                             در انتظار
                           </Badge>

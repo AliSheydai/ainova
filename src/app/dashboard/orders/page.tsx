@@ -209,38 +209,38 @@ function getFulfillmentBadge(type?: string) {
     case 'ACTIVATION_LINK':
       return {
         label: 'لینک فعال‌سازی',
-        color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-        dot: 'bg-blue-500',
+        color: 'bg-primary/10 text-primary border-primary/20',
+        dot: 'bg-primary',
       }
     case 'PRE_CREATED_ACCOUNT':
       return {
         label: 'اکانت آماده',
-        color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-        dot: 'bg-purple-500',
+        color: 'bg-primary/10 text-primary border-primary/20',
+        dot: 'bg-primary',
       }
     case 'CUSTOMER_PROVISIONING':
       return {
         label: 'ساخت روی اکانت مشتری',
-        color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-        dot: 'bg-emerald-500',
+        color: 'bg-muted text-foreground border-border/80',
+        dot: 'bg-muted-foreground',
       }
     case 'MANUAL':
       return {
         label: 'تحویل دستی پشتیبانی',
-        color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-        dot: 'bg-amber-500',
+        color: 'bg-muted text-muted-foreground border-border/80',
+        dot: 'bg-muted-foreground',
       }
     case 'ACTIVATION_CODE':
       return {
         label: 'کد فعال‌سازی',
-        color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-        dot: 'bg-indigo-500',
+        color: 'bg-primary/10 text-primary border-primary/20',
+        dot: 'bg-primary',
       }
     case 'DOWNLOAD':
       return {
         label: 'دانلودی',
-        color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-        dot: 'bg-cyan-500',
+        color: 'bg-muted text-foreground border-border/80',
+        dot: 'bg-muted-foreground',
       }
     default:
       return {
@@ -257,14 +257,14 @@ function getOrderStatusBadge(status: string) {
       return {
         label: 'تکمیل شده',
         variant: 'default' as const,
-        className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20',
+        className: 'bg-primary/10 text-primary border-primary/25 hover:bg-primary/15',
         icon: CheckCircle2,
       }
     case 'PAID':
       return {
         label: 'پرداخت شده',
         variant: 'default' as const,
-        className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20',
+        className: 'bg-primary/10 text-primary border-primary/25 hover:bg-primary/15',
         icon: Clock,
       }
     case 'PENDING_PAYMENT':
@@ -278,28 +278,28 @@ function getOrderStatusBadge(status: string) {
       return {
         label: 'ناموفق',
         variant: 'destructive' as const,
-        className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30',
+        className: 'bg-destructive/10 text-destructive border-destructive/20',
         icon: XCircle,
       }
     case 'CANCELLED':
       return {
         label: 'لغو شده',
         variant: 'outline' as const,
-        className: 'bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 border-zinc-500/30',
+        className: 'bg-muted text-muted-foreground border-border/80',
         icon: XCircle,
       }
     case 'REFUNDED':
       return {
         label: 'استرداد شده',
         variant: 'outline' as const,
-        className: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/20',
+        className: 'bg-muted text-muted-foreground border-border/80',
         icon: Receipt,
       }
     case 'EXPIRED':
       return {
         label: 'منقضی شده',
         variant: 'outline' as const,
-        className: 'bg-stone-500/15 text-stone-600 dark:text-stone-400 border-stone-500/30',
+        className: 'bg-muted text-muted-foreground border-border/80',
         icon: Clock,
       }
     default:
@@ -785,24 +785,28 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 relative overflow-hidden ${
               statusFilter === 'NEEDS_ACTION'
-                ? 'bg-amber-500/10 border-amber-500/50 shadow-xs ring-1 ring-amber-500/30'
-                : 'bg-card border-border/70 hover:border-amber-500/30 hover:bg-amber-500/5'
+                ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1'>
+              <span className={`text-[11px] font-medium flex items-center gap-1 ${
+                statusFilter === 'NEEDS_ACTION' ? 'text-primary' : 'text-muted-foreground'
+              }`}>
                 {counts.needsAction > 0 && (
-                  <span className='size-2 rounded-full bg-amber-500 animate-pulse inline-block' />
+                  <span className='size-2 rounded-full bg-primary animate-pulse inline-block' />
                 )}
                 نیازمند اقدام / تحویل
               </span>
-              <AlertTriangle className='size-4 text-amber-500' />
+              <AlertTriangle className={`size-4 ${statusFilter === 'NEEDS_ACTION' ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-amber-600 dark:text-amber-400'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'NEEDS_ACTION' ? 'text-primary' : 'text-foreground'
+              }`}>
                 {counts.needsAction.toLocaleString('fa-IR')}
               </span>
-              <span className='text-[10px] text-amber-600/80 dark:text-amber-400/80'>مورد</span>
+              <span className='text-[10px] text-muted-foreground'>مورد</span>
             </div>
           </button>
 
@@ -815,21 +819,25 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'COMPLETED'
-                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
-                : 'bg-card border-border/70 hover:border-emerald-500/30 hover:bg-emerald-500/5'
+                ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-emerald-600 dark:text-emerald-400 font-medium'>
+              <span className={`text-[11px] font-medium ${
+                statusFilter === 'COMPLETED' ? 'text-primary' : 'text-muted-foreground'
+              }`}>
                 تکمیل شده
               </span>
-              <CheckCircle2 className='size-4 text-emerald-500' />
+              <CheckCircle2 className={`size-4 ${statusFilter === 'COMPLETED' ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-emerald-600 dark:text-emerald-400'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'COMPLETED' ? 'text-primary' : 'text-foreground'
+              }`}>
                 {counts.completed.toLocaleString('fa-IR')}
               </span>
-              <span className='text-[10px] text-emerald-600/80 dark:text-emerald-400/80'>موفق</span>
+              <span className='text-[10px] text-muted-foreground'>موفق</span>
             </div>
           </button>
 
@@ -842,18 +850,22 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'PENDING_PAYMENT'
-                ? 'bg-muted/80 border-primary/40 shadow-xs ring-1 ring-primary/20'
-                : 'bg-card border-border/70 hover:border-border hover:bg-muted/30'
+                ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-muted-foreground font-medium'>
+              <span className={`text-[11px] font-medium ${
+                statusFilter === 'PENDING_PAYMENT' ? 'text-primary' : 'text-muted-foreground'
+              }`}>
                 در انتظار پرداخت
               </span>
-              <Clock className='size-4 text-muted-foreground' />
+              <Clock className={`size-4 ${statusFilter === 'PENDING_PAYMENT' ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-foreground'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'PENDING_PAYMENT' ? 'text-primary' : 'text-foreground'
+              }`}>
                 {counts.pendingPayment.toLocaleString('fa-IR')}
               </span>
               <span className='text-[10px] text-muted-foreground'>سفارش</span>
@@ -869,21 +881,25 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'CANCELLED' || statusFilter === 'FAILED'
-                ? 'bg-rose-500/10 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
-                : 'bg-card border-border/70 hover:border-rose-500/30 hover:bg-rose-500/5'
+                ? 'bg-destructive/10 border-destructive/50 text-destructive shadow-xs ring-1 ring-destructive/30'
+                : 'bg-card border-border/70 hover:border-destructive/30 hover:bg-destructive/5'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-rose-600 dark:text-rose-400 font-medium'>
+              <span className={`text-[11px] font-medium ${
+                statusFilter === 'CANCELLED' || statusFilter === 'FAILED' ? 'text-destructive' : 'text-muted-foreground'
+              }`}>
                 لغو یا ناموفق
               </span>
-              <XCircle className='size-4 text-rose-500' />
+              <XCircle className={`size-4 ${statusFilter === 'CANCELLED' || statusFilter === 'FAILED' ? 'text-destructive' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-rose-600 dark:text-rose-400'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'CANCELLED' || statusFilter === 'FAILED' ? 'text-destructive' : 'text-foreground'
+              }`}>
                 {counts.failedOrCancelled.toLocaleString('fa-IR')}
               </span>
-              <span className='text-[10px] text-rose-600/80 dark:text-rose-400/80'>مورد</span>
+              <span className='text-[10px] text-muted-foreground'>مورد</span>
             </div>
           </button>
 
@@ -896,21 +912,25 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'REFUNDED'
-                ? 'bg-purple-500/10 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
-                : 'bg-card border-border/70 hover:border-purple-500/30 hover:bg-purple-500/5'
+                ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-purple-600 dark:text-purple-400 font-medium'>
+              <span className={`text-[11px] font-medium ${
+                statusFilter === 'REFUNDED' ? 'text-primary' : 'text-muted-foreground'
+              }`}>
                 استرداد شده
               </span>
-              <Receipt className='size-4 text-purple-500' />
+              <Receipt className={`size-4 ${statusFilter === 'REFUNDED' ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-purple-600 dark:text-purple-400'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'REFUNDED' ? 'text-primary' : 'text-foreground'
+              }`}>
                 {(counts.refunded || 0).toLocaleString('fa-IR')}
               </span>
-              <span className='text-[10px] text-purple-600/80 dark:text-purple-400/80'>مورد</span>
+              <span className='text-[10px] text-muted-foreground'>مورد</span>
             </div>
           </button>
 
@@ -923,21 +943,25 @@ export default function AdminOrdersPage() {
             }}
             className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
               statusFilter === 'EXPIRED'
-                ? 'bg-stone-500/10 border-stone-500/50 shadow-xs ring-1 ring-stone-500/30'
-                : 'bg-card border-border/70 hover:border-stone-500/30 hover:bg-stone-500/5'
+                ? 'bg-primary/10 border-primary text-primary shadow-xs ring-1 ring-primary/30'
+                : 'bg-card border-border/70 hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
             <div className='flex items-center justify-between'>
-              <span className='text-[11px] text-stone-600 dark:text-stone-400 font-medium'>
+              <span className={`text-[11px] font-medium ${
+                statusFilter === 'EXPIRED' ? 'text-primary' : 'text-muted-foreground'
+              }`}>
                 منقضی شده
               </span>
-              <Clock className='size-4 text-stone-500' />
+              <Clock className={`size-4 ${statusFilter === 'EXPIRED' ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
             <div className='mt-2 flex items-baseline gap-1.5'>
-              <span className='text-lg sm:text-xl font-bold font-sans text-stone-600 dark:text-stone-400'>
+              <span className={`text-lg sm:text-xl font-bold font-sans ${
+                statusFilter === 'EXPIRED' ? 'text-primary' : 'text-foreground'
+              }`}>
                 {(counts.expired || 0).toLocaleString('fa-IR')}
               </span>
-              <span className='text-[10px] text-stone-600/80 dark:text-stone-400/80'>مورد</span>
+              <span className='text-[10px] text-muted-foreground'>مورد</span>
             </div>
           </button>
         </div>
@@ -2021,8 +2045,8 @@ export default function AdminOrdersPage() {
                       variant='outline'
                       className={`text-[10px] ${
                         selectedOrder.delivery.status === 'DELIVERED'
-                          ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
-                          : 'border-amber-500/30 text-amber-600 bg-amber-500/10'
+                          ? 'border-primary/30 text-primary bg-primary/10'
+                          : 'border-border text-muted-foreground bg-muted'
                       }`}
                     >
                       {selectedOrder.delivery.status === 'DELIVERED' ? 'تحویل شده' : selectedOrder.delivery.status}
@@ -2142,8 +2166,8 @@ export default function AdminOrdersPage() {
                                 >
                                   {copiedId === `deliv-${k}` ? (
                                     <>
-                                      <Check className='size-3 text-emerald-600 dark:text-emerald-400' />
-                                      <span className='text-emerald-600 dark:text-emerald-400'>کپی شد</span>
+                                      <Check className='size-3 text-primary' />
+                                      <span className='text-primary'>کپی شد</span>
                                     </>
                                   ) : (
                                     <>
@@ -2181,8 +2205,8 @@ export default function AdminOrdersPage() {
                                   >
                                     {copiedId === `deliv-${k}` ? (
                                       <>
-                                        <Check className='size-3 text-emerald-600 dark:text-emerald-400' />
-                                        <span className='text-emerald-600 dark:text-emerald-400'>کپی شد</span>
+                                        <Check className='size-3 text-primary' />
+                                        <span className='text-primary'>کپی شد</span>
                                       </>
                                     ) : (
                                       <>
@@ -2230,7 +2254,7 @@ export default function AdminOrdersPage() {
                                 title='کپی'
                               >
                                 {copiedId === `deliv-${k}` ? (
-                                  <Check className='size-3 text-emerald-500' />
+                                  <Check className='size-3 text-primary' />
                                 ) : (
                                   <Copy className='size-3' />
                                 )}
@@ -2288,26 +2312,16 @@ export default function AdminOrdersPage() {
                   if (!customerEmail) return null
                   return (
                     <div
-                      className={`rounded-xl border p-3.5 space-y-3 min-w-0 overflow-hidden ${
-                        isPending
-                          ? 'border-blue-500/30 bg-blue-500/5'
-                          : 'border-emerald-500/30 bg-emerald-500/5'
-                      }`}
+                      className='rounded-xl border border-primary/25 bg-primary/5 p-3.5 space-y-3 min-w-0 overflow-hidden'
                     >
                       <div className='flex items-center gap-2'>
                         <div
-                          className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
-                            isPending ? 'bg-blue-500/15' : 'bg-emerald-500/15'
-                          }`}
+                          className='size-6 rounded-lg flex items-center justify-center shrink-0 bg-primary/15'
                         >
-                          <User className={`size-3.5 ${isPending ? 'text-blue-500' : 'text-emerald-500'}`} />
+                          <User className='size-3.5 text-primary' />
                         </div>
                         <span
-                          className={`text-[11px] font-bold ${
-                            isPending
-                              ? 'text-blue-700 dark:text-blue-300'
-                              : 'text-emerald-700 dark:text-emerald-300'
-                          }`}
+                          className='text-[11px] font-bold text-primary'
                         >
                           {isPending ? '⏳ در انتظار فعال‌سازی روی اکانت مشتری' : '✅ فعال‌سازی روی اکانت مشتری انجام شد'}
                         </span>
@@ -2418,9 +2432,9 @@ export default function AdminOrdersPage() {
 
               {/* Refund Info Banner if order is REFUNDED */}
               {selectedOrder.status === 'REFUNDED' && (
-                <div className='p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 space-y-1.5 text-xs text-purple-700 dark:text-purple-300'>
+                <div className='p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-1.5 text-xs text-foreground'>
                   <div className='flex items-center gap-1.5 font-bold'>
-                    <Receipt className='size-4 text-purple-600 dark:text-purple-400' />
+                    <Receipt className='size-4 text-primary' />
                     <span>اطلاعات استرداد وجه:</span>
                   </div>
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] pt-1'>
@@ -2434,9 +2448,9 @@ export default function AdminOrdersPage() {
 
               {/* Coupon / Discount Info if applied */}
               {selectedOrder.discountAmount && selectedOrder.discountAmount > 0 && (
-                <div className='p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-300'>
+                <div className='p-3 rounded-xl border border-primary/25 bg-primary/5 flex items-center justify-between text-xs text-primary'>
                   <span className='flex items-center gap-1.5 font-semibold'>
-                    <Tag className='size-3.5 text-emerald-600' />
+                    <Tag className='size-3.5 text-primary' />
                     <span>کد تخفیف اعمال‌شده: {selectedOrder.coupon?.code || 'کد اختصاصی'}</span>
                   </span>
                   <span className='font-sans font-bold'>

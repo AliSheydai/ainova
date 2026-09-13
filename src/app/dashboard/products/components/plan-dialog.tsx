@@ -143,16 +143,16 @@ export function PlanDialog({
       title: 'لینک فعال‌سازی آنی',
       desc: 'اختصاص خودکار لینک اختصاصی آماده از انبار بلافاصله پس از پرداخت',
       icon: Zap,
-      color: 'text-blue-500',
-      activeClass: 'border-blue-500/70 bg-blue-500/5 ring-2 ring-blue-500/20',
+      color: 'text-primary',
+      activeClass: 'border-primary/70 bg-primary/5 ring-2 ring-primary/20',
     },
     {
       type: 'PRE_CREATED_ACCOUNT',
       title: 'اکانت اختصاصی (آماده یا روی اکانت شخصی)',
       desc: 'خریدار می‌تواند جیمیل خود را وارد کند تا ادمین روی اکانتش فعال‌سازی کند، یا بدون وارد کردن اطلاعات، اکانت آماده از انبار دریافت نماید.',
       icon: Package,
-      color: 'text-purple-500',
-      activeClass: 'border-purple-500/70 bg-purple-500/5 ring-2 ring-purple-500/20',
+      color: 'text-primary',
+      activeClass: 'border-primary/70 bg-primary/5 ring-2 ring-primary/20',
     },
   ]
 
@@ -227,7 +227,7 @@ export function PlanDialog({
 
                 {/* Plan Active Status Switch */}
                 <div className='flex items-center justify-between sm:justify-end gap-3 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/60 shrink-0 select-none'>
-                  <span className={`text-[11px] font-semibold transition-colors ${formPlanActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                  <span className={`text-[11px] font-semibold transition-colors ${formPlanActive ? 'text-primary' : 'text-muted-foreground'}`}>
                     {formPlanActive ? 'پلن فعال (قابل مشاهده و خرید)' : 'پلن غیرفعال'}
                   </span>
                   <Switch

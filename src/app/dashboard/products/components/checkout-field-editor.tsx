@@ -153,7 +153,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
           onClick={() => handleAddPresetField('phone')}
           className='inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs shrink-0'
         >
-          <Phone className='size-2.5 sm:size-3 text-emerald-500 shrink-0' />
+          <Phone className='size-2.5 sm:size-3 text-primary shrink-0' />
           <span>+ تماس</span>
         </button>
         <button
@@ -161,7 +161,7 @@ export function CheckoutFieldEditor({ fields, onChange }: CheckoutFieldEditorPro
           onClick={() => handleAddPresetField('note')}
           className='inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10.5px] bg-background hover:bg-muted border border-border/60 text-foreground transition-all shadow-2xs shrink-0'
         >
-          <FileText className='size-2.5 sm:size-3 text-purple-500 shrink-0' />
+          <FileText className='size-2.5 sm:size-3 text-primary shrink-0' />
           <span>+ یادداشت</span>
         </button>
       </div>

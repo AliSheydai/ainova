@@ -98,7 +98,7 @@ export function ProductBuyCard({
                     {formatPrice(p.price)}
                   </span>
                   {isPlanPreCreated && (
-                    <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium'>
+                    <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
                       اکانت اختصاصی
                     </span>
                   )}
@@ -118,7 +118,7 @@ export function ProductBuyCard({
         {isPreCreated ? (
           planStock > 0 ? (
             <div className='flex flex-col items-end gap-1'>
-              <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] sm:text-xs font-medium'>
+              <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs font-medium'>
                 تحویل آنی اکانت آماده
               </Badge>
               <span className='text-[10px] text-muted-foreground'>
@@ -127,10 +127,10 @@ export function ProductBuyCard({
             </div>
           ) : (
             <div className='flex flex-col items-end gap-1'>
-              <Badge className='bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] sm:text-xs font-medium'>
+              <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs font-medium'>
                 فعال‌سازی روی اکانت شخصی
               </Badge>
-              <span className='text-[10px] text-amber-600 dark:text-amber-400 font-medium'>
+              <span className='text-[10px] text-muted-foreground font-medium'>
                 اکانت آماده انبار: موقتاً ناموجود
               </span>
             </div>

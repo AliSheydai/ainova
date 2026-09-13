@@ -155,7 +155,7 @@ export function NotificationsTab({
           icon: CheckCircle2,
           badgeText: 'پرداخت موفق',
           iconWrapperClass:
-            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+            'bg-primary/10 text-primary border-primary/20',
         }
       case 'ORDER_READY':
         return {
@@ -176,7 +176,7 @@ export function NotificationsTab({
           icon: Clock,
           badgeText: 'در حال آماده‌سازی',
           iconWrapperClass:
-            'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+            'bg-muted text-muted-foreground border-border/80',
         }
       case 'SUPPORT_REPLY':
         return {
