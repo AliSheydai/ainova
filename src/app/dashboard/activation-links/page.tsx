@@ -178,7 +178,7 @@ export default function AdminActivationLinksPage() {
   // Bulk Add Dialog
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [bulkProductId, setBulkProductId] = useState('')
-  const [bulkPlanId, setBulkPlanId] = useState('')
+  const [bulkPlanId, setBulkPlanId] = useState('ALL')
   const [bulkText, setBulkText] = useState('')
   const [importing, setImporting] = useState(false)
 
@@ -309,7 +309,7 @@ export default function AdminActivationLinksPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: bulkProductId,
-          planId: bulkPlanId || undefined,
+          planId: bulkPlanId && bulkPlanId !== 'ALL' ? bulkPlanId : undefined,
           links: lines,
         }),
       })
@@ -318,6 +318,7 @@ export default function AdminActivationLinksPage() {
         toast.success(data.message || 'لینک‌ها با موفقیت افزوده شدند.')
         setBulkDialogOpen(false)
         setBulkText('')
+        setBulkPlanId('ALL')
         fetchLinks()
       } else {
         toast.error(data.error || 'خطا در افزودن لینک‌ها.')
@@ -1086,7 +1087,7 @@ export default function AdminActivationLinksPage() {
               <label className='font-semibold block mb-1'>محصول مقصد: *</label>
               <Select value={bulkProductId} onValueChange={(val) => {
                 setBulkProductId(val)
-                setBulkPlanId('')
+                setBulkPlanId('ALL')
               }}>
                 <SelectTrigger className='text-xs rounded-xl h-9'>
                   <SelectValue placeholder='انتخاب محصول' />
@@ -1109,7 +1110,7 @@ export default function AdminActivationLinksPage() {
                     <SelectValue placeholder='همه پلن‌های این محصول' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value=''>همه پلن‌ها</SelectItem>
+                    <SelectItem value='ALL'>همه پلن‌های این محصول</SelectItem>
                     {selectedProductPlans.map((pl) => (
                       <SelectItem key={pl.id} value={pl.id}>
                         {pl.name}
