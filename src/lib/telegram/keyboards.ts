@@ -3,24 +3,30 @@ import { Keyboard, InlineKeyboard } from 'grammy'
 export const BUTTONS = {
   BUY: '🛒 خرید اشتراک',
   ORDERS: '📦 سفارش‌های من',
+  NOTIFICATIONS: '🔔 اعلان‌ها',
   GUIDE: '📖 راهنمای فعال‌سازی',
   SUPPORT: '🎧 پشتیبانی',
   LINK_ACCOUNT: '📱 ورود به حساب کاربری',
   LOGOUT: '🚪 خروج از حساب کاربری',
 }
 
-export function mainMenuKeyboard(isLinked: boolean = false) {
+export function mainMenuKeyboard(isLinked: boolean = false, unreadCount: number = 0) {
+  const notifButton =
+    unreadCount > 0 ? `🔔 اعلان‌ها (${unreadCount.toLocaleString('fa-IR')})` : BUTTONS.NOTIFICATIONS
+
   const kb = new Keyboard()
     .text(BUTTONS.BUY)
     .text(BUTTONS.ORDERS)
     .row()
-    .text(BUTTONS.GUIDE)
+    .text(notifButton)
     .text(BUTTONS.SUPPORT)
+    .row()
+    .text(BUTTONS.GUIDE)
 
   if (isLinked) {
-    kb.row().text(BUTTONS.LOGOUT)
+    kb.text(BUTTONS.LOGOUT)
   } else {
-    kb.row().text(BUTTONS.LINK_ACCOUNT)
+    kb.text(BUTTONS.LINK_ACCOUNT)
   }
 
   return kb.resized()
@@ -152,4 +158,82 @@ export function supportKeyboard(phone: string, telegramUrl: string) {
   keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
 
   return keyboard
+}
+
+export function notificationsListKeyboard(
+  notifications: Array<{ id: string; isRead: boolean }>,
+  page: number,
+  totalPages: number,
+  filter: 'all' | 'unread',
+  unreadCount: number
+) {
+  const kb = new InlineKeyboard()
+
+  // Row 1: Filter switch & Read all
+  if (filter === 'all') {
+    if (unreadCount > 0) {
+      kb.text(`🔴 فقط خوانده‌نشده‌ها (${unreadCount.toLocaleString('fa-IR')})`, `notif:filter:unread:1`)
+    }
+  } else {
+    kb.text('📋 همه اعلان‌ها', `notif:filter:all:1`)
+  }
+
+  if (unreadCount > 0) {
+    kb.text('✅ خواندن همه', 'notif:read_all')
+  }
+  kb.row()
+
+  // Row 2: Quick mark-as-read buttons for unread items on current page
+  const unreadItems = notifications.filter((n) => !n.isRead)
+  if (unreadItems.length > 0) {
+    for (let i = 0; i < unreadItems.length; i++) {
+      kb.text(`✓ خواندن #${(i + 1).toLocaleString('fa-IR')}`, `notif:read:${unreadItems[i].id}`)
+    }
+    kb.row()
+  }
+
+  // Row 3: Pagination
+  if (totalPages > 1) {
+    if (page > 1) {
+      kb.text('➡️ قبلی', `notif:page:${page - 1}:${filter}`)
+    }
+    kb.text(`${page.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`, 'noop')
+    if (page < totalPages) {
+      kb.text('⬅️ بعدی', `notif:page:${page + 1}:${filter}`)
+    }
+    kb.row()
+  }
+
+  // Row 4: Refresh & Main Menu
+  kb.text('🔄 به‌روزرسانی', `notif:refresh:${page}:${filter}`)
+  kb.text('🔙 منوی اصلی', 'nav:main')
+
+  return kb
+}
+
+export function notificationDetailKeyboard(
+  notificationId: string,
+  isRead: boolean,
+  link?: string | null
+) {
+  const kb = new InlineKeyboard()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'
+
+  if (link) {
+    if (link.startsWith('http://') || link.startsWith('https://')) {
+      kb.url('🔗 باز کردن پیوند', link).row()
+    } else {
+      const fullUrl = link.startsWith('/') ? `${appUrl}${link}` : `${appUrl}/${link}`
+      kb.url('🌐 مشاهده در سایت', fullUrl).row()
+    }
+  }
+
+  if (!isRead) {
+    kb.text('✓ علامت‌گذاری به عنوان خوانده‌شده', `notif:read:${notificationId}`).row()
+  }
+
+  kb.text('📋 بازگشت به لیست اعلان‌ها', 'notif:list:1')
+  kb.text('🔙 منوی اصلی', 'nav:main')
+
+  return kb
 }

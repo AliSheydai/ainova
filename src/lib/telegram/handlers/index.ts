@@ -4,6 +4,11 @@ import { MESSAGES } from '../messages'
 import { handleStart } from './start'
 import { handleShowProducts, handleSelectProduct, handleBuyProduct, handleBuyCallback } from './buy'
 import { handleOrders } from './orders'
+import {
+  handleNotifications,
+  handleNotificationRead,
+  handleNotificationReadAll,
+} from './notifications'
 import { handleGuide } from './guide'
 import { handleSupport } from './support'
 import { handleLinkPrompt } from './link'
@@ -21,6 +26,19 @@ import {
 } from '../account-linking'
 import { normalizePhone, isValidIranianPhone } from '@/lib/auth/otp'
 import { prisma } from '@/lib/prisma'
+import { UserNotificationService } from '@/lib/notifications/user-notification-service'
+
+async function getUpdatedMainMenuKeyboard(telegramId: string | null) {
+  if (!telegramId) return mainMenuKeyboard(false, 0)
+  try {
+    const u = await prisma.user.findUnique({ where: { telegramId } })
+    if (!u?.phone) return mainMenuKeyboard(false, 0)
+    const unread = await UserNotificationService.getUnreadCount(u.id).catch(() => 0)
+    return mainMenuKeyboard(true, unread)
+  } catch {
+    return mainMenuKeyboard(false, 0)
+  }
+}
 
 export function registerHandlers(bot: Bot) {
   // Command /start
@@ -28,6 +46,9 @@ export function registerHandlers(bot: Bot) {
 
   // Command /login
   bot.command('login', (ctx) => startLoginFlow(ctx))
+
+  // Command /notifications
+  bot.command(['notifications', 'notif', 'alerts'], (ctx) => handleNotifications(ctx, 1, 'all'))
 
   // Command /logout
   bot.command('logout', async (ctx) => {
@@ -44,6 +65,18 @@ export function registerHandlers(bot: Bot) {
   // Reply Keyboard Buttons
   bot.hears([BUTTONS.BUY, '🛒 خرید اشتراک', '🛒 خرید', 'خرید', 'خرید اشتراک جمینای', 'خرید محصول'], handleShowProducts)
   bot.hears(BUTTONS.ORDERS, (ctx) => handleOrders(ctx, 1))
+  bot.hears(
+    [
+      BUTTONS.NOTIFICATIONS,
+      /^🔔\s*اعلان/,
+      'اعلان‌ها',
+      'اعلانات',
+      'پیام‌ها',
+      'اعلان',
+      'صندوق اعلان‌ها',
+    ],
+    (ctx) => handleNotifications(ctx, 1, 'all')
+  )
   bot.hears(BUTTONS.GUIDE, handleGuide)
   bot.hears(BUTTONS.SUPPORT, handleSupport)
   bot.hears(BUTTONS.LINK_ACCOUNT, handleLinkPrompt)
@@ -74,8 +107,9 @@ export function registerHandlers(bot: Bot) {
     }
 
     if (isLinked) {
+      const kb = await getUpdatedMainMenuKeyboard(telegramId)
       await ctx.reply(MESSAGES.mainMenuPrompt, {
-        reply_markup: mainMenuKeyboard(true),
+        reply_markup: kb,
       })
     } else {
       await startLoginFlow(ctx)
@@ -141,6 +175,44 @@ export function registerHandlers(bot: Bot) {
     await handleOrders(ctx, page)
   })
 
+  // Callback Queries: Notifications pagination
+  bot.callbackQuery(/^notif:page:(\d+):(all|unread)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1
+    const filter = ctx.match[2] as 'all' | 'unread'
+    await handleNotifications(ctx, page, filter)
+  })
+
+  // Callback Queries: Notifications filter toggle
+  bot.callbackQuery(/^notif:filter:(all|unread):(\d+)$/, async (ctx) => {
+    const filter = ctx.match[1] as 'all' | 'unread'
+    const page = parseInt(ctx.match[2], 10) || 1
+    await handleNotifications(ctx, page, filter)
+  })
+
+  // Callback Queries: Notifications refresh
+  bot.callbackQuery(/^notif:refresh:(\d+):(all|unread)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1
+    const filter = ctx.match[2] as 'all' | 'unread'
+    await handleNotifications(ctx, page, filter)
+  })
+
+  // Callback Queries: Notification single mark as read
+  bot.callbackQuery(/^notif:read:(.+)$/, async (ctx) => {
+    const notificationId = ctx.match[1]
+    await handleNotificationRead(ctx, notificationId)
+  })
+
+  // Callback Queries: Notification mark all as read
+  bot.callbackQuery('notif:read_all', async (ctx) => {
+    await handleNotificationReadAll(ctx)
+  })
+
+  // Callback Queries: Notification list entry shortcut
+  bot.callbackQuery(/^notif:list:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1
+    await handleNotifications(ctx, page, 'all')
+  })
+
   // Callback Queries: Navigation - Back to main menu
   bot.callbackQuery('nav:main', async (ctx) => {
     await ctx.answerCallbackQuery().catch(() => {})
@@ -156,8 +228,9 @@ export function registerHandlers(bot: Bot) {
     }
 
     if (isLinked) {
+      const kb = await getUpdatedMainMenuKeyboard(telegramId)
       await ctx.reply(MESSAGES.mainMenuPrompt, {
-        reply_markup: mainMenuKeyboard(true),
+        reply_markup: kb,
       })
     } else {
       await startLoginFlow(ctx)
@@ -234,8 +307,9 @@ export function registerHandlers(bot: Bot) {
       }
     }
 
+    const kb = await getUpdatedMainMenuKeyboard(telegramId)
     await ctx.reply(MESSAGES.mainMenuPrompt, {
-      reply_markup: mainMenuKeyboard(true),
+      reply_markup: kb,
     })
   })
 }

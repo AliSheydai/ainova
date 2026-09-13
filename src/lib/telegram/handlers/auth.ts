@@ -114,9 +114,13 @@ export async function processOtpInput(ctx: Context, rawCode: string) {
   await clearBotLoginSession(telegramId)
 
   if (linkResult.success) {
+    const { UserNotificationService } = await import('@/lib/notifications/user-notification-service')
+    const unreadCount = linkResult.user?.id
+      ? await UserNotificationService.getUnreadCount(linkResult.user.id).catch(() => 0)
+      : 0
     await ctx.reply(MESSAGES.loginSuccess(session.phone), {
       parse_mode: 'Markdown',
-      reply_markup: mainMenuKeyboard(true),
+      reply_markup: mainMenuKeyboard(true, unreadCount),
     })
   } else {
     await ctx.reply(`❌ ${linkResult.message}`, {

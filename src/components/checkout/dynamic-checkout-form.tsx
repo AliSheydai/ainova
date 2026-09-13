@@ -29,7 +29,7 @@ export function DynamicCheckoutForm({
 
   return (
     <div className='space-y-4 text-start' dir='rtl'>
-      <div className='text-xs font-semibold text-muted-foreground mb-1'>
+      <div className='text-xs sm:text-sm font-semibold text-muted-foreground mb-1'>
         اطلاعات موردنیاز برای فعال‌سازی و تحویل:
       </div>
 
@@ -39,7 +39,7 @@ export function DynamicCheckoutForm({
 
         return (
           <div key={field.key} className='space-y-1.5'>
-            <label className='text-xs font-medium text-foreground flex items-center gap-1'>
+            <label className='text-xs sm:text-sm font-medium text-foreground flex items-center gap-1'>
               <span>{field.label}</span>
               {field.required && <span className='text-rose-500 font-bold'>*</span>}
             </label>
@@ -51,7 +51,7 @@ export function DynamicCheckoutForm({
                 placeholder={field.placeholder || `لطفاً ${field.label} را وارد نمایید...`}
                 disabled={disabled}
                 rows={3}
-                className={`text-xs resize-none ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                className={`text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm resize-none ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
               />
             ) : field.type === 'email' ? (
               <Input
@@ -61,7 +61,7 @@ export function DynamicCheckoutForm({
                 placeholder={field.placeholder || 'example@gmail.com'}
                 disabled={disabled}
                 dir='ltr'
-                className={`text-xs h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                className={`text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
               />
             ) : field.type === 'phone' ? (
               <Input
@@ -71,7 +71,7 @@ export function DynamicCheckoutForm({
                 placeholder={field.placeholder || '0912xxxxxxx'}
                 disabled={disabled}
                 dir='ltr'
-                className={`text-xs h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                className={`text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
               />
             ) : field.type === 'number' ? (
               <Input
@@ -81,7 +81,7 @@ export function DynamicCheckoutForm({
                 placeholder={field.placeholder || '0'}
                 disabled={disabled}
                 dir='ltr'
-                className={`text-xs h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                className={`text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm h-10 font-mono ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
               />
             ) : (
               <Input
@@ -90,11 +90,11 @@ export function DynamicCheckoutForm({
                 onChange={(e) => onChange(field.key, e.target.value)}
                 placeholder={field.placeholder || `${field.label}...`}
                 disabled={disabled}
-                className={`text-xs h-10 ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                className={`text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm h-10 ${error ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
               />
             )}
 
-            {error && <p className='text-[11px] text-rose-500 font-medium'>{error}</p>}
+            {error && <p className='text-[11px] sm:text-xs text-rose-500 font-medium'>{error}</p>}
           </div>
         )
       })}

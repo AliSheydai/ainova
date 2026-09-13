@@ -159,6 +159,14 @@ function UserDropdown({
         >
           <LayoutDashboard className='size-4 text-primary shrink-0' />
           <span>داشبورد</span>
+          {unreadCount > 0 && (
+            <span
+              className='ms-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground font-sans animate-in fade-in zoom-in duration-200'
+              title={`${toPersianDigits(unreadCount)} اعلان خوانده‌نشده`}
+            >
+              {toPersianDigits(unreadCount > 99 ? '+۹۹' : unreadCount)}
+            </span>
+          )}
         </DropdownMenuItem>
 
         {/* 2. پنل ادمین (در صورت دسترسی مدیر) */}

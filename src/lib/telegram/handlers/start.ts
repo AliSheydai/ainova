@@ -87,15 +87,24 @@ export async function handleStart(ctx: Context) {
 
   // If user already has a verified phone number in Telegram:
   if (existingUser?.phone) {
-    // If navigation directly to orders
+    // If navigation directly to orders or notifications
     if (payload === 'orders') {
       await handleOrders(ctx, 1)
       return
     }
 
+    if (payload === 'notifications' || payload === 'notif') {
+      const { handleNotifications } = await import('./notifications')
+      await handleNotifications(ctx, 1, 'all')
+      return
+    }
+
+    const { UserNotificationService } = await import('@/lib/notifications/user-notification-service')
+    const unreadCount = await UserNotificationService.getUnreadCount(existingUser.id).catch(() => 0)
+
     await ctx.reply(MESSAGES.welcome(name), {
       parse_mode: 'Markdown',
-      reply_markup: mainMenuKeyboard(true),
+      reply_markup: mainMenuKeyboard(true, unreadCount),
     })
     return
   }

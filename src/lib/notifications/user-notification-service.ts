@@ -8,6 +8,7 @@ export interface CreateNotificationInput {
   type?: NotificationType
   link?: string | null
   metadata?: Record<string, unknown> | null
+  sendTelegram?: boolean
 }
 
 export interface UserNotificationItem {
@@ -23,9 +24,29 @@ export interface UserNotificationItem {
   isBroadcast: boolean
 }
 
+function getNotificationTypeIcon(type: NotificationType): string {
+  switch (type) {
+    case NotificationType.ORDER_SUCCESS:
+      return '🛒'
+    case NotificationType.ORDER_FAILED:
+      return '❌'
+    case NotificationType.ORDER_READY:
+      return '🚀'
+    case NotificationType.ORDER_PENDING_DELIVERY:
+      return '⏳'
+    case NotificationType.SUPPORT_REPLY:
+      return '💬'
+    case NotificationType.PROMOTION:
+      return '🎁'
+    case NotificationType.SYSTEM_ANNOUNCEMENT:
+    default:
+      return '📢'
+  }
+}
+
 export class UserNotificationService {
   /**
-   * ایجاد یک اعلان جدید (اختصاصی یا سراسری)
+   * ایجاد یک اعلان جدید (اختصاصی یا سراسری) و ارسال پیام در تلگرام
    */
   static async createNotification({
     userId = null,
@@ -34,6 +55,7 @@ export class UserNotificationService {
     type = NotificationType.SYSTEM_ANNOUNCEMENT,
     link = null,
     metadata = null,
+    sendTelegram = true,
   }: CreateNotificationInput): Promise<UserNotificationItem> {
     const notification = await prisma.notification.create({
       data: {
@@ -46,6 +68,20 @@ export class UserNotificationService {
         isRead: false,
       },
     })
+
+    // ارسال بلادرنگ به چت‌بات تلگرام در صورت تمایل و اتصال حساب
+    if (sendTelegram) {
+      this.dispatchTelegramNotification({
+        id: notification.id,
+        userId,
+        title,
+        message,
+        type,
+        link,
+      }).catch((err) => {
+        console.error('Failed to dispatch telegram notification:', err)
+      })
+    }
 
     return {
       id: notification.id,
@@ -62,6 +98,74 @@ export class UserNotificationService {
   }
 
   /**
+   * ارسال اعلان به چت‌بات تلگرام کاربر یا کاربران
+   */
+  private static async dispatchTelegramNotification({
+    id,
+    userId,
+    title,
+    message,
+    type,
+    link,
+  }: {
+    id: string
+    userId: string | null
+    title: string
+    message: string
+    type: NotificationType
+    link: string | null
+  }): Promise<void> {
+    const { sendTelegramNotification } = await import('@/lib/telegram/bot')
+    const { InlineKeyboard } = await import('grammy')
+
+    const icon = getNotificationTypeIcon(type)
+    const telegramText = `
+${icon} **اعلان جدید:** ${title}
+━━━━━━━━━━━━━━━━━━━━
+${message}
+`.trim()
+
+    const kb = new InlineKeyboard()
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'
+
+    if (link) {
+      if (link.startsWith('http://') || link.startsWith('https://')) {
+        kb.url('🔗 باز کردن پیوند', link).row()
+      } else {
+        const fullUrl = link.startsWith('/') ? `${appUrl}${link}` : `${appUrl}/${link}`
+        kb.url('🌐 مشاهده در سایت', fullUrl).row()
+      }
+    }
+
+    kb.text('✓ خوانده شد', `notif:read:${id}`).row()
+    kb.text('🔔 صندوق اعلان‌ها', 'notif:list:1')
+
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { telegramId: true },
+      })
+
+      if (user?.telegramId) {
+        await sendTelegramNotification(user.telegramId, telegramText, kb)
+      }
+    } else {
+      // پیام سراسری: ارسال به کاربران دارای اکانت تلگرام متصل (تا سقف ۵۰۰ کاربر)
+      const users = await prisma.user.findMany({
+        where: { telegramId: { not: null } },
+        select: { telegramId: true },
+        take: 500,
+      })
+
+      for (const u of users) {
+        if (u.telegramId) {
+          await sendTelegramNotification(u.telegramId, telegramText, kb).catch(() => {})
+        }
+      }
+    }
+  }
+
+  /**
    * دریافت اعلانات یک کاربر (شامل پیام‌های شخصی و پیام‌های عمومی ادمین)
    */
   static async getUserNotifications(
@@ -71,25 +175,37 @@ export class UserNotificationService {
       limit?: number
       offset?: number
     }
-  ): Promise<{ notifications: UserNotificationItem[]; totalUnread: number }> {
+  ): Promise<{ notifications: UserNotificationItem[]; totalUnread: number; totalCount: number }> {
     const limit = options?.limit ?? 40
     const offset = options?.offset ?? 0
 
-    // Fetch user notifications and public broadcast notifications
-    const rawNotifications = await prisma.notification.findMany({
-      where: {
-        OR: [{ userId }, { userId: null }],
-      },
-      include: {
-        reads: {
-          where: { userId },
-          select: { id: true },
+    const whereClause: any = options?.unreadOnly
+      ? {
+          OR: [
+            { userId, isRead: false },
+            { userId: null, reads: { none: { userId } } },
+          ],
+        }
+      : {
+          OR: [{ userId }, { userId: null }],
+        }
+
+    const [rawNotifications, totalCount, totalUnread] = await Promise.all([
+      prisma.notification.findMany({
+        where: whereClause,
+        include: {
+          reads: {
+            where: { userId },
+            select: { id: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.notification.count({ where: whereClause }),
+      this.getUnreadCount(userId),
+    ])
 
     const formatted: UserNotificationItem[] = rawNotifications.map((n) => {
       const isRead = n.userId !== null ? n.isRead : n.reads.length > 0
@@ -107,15 +223,10 @@ export class UserNotificationService {
       }
     })
 
-    const totalUnread = await this.getUnreadCount(userId)
-
-    const result = options?.unreadOnly
-      ? formatted.filter((item) => !item.isRead)
-      : formatted
-
     return {
-      notifications: result,
+      notifications: formatted,
       totalUnread,
+      totalCount,
     }
   }
 

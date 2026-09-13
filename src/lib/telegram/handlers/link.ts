@@ -14,11 +14,13 @@ export async function handleLinkPrompt(ctx: Context) {
   })
 
   if (user?.phone) {
+    const { UserNotificationService } = await import('@/lib/notifications/user-notification-service')
+    const unreadCount = await UserNotificationService.getUnreadCount(user.id).catch(() => 0)
     await ctx.reply(
       `✅ حساب تلگرام شما هم‌اکنون به شماره **${user.phone}** متصل است.\nبرای ورود با شماره دیگر می‌توانید شماره جدید را ارسال فرمایید.`,
       {
         parse_mode: 'Markdown',
-        reply_markup: mainMenuKeyboard(true),
+        reply_markup: mainMenuKeyboard(true, unreadCount),
       }
     )
     return

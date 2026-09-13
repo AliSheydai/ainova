@@ -79,10 +79,10 @@ function MockBankContent() {
               <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
                 <Sparkles className='size-4' />
               </div>
-              <span className='text-base font-bold text-foreground'>آریوچت</span>
+              <span className='text-base sm:text-lg font-bold text-foreground'>آریوچت</span>
             </Link>
-            <span className='hidden text-xs text-muted-foreground sm:inline-block'>|</span>
-            <span className='hidden text-xs text-muted-foreground sm:inline-block'>درگاه پرداخت الکترونیک</span>
+            <span className='hidden text-xs sm:text-sm text-muted-foreground sm:inline-block'>|</span>
+            <span className='hidden text-xs sm:text-sm text-muted-foreground sm:inline-block'>درگاه پرداخت الکترونیک</span>
           </div>
 
           <div className='flex items-center gap-3'>
@@ -92,7 +92,7 @@ function MockBankContent() {
               size='sm'
               onClick={handlePayCancel}
               disabled={loading}
-              className='text-xs text-muted-foreground gap-1.5'
+              className='text-xs sm:text-sm text-muted-foreground gap-1.5'
             >
               <ArrowRight className='size-3.5' />
               <span>انصراف</span>
@@ -102,50 +102,50 @@ function MockBankContent() {
       </header>
 
       {/* Content */}
-      <main className='flex flex-1 items-center justify-center p-4 sm:p-6'>
+      <main className='flex flex-1 items-center justify-center p-3.5 sm:p-6'>
         <div className='w-full max-w-md space-y-4'>
           {/* Mock Environment Banner */}
-          <div className='flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-xs text-primary backdrop-blur-sm'>
+          <div className='flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5 text-[11px] sm:text-xs text-primary backdrop-blur-sm'>
             <AlertTriangle className='h-4 w-4 shrink-0 text-primary' />
             <span>محیط تست درگاه شبیه‌ساز پرداخت (Mock Payment Gateway)</span>
           </div>
 
           {/* Main Card */}
-          <Card className='relative overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl'>
+          <Card className='relative overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl rounded-2xl'>
             {/* Top Gradient Accent Line */}
             <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60' />
 
-            <CardHeader className='border-b border-border/50 pb-5 pt-7 text-center'>
-              <div className='mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner'>
-                <Building2 className='h-7 w-7' />
+            <CardHeader className='border-b border-border/50 pb-5 pt-6 sm:pt-7 text-center px-4 sm:px-6'>
+              <div className='mx-auto mb-3 flex size-12 sm:size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner'>
+                <Building2 className='h-6 w-6 sm:h-7 sm:w-7' />
               </div>
               <div className='flex items-center justify-center gap-2'>
-                <CardTitle className='text-xl font-bold'>درگاه پرداخت الکترونیک شاپرک</CardTitle>
+                <CardTitle className='text-lg sm:text-xl font-bold'>درگاه پرداخت الکترونیک شاپرک</CardTitle>
               </div>
-              <CardDescription className='text-xs text-muted-foreground mt-1.5'>
+              <CardDescription className='text-xs sm:text-sm text-muted-foreground mt-1.5'>
                 پذیرنده: فروشگاه رسمی آریوچت
               </CardDescription>
             </CardHeader>
 
-            <CardContent className='space-y-4 pt-6'>
+            <CardContent className='space-y-4 pt-5 sm:pt-6 px-4 sm:px-6'>
               {/* Payment Receipt Info Box */}
-              <div className='rounded-2xl border border-border/70 bg-muted/30 p-4 sm:p-5 space-y-3.5'>
+              <div className='rounded-2xl border border-border/70 bg-muted/30 p-3.5 sm:p-5 space-y-3 sm:space-y-3.5'>
                 <div className='flex justify-between items-center'>
-                  <span className='text-xs text-muted-foreground'>مبلغ قابل پرداخت:</span>
-                  <span className='text-xl font-extrabold text-primary font-sans'>
+                  <span className='text-xs sm:text-sm text-muted-foreground'>مبلغ قابل پرداخت:</span>
+                  <span className='text-lg sm:text-xl md:text-2xl font-extrabold text-primary font-sans'>
                     {new Intl.NumberFormat('fa-IR').format(amount)}{' '}
-                    <span className='text-xs font-normal text-muted-foreground'>تومان</span>
+                    <span className='text-xs sm:text-sm font-normal text-muted-foreground'>تومان</span>
                   </span>
                 </div>
 
-                <div className='flex justify-between items-center text-xs'>
+                <div className='flex justify-between items-center text-xs sm:text-sm'>
                   <span className='text-muted-foreground'>شناسه پرداخت (Authority):</span>
-                  <span className='font-sans font-medium text-foreground truncate max-w-[210px] select-all bg-background/80 px-2 py-0.5 rounded-md border border-border/50' title={authority}>
+                  <span className='font-mono font-medium text-foreground truncate max-w-[170px] sm:max-w-[210px] select-all bg-background/80 px-2 py-0.5 rounded-md border border-border/50 text-xs' title={authority}>
                     {authority}
                   </span>
                 </div>
 
-                <div className='flex justify-between items-center text-xs'>
+                <div className='flex justify-between items-center text-xs sm:text-sm'>
                   <span className='text-muted-foreground'>شماره کارت فرضی تست:</span>
                   <span className='font-sans font-medium text-foreground tracking-wider' dir='ltr'>
                     ۶۰۳۷-۹۹**-****-۲۸۱۴
@@ -154,22 +154,22 @@ function MockBankContent() {
               </div>
 
               {/* Security Banner */}
-              <div className='rounded-xl bg-primary/5 border border-primary/15 p-3 flex items-center gap-2.5 text-xs text-muted-foreground'>
+              <div className='rounded-xl bg-primary/5 border border-primary/15 p-3 flex items-center gap-2.5 text-xs sm:text-sm text-muted-foreground'>
                 <ShieldCheck className='h-4 w-4 shrink-0 text-primary' />
                 <span>ارتباط امن رمزنگاری‌شده بانکی (SSL 256-bit) برقرار است.</span>
               </div>
             </CardContent>
 
-            <CardFooter className='flex flex-col gap-3 border-t border-border/50 pt-5 pb-6'>
+            <CardFooter className='flex flex-col gap-2.5 sm:gap-3 border-t border-border/50 pt-5 pb-6 px-4 sm:px-6'>
               <Button
                 onClick={handlePaySuccess}
                 disabled={loading}
-                className='w-full font-bold h-12 text-sm shadow-md shadow-primary/20 cursor-pointer rounded-xl transition-all'
+                className='w-full font-bold h-11 sm:h-12 text-xs sm:text-sm shadow-md shadow-primary/20 cursor-pointer rounded-xl transition-all'
               >
                 {loading ? (
-                  <Loader2 className='ml-2 h-5 w-5 animate-spin' />
+                  <Loader2 className='ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin' />
                 ) : (
-                  <CheckCircle2 className='ml-2 h-5 w-5' />
+                  <CheckCircle2 className='ml-2 h-4 w-4 sm:h-5 sm:w-5' />
                 )}
                 تکمیل خرید و پرداخت موفق (آزمایشی)
               </Button>
@@ -178,7 +178,7 @@ function MockBankContent() {
                 onClick={handlePayCancel}
                 disabled={loading}
                 variant='outline'
-                className='w-full border-border/80 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground h-11 text-xs cursor-pointer rounded-xl'
+                className='w-full border-border/80 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground h-10 sm:h-11 text-xs sm:text-sm cursor-pointer rounded-xl'
               >
                 <XCircle className='ml-2 h-4 w-4 text-muted-foreground' />
                 انصراف از پرداخت و بازگشت
