@@ -90,13 +90,17 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       order: {
         ...order,
         delivery: safeDelivery,
       },
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   } catch (error: unknown) {
     console.error('Error fetching order by id:', error)
     return NextResponse.json(

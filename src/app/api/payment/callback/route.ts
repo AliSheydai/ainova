@@ -10,6 +10,7 @@ import { UserNotificationService } from '@/lib/notifications/user-notification-s
 import { NotificationType } from '@prisma/client'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { getCurrentUser } from '@/lib/auth/jwt'
+import { sendOrderConfirmationSms } from '@/lib/auth/sms'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -400,6 +401,20 @@ export async function GET(req: NextRequest) {
         type: NotificationType.ORDER_READY,
         metadata: { orderId: payment.order.id },
       }).catch((err) => console.error('Notification error:', err))
+    }
+
+    // Send SMS confirmation to user if phone number is available
+    const customerPhone =
+      payment.order.user?.phone ||
+      (payment.order.checkoutData as Record<string, any> | null)?.phone ||
+      (payment.order.checkoutData as Record<string, any> | null)?.customer_phone
+
+    if (customerPhone) {
+      const shortOrderId = payment.order.id.slice(-6).toUpperCase()
+      const orderUrl = `${appUrl}/orders?orderId=${payment.order.id}`
+      sendOrderConfirmationSms(customerPhone, shortOrderId, orderUrl).catch((err) =>
+        console.error('Order confirmation SMS error:', err)
+      )
     }
 
     if (targetChatId) {

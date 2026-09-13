@@ -64,3 +64,90 @@ export async function sendOtpSms(phone: string, token: string): Promise<SendOtpR
     }
   }
 }
+
+interface SendSmsResult {
+  success: boolean
+  message: string
+}
+
+/**
+ * Send order confirmation SMS after successful payment
+ * @param phone Iranian mobile number (e.g. 09xxxxxxxxx)
+ * @param orderId Short or full order ID
+ * @param orderUrl Direct link to view the order
+ */
+export async function sendOrderConfirmationSms(
+  phone: string,
+  orderId: string,
+  orderUrl: string
+): Promise<SendSmsResult> {
+  const apiKey = process.env.KAVEH_NEGAR_API_KEY || process.env.KAVENEGAR_API_KEY
+  const sender = process.env.KAVEH_NEGAR_SENDER || process.env.KAVENEGAR_SENDER
+  const orderPattern = process.env.KAVEH_NEGAR_ORDER_PATTERN
+  const isDevBypass =
+    process.env.KAVEH_NEGAR_DEV_BYPASS === 'true' ||
+    process.env.NODE_ENV === 'test'
+
+  const messageText = `سفارش #${orderId} ثبت شد.\nمشاهده: ${orderUrl}`
+
+  if (isDevBypass || !apiKey) {
+    console.log(`\n==========================================`)
+    console.log(`[DEV SMS ORDER CONFIRMATION]`)
+    console.log(`Phone:   ${phone}`)
+    console.log(`Message: ${messageText}`)
+    console.log(`==========================================\n`)
+    return {
+      success: true,
+      message: 'پیامک تأیید سفارش ارسال شد (حالت توسعه)',
+    }
+  }
+
+  try {
+    let url: string
+    let params: Record<string, string>
+
+    if (orderPattern) {
+      url = `https://api.kavenegar.com/v1/${apiKey}/verify/lookup.json`
+      params = {
+        receptor: phone,
+        token: orderId,
+        token2: orderUrl,
+        template: orderPattern,
+      }
+    } else {
+      url = `https://api.kavenegar.com/v1/${apiKey}/sms/send.json`
+      params = {
+        receptor: phone,
+        message: messageText,
+      }
+      if (sender) {
+        params.sender = sender
+      }
+    }
+
+    const response = await axios.get(url, {
+      params,
+      timeout: 10000,
+    })
+
+    if (response.data && response.data.return && response.data.return.status === 200) {
+      return {
+        success: true,
+        message: 'پیامک تأیید سفارش با موفقیت ارسال شد.',
+      }
+    }
+
+    console.error('Kavenegar SMS send error:', response.data)
+    return {
+      success: false,
+      message: response.data?.return?.message || 'خطا در ارسال پیامک تأیید سفارش.',
+    }
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: unknown }; message?: string }
+    console.error('Kavenegar order SMS failed:', error.response?.data || error.message)
+    return {
+      success: false,
+      message: 'خطا در برقراری ارتباط با سامانه پیامک جهت تأیید سفارش.',
+    }
+  }
+}

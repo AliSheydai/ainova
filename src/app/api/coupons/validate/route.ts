@@ -16,12 +16,22 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = getClientIp(req.headers)
-    const rateCheck = couponRateLimiter.check(ip)
-    if (!rateCheck.success) {
-      return NextResponse.json(
-        { success: false, error: 'تعداد تلاش‌ها بیش از حد مجاز است. لطفاً یک دقیقه دیگر تلاش فرمایید.' },
+    const ipRateCheck = couponRateLimiter.check(`ip:${ip}`)
+    const userRateCheck = couponRateLimiter.check(`user:${session.userId}`)
+
+    if (!ipRateCheck.success || !userRateCheck.success) {
+      const resetAt = !ipRateCheck.success ? ipRateCheck.resetAt : userRateCheck.resetAt
+      const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000))
+
+      const rateLimitResponse = NextResponse.json(
+        {
+          success: false,
+          error: 'تعداد تلاش‌ها برای بررسی کد تخفیف بیش از حد مجاز است. لطفاً یک دقیقه دیگر تلاش فرمایید.',
+        },
         { status: 429 }
       )
+      rateLimitResponse.headers.set('Retry-After', retryAfterSeconds.toString())
+      return rateLimitResponse
     }
 
     const body = await req.json()

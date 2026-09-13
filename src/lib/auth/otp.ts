@@ -295,6 +295,7 @@ export async function verifyOtpCode(
     phone: user.phone || phone,
     name: user.name,
     role: user.role,
+    tokenVersion: user.tokenVersion ?? 0,
   })
 
   return {

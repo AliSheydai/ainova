@@ -219,7 +219,7 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalFiltered / limit) || 1
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       orders: safeOrders,
       pagination: {
@@ -245,6 +245,10 @@ export async function GET(req: NextRequest) {
         products,
       },
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   } catch (error: unknown) {
     console.error('Error fetching admin orders:', error)
     return NextResponse.json(
