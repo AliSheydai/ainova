@@ -82,7 +82,6 @@ export default function ProfilePage() {
   }
 
   const displayName = name.trim() || profile?.name || 'کاربر گرامی'
-  const initial = displayName.charAt(0) || 'ک'
 
   return (
     <>
@@ -95,8 +94,8 @@ export default function ProfilePage() {
       <Main className="flex flex-col gap-6 p-4 sm:p-6 max-w-2xl mx-auto w-full">
         {/* Profile Header Banner */}
         <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-gradient-to-l from-primary/5 via-card to-card p-5 shadow-xs">
-          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-2xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
-            {initial}
+          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-md shadow-primary/25 ring-2 ring-primary/20">
+            <User className="size-8 text-white" />
             <span className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-primary ring-2 ring-card" />
           </div>
           <div>

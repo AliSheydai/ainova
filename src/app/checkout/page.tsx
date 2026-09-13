@@ -119,172 +119,255 @@ function PreCreatedAccountSection({
   setMode,
 }: PreCreatedAccountSectionProps) {
   const hasInventory = availableCount !== null && availableCount !== undefined && availableCount > 0
+  const isInventoryExhausted = availableCount !== null && availableCount !== undefined && availableCount === 0
   const inventoryUnknown = availableCount === null || availableCount === undefined
 
   return (
-    <div className='rounded-2xl border border-border/80 bg-card/60 overflow-hidden shadow-sm'>
-      {/* Header */}
-      <div className='flex items-center gap-2.5 px-4 py-3 border-b border-border/60 bg-muted/30'>
-        <div className='size-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0'>
-          <Package className='size-3.5 text-purple-500' />
-        </div>
-        <div className='flex-1 min-w-0'>
-          <p className='text-xs font-bold text-foreground'>اکانت اختصاصی — دو روش تحویل</p>
-          <p className='text-[10.5px] text-muted-foreground'>یکی از گزینه‌های زیر را انتخاب کنید</p>
-        </div>
-        {/* Inventory badge */}
-        {!inventoryUnknown && (
-          <div
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold border ${
-              hasInventory
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-            }`}
-          >
-            <Warehouse className='size-3 shrink-0' />
-            <span>{hasInventory ? `انبار: ${availableCount} اکانت آماده` : 'انبار: ناموجود'}</span>
+    <div className='rounded-2xl border border-border/80 bg-card/70 overflow-hidden shadow-sm transition-all'>
+      {/* Header Banner */}
+      <div className='flex flex-col items-center justify-between gap-2.5 px-4 py-3.5 border-b border-border/60 bg-muted/30'>
+        <div className='flex items-center gap-2.5 min-w-0'>
+          <div className='size-8 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs'>
+            <Package className='size-4' />
           </div>
-        )}
+          <div className='min-w-0'>
+            <p className='text-xs sm:text-sm font-bold text-foreground'>
+              پلن اکانت اختصاصی — شیوه تحویل اشتراک
+            </p>
+            <p className='text-[11px] text-muted-foreground'>
+              می‌توانید اکانت آماده تحویل بگیرید یا جیمیل خودتان را وارد کنید
+            </p>
+          </div>
+        </div>
+
+        {/* Live Warehouse Badge */}
+        <div className='shrink-0 self-start sm:self-auto'>
+          {!inventoryUnknown ? (
+            hasInventory ? (
+              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs'>
+                <span className='size-2 rounded-full bg-emerald-500 animate-pulse' />
+                <Warehouse className='size-3.5 shrink-0' />
+                <span>انبار: {availableCount} اکانت آماده تحویل فوری</span>
+              </div>
+            ) : (
+              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 shadow-2xs'>
+                <AlertTriangle className='size-3.5 shrink-0' />
+                <span>انبار: اکانت آماده موقتاً ناموجود</span>
+              </div>
+            )
+          ) : (
+            <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] text-muted-foreground bg-muted/40 border border-border/60'>
+              <Warehouse className='size-3.5 shrink-0' />
+              <span>وضعیت انبار: در حال استعلام...</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className='p-4 space-y-3'>
-        {/* Option A: Pre-created account from inventory */}
-        <button
-          type='button'
-          onClick={() => setMode('inventory')}
-          disabled={!hasInventory && !inventoryUnknown}
-          className={`w-full text-start rounded-xl border p-3.5 transition-all cursor-pointer select-none ${
-            mode === 'inventory'
-              ? 'border-purple-500/60 bg-purple-500/5 ring-2 ring-purple-500/20'
-              : !hasInventory && !inventoryUnknown
-              ? 'border-border/40 bg-muted/20 opacity-50 cursor-not-allowed'
-              : 'border-border/60 bg-muted/10 hover:border-border hover:bg-muted/30'
-          }`}
-        >
-          <div className='flex items-start gap-3'>
-            <div
-              className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                mode === 'inventory' ? 'border-purple-500 bg-purple-500' : 'border-border'
-              }`}
-            >
-              {mode === 'inventory' && <div className='size-2 rounded-full bg-white' />}
-            </div>
-            <div className='flex-1 min-w-0'>
-              <div className='flex items-center gap-2 flex-wrap'>
-                <span className='text-xs font-bold text-foreground'>
-                  دریافت اکانت آماده از انبار
-                </span>
-                <Badge
-                  variant='outline'
-                  className='text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold'
-                >
-                  <Zap className='size-2.5 me-1' />
-                  تحویل فوری
-                </Badge>
-              </div>
-              <p className='text-[10.5px] text-muted-foreground mt-1 leading-relaxed'>
-                بلافاصله پس از پرداخت، ایمیل و رمزعبور یک اکانت آماده از انبار به شما تحویل داده
-                می‌شود.
+      <div className='p-4 sm:p-5 space-y-4'>
+        {/* Notice if warehouse is exhausted */}
+        {isInventoryExhausted && (
+          <div className='flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs leading-relaxed animate-in fade-in duration-300'>
+            <AlertTriangle className='size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5' />
+            <div>
+              <span className='font-bold'>موجودی اکانت‌های آماده در انبار موقتاً تمام شده است.</span>
+              <p className='text-[11px] text-amber-700/90 dark:text-amber-400/90 mt-0.5'>
+                هیچ جای نگرانی نیست! این سفارش به صورت اختصاصی مستقیماً روی آدرس جیمیل و اکانت شخصی شما توسط کارشناس پشتیبانی فعال خواهد شد.
               </p>
-              {!hasInventory && !inventoryUnknown && (
-                <div className='flex items-center gap-1.5 mt-2 text-[10px] text-rose-500 font-medium'>
-                  <AlertTriangle className='size-3 shrink-0' />
-                  <span>در حال حاضر اکانت آماده در انبار موجود نیست.</span>
-                </div>
-              )}
             </div>
           </div>
-        </button>
+        )}
 
-        {/* Divider */}
-        <div className='flex items-center gap-2'>
-          <div className='flex-1 h-px bg-border/50' />
-          <span className='text-[10px] text-muted-foreground font-medium px-1'>یا</span>
-          <div className='flex-1 h-px bg-border/50' />
-        </div>
+        {/* 2 Choice Cards */}
+        <div className='flex flex-col gap-3.5'>
+          {/* Option A: Pre-created account from warehouse */}
+          <div
+            role='button'
+            tabIndex={isInventoryExhausted ? -1 : 0}
+            onClick={() => {
+              if (!isInventoryExhausted) setMode('inventory')
+            }}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && !isInventoryExhausted) {
+                setMode('inventory')
+              }
+            }}
+            className={`relative flex flex-col justify-between rounded-xl border p-4 transition-all select-none ${
+              mode === 'inventory' && !isInventoryExhausted
+                ? 'border-purple-500/70 bg-purple-500/8 ring-2 ring-purple-500/20 shadow-xs'
+                : isInventoryExhausted
+                ? 'border-border/40 bg-muted/20 opacity-55 cursor-not-allowed'
+                : 'border-border/70 bg-card hover:border-border hover:bg-muted/30 cursor-pointer'
+            }`}
+          >
+            <div>
+              <div className='flex items-start justify-between gap-2 mb-2'>
+                <div className='flex items-center gap-2'>
+                  <div
+                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                      mode === 'inventory' && !isInventoryExhausted
+                        ? 'border-purple-600 bg-purple-600 text-white'
+                        : 'border-border'
+                    }`}
+                  >
+                    {mode === 'inventory' && !isInventoryExhausted && (
+                      <div className='size-2 rounded-full bg-white' />
+                    )}
+                  </div>
+                  <span className='text-xs sm:text-sm font-bold text-foreground'>
+                    دریافت اکانت آماده از انبار
+                  </span>
+                </div>
+                <Badge
+                  variant='outline'
+                  className={`text-[10px] font-semibold ${
+                    isInventoryExhausted
+                      ? 'bg-muted text-muted-foreground border-border'
+                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                  }`}
+                >
+                  <Zap className='size-2.5 me-1' />
+                  {isInventoryExhausted ? 'ناموجود' : 'تحویل فوری (۰ ثانیه)'}
+                </Badge>
+              </div>
 
-        {/* Option B: Use own account */}
-        <button
-          type='button'
-          onClick={() => setMode('own')}
-          className={`w-full text-start rounded-xl border p-3.5 transition-all cursor-pointer select-none ${
-            mode === 'own'
-              ? 'border-blue-500/60 bg-blue-500/5 ring-2 ring-blue-500/20'
-              : 'border-border/60 bg-muted/10 hover:border-border hover:bg-muted/30'
-          }`}
-        >
-          <div className='flex items-start gap-3'>
-            <div
-              className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                mode === 'own' ? 'border-blue-500 bg-blue-500' : 'border-border'
-              }`}
-            >
-              {mode === 'own' && <div className='size-2 rounded-full bg-white' />}
+              <p className='text-[11px] text-muted-foreground leading-relaxed'>
+                بلافاصله پس از پرداخت، مشخصات ورود (ایمیل و رمز عبور یک اکانت آماده و اختصاصی) به شما تحویل داده می‌شود.
+              </p>
             </div>
-            <div className='flex-1 min-w-0'>
-              <div className='flex items-center gap-2 flex-wrap'>
-                <span className='text-xs font-bold text-foreground'>
-                  فعال‌سازی روی اکانت شخصی من
-                </span>
+
+            <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[10.5px] text-muted-foreground'>
+              <div className='flex items-center gap-1.5'>
+                <Check className='size-3 text-emerald-500 shrink-0' />
+                <span>تحویل ۱۰۰٪ خودکار بلافاصله پس از پرداخت</span>
+              </div>
+              <div className='flex items-center gap-1.5'>
+                <Check className='size-3 text-emerald-500 shrink-0' />
+                <span>اکانت کاملاً جدید و اختصاصی شما</span>
+              </div>
+              <div className='flex items-center gap-1.5'>
+                <Check className='size-3 text-emerald-500 shrink-0' />
+                <span>امکان تغییر رمز عبور و افزودن بازیابی</span>
+              </div>
+            </div>
+
+            {isInventoryExhausted && (
+              <div className='mt-2 text-[10.5px] text-rose-500 font-semibold flex items-center gap-1'>
+                <AlertTriangle className='size-3 shrink-0' />
+                <span>موجودی انبار خالی است</span>
+              </div>
+            )}
+          </div>
+
+          {/* Option B: Customer's own account */}
+          <div
+            role='button'
+            tabIndex={0}
+            onClick={() => setMode('own')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') setMode('own')
+            }}
+            className={`relative flex flex-col justify-between rounded-xl border p-4 transition-all cursor-pointer select-none ${
+              mode === 'own'
+                ? 'border-blue-500/70 bg-blue-500/8 ring-2 ring-blue-500/20 shadow-xs'
+                : 'border-border/70 bg-card hover:border-border hover:bg-muted/30'
+            }`}
+          >
+            <div>
+              <div className='flex items-start justify-between gap-2 mb-2'>
+                <div className='flex items-center gap-2'>
+                  <div
+                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                      mode === 'own' ? 'border-blue-600 bg-blue-600 text-white' : 'border-border'
+                    }`}
+                  >
+                    {mode === 'own' && <div className='size-2 rounded-full bg-white' />}
+                  </div>
+                  <span className='text-xs sm:text-sm font-bold text-foreground'>
+                    فعال‌سازی روی جیمیل شخصی من
+                  </span>
+                </div>
                 <Badge
                   variant='outline'
                   className='text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-semibold'
                 >
                   <UserIcon className='size-2.5 me-1' />
-                  اکانت خودم
+                  اکانت شخصی
                 </Badge>
               </div>
-              <p className='text-[10.5px] text-muted-foreground mt-1 leading-relaxed'>
-                جیمیل خود را وارد کنید تا ادمین پس از پرداخت، اشتراک را روی اکانت شما فعال کند.
+
+              <p className='text-[11px] text-muted-foreground leading-relaxed'>
+                جیمیل شخصی خودتان را وارد می‌کنید تا اشتراک مستقیماً روی حساب گوگل فعلی شما فعال شود.
               </p>
+            </div>
+
+            <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[10.5px] text-muted-foreground'>
+              <div className='flex items-center gap-1.5'>
+                <Check className='size-3 text-blue-500 shrink-0' />
+                <span>حفظ کامل اطلاعات و تاریخچه قبلی شما</span>
+              </div>
+              <div className='flex items-center gap-1.5'>
+                <Check className='size-3 text-blue-500 shrink-0' />
+                <span>بدون نیاز به تعویض حساب کاربری</span>
+              </div>
+              <div className='flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium'>
+                <span className='size-1.5 rounded-full bg-amber-500 shrink-0' />
+                <span>زمان فعال‌سازی: ۱ الی ۲۴ ساعت کاری توسط ادمین</span>
+              </div>
             </div>
           </div>
-        </button>
+        </div>
 
-        {/* Expanded fields for Option B */}
+        {/* Input fields for Option B (Customer's own account) */}
         {mode === 'own' && (
-          <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-3.5 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200'>
-            <div className='flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20'>
-              <AlertTriangle className='size-3.5 text-amber-500 shrink-0 mt-0.5' />
-              <p className='text-[10.5px] text-amber-700 dark:text-amber-400 leading-relaxed'>
-                پس از پرداخت، ادمین اشتراک را بررسی و روی اکانت شما فعال می‌کند. این فرآیند معمولاً
-                کمتر از ۲۴ ساعت طول می‌کشد.
-              </p>
+          <div className='rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200'>
+            <div className='flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300'>
+              <Mail className='size-4' />
+              <span>مشخصات حساب شخصی شما جهت فعال‌سازی</span>
             </div>
 
-            <div className='space-y-2.5'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
               {/* Gmail field */}
               <div className='space-y-1.5'>
-                <label className='text-[11px] font-semibold text-foreground flex items-center gap-1.5'>
-                  <Mail className='size-3.5 text-blue-500 shrink-0' />
-                  آدرس جیمیل
-                  <span className='text-rose-500 font-bold'>*</span>
+                <label className='text-[11.5px] font-semibold text-foreground flex items-center justify-between'>
+                  <span className='flex items-center gap-1.5'>
+                    <Mail className='size-3.5 text-blue-500 shrink-0' />
+                    <span>آدرس جیمیل شما</span>
+                    <span className='text-rose-500 font-bold'>*</span>
+                  </span>
+                  <span className='text-[10px] text-muted-foreground font-normal'>الزامی</span>
                 </label>
                 <Input
                   type='email'
                   placeholder='example@gmail.com'
                   value={customerGmail}
                   onChange={(e) => setCustomerGmail(e.target.value)}
-                  className='h-9 text-xs font-mono bg-background/90 border-blue-500/30 focus:border-blue-500'
+                  className='h-9 text-xs font-mono bg-background border-blue-500/30 focus:border-blue-500'
                   dir='ltr'
                 />
+                {/* <p className='text-[10px] text-muted-foreground'>
+                  جیمیلی که می‌خواهید اشتراک هوش مصنوعی روی آن فعال شود.
+                </p> */}
               </div>
 
               {/* Password field */}
               <div className='space-y-1.5'>
-                <label className='text-[11px] font-semibold text-foreground flex items-center gap-1.5'>
-                  <KeyRound className='size-3.5 text-blue-500 shrink-0' />
-                  رمزعبور جیمیل
-                  <span className='text-[10px] text-muted-foreground font-normal'>(اختیاری)</span>
+                <label className='text-[11.5px] font-semibold text-foreground flex items-center justify-between'>
+                  <span className='flex items-center gap-1.5'>
+                    <KeyRound className='size-3.5 text-blue-500 shrink-0' />
+                    <span>رمزعبور جیمیل</span>
+                    <span className='text-rose-500 font-bold'>*</span>
+                  </span>
+                  <span className='text-[10px] text-muted-foreground font-normal'>الزامی</span>
                 </label>
                 <div className='relative'>
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder='رمزعبور جیمیل (اختیاری)'
+                    placeholder='رمزعبور اکانت گوگل'
                     value={customerPassword}
                     onChange={(e) => setCustomerPassword(e.target.value)}
-                    className='h-9 text-xs font-mono bg-background/90 border-blue-500/30 focus:border-blue-500 pe-9'
-                    dir='ltr'
+                    className='h-9 text-xs font-mono bg-background border-blue-500/30 focus:border-blue-500 pe-9'
+                    dir='rtl'
                   />
                   <button
                     type='button'
@@ -295,14 +378,27 @@ function PreCreatedAccountSection({
                     {showPassword ? <EyeOff className='size-3.5' /> : <Eye className='size-3.5' />}
                   </button>
                 </div>
-                <p className='text-[10px] text-muted-foreground'>
-                  رمزعبور رمزگذاری‌شده ذخیره می‌شود و فقط برای فعال‌سازی توسط ادمین استفاده
-                  می‌شود.
-                </p>
               </div>
             </div>
           </div>
         )}
+
+        {/* Quick Comparison Summary Table */}
+        {/* <div className='rounded-xl border border-border/50 bg-muted/20 p-3 text-[11px] space-y-1.5'>
+          <p className='font-bold text-foreground flex items-center gap-1.5 text-[11.5px]'>
+            <span>💡 راهنمای سریع تفاوت دو شیوه تحویل:</span>
+          </p>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-muted-foreground'>
+            <div className='p-2 rounded-lg bg-background/60 border border-border/40'>
+              <span className='font-bold text-foreground block mb-0.5'>⚡ اکانت آماده انبار:</span>
+              <span>تحویل ۰ ثانیه‌ای بلافاصله پس از پرداخت | ایمیل جدید گوگل بدون نیاز به وارد کردن مشخصات.</span>
+            </div>
+            <div className='p-2 rounded-lg bg-background/60 border border-border/40'>
+              <span className='font-bold text-foreground block mb-0.5'>👤 اکانت شخصی شما:</span>
+              <span>تحویل طی چند ساعت توسط ادمین | حفظ تمامی چت‌ها، فایل‌ها و اکانت اصلی فعلی خودتان.</span>
+            </div>
+          </div>
+        </div> */}
       </div>
     </div>
   )
@@ -392,18 +488,26 @@ function CheckoutContent() {
     loadProduct()
   }, [slugParam, productIdParam, planIdParam])
 
-  // Reset pre-created mode when plan changes
-  useEffect(() => {
-    setPreCreatedMode('inventory')
-    setCustomerGmail('')
-    setCustomerPassword('')
-  }, [selectedPlanId])
-
   const activePlans = product?.plans?.filter((p) => p.active) || []
   const selectedPlan = activePlans.find((p) => p.id === selectedPlanId) || activePlans[0]
   const effectivePrice = selectedPlan ? selectedPlan.price : product?.price || 0
   const productTitle = product?.title || product?.name || 'اشتراک ویژه'
   const isPreCreatedPlan = selectedPlan?.fulfillmentType === 'PRE_CREATED_ACCOUNT'
+
+  // Reset or initialize pre-created mode when plan changes or inventory count is updated
+  useEffect(() => {
+    if (selectedPlan?.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+      if (selectedPlan.availableInventoryCount === 0) {
+        setPreCreatedMode('own')
+      } else {
+        setPreCreatedMode('inventory')
+      }
+    } else {
+      setPreCreatedMode('inventory')
+    }
+    setCustomerGmail('')
+    setCustomerPassword('')
+  }, [selectedPlanId, selectedPlan?.availableInventoryCount, selectedPlan?.fulfillmentType])
 
   const payablePrice = appliedCoupon
     ? Math.max(1000, effectivePrice - appliedCoupon.discountAmount)
@@ -462,17 +566,34 @@ function CheckoutContent() {
   }
 
   const validateForm = (): boolean => {
-    // For PRE_CREATED_ACCOUNT, if 'own' mode, validate gmail
+    // For PRE_CREATED_ACCOUNT, if 'own' mode, validate gmail and password
     if (isPreCreatedPlan && preCreatedMode === 'own') {
       if (!customerGmail.trim()) {
-        toast.error('لطفاً آدرس جیمیل خود را وارد نمایید.')
+        toast.error('لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد نمایید.')
         return false
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(customerGmail.trim())) {
-        toast.error('فرمت آدرس جیمیل نامعتبر است.')
+        toast.error('فرمت آدرس جیمیل وارد شده نامعتبر است.')
         return false
       }
+      if (!customerPassword.trim()) {
+        toast.error('لطفاً رمزعبور جیمیل خود را جهت فعال‌سازی وارد نمایید.')
+        return false
+      }
+    }
+
+    // For PRE_CREATED_ACCOUNT, if in 'inventory' mode but warehouse has 0 stock
+    if (
+      isPreCreatedPlan &&
+      preCreatedMode === 'inventory' &&
+      selectedPlan?.availableInventoryCount === 0
+    ) {
+      toast.error(
+        'موجودی اکانت‌های آماده انبار موقتاً به پایان رسیده است. لطفاً گزینه فعال‌سازی روی اکانت شخصی را انتخاب فرمایید.'
+      )
+      setPreCreatedMode('own')
+      return false
     }
 
     if (!selectedPlan?.checkoutFields || selectedPlan.checkoutFields.length === 0) {
@@ -508,12 +629,20 @@ function CheckoutContent() {
 
     // Build final checkoutData including pre-created account fields
     let finalCheckoutData = { ...checkoutData }
-    if (isPreCreatedPlan && preCreatedMode === 'own' && customerGmail.trim()) {
-      finalCheckoutData = {
-        ...finalCheckoutData,
-        customer_email: customerGmail.trim(),
-        customer_gmail: customerGmail.trim(),
-        ...(customerPassword.trim() ? { customer_password: customerPassword.trim() } : {}),
+    if (isPreCreatedPlan) {
+      if (preCreatedMode === 'own' && customerGmail.trim() && customerPassword.trim()) {
+        finalCheckoutData = {
+          ...finalCheckoutData,
+          customer_email: customerGmail.trim(),
+          customer_gmail: customerGmail.trim(),
+          customer_password: customerPassword.trim(),
+          delivery_preference: 'own_account',
+        }
+      } else {
+        finalCheckoutData = {
+          ...finalCheckoutData,
+          delivery_preference: 'ready_account',
+        }
       }
     }
 

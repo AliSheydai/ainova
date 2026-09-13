@@ -30,6 +30,8 @@ model User {
 
   orders          Order[]
   supportTickets  SupportTicket[]
+  notifications   Notification[]
+  notificationReads NotificationRead[]
 
   @@index([role])
   @@index([createdAt])
@@ -378,6 +380,53 @@ model InventoryItem {
   @@index([type, status, planId])
   @@index([type, status, productId])
   @@map("inventory_items")
+}
+
+// =====================
+// Notifications
+// =====================
+enum NotificationType {
+  ORDER_SUCCESS
+  ORDER_FAILED
+  ORDER_READY
+  ORDER_PENDING_DELIVERY
+  SUPPORT_REPLY
+  SYSTEM_ANNOUNCEMENT
+  PROMOTION
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String?          // null = broadcast to all users
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM_ANNOUNCEMENT)
+  link      String?          // optional link/action
+  metadata  Json?            // optional { orderId, ticketId, etc. }
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reads     NotificationRead[]
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationRead {
+  id             String       @id @default(cuid())
+  notificationId String
+  userId         String
+  readAt         DateTime     @default(now())
+
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+  @@map("notification_reads")
 }
 
 

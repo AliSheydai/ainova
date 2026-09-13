@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
-import { TicketStatus, type Prisma } from '@prisma/client'
+import { TicketStatus, type Prisma, NotificationType } from '@prisma/client'
+import { UserNotificationService } from '@/lib/notifications/user-notification-service'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -84,6 +85,18 @@ export async function PATCH(req: NextRequest) {
       data,
       include: { user: true, order: true },
     })
+
+    if (updated.userId && (response || status === 'RESOLVED')) {
+      UserNotificationService.createNotification({
+        userId: updated.userId,
+        title: response ? 'پاسخ جدید به تیکت پشتیبانی' : 'تغییر وضعیت تیکت پشتیبانی',
+        message: response
+          ? `پاسخ پشتیبانی برای تیکت «${updated.subject}»: ${response.slice(0, 100)}${response.length > 100 ? '...' : ''}`
+          : `وضعیت تیکت پشتیبانی «${updated.subject}» به «حل شده» تغییر یافت.`,
+        type: NotificationType.SUPPORT_REPLY,
+        metadata: { ticketId: updated.id },
+      }).catch(() => {})
+    }
 
     return NextResponse.json({
       success: true,

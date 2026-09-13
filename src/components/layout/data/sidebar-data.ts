@@ -9,6 +9,7 @@ import {
   Users,
   Tag,
   Archive,
+  Bell,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -68,6 +69,11 @@ export const sidebarData: SidebarData = {
           title: 'کدهای تخفیف',
           url: '/dashboard/coupons',
           icon: Tag,
+        },
+        {
+          title: 'اعلانات و پیام‌ها',
+          url: '/dashboard/notifications',
+          icon: Bell,
         },
         {
           title: 'پشتیبانی',

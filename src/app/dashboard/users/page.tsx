@@ -707,8 +707,8 @@ export default function AdminUsersPage() {
                           {/* User */}
                           <td className='py-3.5 px-4 whitespace-nowrap min-w-[180px]'>
                             <div className='flex items-center gap-2.5'>
-                              <div className='size-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0'>
-                                {u.name?.trim() ? u.name.trim().charAt(0) : <UserIcon className='size-4' />}
+                              <div className='size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0'>
+                                <UserIcon className='size-4' />
                               </div>
                               <div className='min-w-0'>
                                 <span className='font-bold block text-foreground'>
@@ -811,8 +811,8 @@ export default function AdminUsersPage() {
                     >
                       <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-2'>
-                          <div className='size-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0'>
-                            {u.name?.trim() ? u.name.trim().charAt(0) : <UserIcon className='size-4' />}
+                          <div className='size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0'>
+                            <UserIcon className='size-4' />
                           </div>
                           <div>
                             <span className='font-bold text-xs text-foreground block'>

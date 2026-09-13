@@ -5,6 +5,8 @@ import { OrderStatus, type FulfillmentType, DeliveryStatus, type Prisma } from '
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { decryptCredential } from '@/lib/security/crypto'
 import { AdminNotificationService } from '@/lib/notifications/admin-notification'
+import { UserNotificationService } from '@/lib/notifications/user-notification-service'
+import { NotificationType } from '@prisma/client'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
 
@@ -394,6 +396,16 @@ export async function PATCH(req: NextRequest) {
         user.id
       )
 
+      if (fulfillResult.success && fulfillResult.order?.userId) {
+        UserNotificationService.createNotification({
+          userId: fulfillResult.order.userId,
+          title: 'سفارش شما تحویل داده شد!',
+          message: `سفارش #${fulfillResult.order.id.slice(-6).toUpperCase()} با موفقیت آماده و تحویل گردید. جزئیات در بخش سفارش‌های من قابل مشاهده است.`,
+          type: NotificationType.ORDER_READY,
+          metadata: { orderId: fulfillResult.order.id },
+        }).catch(() => {})
+      }
+
       return NextResponse.json({
         success: fulfillResult.success,
         order: fulfillResult.order,
@@ -489,6 +501,16 @@ export async function PATCH(req: NextRequest) {
           `\nبا تشکر از خرید شما!`
 
         sendTelegramNotification(customerTelegram, msg).catch(() => {})
+      }
+
+      if (targetOrder.userId) {
+        UserNotificationService.createNotification({
+          userId: targetOrder.userId,
+          title: 'اشتراک شما فعال شد!',
+          message: `اشتراک ${serviceName} روی حساب «${customerEmail}» با موفقیت فعال شد.`,
+          type: NotificationType.ORDER_READY,
+          metadata: { orderId: targetOrder.id },
+        }).catch(() => {})
       }
 
       return NextResponse.json({

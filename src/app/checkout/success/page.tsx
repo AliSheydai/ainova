@@ -41,6 +41,7 @@ interface OrderDetails {
   status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
   fulfillmentStatus?: string
   createdAt: string
+  checkoutData?: any
   product?: {
     id: string
     title: string
@@ -431,11 +432,33 @@ function SuccessContent() {
             <div className='rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-start space-y-3'>
               <div className='flex items-center gap-2 text-sm font-bold text-amber-700 dark:text-amber-400'>
                 <Clock className='size-5' />
-                <span>پرداخت با موفقیت انجام شد — در حال آماده‌سازی سفارش</span>
+                <span>پرداخت با موفقیت انجام شد — در حال آماده‌سازی و فعال‌سازی سفارش</span>
               </div>
-              <p className='text-xs text-muted-foreground leading-relaxed'>
-                سفارش شما با موفقیت ثبت شد. این محصول نیازمند آماده‌سازی و بررسی دستی توسط کارشناسان پشتیبانی است. پس از تکمیل، اطلاعات تحویل در همین صفحه و پنل کاربری شما نمایش داده خواهد شد.
-              </p>
+              {(() => {
+                const cdata = order.checkoutData as Record<string, any> | null
+                const customerEmail =
+                  cdata?.customer_email || cdata?.customer_gmail || deliveryData.email
+                if (customerEmail) {
+                  return (
+                    <div className='p-3.5 rounded-xl bg-background/80 border border-amber-500/20 text-xs space-y-2'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-muted-foreground'>آدرس جیمیل ثبت شده شما:</span>
+                        <span className='font-mono font-bold text-foreground' dir='ltr'>
+                          {customerEmail}
+                        </span>
+                      </div>
+                      <p className='text-[11px] text-muted-foreground leading-relaxed pt-1'>
+                        سفارش شما در صف فعال‌سازی توسط کارشناسان پشتیبانی قرار گرفت. اشتراک مستقیماً روی همین حساب فعال خواهد شد و پس از تکمیل، اعلان پیامکی ارسال می‌گردد.
+                      </p>
+                    </div>
+                  )
+                }
+                return (
+                  <p className='text-xs text-muted-foreground leading-relaxed'>
+                    سفارش شما با موفقیت ثبت شد. این محصول نیازمند آماده‌سازی و بررسی دستی توسط کارشناسان پشتیبانی است. پس از تکمیل، اطلاعات تحویل در همین صفحه و پنل کاربری شما نمایش داده خواهد شد.
+                  </p>
+                )
+              })()}
               <Button
                 variant='outline'
                 size='sm'
@@ -443,7 +466,7 @@ function SuccessContent() {
                 className='text-xs gap-1.5 border-amber-500/40 text-amber-600 rounded-lg'
               >
                 <RefreshCw className='size-3.5' />
-                بررسی وضعیت سفارش
+                بررسی مجدد وضعیت سفارش
               </Button>
             </div>
           )}

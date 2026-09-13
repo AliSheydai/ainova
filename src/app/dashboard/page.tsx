@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  User,
   Users,
   Package,
   CreditCard,
@@ -499,8 +500,8 @@ export default function AdminOverviewPage() {
                         className='flex items-center justify-between p-2.5 rounded-xl border border-border/40 hover:bg-muted/30 transition-colors gap-2'
                       >
                         <div className='flex items-center gap-2.5 min-w-0 flex-1'>
-                          <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs'>
-                            {u.name?.trim() ? u.name.trim().charAt(0) : <Users className='size-3.5' />}
+                          <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                            <User className='size-4' />
                           </div>
                           <div className='min-w-0 flex-1'>
                             <div className='flex items-center gap-1.5'>

@@ -90,7 +90,8 @@ export default async function ProductDetailPage(props: ProductPageProps) {
       ? (product.features as string[])
       : null
 
-  const isAvailable = stock > 0
+  const hasPreCreatedPlan = enrichedPlans.some((p) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT')
+  const isAvailable = stock > 0 || hasPreCreatedPlan
 
   return (
     <div className='flex min-h-svh flex-col bg-background text-foreground' dir='rtl'>

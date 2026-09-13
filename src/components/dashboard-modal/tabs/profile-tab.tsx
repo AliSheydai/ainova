@@ -144,7 +144,6 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
   }
 
   const displayName = name.trim() || user.name?.trim() || user.phone
-  const initial = displayName.charAt(0) || 'ک'
 
   return (
     <motion.div
@@ -160,26 +159,13 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
       >
         {/* User Identity Info */}
         <div className="flex items-center gap-3.5 min-w-0">
-          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white font-black text-xl shadow-md shadow-primary/25 ring-2 ring-primary/20">
-            {initial}
-            <span
-              className="absolute -bottom-1 -left-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card"
-              title="حساب فعال"
-            />
-          </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
-                {displayName}
-              </h3>
-              <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] gap-1 font-medium py-0.5">
-                <ShieldCheck className="h-3 w-3" />
-                حساب فعال
-              </Badge>
-            </div>
+            <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
+              {displayName}
+            </h3>  
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
-              <span>شماره موبایل:</span>
+              {/* <span>شماره موبایل:</span> */}
               <span dir="ltr" className="font-sans text-foreground font-medium tabular-nums">
                 {user.phone}
               </span>

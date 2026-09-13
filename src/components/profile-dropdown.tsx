@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import useDialogState from '@/hooks/use-dialog-state'
+import { User } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,7 +27,9 @@ export function ProfileDropdown() {
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <Avatar className='h-8 w-8'>
               <AvatarImage src='/avatars/01.png' alt='مدیر' />
-              <AvatarFallback>مدیر</AvatarFallback>
+              <AvatarFallback>
+                <User className='size-4' />
+              </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>

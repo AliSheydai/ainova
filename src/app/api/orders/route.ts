@@ -110,6 +110,46 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 3.1 Validate PRE_CREATED_ACCOUNT if customer requested their own account
+    if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+      const isOwnAccount =
+        submittedData?.delivery_preference === 'own_account' ||
+        Boolean(typeof submittedData?.customer_email === 'string' && submittedData.customer_email.trim()) ||
+        Boolean(typeof submittedData?.customer_gmail === 'string' && submittedData.customer_gmail.trim())
+
+      if (isOwnAccount) {
+        const email =
+          (typeof submittedData?.customer_email === 'string' && submittedData.customer_email.trim()) ||
+          (typeof submittedData?.customer_gmail === 'string' && submittedData.customer_gmail.trim()) ||
+          ''
+        const password =
+          (typeof submittedData?.customer_password === 'string' && submittedData.customer_password.trim()) ||
+          ''
+
+        if (!email) {
+          return NextResponse.json(
+            { success: false, message: 'لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد نمایید.' },
+            { status: 400 }
+          )
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+          return NextResponse.json(
+            { success: false, message: 'فرمت آدرس جیمیل وارد شده نامعتبر است.' },
+            { status: 400 }
+          )
+        }
+
+        if (!password) {
+          return NextResponse.json(
+            { success: false, message: 'وارد کردن رمز عبور جیمیل برای فعال‌سازی روی اکانت شما الزامی است.' },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     // 4. Determine base price using nullish coalescing (Section 2.5)
     const baseAmount = plan?.price ?? product.price ?? 0
 
@@ -158,7 +198,22 @@ export async function POST(req: NextRequest) {
         const targetProductId = product.id
         let reservedInventoryItemId: string | null = null
 
-        if (fulfillmentType === 'ACTIVATION_LINK' || fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+        // Check if customer provided their own account for PRE_CREATED_ACCOUNT
+        const hasCustomerProvidedAccount =
+          fulfillmentType === 'PRE_CREATED_ACCOUNT' &&
+          (
+            submittedData?.delivery_preference === 'own_account' ||
+            Boolean(
+              (typeof submittedData?.customer_email === 'string' && submittedData.customer_email.trim()) ||
+              (typeof submittedData?.customer_gmail === 'string' && submittedData.customer_gmail.trim())
+            )
+          )
+
+        // Only reserve inventory if it's ACTIVATION_LINK, or PRE_CREATED_ACCOUNT without customer own account
+        if (
+          fulfillmentType === 'ACTIVATION_LINK' ||
+          (fulfillmentType === 'PRE_CREATED_ACCOUNT' && !hasCustomerProvidedAccount)
+        ) {
           const invType = fulfillmentType === 'ACTIVATION_LINK' ? 'ACTIVATION_LINK' : 'PRE_CREATED_ACCOUNT'
           const invRows = await tx.$queryRaw<Array<{ id: string }>>`
             SELECT id FROM inventory_items
@@ -175,7 +230,11 @@ export async function POST(req: NextRequest) {
           if (invRows && invRows.length > 0) {
             reservedInventoryItemId = invRows[0].id
           } else {
-            throw new Error('STOCK_EXHAUSTED')
+            throw new Error(
+              fulfillmentType === 'PRE_CREATED_ACCOUNT'
+                ? 'READY_ACCOUNT_STOCK_EXHAUSTED'
+                : 'STOCK_EXHAUSTED'
+            )
           }
         }
 
@@ -210,6 +269,16 @@ export async function POST(req: NextRequest) {
         return newOrder
       })
     } catch (txError: unknown) {
+      if (txError instanceof Error && txError.message === 'READY_ACCOUNT_STOCK_EXHAUSTED') {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'موجودی اکانت‌های آماده انبار موقتاً به پایان رسیده است. شما می‌توانید با وارد کردن آدرس جیمیل خود، سفارش را جهت فعال‌سازی روی اکانت شخصی ثبت فرمایید.',
+          },
+          { status: 400 }
+        )
+      }
       if (txError instanceof Error && txError.message === 'STOCK_EXHAUSTED') {
         return NextResponse.json(
           {

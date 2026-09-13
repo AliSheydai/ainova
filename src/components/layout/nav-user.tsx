@@ -54,7 +54,6 @@ export function NavUser({ user }: NavUserProps) {
 
   const displayName = currentUser?.name || currentUser?.phone || user.name || 'کاربر'
   const subText = currentUser?.name ? currentUser.phone : ''
-  const initials = displayName.charAt(0)
 
   return (
     <>
@@ -68,8 +67,8 @@ export function NavUser({ user }: NavUserProps) {
               >
                 <Avatar className='size-7 shrink-0 rounded-lg'>
                   <AvatarImage src={user.avatar} alt={displayName} />
-                  <AvatarFallback className='rounded-lg text-xs bg-primary text-primary-foreground'>
-                    {initials}
+                  <AvatarFallback className='rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                    <User className='size-3.5' />
                   </AvatarFallback>
                 </Avatar>
                 <div className='flex flex-1 items-center overflow-hidden text-start group-data-[collapsible=icon]:hidden'>
@@ -90,8 +89,8 @@ export function NavUser({ user }: NavUserProps) {
                 <div className='flex items-center gap-2 px-1 py-1.5 text-start text-sm'>
                   <Avatar className='h-8 w-8 rounded-lg'>
                     <AvatarImage src={user.avatar} alt={displayName} />
-                    <AvatarFallback className='rounded-lg bg-primary text-primary-foreground'>
-                      {initials}
+                    <AvatarFallback className='rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
+                      <User className='size-4' />
                     </AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-start text-sm leading-tight'>

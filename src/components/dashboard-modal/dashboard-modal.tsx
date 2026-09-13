@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Package,
   BookOpen,
@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   ChevronLeft,
   X,
+  Bell,
 } from 'lucide-react'
 import {
   Dialog,
@@ -32,6 +33,8 @@ import { OrdersTab } from './tabs/orders-tab'
 import { ActivationGuideTab } from './tabs/activation-guide-tab'
 import { SupportTab } from './tabs/support-tab'
 import { ProfileTab } from './tabs/profile-tab'
+import { NotificationsTab } from './tabs/notifications-tab'
+import { toPersianDigits } from '@/lib/persian-utils'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -41,10 +44,10 @@ interface DashboardModalProps {
   user: AuthUserData
   onUserUpdate: (updated: AuthUserData) => void
   onLogout: () => void
-  defaultTab?: 'orders' | 'guide' | 'support' | 'profile'
+  defaultTab?: 'orders' | 'notifications' | 'guide' | 'support' | 'profile'
 }
 
-type TabKey = 'orders' | 'guide' | 'support' | 'profile'
+type TabKey = 'orders' | 'notifications' | 'guide' | 'support' | 'profile'
 
 const menuItems: {
   id: TabKey
@@ -59,6 +62,13 @@ const menuItems: {
     shortTitle: 'سفارش‌ها',
     subtitle: 'تاریخچه، وضعیت و لینک‌ها',
     icon: Package,
+  },
+  {
+    id: 'notifications',
+    title: 'اعلانات',
+    shortTitle: 'اعلانات',
+    subtitle: 'پیام‌ها و رویدادهای حساب',
+    icon: Bell,
   },
   {
     id: 'guide',
@@ -92,12 +102,38 @@ export function DashboardModal({
   defaultTab = 'orders',
 }: DashboardModalProps) {
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab)
+  const [unreadCount, setUnreadCount] = useState(0)
   const isMobile = useIsMobile()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Sync unread notification count
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications/unread-count')
+      if (res.ok) {
+        const data = await res.json()
+        setUnreadCount(data.unreadCount || 0)
+      }
+    } catch {
+      // Ignore background errors
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      fetchUnreadCount()
+    }
+  }, [open, fetchUnreadCount])
+
+  useEffect(() => {
+    const handleUpdate = () => fetchUnreadCount()
+    window.addEventListener('notifications-updated', handleUpdate)
+    return () => window.removeEventListener('notifications-updated', handleUpdate)
+  }, [fetchUnreadCount])
 
   useEffect(() => {
     if (open && defaultTab) {
@@ -125,6 +161,13 @@ export function DashboardModal({
                 onOpenChange(false)
                 window.location.href = '/checkout'
               }}
+            />
+          )}
+
+          {activeTab === 'notifications' && (
+            <NotificationsTab
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onUnreadCountChange={(count) => setUnreadCount(count)}
             />
           )}
 
@@ -211,7 +254,7 @@ export function DashboardModal({
           {/* Navigation Bar (Tabs) */}
           <div className="px-3 py-2 border-b border-border/50 shrink-0 bg-muted/25">
             <div
-              className="grid grid-cols-4 gap-1 p-1 bg-muted/60 rounded-xl"
+              className="grid grid-cols-5 gap-1 p-1 bg-muted/60 rounded-xl"
               role="tablist"
               aria-label="بخش‌های داشبورد کاربری"
             >
@@ -229,14 +272,21 @@ export function DashboardModal({
                     aria-selected={isActive}
                     onClick={() => setActiveTab(item.id)}
                     className={cn(
-                      'flex flex-col items-center justify-center py-2 px-1 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer select-none',
+                      'flex flex-col items-center justify-center py-2 px-1 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer select-none relative',
                       isActive
                         ? 'bg-background text-foreground font-bold shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Icon className={cn('size-4 mb-0.5', isActive ? 'text-primary' : 'text-muted-foreground')} />
-                    <span className="truncate max-w-full">{item.shortTitle}</span>
+                    <div className="relative">
+                      <Icon className={cn('size-4 mb-0.5', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                      {item.id === 'notifications' && unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[9px] font-bold text-primary-foreground font-sans">
+                          {toPersianDigits(unreadCount > 99 ? '+۹۹' : unreadCount)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="truncate max-w-full text-[10px]">{item.shortTitle}</span>
                   </button>
                 )
               })}
@@ -350,14 +400,29 @@ export function DashboardModal({
                       </div>
                     </div>
 
-                    <ChevronLeft
-                      className={cn(
-                        'size-3.5 transition-transform duration-200',
-                        isActive
-                          ? 'text-primary-foreground translate-x-0.5'
-                          : 'text-muted-foreground/50 opacity-0 group-hover:opacity-100'
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.id === 'notifications' && unreadCount > 0 && (
+                        <span
+                          className={cn(
+                            'rounded-full px-1.5 py-0.2 text-[10px] font-bold font-sans transition-colors',
+                            isActive
+                              ? 'bg-primary-foreground text-primary'
+                              : 'bg-primary text-primary-foreground'
+                          )}
+                        >
+                          {toPersianDigits(unreadCount > 99 ? '+۹۹' : unreadCount)}
+                        </span>
                       )}
-                    />
+
+                      <ChevronLeft
+                        className={cn(
+                          'size-3.5 transition-transform duration-200',
+                          isActive
+                            ? 'text-primary-foreground translate-x-0.5'
+                            : 'text-muted-foreground/50 opacity-0 group-hover:opacity-100'
+                        )}
+                      />
+                    </div>
                   </button>
                 )
               })}

@@ -7,7 +7,6 @@ export async function GET(req: NextRequest) {
     const products = await prisma.product.findMany({
       where: {
         status: 'ACTIVE',
-        active: true,
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: {
@@ -20,14 +19,40 @@ export async function GET(req: NextRequest) {
 
     const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases(products)
 
-    const enrichedProducts = products.map((prod) => {
-      const metrics = metricsMap.get(prod.id)
-      return {
-        ...prod,
-        stock: metrics?.stock ?? 0,
-        purchaseCount: metrics?.purchaseCount ?? 0,
-      }
-    })
+    const enrichedProducts = await Promise.all(
+      products.map(async (prod) => {
+        const metrics = metricsMap.get(prod.id)
+        const enrichedPlans = await Promise.all(
+          (prod.plans || []).map(async (plan) => {
+            let availableCount: number | null = null
+            if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+              availableCount = await prisma.inventoryItem.count({
+                where: {
+                  type: 'PRE_CREATED_ACCOUNT',
+                  status: 'AVAILABLE',
+                  OR: [
+                    { planId: plan.id },
+                    { productId: prod.id, planId: null },
+                  ],
+                },
+              })
+            }
+            return {
+              ...plan,
+              stock: metrics?.planStocks[plan.id] ?? 0,
+              availableInventoryCount: availableCount,
+            }
+          })
+        )
+
+        return {
+          ...prod,
+          plans: enrichedPlans,
+          stock: metrics?.stock ?? 0,
+          purchaseCount: metrics?.purchaseCount ?? 0,
+        }
+      })
+    )
 
     const firstProduct = enrichedProducts[0] || null
 

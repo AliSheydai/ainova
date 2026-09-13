@@ -2086,8 +2086,20 @@ export default function AdminOrdersPage() {
                         </div>
                         {cdata?.customer_password && (
                           <div className='flex items-center justify-between'>
-                            <span className='text-muted-foreground'>رمزعبور (رمزگذاری‌شده):</span>
-                            <span className='font-mono text-muted-foreground text-[10px]'>****** (محرمانه)</span>
+                            <span className='text-muted-foreground'>رمزعبور اکانت:</span>
+                            <div className='flex items-center gap-1.5'>
+                              <span className='font-mono font-bold text-foreground select-all' dir='ltr'>
+                                {cdata.customer_password}
+                              </span>
+                              <button
+                                type='button'
+                                onClick={() => handleCopyText(cdata.customer_password, 'cust-pass', 'رمزعبور کپی شد.')}
+                                className='text-muted-foreground hover:text-primary'
+                                title='کپی رمزعبور'
+                              >
+                                <Copy className='size-3' />
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>

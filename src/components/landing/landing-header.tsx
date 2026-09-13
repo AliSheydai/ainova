@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, useScroll, useMotionValueEvent, useSpring } from 'framer-motion'
 import {
   LogIn,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { toPersianDigits } from '@/lib/persian-utils'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -61,6 +62,7 @@ interface UserDropdownProps {
   onLogout: () => void
   isMobile?: boolean
   isCompact?: boolean
+  unreadCount?: number
 }
 
 function UserDropdown({
@@ -72,6 +74,7 @@ function UserDropdown({
   onLogout,
   isMobile,
   isCompact = false,
+  unreadCount = 0,
 }: UserDropdownProps) {
   return (
     <DropdownMenu>
@@ -81,42 +84,44 @@ function UserDropdown({
             variant='ghost'
             size='icon'
             className={cn(
-              'rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer transition-all duration-200',
+              'rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer transition-all duration-200 relative',
               isCompact ? 'size-8' : 'size-9'
             )}
             aria-label='منوی کاربری'
             title={displayName}
           >
-            <div
-              className={cn(
-                'flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold transition-all',
-                isCompact ? 'size-5 text-[10px]' : 'size-6 text-xs'
-              )}
-            >
-              {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3.5' />}
-            </div>
+            <User className={cn('text-primary shrink-0', isCompact ? 'size-4' : 'size-4.5')} />
+            {unreadCount > 0 && (
+              <span
+                className='absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground ring-2 ring-background font-sans shadow-xs animate-in fade-in zoom-in duration-200'
+                title={`${toPersianDigits(unreadCount)} اعلان خوانده‌نشده`}
+              >
+                {toPersianDigits(unreadCount > 99 ? '+۹۹' : unreadCount)}
+              </span>
+            )}
           </Button>
         ) : (
           <Button
             variant='outline'
             size='sm'
             className={cn(
-              'group items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer rounded-xl',
+              'group items-center gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 text-foreground transition-all duration-200 cursor-pointer rounded-xl relative',
               isCompact ? 'h-8 px-2.5 text-xs' : 'h-9 px-3 text-sm'
             )}
           >
-            <div
-              className={cn(
-                'flex shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold transition-all',
-                isCompact ? 'size-4.5 text-[10px]' : 'size-5 text-xs'
-              )}
-            >
-              {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-3' />}
-            </div>
+            <User className={cn('text-primary shrink-0', isCompact ? 'size-3.5' : 'size-4')} />
             <span className='max-w-[130px] truncate font-medium'>
               {displayName}
             </span>
             <ChevronDown className='size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180' />
+            {unreadCount > 0 && (
+              <span
+                className='absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground ring-2 ring-background font-sans shadow-xs animate-in fade-in zoom-in duration-200'
+                title={`${toPersianDigits(unreadCount)} اعلان خوانده‌نشده`}
+              >
+                {toPersianDigits(unreadCount > 99 ? '+۹۹' : unreadCount)}
+              </span>
+            )}
           </Button>
         )}
       </DropdownMenuTrigger>
@@ -183,22 +188,6 @@ function UserDropdown({
           <span>ربات تلگرام</span>
         </DropdownMenuItem>
 
-        {/* 4. اعلانات */}
-        <DropdownMenuItem
-          onClick={() => {
-            toast.info('بخش اعلانات به زودی فعال خواهد شد.')
-          }}
-          className='cursor-pointer gap-2.5 px-2.5 py-2 rounded-xl text-sm font-medium text-foreground transition-colors justify-between'
-        >
-          <div className='flex items-center gap-2.5'>
-            <Bell className='size-4 text-muted-foreground shrink-0' />
-            <span>اعلانات</span>
-          </div>
-          <span className='rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
-            به‌زودی
-          </span>
-        </DropdownMenuItem>
-
         <DropdownMenuSeparator className='my-1' />
 
         {/* خروج از حساب */}
@@ -225,7 +214,8 @@ export function LandingHeader() {
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
-  const [dashboardTab, setDashboardTab] = useState<'orders' | 'guide' | 'support' | 'profile'>('orders')
+  const [dashboardTab, setDashboardTab] = useState<'orders' | 'notifications' | 'guide' | 'support' | 'profile'>('orders')
+  const [unreadCount, setUnreadCount] = useState(0)
   const [user, setUser] = useState<AuthUserData | null>(null)
   const [openingTg, setOpeningTg] = useState(false)
 
@@ -270,6 +260,12 @@ export function LandingHeader() {
             ) {
               setDashboardTab('orders')
               setDashboardModalOpen(true)
+            } else if (
+              params.get('dashboard') === 'notifications' ||
+              params.get('tab') === 'notifications'
+            ) {
+              setDashboardTab('notifications')
+              setDashboardModalOpen(true)
             }
           }
         }
@@ -280,6 +276,35 @@ export function LandingHeader() {
       isMounted = false
     }
   }, [])
+
+  // Sync unread notification count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return
+    try {
+      const res = await fetch('/api/notifications/unread-count')
+      if (res.ok) {
+        const data = await res.json()
+        setUnreadCount(data.unreadCount || 0)
+      }
+    } catch {
+      // Ignore background errors
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+      const interval = setInterval(fetchUnreadCount, 45000)
+      const handleUpdate = () => fetchUnreadCount()
+      window.addEventListener('notifications-updated', handleUpdate)
+      return () => {
+        clearInterval(interval)
+        window.removeEventListener('notifications-updated', handleUpdate)
+      }
+    } else {
+      setUnreadCount(0)
+    }
+  }, [user, fetchUnreadCount])
 
   const openOrdersModal = () => {
     if (user) {
@@ -440,7 +465,7 @@ export function LandingHeader() {
                     <span>سفارش‌های من</span>
                   </Button>
 
-                  {/* دراپ‌داون نام کاربری با گزینه‌های داشبورد، پنل ادمین، ربات تلگرام، اعلانات و خروج */}
+                  {/* دراپ‌داون نام کاربری با گزینه‌های داشبورد، پنل ادمین، ربات تلگرام و خروج */}
                   <UserDropdown
                     user={user}
                     displayName={displayName}
@@ -449,6 +474,7 @@ export function LandingHeader() {
                     onOpenDashboard={() => setDashboardModalOpen(true)}
                     onLogout={handleLogout}
                     isCompact={isScrolled}
+                    unreadCount={unreadCount}
                   />
                 </div>
               ) : (
@@ -490,6 +516,7 @@ export function LandingHeader() {
                     onLogout={handleLogout}
                     isMobile
                     isCompact={isScrolled}
+                    unreadCount={unreadCount}
                   />
                 </div>
               ) : (
@@ -616,9 +643,7 @@ export function LandingHeader() {
                           }}
                           className='w-full justify-center gap-2 text-xs text-muted-foreground'
                         >
-                          <div className='flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold'>
-                            {user.name?.trim() ? user.name.trim().charAt(0) : <User className='size-2.5' />}
-                          </div>
+                          <User className='size-3.5 shrink-0 text-muted-foreground' />
                           <span className='truncate'>{displayName} (تنظیمات حساب)</span>
                         </Button>
                       </>

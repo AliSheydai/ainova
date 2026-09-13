@@ -6,6 +6,8 @@ import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
 import { MESSAGES } from '@/lib/telegram/messages'
 import { AdminNotificationService } from '@/lib/notifications/admin-notification'
+import { UserNotificationService } from '@/lib/notifications/user-notification-service'
+import { NotificationType } from '@prisma/client'
 import { CouponService } from '@/lib/discounts/coupon-service'
 
 export async function GET(req: NextRequest) {
@@ -95,6 +97,16 @@ export async function GET(req: NextRequest) {
           data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
         }),
       ])
+
+      if (payment.order.userId) {
+        UserNotificationService.createNotification({
+          userId: payment.order.userId,
+          title: 'لغو پرداخت سفارش',
+          message: `پرداخت سفارش #${payment.order.id.slice(-6).toUpperCase()} به علت انصراف از پرداخت تکمیل نگردید.`,
+          type: NotificationType.ORDER_FAILED,
+          metadata: { orderId: payment.order.id },
+        }).catch((err) => console.error('Notification error:', err))
+      }
     }
 
     if (isTelegram) {
@@ -133,6 +145,15 @@ export async function GET(req: NextRequest) {
     ])
 
     const errorMsg = verifyResult.message || 'خطا در تایید تراکنش'
+    if (payment.order.userId) {
+      UserNotificationService.createNotification({
+        userId: payment.order.userId,
+        title: 'خطا در پرداخت سفارش',
+        message: `تراکنش سفارش #${payment.order.id.slice(-6).toUpperCase()} با خطا مواجه شد: ${errorMsg}`,
+        type: NotificationType.ORDER_FAILED,
+        metadata: { orderId: payment.order.id },
+      }).catch((err) => console.error('Notification error:', err))
+    }
     if (isTelegram) {
       return NextResponse.redirect(
         `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=${encodeURIComponent(
@@ -199,6 +220,16 @@ export async function GET(req: NextRequest) {
         ).catch((err) => console.error('Telegram notification error:', err))
       }
 
+      if (payment.order.userId) {
+        UserNotificationService.createNotification({
+          userId: payment.order.userId,
+          title: 'پرداخت موفق — در انتظار تامین موجودی',
+          message: `پرداخت سفارش #${payment.order.id.slice(-6).toUpperCase()} با موفقیت ثبت شد. به دلیل حجم سفارش‌ها، محصول به زودی تامین و در پنل کاربری تحویل می‌گردد.`,
+          type: NotificationType.ORDER_PENDING_DELIVERY,
+          metadata: { orderId: payment.order.id },
+        }).catch((err) => console.error('Notification error:', err))
+      }
+
       if (isTelegram) {
         return NextResponse.redirect(
           `${appUrl}/telegram-return?status=stock_waiting&orderId=${payment.orderId}`
@@ -235,6 +266,16 @@ export async function GET(req: NextRequest) {
         )
       }
 
+      if (payment.order.userId) {
+        UserNotificationService.createNotification({
+          userId: payment.order.userId,
+          title: 'پرداخت موفق — سفارش در صف تحویل دستی',
+          message: `پرداخت سفارش #${payment.order.id.slice(-6).toUpperCase()} با موفقیت انجام شد. اطلاعات این محصول پس از آماده‌سازی توسط کارشناسان در پنل درج می‌شود.`,
+          type: NotificationType.ORDER_PENDING_DELIVERY,
+          metadata: { orderId: payment.order.id },
+        }).catch((err) => console.error('Notification error:', err))
+      }
+
       if (isTelegram) {
         return NextResponse.redirect(
           `${appUrl}/telegram-return?status=awaiting_manual&orderId=${payment.orderId}`
@@ -259,6 +300,16 @@ export async function GET(req: NextRequest) {
     const delivery = fulfillment.delivery
     const deliveryType = delivery?.type || 'ACTIVATION_LINK'
     const deliveryData = (delivery?.data as Record<string, any>) || {}
+
+    if (payment.order.userId) {
+      UserNotificationService.createNotification({
+        userId: payment.order.userId,
+        title: 'سفارش شما آماده است!',
+        message: `سفارش #${payment.order.id.slice(-6).toUpperCase()} برای ${productTitle} با موفقیت آماده شد و در بخش سفارش‌های من در دسترس است.`,
+        type: NotificationType.ORDER_READY,
+        metadata: { orderId: payment.order.id },
+      }).catch((err) => console.error('Notification error:', err))
+    }
 
     if (targetChatId) {
       if (deliveryType === 'ACTIVATION_LINK') {
