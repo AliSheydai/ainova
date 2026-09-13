@@ -64,14 +64,28 @@ export async function GET(req: NextRequest) {
     payment.order.status === 'PAID'
   ) {
     if (isTelegram) {
+      let tgStatus = 'success'
+      if (payment.order.status === 'PAID') {
+        const fType = payment.order.plan?.fulfillmentType || 'ACTIVATION_LINK'
+        if (fType === 'MANUAL' || fType === 'CUSTOMER_PROVISIONING') {
+          tgStatus = 'awaiting_manual'
+        } else if (payment.order.fulfillmentStatus === 'PENDING') {
+          tgStatus = 'stock_waiting'
+        }
+      }
       return NextResponse.redirect(
-        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
+        `${appUrl}/telegram-return?status=${tgStatus}&orderId=${payment.orderId}`
       )
     }
 
     if (payment.order.status === 'PAID' && payment.order.fulfillmentStatus === 'PENDING') {
+      const fType = payment.order.plan?.fulfillmentType || 'ACTIVATION_LINK'
+      const statusParam =
+        fType === 'MANUAL' || fType === 'CUSTOMER_PROVISIONING'
+          ? 'awaiting_manual'
+          : 'stock_waiting'
       return NextResponse.redirect(
-        `${appUrl}/checkout/success?orderId=${payment.orderId}&status=stock_waiting`
+        `${appUrl}/checkout/success?orderId=${payment.orderId}&status=${statusParam}`
       )
     }
 

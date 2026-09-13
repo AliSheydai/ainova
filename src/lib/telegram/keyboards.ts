@@ -191,11 +191,64 @@ export function ordersPaginationKeyboard(page: number, totalPages: number) {
   return keyboard
 }
 
-export function guideKeyboard() {
-  return new InlineKeyboard()
-    .url('🌍 مدیریت کشور/Region حساب Google', 'https://policies.google.com/country-association-form')
+function getValidWebUrl(path: string, customUrl?: string): string {
+  const candidate = customUrl || process.env.NEXT_PUBLIC_APP_URL || ''
+  const isInvalid =
+    !candidate ||
+    candidate.startsWith('/') ||
+    candidate.includes('localhost') ||
+    candidate.includes('127.0.0.1')
+
+  const base = isInvalid ? 'https://ariachat.org' : candidate.replace(/\/$/, '')
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${base}${cleanPath}`
+}
+
+export function guideMenuKeyboard(webUrl?: string) {
+  const kb = new InlineKeyboard()
+    .text('⚡ پلن ۱: لینک فعال‌سازی آنی', 'guide:link')
     .row()
-    .text('🔙 بازگشت به منوی اصلی', 'nav:main')
+    .text('📧 پلن ۲: اکانت اختصاصی روی ایمیل', 'guide:email')
+    .row()
+    .text('✨ ۳ نکته طلایی فعال‌سازی', 'guide:tips')
+    .text('❓ سوالات متداول و رفع خطا', 'guide:faq')
+    .row()
+
+  const guideWebUrl = getValidWebUrl('/dashboard/activation-guide', webUrl)
+  kb.url('🌐 مشاهده راهنما در وب‌سایت', guideWebUrl).row()
+  kb.url('🌍 فرم تغییر ریجن گوگل', 'https://policies.google.com/country-association-form').row()
+
+  kb.text('🔙 بازگشت به منوی اصلی', 'nav:main')
+  return kb
+}
+
+export function guideSubSectionKeyboard(
+  currentSection: 'link' | 'email' | 'tips' | 'faq',
+  webUrl?: string
+) {
+  const kb = new InlineKeyboard()
+
+  if (currentSection === 'link') {
+    kb.text('📧 پلن ۲: اکانت اختصاصی روی ایمیل', 'guide:email').row()
+  } else if (currentSection === 'email') {
+    kb.text('⚡ پلن ۱: لینک فعال‌سازی آنی', 'guide:link').row()
+  } else if (currentSection === 'tips') {
+    kb.text('❓ سوالات متداول و رفع خطا', 'guide:faq').row()
+  } else if (currentSection === 'faq') {
+    kb.text('✨ ۳ نکته طلایی فعال‌سازی', 'guide:tips').row()
+  }
+
+  const guideWebUrl = getValidWebUrl('/dashboard/activation-guide', webUrl)
+
+  kb.url('🌐 راهنمای تصویری وب‌سایت', guideWebUrl).row()
+  kb.text('📖 بازگشت به فهرست راهنما', 'guide:menu')
+  kb.text('🔙 منوی اصلی', 'nav:main')
+
+  return kb
+}
+
+export function guideKeyboard(webUrl?: string) {
+  return guideMenuKeyboard(webUrl)
 }
 
 export function supportKeyboard(phone: string, telegramUrl: string) {

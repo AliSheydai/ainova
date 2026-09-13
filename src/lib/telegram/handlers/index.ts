@@ -9,7 +9,13 @@ import {
   handleNotificationRead,
   handleNotificationReadAll,
 } from './notifications'
-import { handleGuide } from './guide'
+import {
+  handleGuide,
+  handleGuideLink,
+  handleGuideEmail,
+  handleGuideTips,
+  handleGuideFaq,
+} from './guide'
 import { handleSupport } from './support'
 import { handleLinkPrompt } from './link'
 import {
@@ -50,6 +56,9 @@ export function registerHandlers(bot: Bot) {
   // Command /notifications
   bot.command(['notifications', 'notif', 'alerts'], (ctx) => handleNotifications(ctx, 1, 'all'))
 
+  // Command /guide
+  bot.command(['guide', 'help_activation', 'help', 'rahnama'], handleGuide)
+
   // Command /logout
   bot.command('logout', async (ctx) => {
     const telegramId = ctx.from?.id ? String(ctx.from.id) : null
@@ -77,7 +86,23 @@ export function registerHandlers(bot: Bot) {
     ],
     (ctx) => handleNotifications(ctx, 1, 'all')
   )
-  bot.hears(BUTTONS.GUIDE, handleGuide)
+  bot.hears(
+    [
+      BUTTONS.GUIDE,
+      /^(?:📖\s*)?راهنما(?:ی)?(?:\s|[\u200c])*(?:فعال(?:\s|[\u200c])*ساز(?:ی)?)?$/,
+      /^(?:📖\s*)?آموزش(?:\s|[\u200c])*(?:فعال(?:\s|[\u200c])*ساز(?:ی)?)?$/,
+      'راهنما',
+      'راهنمای فعال‌سازی',
+      'راهنمای فعال سازی',
+      'راهنمای فعالسازی',
+      'آموزش فعال‌سازی',
+      'آموزش فعال سازی',
+      'آموزش فعالسازی',
+      'آموزش',
+      'راهنمایی',
+    ],
+    handleGuide
+  )
   bot.hears(BUTTONS.SUPPORT, handleSupport)
   bot.hears(BUTTONS.LINK_ACCOUNT, handleLinkPrompt)
 
@@ -127,8 +152,12 @@ export function registerHandlers(bot: Bot) {
   bot.callbackQuery('auth:resend', handleAuthResend)
   bot.callbackQuery('auth:change_phone', handleAuthChangePhone)
 
-  // Callback query for guide
-  bot.callbackQuery('guide', handleGuide)
+  // Callback queries for activation guide
+  bot.callbackQuery(['guide', 'guide:menu'], handleGuide)
+  bot.callbackQuery('guide:link', handleGuideLink)
+  bot.callbackQuery('guide:email', handleGuideEmail)
+  bot.callbackQuery('guide:tips', handleGuideTips)
+  bot.callbackQuery('guide:faq', handleGuideFaq)
 
   // Callback query for support phone
   bot.callbackQuery('support:phone', async (ctx) => {
