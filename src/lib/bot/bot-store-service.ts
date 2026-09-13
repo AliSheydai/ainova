@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { PaymentService } from '@/lib/payment'
+import { CouponService } from '@/lib/discounts/coupon-service'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 import { decryptCredential } from '@/lib/security/crypto'
+import { type FulfillmentType } from '@prisma/client'
 
 export interface BotProductSummary {
   id: string
@@ -22,6 +24,7 @@ export interface BotPlanSummary {
   price: number
   fulfillmentType: string
   stock: number
+  availableInventoryCount?: number | null
   checkoutFields: CheckoutFieldDefinition[]
 }
 
@@ -31,10 +34,16 @@ export class BotStoreService {
    */
   static async getActiveProducts(): Promise<BotProductSummary[]> {
     const products = await prisma.product.findMany({
-      where: { status: 'ACTIVE', active: true },
+      where: {
+        status: 'ACTIVE',
+        archivedAt: null,
+      },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: {
-        plans: { where: { active: true } },
+        plans: {
+          where: { active: true },
+          orderBy: { price: 'asc' },
+        },
       },
     })
 
@@ -76,39 +85,59 @@ export class BotStoreService {
     const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases([product])
     const productMetrics = metricsMap.get(product.id)
 
-    const plans = product.plans.map((plan) => {
-      const stock = productMetrics?.planStocks[plan.id] ?? 0
-      const fields = (Array.isArray(plan.checkoutFields)
-        ? plan.checkoutFields
-        : []) as unknown as CheckoutFieldDefinition[]
+    const plans = await Promise.all(
+      product.plans.map(async (plan) => {
+        const stock = productMetrics?.planStocks[plan.id] ?? 0
+        let availableCount: number | null = null
 
-      return {
-        id: plan.id,
-        productId: plan.productId,
-        name: plan.name,
-        duration: plan.duration,
-        price: plan.price,
-        fulfillmentType: plan.fulfillmentType,
-        stock,
-        checkoutFields: fields,
-      }
-    })
+        if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+          availableCount = await prisma.inventoryItem.count({
+            where: {
+              type: 'PRE_CREATED_ACCOUNT',
+              status: 'AVAILABLE',
+              OR: [
+                { planId: plan.id },
+                { productId: product.id, planId: null },
+              ],
+            },
+          })
+        }
+
+        const fields = (Array.isArray(plan.checkoutFields)
+          ? plan.checkoutFields
+          : []) as unknown as CheckoutFieldDefinition[]
+
+        return {
+          id: plan.id,
+          productId: plan.productId,
+          name: plan.name,
+          duration: plan.duration,
+          price: plan.price,
+          fulfillmentType: plan.fulfillmentType,
+          stock,
+          availableInventoryCount: availableCount,
+          checkoutFields: fields,
+        }
+      })
+    )
 
     return { product, plans }
   }
 
   /**
    * Creates an order from a chatbot (Telegram, Bale, Rubika, Soroush) and generates a payment URL.
+   * Employs atomic reservation (FOR UPDATE SKIP LOCKED) to prevent double-selling.
    */
   static async createBotOrder(options: {
     userId: string
     planId: string
     checkoutData?: Record<string, any>
+    couponCode?: string
     source: 'telegram' | 'bale' | 'rubika' | 'soroush'
     chatId?: string
     mobile?: string | null
   }) {
-    const { userId, planId, checkoutData = {}, source, chatId, mobile } = options
+    const { userId, planId, checkoutData = {}, couponCode, source, chatId, mobile } = options
 
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
@@ -116,14 +145,50 @@ export class BotStoreService {
     })
 
     if (!plan || !plan.active) {
-      throw new Error('پلن انتخاب‌شده یافت نشد یا غیرفعال است.')
+      throw new Error('پلن انتخاب‌شده یافت نشد یا در حال حاضر غیرفعال است.')
     }
 
     if (!plan.product || plan.product.status !== 'ACTIVE') {
-      throw new Error('محصول مرتبط با این پلن غیرفعال است.')
+      throw new Error('محصول مرتبط با این پلن در حال حاضر غیرفعال است.')
     }
 
-    // Validate plan fields
+    const fulfillmentType: FulfillmentType = plan.fulfillmentType || 'ACTIVATION_LINK'
+
+    // Check if customer provided their own account for PRE_CREATED_ACCOUNT
+    const hasCustomerProvidedAccount =
+      fulfillmentType === 'PRE_CREATED_ACCOUNT' &&
+      (
+        checkoutData?.delivery_preference === 'own_account' ||
+        Boolean(
+          (typeof checkoutData?.customer_email === 'string' && checkoutData.customer_email.trim()) ||
+          (typeof checkoutData?.customer_gmail === 'string' && checkoutData.customer_gmail.trim())
+        )
+      )
+
+    // Validation for PRE_CREATED_ACCOUNT with customer's own Gmail
+    if (fulfillmentType === 'PRE_CREATED_ACCOUNT' && hasCustomerProvidedAccount) {
+      const email =
+        (typeof checkoutData?.customer_email === 'string' && checkoutData.customer_email.trim()) ||
+        (typeof checkoutData?.customer_gmail === 'string' && checkoutData.customer_gmail.trim()) ||
+        ''
+      const password =
+        (typeof checkoutData?.customer_password === 'string' && checkoutData.customer_password.trim()) || ''
+
+      if (!email) {
+        throw new Error('لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد فرمایید.')
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        throw new Error('فرمت آدرس جیمیل وارد شده نامعتبر است.')
+      }
+
+      if (!password) {
+        throw new Error('وارد کردن رمز عبور جیمیل برای فعال‌سازی روی اکانت شما الزامی است.')
+      }
+    }
+
+    // Validate custom plan checkout fields
     const fieldDefs = (Array.isArray(plan.checkoutFields)
       ? plan.checkoutFields
       : []) as unknown as CheckoutFieldDefinition[]
@@ -141,26 +206,106 @@ export class BotStoreService {
       }
     }
 
-    // Check stock
-    const stock = await FulfillmentService.getPlanStock(plan.id)
-    if (stock <= 0) {
-      throw new Error('موجودی این پلن در حال حاضر به پایان رسیده است.')
+    // Determine base amount and validate coupon
+    const baseAmount = plan.price
+    let appliedCouponId: string | null = null
+    let appliedDiscountAmount = 0
+    let payableAmount = baseAmount
+
+    if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
+      const couponValidation = await CouponService.validateAndCalculate(
+        couponCode,
+        baseAmount,
+        plan.productId
+      )
+
+      if (!couponValidation.valid) {
+        throw new Error(couponValidation.error || 'کد تخفیف وارد شده معتبر نیست.')
+      }
+
+      appliedCouponId = couponValidation.coupon?.id || null
+      appliedDiscountAmount = couponValidation.discountAmount || 0
+      payableAmount = Math.max(1000, baseAmount - appliedDiscountAmount)
     }
 
-    // Create Order snapshot
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        productId: plan.productId,
-        planId: plan.id,
-        amount: plan.price, // SNAPSHOT
-        checkoutData, // SNAPSHOT
-        status: 'PENDING_PAYMENT',
-        fulfillmentStatus: 'PENDING',
-        source,
-        telegramChatId: chatId,
-      },
-    })
+    // Atomic Stock Reservation & Order Creation with FOR UPDATE SKIP LOCKED
+    let order
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        const targetPlanId = plan.id
+        const targetProductId = plan.productId
+        let reservedInventoryItemId: string | null = null
+
+        // Only reserve inventory item if it's ACTIVATION_LINK or PRE_CREATED_ACCOUNT with ready warehouse account
+        if (
+          fulfillmentType === 'ACTIVATION_LINK' ||
+          (fulfillmentType === 'PRE_CREATED_ACCOUNT' && !hasCustomerProvidedAccount)
+        ) {
+          const invType = fulfillmentType === 'ACTIVATION_LINK' ? 'ACTIVATION_LINK' : 'PRE_CREATED_ACCOUNT'
+          const invRows = await tx.$queryRaw<Array<{ id: string }>>`
+            SELECT id FROM inventory_items
+            WHERE type = ${invType}::"InventoryType"
+              AND (
+                ("planId" = ${targetPlanId} AND "planId" IS NOT NULL) OR
+                ("productId" = ${targetProductId} AND ("planId" IS NULL OR "planId" = ${targetPlanId}))
+              )
+              AND status = 'AVAILABLE'::"LinkStatus"
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          `
+
+          if (invRows && invRows.length > 0) {
+            reservedInventoryItemId = invRows[0].id
+          } else {
+            throw new Error(
+              fulfillmentType === 'PRE_CREATED_ACCOUNT'
+                ? 'READY_ACCOUNT_STOCK_EXHAUSTED'
+                : 'STOCK_EXHAUSTED'
+            )
+          }
+        }
+
+        // Create Order snapshot
+        const newOrder = await tx.order.create({
+          data: {
+            userId,
+            productId: plan.productId,
+            planId: plan.id,
+            couponId: appliedCouponId,
+            amount: payableAmount,
+            discountAmount: appliedDiscountAmount,
+            checkoutData,
+            status: 'PENDING_PAYMENT',
+            fulfillmentStatus: 'PENDING',
+            source,
+            telegramChatId: chatId,
+          },
+        })
+
+        if (reservedInventoryItemId) {
+          await tx.inventoryItem.update({
+            where: { id: reservedInventoryItemId },
+            data: {
+              status: 'RESERVED',
+              orderId: newOrder.id,
+              assignedAt: new Date(),
+            },
+          })
+        }
+
+        return newOrder
+      })
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (err.message === 'READY_ACCOUNT_STOCK_EXHAUSTED') {
+          throw new Error('موجودی اکانت‌های آماده انبار موقتاً به پایان رسیده است. شما می‌توانید با انتخاب گزینه «فعال‌سازی روی جیمیل شخصی»، اشتراک را روی اکانت خود دریافت فرمایید.')
+        }
+        if (err.message === 'STOCK_EXHAUSTED') {
+          throw new Error('موجودی این پلن در حال حاضر به اتمام رسیده است.')
+        }
+      }
+      throw err
+    }
 
     // Request payment
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -169,13 +314,25 @@ export class BotStoreService {
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
-      amount: plan.price,
+      amount: payableAmount,
       description: `خرید (${source}): ${productTitle} (${plan.name})`,
       callbackUrl,
       mobile: mobile || undefined,
     })
 
     if (!paymentResult.success || !paymentResult.paymentUrl) {
+      // Rollback reservation and mark order failed
+      await prisma.$transaction([
+        prisma.inventoryItem.updateMany({
+          where: { orderId: order.id, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        }),
+        prisma.order.update({
+          where: { id: order.id },
+          data: { status: 'FAILED' },
+        }),
+      ]).catch((cleanupErr) => console.error('Error rolling back reservation in bot order:', cleanupErr))
+
       throw new Error(paymentResult.error || 'خطا در اتصال به درگاه پرداخت.')
     }
 
@@ -188,7 +345,9 @@ export class BotStoreService {
       paymentUrl: fullPaymentUrl,
       productTitle,
       planName: plan.name,
-      amount: plan.price,
+      amount: payableAmount,
+      originalAmount: baseAmount,
+      discountAmount: appliedDiscountAmount,
     }
   }
 
@@ -199,7 +358,12 @@ export class BotStoreService {
     const delivery = order.delivery
     const deliveryType = delivery?.type || (order.activationLink ? 'ACTIVATION_LINK' : 'MANUAL')
     const deliveryData = (delivery?.data as Record<string, any>) || {}
+    const checkoutData = (order.checkoutData as Record<string, any>) || {}
     const linkUrl = deliveryData.url || order.activationLink?.url
+
+    const isOwnAccount =
+      checkoutData.delivery_preference === 'own_account' ||
+      Boolean(checkoutData.customer_gmail || checkoutData.customer_email)
 
     if (order.status === 'COMPLETED') {
       if (deliveryType === 'ACTIVATION_LINK' && linkUrl) {
@@ -207,6 +371,14 @@ export class BotStoreService {
       }
 
       if (deliveryType === 'PRE_CREATED_ACCOUNT') {
+        if (isOwnAccount) {
+          const email = deliveryData.email || checkoutData.customer_gmail || checkoutData.customer_email || 'اکانت شما'
+          return (
+            `✅ **وضعیت فعال‌سازی:** تکمیل گردید\n` +
+            `📧 اشتراک با موفقیت روی اکانت شخصی شما (\`${email}\`) فعال شد.`
+          )
+        }
+
         const pass = deliveryData.password ? decryptCredential(deliveryData.password) : '••••••'
         return (
           `👤 **اطلاعات اکانت اختصاصی:**\n` +
@@ -230,17 +402,31 @@ export class BotStoreService {
         )
       }
 
-      return `✅ سفارش شما تکمیل شده است.`
+      return `✅ سفارش شما با موفقیت تکمیل شده است.`
     }
 
     if (order.status === 'PAID') {
-      return `⏳ **وضعیت:** پرداخت تایید شده — در حال آماده‌سازی و تحویل توسط سیستم یا پشتیبانی.`
+      if (isOwnAccount || deliveryType === 'CUSTOMER_PROVISIONING') {
+        const email = checkoutData.customer_gmail || checkoutData.customer_email || ''
+        return (
+          `⏳ **وضعیت:** پرداخت تایید شده — سفارش در صف فعال‌سازی روی اکانت شما${email ? ` (\`${email}\`)` : ''} توسط کارشناسان است.`
+        )
+      }
+      return `⏳ **وضعیت:** پرداخت تایید شده — در حال آماده‌سازی و تحویل توسط سیستم.`
     }
 
     if (order.status === 'PENDING_PAYMENT') {
       return `🟡 **وضعیت:** در انتظار پرداخت بانکی.`
     }
 
-    return `❌ **وضعیت سفارش:** ${order.status}`
+    if (order.status === 'CANCELLED') {
+      return `🚫 **وضعیت:** سفارش لغو شده.`
+    }
+
+    if (order.status === 'FAILED') {
+      return `❌ **وضعیت:** پرداخت ناموفق.`
+    }
+
+    return `📊 **وضعیت سفارش:** ${order.status}`
   }
 }

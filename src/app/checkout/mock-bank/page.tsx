@@ -87,7 +87,7 @@ function MockBankContent() {
 
           <div className='flex items-center gap-3'>
             <ThemeSwitch />
-            <Button
+            {/* <Button
               variant='ghost'
               size='sm'
               onClick={handlePayCancel}
@@ -96,7 +96,7 @@ function MockBankContent() {
             >
               <ArrowRight className='size-3.5' />
               <span>انصراف</span>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </header>

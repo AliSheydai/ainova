@@ -109,6 +109,83 @@ export const MESSAGES = {
     `🚪 **از حساب کاربری خود خارج شدید.**\n\n` +
     `اتصال این اکانت تلگرام به حساب شما قطع گردید.\n` +
     `برای ورود مجدد، می‌توانید از دکمه «📱 ورود به حساب کاربری» استفاده کنید یا از طریق دیپ‌لینک سایت متصل شوید.`,
+
+  preCreatedDeliveryChoice: (planName: string, warehouseCount: number | null | undefined) => {
+    const hasInventory = warehouseCount !== null && warehouseCount !== undefined && warehouseCount > 0
+    const countText = hasInventory
+      ? `✅ هم‌اکنون **${warehouseCount.toLocaleString('fa-IR')} اکانت آماده** در انبار موجود و آماده تحویل فوری است.`
+      : `⚠️ موجودی اکانت‌های آماده انبار موقتاً تمام شده است، اما سفارش شما مستقیماً روی جیمیل شخصی‌تان توسط پشتیبانی فعال خواهد شد.`
+
+    return (
+      `📦 **انتخاب شیوه تحویل اشتراک برای پلن «${planName}»**\n\n` +
+      `${countText}\n\n` +
+      `لطفاً یکی از دو روش تحویل زیر را انتخاب فرمایید:\n\n` +
+      `⚡ **۱. دریافت اکانت آماده از انبار (تحویل ۰ ثانیه‌ای):**\n` +
+      `بلافاصله پس از پرداخت، مشخصات ورود (ایمیل و پسورد یک حساب جدید اختصاصی) به شما تحویل داده می‌شود.\n\n` +
+      `👤 **۲. فعال‌سازی روی جیمیل شخصی شما (۱ الی ۲۴ ساعت کاری):**\n` +
+      `اشتراک مستقیماً روی آدرس جیمیل خودتان توسط کارشناسان فعال می‌شود و نیازی به تغییر حساب کاربری ندارید.`
+    )
+  },
+
+  gmailPrompt: (planName: string) =>
+    `📧 **وارد کردن جیمیل شخصی جهت فعال‌سازی «${planName}»:**\n\n` +
+    `لطفاً آدرس جیمیل خود را در چت ارسال فرمایید:\n` +
+    `*(مثال: example@gmail.com)*`,
+
+  passwordPrompt: (gmail: string) =>
+    `🔑 **وارد کردن رمز عبور جیمیل:**\n\n` +
+    `لطفاً رمز عبور اکانت گوگل \`${gmail}\` را ارسال فرمایید:\n\n` +
+    `🔒 *اطلاعات شما با پروتکل استاندارد AES-256 رمزنگاری می‌شود و صرفاً توسط تیم پشتیبانی جهت انجام فعال‌سازی اشتراک مورد استفاده قرار می‌گیرد.*`,
+
+  couponPrompt: (currentAmount: number) =>
+    `🏷 **ثبت کد تخفیف:**\n\n` +
+    `مبلغ فعلی سفارش: **${formatPrice(currentAmount)}**\n\n` +
+    `لطفاً کد تخفیف خود را به صورت متن ارسال فرمایید:\n` +
+    `*(جهت انصراف، کلمه «انصراف» را ارسال کنید)*`,
+
+  orderSummaryCard: (options: {
+    productTitle: string
+    planName: string
+    deliveryLabel: string
+    amount: number
+    originalAmount?: number
+    discountAmount?: number
+    couponCode?: string
+    customerGmail?: string
+  }) => {
+    const {
+      productTitle,
+      planName,
+      deliveryLabel,
+      amount,
+      originalAmount,
+      discountAmount,
+      couponCode,
+      customerGmail,
+    } = options
+
+    let text = `🧾 **پیش‌فاکتور و تایید سفارش**\n`
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`
+    text += `📦 **محصول:** ${productTitle}\n`
+    text += `🔹 **پلن:** ${planName}\n`
+    text += `🚀 **شیوه تحویل:** ${deliveryLabel}\n`
+    if (customerGmail) {
+      text += `📧 **جیمیل انتخابی:** \`${customerGmail}\`\n`
+    }
+    text += `\n────────────────────\n`
+
+    if (couponCode && discountAmount && discountAmount > 0 && originalAmount) {
+      text += `💵 قیمت پایه: ~~${formatPrice(originalAmount)}~~\n`
+      text += `🏷 کد تخفیف اعمال‌شده: \`${couponCode}\` (${formatPrice(discountAmount)} تخفیف)\n`
+      text += `💰 **مبلغ نهایی قابل پرداخت:** **${formatPrice(amount)}**\n`
+    } else {
+      text += `💰 **مبلغ قابل پرداخت:** **${formatPrice(amount)}**\n`
+    }
+
+    text += `\n🔒 *پرداخت امن در بستر شبکه شتاب و شاپرک با کلیه کارت‌های عضو شتاب.*`
+
+    return text
+  },
 }
 
 export function formatProductDetails(

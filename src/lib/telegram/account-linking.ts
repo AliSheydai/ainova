@@ -6,14 +6,26 @@ const LINK_TOKEN_PREFIX = 'tglink_'
 const PHONE_HASH_PREFIX = 'tg_hash_'
 const LINK_TOKEN_EXPIRY_MINUTES = 15
 
+export type BotSessionStep =
+  | 'AWAITING_PHONE'
+  | 'AWAITING_OTP'
+  | 'AWAITING_CHECKOUT_FIELD'
+  | 'AWAITING_GMAIL'
+  | 'AWAITING_GMAIL_PASSWORD'
+  | 'AWAITING_COUPON'
+
 export interface BotLoginSession {
-  step: 'AWAITING_PHONE' | 'AWAITING_OTP' | 'AWAITING_CHECKOUT_FIELD'
+  step: BotSessionStep
   phone?: string
   lastSentAt?: number
   planId?: string
+  productId?: string
   currentFieldKey?: string
   currentFieldLabel?: string
   checkoutData?: Record<string, any>
+  deliveryPreference?: 'ready_account' | 'own_account'
+  couponCode?: string
+  couponDiscount?: number
 }
 
 // In-memory cache for quick response in long-running processes

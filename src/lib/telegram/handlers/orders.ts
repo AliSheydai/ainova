@@ -10,9 +10,9 @@ function getStatusBadge(status: string): string {
     case 'COMPLETED':
       return '✅ فعال و تکمیل شده'
     case 'PAID':
-      return '⏳ پرداخت شده (در انتظار ارسال لینک)'
+      return '⏳ پرداخت شده (در صف آماده‌سازی / فعال‌سازی)'
     case 'PENDING_PAYMENT':
-      return '🟡 در انتظار پرداخت'
+      return '🟡 در انتظار پرداخت بانکی'
     case 'FAILED':
       return '❌ پرداخت ناموفق'
     case 'CANCELLED':

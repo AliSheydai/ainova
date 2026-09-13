@@ -120,6 +120,57 @@ export function orderPaymentKeyboard(paymentUrl: string) {
   return keyboard
 }
 
+export function deliveryPreferenceKeyboard(
+  planId: string,
+  productId: string,
+  warehouseCount: number | null | undefined
+) {
+  const kb = new InlineKeyboard()
+  const hasInventory = warehouseCount !== null && warehouseCount !== undefined && warehouseCount > 0
+
+  if (hasInventory) {
+    kb.text(
+      `⚡ اکانت آماده انبار (${warehouseCount.toLocaleString('fa-IR')} عدد - تحویل فوری)`,
+      `delivery:mode:${planId}:ready`
+    ).row()
+  } else {
+    kb.text(
+      '⚠️ اکانت آماده انبار (موقتاً ناموجود)',
+      `delivery:mode:${planId}:exhausted`
+    ).row()
+  }
+
+  kb.text('👤 فعال‌سازی روی جیمیل شخصی من (۱ الی ۲۴ ساعت)', `delivery:mode:${planId}:own`).row()
+  kb.text('🔙 بازگشت به مشخصات محصول', `product:select:${productId}`)
+
+  return kb
+}
+
+export function orderSummaryKeyboard(
+  planId: string,
+  hasCoupon: boolean,
+  paymentUrl?: string
+) {
+  const kb = new InlineKeyboard()
+
+  if (paymentUrl) {
+    kb.url('💳 پرداخت آنلاین شاپرک', paymentUrl).row()
+  } else {
+    kb.text('💳 تأیید و پرداخت آنلاین شاپرک', `order:pay:${planId}`).row()
+  }
+
+  if (hasCoupon) {
+    kb.text('❌ حذف کد تخفیف', `order:coupon:remove:${planId}`)
+  } else {
+    kb.text('🏷 ثبت کد تخفیف', `order:coupon:prompt:${planId}`)
+  }
+  kb.row()
+
+  kb.text('🔙 انصراف و بازگشت', `order:cancel:${planId}`)
+
+  return kb
+}
+
 export function ordersPaginationKeyboard(page: number, totalPages: number) {
   const keyboard = new InlineKeyboard()
 
