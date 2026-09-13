@@ -125,12 +125,17 @@ export class ZarinpalPaymentProvider implements PaymentProvider {
 
       const data = response.data?.data
       if (data && (data.code === 100 || data.code === 101)) {
+        const verifiedAmount = data.amount !== undefined ? Number(data.amount) : amount
         return {
           success: true,
           provider: this.name,
           refId: data.ref_id?.toString(),
+          amount: verifiedAmount,
           message: 'پرداخت با موفقیت تأیید شد.',
-          rawResponse: data,
+          rawResponse: {
+            ...data,
+            amount: verifiedAmount,
+          },
         }
       }
 

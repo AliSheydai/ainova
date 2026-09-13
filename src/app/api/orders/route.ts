@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
     // 4. Determine base price using nullish coalescing (Section 2.5)
     const baseAmount = plan?.price ?? product.price ?? 0
 
-    if (baseAmount < 0) {
+    if (baseAmount <= 0) {
       return NextResponse.json(
         { success: false, message: 'قیمت محصول یا پلن نامعتبر است.' },
         { status: 400 }
@@ -185,7 +185,17 @@ export async function POST(req: NextRequest) {
 
       appliedCouponId = couponValidation.coupon?.id || null
       appliedDiscountAmount = couponValidation.discountAmount || 0
-      payableAmount = Math.max(1000, baseAmount - appliedDiscountAmount)
+      payableAmount = baseAmount - appliedDiscountAmount
+    }
+
+    if (payableAmount < 1000) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'مبلغ نهایی کمتر از حداقل مجاز درگاه (۱۰۰۰ تومان) است.',
+        },
+        { status: 400 }
+      )
     }
 
     // 5. Determine fulfillment type from Plan (Section 2.4)
@@ -239,6 +249,30 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // Atomic Coupon Capacity Check & Increment with FOR UPDATE (Bug 2.2 & 2.5)
+        if (appliedCouponId) {
+          const couponCheck = await tx.$queryRaw<
+            Array<{ id: string; usedCount: number; maxUses: number | null }>
+          >`
+            SELECT id, "usedCount", "maxUses" FROM coupons
+            WHERE id = ${appliedCouponId}
+            FOR UPDATE
+          `
+          if (!couponCheck || couponCheck.length === 0) {
+            throw new Error('COUPON_NOT_FOUND')
+          }
+          if (
+            couponCheck[0].maxUses !== null &&
+            couponCheck[0].usedCount >= couponCheck[0].maxUses
+          ) {
+            throw new Error('COUPON_EXHAUSTED')
+          }
+          await tx.coupon.update({
+            where: { id: appliedCouponId },
+            data: { usedCount: { increment: 1 } },
+          })
+        }
+
         // Encrypt sensitive customer credentials before storing in DB (Bug 1.1)
         const secureCheckoutData = { ...submittedData }
         if (
@@ -281,6 +315,24 @@ export async function POST(req: NextRequest) {
         return newOrder
       })
     } catch (txError: unknown) {
+      if (txError instanceof Error && txError.message === 'COUPON_EXHAUSTED') {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'ظرفیت استفاده از این کد تخفیف تکمیل شده است.',
+          },
+          { status: 400 }
+        )
+      }
+      if (txError instanceof Error && txError.message === 'COUPON_NOT_FOUND') {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'کد تخفیف معتبر نمی‌باشد.',
+          },
+          { status: 400 }
+        )
+      }
       if (txError instanceof Error && txError.message === 'READY_ACCOUNT_STOCK_EXHAUSTED') {
         return NextResponse.json(
           {

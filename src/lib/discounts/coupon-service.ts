@@ -121,4 +121,29 @@ export class CouponService {
       console.error(`Failed to increment usage for coupon ${couponId}:`, err)
     }
   }
+
+  /**
+   * Safely decrements the usage count of a coupon within an existing Prisma transaction or standalone
+   * (e.g. upon order refund, cancellation, expiration, or payment failure).
+   * Ensures usedCount never drops below zero.
+   */
+  static async decrementCouponUsage(
+    couponId: string,
+    tx?: Prisma.TransactionClient
+  ): Promise<void> {
+    const client = tx || prisma
+    try {
+      await client.coupon.updateMany({
+        where: {
+          id: couponId,
+          usedCount: { gt: 0 },
+        },
+        data: {
+          usedCount: { decrement: 1 },
+        },
+      })
+    } catch (err) {
+      console.error(`Failed to decrement usage for coupon ${couponId}:`, err)
+    }
+  }
 }

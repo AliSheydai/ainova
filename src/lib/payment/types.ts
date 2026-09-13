@@ -29,6 +29,7 @@ export interface VerifyPaymentResult {
   success: boolean
   provider: string
   refId?: string // Bank reference tracking number
+  amount?: number // Verified amount in Toman
   message?: string
   rawResponse?: unknown
 }

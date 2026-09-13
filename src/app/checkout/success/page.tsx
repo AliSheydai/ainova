@@ -176,9 +176,11 @@ function SuccessContent() {
 
   const deliveryData = (order.delivery?.data as Record<string, any>) || {}
   const deliveryType = order.delivery?.type || (order.activationLink ? 'ACTIVATION_LINK' : 'MANUAL')
-  const isCompleted = order.status === 'COMPLETED'
-  const isManualPending = order.status === 'PAID' && (deliveryType === 'MANUAL' || statusParam === 'awaiting_manual')
-  const isStockWaiting = order.status === 'PAID' && statusParam === 'stock_waiting' && !isManualPending
+  const isAmountMismatch = statusParam === 'amount_mismatch'
+  const isFailed = order.status === 'FAILED' || isAmountMismatch
+  const isCompleted = order.status === 'COMPLETED' && !isFailed
+  const isManualPending = !isFailed && order.status === 'PAID' && (deliveryType === 'MANUAL' || statusParam === 'awaiting_manual')
+  const isStockWaiting = !isFailed && order.status === 'PAID' && statusParam === 'stock_waiting' && !isManualPending
 
   const linkUrl = deliveryData.url || order.activationLink?.url
 
@@ -194,38 +196,54 @@ function SuccessContent() {
     <div className='container relative mx-auto max-w-2xl px-3.5 sm:px-4 py-6 sm:py-12'>
       {/* Background Ambient Glow */}
       <div aria-hidden className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
-        <div className='absolute left-1/2 top-10 -translate-x-1/2 h-[400px] w-[600px] rounded-full bg-primary/8 blur-3xl' />
-        <div className='absolute bottom-10 right-10 h-[300px] w-[400px] rounded-full bg-primary/5 blur-3xl' />
+        <div className={`absolute left-1/2 top-10 -translate-x-1/2 h-[400px] w-[600px] rounded-full blur-3xl ${isFailed ? 'bg-destructive/10' : 'bg-primary/8'}`} />
+        <div className={`absolute bottom-10 right-10 h-[300px] w-[400px] rounded-full blur-3xl ${isFailed ? 'bg-destructive/5' : 'bg-primary/5'}`} />
       </div>
 
       <Card className='relative overflow-hidden border border-border/70 shadow-2xl backdrop-blur-xl bg-card/95 rounded-2xl'>
         {/* Glow Top Highlight Bar */}
-        <div className='absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-primary to-primary/70' />
+        <div className={`absolute left-0 right-0 top-0 h-1 ${isFailed ? 'bg-gradient-to-r from-destructive/70 via-destructive to-destructive/70' : 'bg-gradient-to-r from-primary/70 via-primary to-primary/70'}`} />
 
         <CardHeader className='text-center pb-4 pt-6 sm:pt-8 px-4 sm:px-6'>
           {/* Status Icon */}
-          <div className='mx-auto mb-3 sm:mb-4 flex size-14 sm:size-16 items-center justify-center rounded-3xl bg-primary/10 text-primary border border-primary/20 shadow-inner'>
-            <CheckCircle2 className='size-8 sm:size-9' />
+          <div className={`mx-auto mb-3 sm:mb-4 flex size-14 sm:size-16 items-center justify-center rounded-3xl border shadow-inner ${isFailed ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+            {isFailed ? <AlertCircle className='size-8 sm:size-9' /> : <CheckCircle2 className='size-8 sm:size-9' />}
           </div>
 
           <div className='flex justify-center'>
-            <Badge
-              variant='outline'
-              className='gap-1.5 border-primary/30 bg-primary/10 text-primary text-[11px] sm:text-xs font-semibold px-3 sm:px-3.5 py-1 rounded-full'
-            >
-              <Sparkles className='size-3.5 text-primary' />
-              پرداخت با موفقیت انجام شد
-            </Badge>
+            {isFailed ? (
+              <Badge
+                variant='outline'
+                className='gap-1.5 border-destructive/30 bg-destructive/10 text-destructive text-[11px] sm:text-xs font-semibold px-3 sm:px-3.5 py-1 rounded-full'
+              >
+                <AlertCircle className='size-3.5 text-destructive' />
+                {isAmountMismatch ? 'مغایرت در مبلغ واریزی' : 'پرداخت ناموفق'}
+              </Badge>
+            ) : (
+              <Badge
+                variant='outline'
+                className='gap-1.5 border-primary/30 bg-primary/10 text-primary text-[11px] sm:text-xs font-semibold px-3 sm:px-3.5 py-1 rounded-full'
+              >
+                <Sparkles className='size-3.5 text-primary' />
+                پرداخت با موفقیت انجام شد
+              </Badge>
+            )}
           </div>
 
           <CardTitle className='text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight mt-3'>
-            {isCompleted ? 'سفارش شما تکمیل شد' : 'پرداخت شما تأیید شد'}
+            {isFailed
+              ? (isAmountMismatch ? 'خطای مغایرت در مبلغ پرداخت' : 'پرداخت سفارش تایید نشد')
+              : (isCompleted ? 'سفارش شما تکمیل شد' : 'پرداخت شما تأیید شد')}
           </CardTitle>
 
           <CardDescription className='text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed'>
-            {isCompleted
-              ? 'اطلاعات فعال‌سازی و دسترسی به محصول شما آماده استفاده است.'
-              : 'پرداخت با موفقیت در سیستم ثبت شد و سفارش در حال پردازش می‌باشد.'}
+            {isFailed
+              ? (isAmountMismatch
+                  ? 'مبلغ واریز شده در درگاه با مبلغ ثبت‌شده سفارش یکسان نبوده است. تحویل سفارش متوقف گردید.'
+                  : 'تراکنش پرداخت سفارش با خطا مواجه شد و سفارش به حالت ناموفق تغییر یافت.')
+              : (isCompleted
+                  ? 'اطلاعات فعال‌سازی و دسترسی به محصول شما آماده استفاده است.'
+                  : 'پرداخت با موفقیت در سیستم ثبت شد و سفارش در حال پردازش می‌باشد.')}
           </CardDescription>
         </CardHeader>
 
@@ -260,10 +278,32 @@ function SuccessContent() {
             </div>
           </div>
 
+          {/* Failure Alert Banner (Bug 2.1 & Failed Transactions) */}
+          {isFailed && (
+            <div className='rounded-2xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6 text-center space-y-3'>
+              <div className='flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-destructive'>
+                <AlertCircle className='size-5' />
+                <span>سفارش تکمیل نگردید</span>
+              </div>
+              <p className='text-xs sm:text-sm text-muted-foreground leading-relaxed'>
+                {isAmountMismatch
+                  ? 'به دلایل امنیتی و به علت مغایرت مبلغ دریافتی با مبلغ سفارش، تحویل سفارش متوقف گردید. در صورتی که وجهی از حسابتان کسر گردیده، توسط بانک ظرف ۷۲ ساعت عودت داده خواهد شد یا می‌توانید با پشتیبانی در ارتباط باشید.'
+                  : 'تراکنش پرداخت سفارش با خطا مواجه شد و سفارش به حالت ناموفق تغییر یافت. شما می‌توانید سفارش خود را مجدداً ثبت نمایید.'}
+              </p>
+              <div className='pt-2 flex flex-col sm:flex-row items-center justify-center gap-2'>
+                <Link href='/'>
+                  <Button variant='outline' size='sm' className='rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 text-xs sm:text-sm'>
+                    ثبت مجدد سفارش
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* DYNAMIC DELIVERY DISPLAY BASED ON TYPE */}
 
           {/* 1. ACTIVATION LINK */}
-          {isCompleted && (deliveryType === 'ACTIVATION_LINK' || linkUrl) && (
+          {!isFailed && isCompleted && (deliveryType === 'ACTIVATION_LINK' || linkUrl) && (
             <div className='rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent p-4 sm:p-6 shadow-sm'>
               <div className='flex items-center justify-between gap-2 mb-3'>
                 <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>

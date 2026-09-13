@@ -43,6 +43,7 @@ export class MockPaymentProvider implements PaymentProvider {
 
   async verifyPayment({
     transactionId,
+    amount,
     extraParams,
   }: VerifyPaymentOptions): Promise<VerifyPaymentResult> {
     this.assertEnvironmentSafe()
@@ -59,14 +60,22 @@ export class MockPaymentProvider implements PaymentProvider {
     const randomRef = Math.floor(10000000 + Math.random() * 90000000)
     const refId = `MOCK-REF-${randomRef}`
 
+    // Support simulated amount mismatch for testing, otherwise use the expected payment amount
+    const verifiedAmount =
+      extraParams?.simulatedAmount !== undefined && extraParams?.simulatedAmount !== null
+        ? Number(extraParams.simulatedAmount)
+        : amount
+
     return {
       success: true,
       provider: this.name,
       refId,
+      amount: verifiedAmount,
       message: 'پرداخت تستی با موفقیت تأیید شد.',
       rawResponse: {
         mock: true,
         transactionId,
+        amount: verifiedAmount,
         verifiedAt: new Date().toISOString(),
       },
     }

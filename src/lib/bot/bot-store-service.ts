@@ -208,6 +208,10 @@ export class BotStoreService {
 
     // Determine base amount and validate coupon
     const baseAmount = plan.price
+    if (baseAmount <= 0) {
+      throw new Error('قیمت محصول یا پلن نامعتبر است.')
+    }
+
     let appliedCouponId: string | null = null
     let appliedDiscountAmount = 0
     let payableAmount = baseAmount
@@ -225,7 +229,11 @@ export class BotStoreService {
 
       appliedCouponId = couponValidation.coupon?.id || null
       appliedDiscountAmount = couponValidation.discountAmount || 0
-      payableAmount = Math.max(1000, baseAmount - appliedDiscountAmount)
+      payableAmount = baseAmount - appliedDiscountAmount
+    }
+
+    if (payableAmount < 1000) {
+      throw new Error('مبلغ نهایی کمتر از حداقل مجاز درگاه (۱۰۰۰ تومان) است.')
     }
 
     // Atomic Stock Reservation & Order Creation with FOR UPDATE SKIP LOCKED
@@ -263,6 +271,30 @@ export class BotStoreService {
                 : 'STOCK_EXHAUSTED'
             )
           }
+        }
+
+        // Atomic Coupon Capacity Check & Increment with FOR UPDATE (Bug 2.2 & 2.5)
+        if (appliedCouponId) {
+          const couponCheck = await tx.$queryRaw<
+            Array<{ id: string; usedCount: number; maxUses: number | null }>
+          >`
+            SELECT id, "usedCount", "maxUses" FROM coupons
+            WHERE id = ${appliedCouponId}
+            FOR UPDATE
+          `
+          if (!couponCheck || couponCheck.length === 0) {
+            throw new Error('COUPON_NOT_FOUND')
+          }
+          if (
+            couponCheck[0].maxUses !== null &&
+            couponCheck[0].usedCount >= couponCheck[0].maxUses
+          ) {
+            throw new Error('COUPON_EXHAUSTED')
+          }
+          await tx.coupon.update({
+            where: { id: appliedCouponId },
+            data: { usedCount: { increment: 1 } },
+          })
         }
 
         // Encrypt customer_password in checkoutData before saving (Bug 1.1)
@@ -310,6 +342,12 @@ export class BotStoreService {
       })
     } catch (err: unknown) {
       if (err instanceof Error) {
+        if (err.message === 'COUPON_EXHAUSTED') {
+          throw new Error('ظرفیت استفاده از این کد تخفیف تکمیل شده است.')
+        }
+        if (err.message === 'COUPON_NOT_FOUND') {
+          throw new Error('کد تخفیف معتبر نمی‌باشد.')
+        }
         if (err.message === 'READY_ACCOUNT_STOCK_EXHAUSTED') {
           throw new Error('موجودی اکانت‌های آماده انبار موقتاً به پایان رسیده است. شما می‌توانید با انتخاب گزینه «فعال‌سازی روی جیمیل شخصی»، اشتراک را روی اکانت خود دریافت فرمایید.')
         }

@@ -97,20 +97,23 @@ export async function GET(req: NextRequest) {
   // 2. If bank/provider returned cancelled or error status
   if (status && status !== 'OK' && status !== 'success') {
     if (payment.status === 'PENDING') {
-      await prisma.$transaction([
-        prisma.payment.update({
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.update({
           where: { id: payment.id },
           data: { status: 'FAILED' },
-        }),
-        prisma.order.update({
+        })
+        await tx.order.update({
           where: { id: payment.orderId },
           data: { status: 'CANCELLED' },
-        }),
-        prisma.inventoryItem.updateMany({
+        })
+        await tx.inventoryItem.updateMany({
           where: { orderId: payment.orderId, status: 'RESERVED' },
           data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-        }),
-      ])
+        })
+        if (payment.order.couponId) {
+          await CouponService.decrementCouponUsage(payment.order.couponId, tx)
+        }
+      })
 
       if (payment.order.userId) {
         UserNotificationService.createNotification({
@@ -132,7 +135,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/?payment=cancelled`)
   }
 
-  // 3. Verify payment via PaymentService
+  // 3. Concurrency Lock: Prevent double-fulfillment on concurrent callback retries (Bug 2.4)
+  const paymentLock = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT id FROM payments
+    WHERE id = ${payment.id} AND status = 'PENDING'
+    FOR UPDATE SKIP LOCKED
+  `
+  if (!paymentLock || paymentLock.length === 0) {
+    if (isTelegram) {
+      return NextResponse.redirect(
+        `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
+      )
+    }
+    return NextResponse.redirect(
+      `${appUrl}/checkout/success?orderId=${payment.orderId}`
+    )
+  }
+
+  // 4. Verify payment via PaymentService
   const verifyResult = await PaymentService.verifyPayment({
     transactionId: authority,
     amount: payment.amount,
@@ -143,20 +163,23 @@ export async function GET(req: NextRequest) {
   })
 
   if (!verifyResult.success) {
-    await prisma.$transaction([
-      prisma.payment.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
         where: { id: payment.id },
         data: { status: 'FAILED' },
-      }),
-      prisma.order.update({
+      })
+      await tx.order.update({
         where: { id: payment.orderId },
         data: { status: 'FAILED' },
-      }),
-      prisma.inventoryItem.updateMany({
+      })
+      await tx.inventoryItem.updateMany({
         where: { orderId: payment.orderId, status: 'RESERVED' },
         data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-      }),
-    ])
+      })
+      if (payment.order.couponId) {
+        await CouponService.decrementCouponUsage(payment.order.couponId, tx)
+      }
+    })
 
     const errorMsg = verifyResult.message || 'خطا در تایید تراکنش'
     if (payment.order.userId) {
@@ -181,20 +204,65 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // 4. Fulfill Order and assign Activation Link atomically
+  // 5. Bug 2.1: Strict validation of paid amount against order/payment amount
+  const rawResponseObj = verifyResult.rawResponse as Record<string, any> | undefined
+  const verifiedAmount =
+    verifyResult.amount !== undefined ? verifyResult.amount : rawResponseObj?.amount
+
+  if (
+    verifiedAmount !== undefined &&
+    verifiedAmount !== null &&
+    Number(verifiedAmount) !== payment.amount
+  ) {
+    console.error(
+      `SECURITY: Amount mismatch! Expected ${payment.amount}, got ${verifiedAmount} for payment ${payment.id}`
+    )
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: { status: 'FAILED' },
+      })
+      await tx.order.update({
+        where: { id: payment.orderId },
+        data: { status: 'FAILED' },
+      })
+      await tx.inventoryItem.updateMany({
+        where: { orderId: payment.orderId, status: 'RESERVED' },
+        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+      })
+      if (payment.order.couponId) {
+        await CouponService.decrementCouponUsage(payment.order.couponId, tx)
+      }
+    })
+
+    if (payment.order.userId) {
+      UserNotificationService.createNotification({
+        userId: payment.order.userId,
+        title: 'خطای مغایرت در مبلغ پرداخت',
+        message: `تراکنش سفارش #${payment.order.id.slice(-6).toUpperCase()} به علت عدم تطابق مبلغ پرداختی با مبلغ سفارش تایید نگردید.`,
+        type: NotificationType.ORDER_FAILED,
+        metadata: { orderId: payment.order.id },
+      }).catch((err) => console.error('Notification error:', err))
+    }
+
+    if (isTelegram) {
+      return NextResponse.redirect(
+        `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=amount_mismatch`
+      )
+    }
+
+    return NextResponse.redirect(
+      `${appUrl}/checkout/success?orderId=${payment.orderId}&status=amount_mismatch`
+    )
+  }
+
+  // 6. Fulfill Order and assign Activation Link atomically
   try {
     const fulfillment = await FulfillmentService.fulfillOrder({
       orderId: payment.orderId,
       refId: verifyResult.refId,
       rawResponse: verifyResult.rawResponse,
     })
-
-    // Track coupon usage if order used a coupon
-    if (payment.order.couponId) {
-      await CouponService.incrementCouponUsage(payment.order.couponId).catch((err) =>
-        console.error('Failed to increment coupon usage:', err)
-      )
-    }
 
     // Send Realtime Notification to Admin for Paid Order
     AdminNotificationService.notifyOrderPaid({

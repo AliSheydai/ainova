@@ -9,6 +9,7 @@ import { UserNotificationService } from '@/lib/notifications/user-notification-s
 import { NotificationType } from '@prisma/client'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
+import { CouponService } from '@/lib/discounts/coupon-service'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -326,7 +327,12 @@ export async function PATCH(req: NextRequest) {
           })
         }
 
-        // 3. Mark order as REFUNDED with audit metadata
+        // 3. Decrement coupon usage upon refund (Bug 2.5)
+        if (targetOrder.couponId) {
+          await CouponService.decrementCouponUsage(targetOrder.couponId, tx)
+        }
+
+        // 4. Mark order as REFUNDED with audit metadata
         return await tx.order.update({
           where: { id: targetOrder.id },
           data: {

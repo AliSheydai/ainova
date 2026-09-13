@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { OrderStatus, PaymentStatus } from '@prisma/client'
+import { CouponService } from '@/lib/discounts/coupon-service'
 
 export interface ExpireOrdersResult {
   expiredOrdersCount: number
@@ -28,7 +29,7 @@ export class OrderExpirationService {
           status: OrderStatus.PENDING_PAYMENT,
           createdAt: { lt: cutoffDate },
         },
-        select: { id: true },
+        select: { id: true, couponId: true },
       })
 
       if (staleOrders.length === 0) {
@@ -65,7 +66,14 @@ export class OrderExpirationService {
         },
       })
 
-      // 4. Update order status to EXPIRED
+      // 4. Decrement coupon usage for any expired orders that used a coupon (Bug 2.5)
+      for (const order of staleOrders) {
+        if (order.couponId) {
+          await CouponService.decrementCouponUsage(order.couponId, tx)
+        }
+      }
+
+      // 5. Update order status to EXPIRED
       const updatedOrders = await tx.order.updateMany({
         where: {
           id: { in: orderIds },
