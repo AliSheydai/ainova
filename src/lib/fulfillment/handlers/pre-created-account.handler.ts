@@ -1,10 +1,45 @@
-import { type IFulfillmentHandler, type AccountCredentialsDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
+import { type IFulfillmentHandler, type AccountCredentialsDeliveryData, type CustomerProvisioningDeliveryData, type OrderWithFulfillmentDetails, type PrismaTransactionClient } from '../types'
 import { encryptCredential, decryptCredential } from '@/lib/security/crypto'
 
 export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler {
   type = 'PRE_CREATED_ACCOUNT' as const
 
   async fulfill({ tx, order, now }: { tx: PrismaTransactionClient; order: OrderWithFulfillmentDetails; now: Date }) {
+    const checkoutData = (order.checkoutData as Record<string, unknown>) || {}
+
+    // Check if customer provided their own Gmail credentials
+    const customerEmail =
+      (typeof checkoutData.customer_email === 'string' && checkoutData.customer_email.trim()) ||
+      (typeof checkoutData.customer_gmail === 'string' && checkoutData.customer_gmail.trim()) ||
+      ''
+    const customerPassword =
+      (typeof checkoutData.customer_password === 'string' && checkoutData.customer_password.trim()) || ''
+
+    // If customer provided their own account — route to admin confirmation flow
+    if (customerEmail) {
+      const serviceName =
+        order.plan?.product?.title ||
+        order.product?.title ||
+        'سرویس'
+
+      const deliveryData: CustomerProvisioningDeliveryData = {
+        email: customerEmail,
+        serviceName,
+        provisionDetails: `اشتراک ${serviceName} پس از بررسی و تأیید ادمین روی حساب «${customerEmail}» فعال خواهد شد.`,
+        accountInfo: customerPassword
+          ? `ایمیل: ${customerEmail} | رمزعبور: ${encryptCredential(customerPassword)}`
+          : `ایمیل: ${customerEmail}`,
+        status: 'PENDING',
+      }
+
+      return {
+        status: 'AWAITING_MANUAL_DELIVERY' as const,
+        message: `پرداخت تأیید شد. اشتراک پس از بررسی ادمین روی اکانت «${customerEmail}» فعال خواهد شد.`,
+        deliveryData,
+      }
+    }
+
+    // No customer account provided — fulfill from inventory (pre-created account)
     const effectiveProduct = order.product || order.plan?.product
     const productId = effectiveProduct?.id
     const planId = order.planId

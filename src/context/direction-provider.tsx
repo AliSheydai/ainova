@@ -53,10 +53,14 @@ export function DirectionProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+const FALLBACK_DIRECTION_CONTEXT: DirectionContextType = {
+  defaultDir: DEFAULT_DIRECTION,
+  dir: DEFAULT_DIRECTION,
+  setDir: () => {},
+  resetDir: () => {},
+}
+
 export const useDirection = () => {
   const context = useContext(DirectionContext)
-  if (!context) {
-    throw new Error('useDirection must be used within a DirectionProvider')
-  }
-  return context
+  return context || FALLBACK_DIRECTION_CONTEXT
 }

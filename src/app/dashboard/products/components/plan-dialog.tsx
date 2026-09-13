@@ -8,8 +8,7 @@ import {
   Clock,
   Check,
   Package,
-  Layers,
-  Settings2,
+  LayoutGrid,
   Plus,
   Minus,
   Coins,
@@ -149,27 +148,11 @@ export function PlanDialog({
     },
     {
       type: 'PRE_CREATED_ACCOUNT',
-      title: 'اکانت آماده اختصاصی',
-      desc: 'تحویل نام کاربری و رمزعبور حساب آماده‌شده از انبار پس از پرداخت',
+      title: 'اکانت اختصاصی (آماده یا روی اکانت شخصی)',
+      desc: 'خریدار می‌تواند جیمیل خود را وارد کند تا ادمین روی اکانتش فعال‌سازی کند، یا بدون وارد کردن اطلاعات، اکانت آماده از انبار دریافت نماید.',
       icon: Package,
       color: 'text-purple-500',
       activeClass: 'border-purple-500/70 bg-purple-500/5 ring-2 ring-purple-500/20',
-    },
-    {
-      type: 'CUSTOMER_PROVISIONING',
-      title: 'ساخت روی اکانت شخصی مشتری',
-      desc: 'فعال‌سازی هوشمند یا با هوک اختصاصی روی آدرس ایمیل وارد شده توسط خریدار',
-      icon: Layers,
-      color: 'text-emerald-500',
-      activeClass: 'border-emerald-500/70 bg-emerald-500/5 ring-2 ring-emerald-500/20',
-    },
-    {
-      type: 'MANUAL',
-      title: 'تحویل دستی (پشتیبانی)',
-      desc: 'ثبت سفارش در وضعیت نیازمند بررسی جهت هماهنگی دستی توسط پشتیبانی',
-      icon: Settings2,
-      color: 'text-amber-500',
-      activeClass: 'border-amber-500/70 bg-amber-500/5 ring-2 ring-amber-500/20',
     },
   ]
 
@@ -444,7 +427,7 @@ export function PlanDialog({
             <div className='bg-card rounded-2xl border border-border/70 p-3 sm:p-5 shadow-xs space-y-3 min-w-0 w-full'>
               <div className='flex items-center justify-between pb-2 border-b border-border/40 min-w-0'>
                 <div className='flex items-center gap-2 min-w-0'>
-                  <Layers className='size-4 text-primary shrink-0' />
+                  <LayoutGrid className='size-4 text-primary shrink-0' />
                   <span className='text-xs font-bold text-foreground break-words'>
                     موتور و مکانیزم تحویل سفارش (Fulfillment Engine)
                   </span>

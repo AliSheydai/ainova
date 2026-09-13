@@ -345,6 +345,10 @@ export default function AdminOrdersPage() {
   // Stale Orders Expiration State (Section 4.2)
   const [expiringStale, setExpiringStale] = useState(false)
 
+  // Customer Provisioning Confirmation State
+  const [confirmingProvisioning, setConfirmingProvisioning] = useState(false)
+  const [provisionAdminNote, setProvisionAdminNote] = useState('')
+
   // Search Debounce Handler
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const handleSearchChange = (value: string) => {
@@ -561,6 +565,36 @@ export default function AdminOrdersPage() {
       toast.error('خطای ارتباط با سرور در استرداد وجه.')
     } finally {
       setRefunding(false)
+    }
+  }
+
+  // Confirm Customer Provisioning (admin confirms account activation on customer's Gmail)
+  const handleConfirmCustomerProvisioning = async () => {
+    if (!selectedOrder) return
+    setConfirmingProvisioning(true)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          action: 'CONFIRM_CUSTOMER_PROVISIONING',
+          adminNote: provisionAdminNote.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message || 'اشتراک با موفقیت روی اکانت مشتری فعال‌سازی شد.')
+        setSelectedOrder(null)
+        setProvisionAdminNote('')
+        fetchOrders()
+      } else {
+        toast.error(data.error || 'خطا در تأیید فعال‌سازی.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setConfirmingProvisioning(false)
     }
   }
 
@@ -2018,10 +2052,80 @@ export default function AdminOrdersPage() {
                   </p>
                 )}
 
+                {/* Customer Account Info Banner — for PRE_CREATED_ACCOUNT with customer's own Gmail */}
+                {(() => {
+                  const cdata = selectedOrder.checkoutData as Record<string, any> | null
+                  const customerEmail = cdata?.customer_email || cdata?.customer_gmail
+                  const isPending = selectedOrder.status === 'PAID' && selectedOrder.fulfillmentStatus !== 'COMPLETED'
+                  if (!customerEmail) return null
+                  return (
+                    <div className={`rounded-xl border p-3.5 space-y-3 ${
+                      isPending
+                        ? 'border-blue-500/30 bg-blue-500/5'
+                        : 'border-emerald-500/30 bg-emerald-500/5'
+                    }`}>
+                      <div className='flex items-center gap-2'>
+                        <div className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
+                          isPending ? 'bg-blue-500/15' : 'bg-emerald-500/15'
+                        }`}>
+                          <User className={`size-3.5 ${isPending ? 'text-blue-500' : 'text-emerald-500'}`} />
+                        </div>
+                        <span className={`text-[11px] font-bold ${isPending ? 'text-blue-700 dark:text-blue-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                          {isPending ? '⏳ در انتظار فعال‌سازی روی اکانت مشتری' : '✅ فعال‌سازی روی اکانت مشتری انجام شد'}
+                        </span>
+                      </div>
+                      <div className='text-[11px] space-y-1 bg-background/70 rounded-lg p-2.5 border border-border/50'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground'>جیمیل مشتری:</span>
+                          <div className='flex items-center gap-1.5'>
+                            <span className='font-mono font-bold text-foreground' dir='ltr'>{customerEmail}</span>
+                            <button type='button' onClick={() => handleCopyText(customerEmail, 'cust-gmail')} className='text-muted-foreground hover:text-primary' title='کپی'>
+                              <Copy className='size-3' />
+                            </button>
+                          </div>
+                        </div>
+                        {cdata?.customer_password && (
+                          <div className='flex items-center justify-between'>
+                            <span className='text-muted-foreground'>رمزعبور (رمزگذاری‌شده):</span>
+                            <span className='font-mono text-muted-foreground text-[10px]'>****** (محرمانه)</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Confirm Provisioning Action */}
+                      {isPending && (
+                        <div className='space-y-2'>
+                          <Textarea
+                            placeholder='یادداشت برای مشتری (اختیاری): مثلاً راهنمای ورود، زمان فعال‌سازی...'
+                            value={provisionAdminNote}
+                            onChange={(e) => setProvisionAdminNote(e.target.value)}
+                            className='text-xs min-h-[60px] resize-none rounded-lg bg-background/80'
+                            rows={2}
+                          />
+                          <Button
+                            size='sm'
+                            onClick={handleConfirmCustomerProvisioning}
+                            disabled={confirmingProvisioning}
+                            aria-busy={confirmingProvisioning}
+                            className='w-full text-xs font-bold gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 shadow-sm'
+                          >
+                            {confirmingProvisioning
+                              ? <Loader2 className='size-3.5 animate-spin' />
+                              : <Check className='size-3.5' />
+                            }
+                            <span>تأیید فعال‌سازی روی اکانت مشتری</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+
                 {/* Action Buttons in Detail Modal */}
                 <div className='flex flex-col sm:flex-row gap-2 pt-1'>
-                  {/* If order is PAID, provide button for Manual Delivery */}
-                  {selectedOrder.status === 'PAID' && (
+                  {/* If order is PAID and no customer gmail, provide button for Manual Delivery */}
+                  {selectedOrder.status === 'PAID' &&
+                   !((selectedOrder.checkoutData as any)?.customer_email || (selectedOrder.checkoutData as any)?.customer_gmail) && (
                     <Button
                       size='sm'
                       onClick={() => {

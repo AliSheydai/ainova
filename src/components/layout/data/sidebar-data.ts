@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Users,
   Tag,
+  Archive,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -52,6 +53,11 @@ export const sidebarData: SidebarData = {
           title: 'لینک‌های فعال‌سازی',
           url: '/dashboard/activation-links',
           icon: LinkIcon,
+        },
+        {
+          title: 'اکانت‌های آماده',
+          url: '/dashboard/ready-accounts',
+          icon: Archive,
         },
         {
           title: 'محصولات و پلن‌ها',

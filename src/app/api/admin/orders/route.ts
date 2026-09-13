@@ -402,6 +402,101 @@ export async function PATCH(req: NextRequest) {
       })
     }
 
+    // Special Action: Confirm Customer Provisioning (admin confirms activation on customer's account)
+    if (action === 'CONFIRM_CUSTOMER_PROVISIONING') {
+      const targetOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          plan: { include: { product: true } },
+          product: true,
+          delivery: true,
+          payment: true,
+        },
+      })
+
+      if (!targetOrder) {
+        return NextResponse.json(
+          { success: false, error: 'سفارش مورد نظر یافت نشد.' },
+          { status: 404 }
+        )
+      }
+
+      const checkoutData = (targetOrder.checkoutData as Record<string, unknown>) || {}
+      const customerEmail =
+        (typeof checkoutData.customer_email === 'string' && checkoutData.customer_email) ||
+        (typeof checkoutData.customer_gmail === 'string' && checkoutData.customer_gmail) ||
+        ''
+
+      if (!customerEmail) {
+        return NextResponse.json(
+          { success: false, error: 'این سفارش دارای اطلاعات اکانت مشتری نیست.' },
+          { status: 400 }
+        )
+      }
+
+      const serviceName =
+        targetOrder.product?.title || targetOrder.plan?.product?.title || 'سرویس'
+      const now = new Date()
+      const adminNote = body.adminNote?.trim() || ''
+
+      const deliveryData = {
+        email: customerEmail,
+        serviceName,
+        provisionDetails: `اشتراک ${serviceName} توسط مدیر سیستم روی حساب «${customerEmail}» فعال‌سازی شد.${adminNote ? ' یادداشت: ' + adminNote : ''}`,
+        accountInfo: `ایمیل فعال‌شده: ${customerEmail}`,
+        status: 'COMPLETED' as const,
+        confirmedByAdminId: user.id,
+        confirmedAt: now.toISOString(),
+        adminNote,
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.delivery.upsert({
+          where: { orderId },
+          create: {
+            orderId,
+            type: 'PRE_CREATED_ACCOUNT',
+            status: 'DELIVERED',
+            data: deliveryData,
+            deliveredAt: now,
+          },
+          update: {
+            type: 'PRE_CREATED_ACCOUNT',
+            status: 'DELIVERED',
+            data: deliveryData,
+            deliveredAt: now,
+          },
+        })
+
+        await tx.order.update({
+          where: { id: orderId },
+          data: {
+            status: 'COMPLETED',
+            fulfillmentStatus: 'COMPLETED',
+          },
+        })
+      })
+
+      // Notify customer via Telegram if available
+      const customerTelegram = targetOrder.telegramChatId || targetOrder.user?.telegramId
+      if (customerTelegram) {
+        const msg =
+          `✅ **اشتراک شما فعال شد!**\n\n` +
+          `📦 **محصول:** ${serviceName}\n` +
+          `📧 **اکانت فعال‌شده:** ${customerEmail}\n` +
+          (adminNote ? `📝 **یادداشت مدیر:** ${adminNote}\n` : '') +
+          `\nبا تشکر از خرید شما!`
+
+        sendTelegramNotification(customerTelegram, msg).catch(() => {})
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `اشتراک با موفقیت روی اکانت «${customerEmail}» فعال‌سازی و سفارش تکمیل شد.`,
+      })
+    }
+
     // Standard Status Update
     if (!status || !Object.values(OrderStatus).includes(status)) {
       return NextResponse.json(

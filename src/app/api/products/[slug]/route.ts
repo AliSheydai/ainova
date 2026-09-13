@@ -19,7 +19,7 @@ export async function GET(
       include: {
         plans: {
           where: { active: true },
-          orderBy: { price: 'asc' },
+          orderBy: { sortOrder: 'asc' },
         },
       },
     })
@@ -33,10 +33,31 @@ export async function GET(
       FulfillmentService.getProductPurchaseCount(product.id),
     ])
 
+    // Enrich each plan with its available inventory count (for PRE_CREATED_ACCOUNT plans)
+    const plansWithStock = await Promise.all(
+      product.plans.map(async (plan) => {
+        if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+          const availableCount = await prisma.inventoryItem.count({
+            where: {
+              type: 'PRE_CREATED_ACCOUNT',
+              status: 'AVAILABLE',
+              OR: [
+                { planId: plan.id },
+                { productId: product.id, planId: null },
+              ],
+            },
+          })
+          return { ...plan, availableInventoryCount: availableCount }
+        }
+        return { ...plan, availableInventoryCount: null }
+      })
+    )
+
     return NextResponse.json({
       success: true,
       product: {
         ...product,
+        plans: plansWithStock,
         stock,
         purchaseCount,
       },
