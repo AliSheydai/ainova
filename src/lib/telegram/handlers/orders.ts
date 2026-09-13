@@ -2,6 +2,8 @@ import { type Context } from 'grammy'
 import { prisma } from '@/lib/prisma'
 import { MESSAGES } from '../messages'
 import { ordersPaginationKeyboard } from '../keyboards'
+import { encryptCredential } from '@/lib/security/crypto'
+import { type Prisma } from '@prisma/client'
 
 const PAGE_SIZE = 3
 
@@ -375,18 +377,18 @@ export async function handleSubmitCredentials(ctx: Context) {
   }
 
   const fixData = session.fixData || {}
-  const existingCheckout = (order.checkoutData as Record<string, any>) || {}
-  const updatedCheckout = {
+  const existingCheckout = (order.checkoutData as Record<string, unknown>) || {}
+  const updatedCheckout: Record<string, unknown> = {
     ...existingCheckout,
     ...(fixData.email ? { customer_email: fixData.email, customer_gmail: fixData.email } : {}),
-    ...(fixData.password ? { customer_password: fixData.password } : {}),
+    ...(fixData.password ? { customer_password: encryptCredential(fixData.password.trim()) } : {}),
     ...(fixData.note ? { customer_correction_note: fixData.note } : {}),
   }
 
   await prisma.order.update({
     where: { id: order.id },
     data: {
-      checkoutData: updatedCheckout,
+      checkoutData: updatedCheckout as Prisma.InputJsonValue,
       customerActionRequired: false,
       actionRequiredReason: null,
       credentialsUpdatedAt: new Date(),

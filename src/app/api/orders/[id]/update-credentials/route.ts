@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { AdminNotificationService } from '@/lib/notifications/admin-notification'
+import { encryptCredential } from '@/lib/security/crypto'
+import { type Prisma } from '@prisma/client'
 
 export async function POST(
   req: NextRequest,
@@ -57,10 +59,10 @@ export async function POST(
       )
     }
 
-    const existingCheckout = (targetOrder.checkoutData as Record<string, any>) || {}
-    const updatedCheckout = {
+    const existingCheckout = (targetOrder.checkoutData as Record<string, unknown>) || {}
+    const updatedCheckout: Record<string, unknown> = {
       ...existingCheckout,
-      customer_password: password.trim(),
+      customer_password: encryptCredential(password.trim()),
       ...(email && typeof email === 'string' && email.trim() ? { customer_email: email.trim(), customer_gmail: email.trim() } : {}),
       ...(customerNote && typeof customerNote === 'string' && customerNote.trim() ? { customer_correction_note: customerNote.trim() } : {}),
     }
@@ -68,7 +70,7 @@ export async function POST(
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
-        checkoutData: updatedCheckout,
+        checkoutData: updatedCheckout as Prisma.InputJsonValue,
         customerActionRequired: false,
         actionRequiredReason: null,
         credentialsUpdatedAt: new Date(),

@@ -5,6 +5,7 @@ import { PaymentService } from '@/lib/payment'
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
+import { encryptCredential } from '@/lib/security/crypto'
 
 export async function POST(req: NextRequest) {
   try {
@@ -238,6 +239,17 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // Encrypt sensitive customer credentials before storing in DB (Bug 1.1)
+        const secureCheckoutData = { ...submittedData }
+        if (
+          typeof secureCheckoutData.customer_password === 'string' &&
+          secureCheckoutData.customer_password.trim()
+        ) {
+          secureCheckoutData.customer_password = encryptCredential(
+            secureCheckoutData.customer_password.trim()
+          )
+        }
+
         // Create Order record with coupon discount
         const newOrder = await tx.order.create({
           data: {
@@ -247,7 +259,7 @@ export async function POST(req: NextRequest) {
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,
-            checkoutData: submittedData,
+            checkoutData: secureCheckoutData,
             status: 'PENDING_PAYMENT',
             fulfillmentStatus: 'PENDING',
             source: source || 'web',

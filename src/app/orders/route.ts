@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  return NextResponse.redirect(new URL('/?dashboard=orders', request.url))
+  const url = new URL('/?dashboard=orders', request.url)
+  request.nextUrl.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value)
+  })
+  return NextResponse.redirect(url)
 }

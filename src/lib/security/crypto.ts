@@ -14,11 +14,31 @@ function getEncryptionKey(): Buffer {
 }
 
 /**
+ * Checks if a string is already encrypted in the iv_hex:auth_tag_hex:encrypted_hex format.
+ */
+export function isEncryptedCredential(text: string): boolean {
+  if (!text || typeof text !== 'string') return false
+  const parts = text.split(':')
+  if (parts.length !== 3) return false
+  const [ivHex, authTagHex, cipherHex] = parts
+  const isHex = (str: string) => /^[0-9a-fA-F]+$/.test(str)
+  return (
+    ivHex.length === IV_LENGTH * 2 &&
+    isHex(ivHex) &&
+    authTagHex.length === 32 &&
+    isHex(authTagHex) &&
+    cipherHex.length > 0 &&
+    isHex(cipherHex)
+  )
+}
+
+/**
  * Encrypts a sensitive string (e.g., account password) using AES-256-GCM.
  * Output format: iv_hex:auth_tag_hex:encrypted_hex
  */
 export function encryptCredential(plainText: string): string {
   if (!plainText) return ''
+  if (isEncryptedCredential(plainText)) return plainText
   const key = getEncryptionKey()
   const iv = crypto.randomBytes(IV_LENGTH)
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv)

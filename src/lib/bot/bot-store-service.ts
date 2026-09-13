@@ -3,8 +3,8 @@ import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 import { PaymentService } from '@/lib/payment'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
-import { decryptCredential } from '@/lib/security/crypto'
-import { type FulfillmentType } from '@prisma/client'
+import { encryptCredential } from '@/lib/security/crypto'
+import { type FulfillmentType, type Prisma } from '@prisma/client'
 
 export interface BotProductSummary {
   id: string
@@ -265,6 +265,19 @@ export class BotStoreService {
           }
         }
 
+        // Encrypt customer_password in checkoutData before saving (Bug 1.1)
+        const secureCheckoutData: Record<string, unknown> = {
+          ...(checkoutData as Record<string, unknown>),
+        }
+        if (
+          typeof secureCheckoutData.customer_password === 'string' &&
+          secureCheckoutData.customer_password.trim()
+        ) {
+          secureCheckoutData.customer_password = encryptCredential(
+            secureCheckoutData.customer_password.trim()
+          )
+        }
+
         // Create Order snapshot
         const newOrder = await tx.order.create({
           data: {
@@ -274,7 +287,7 @@ export class BotStoreService {
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,
-            checkoutData,
+            checkoutData: secureCheckoutData as Prisma.InputJsonValue,
             status: 'PENDING_PAYMENT',
             fulfillmentStatus: 'PENDING',
             source,
@@ -379,11 +392,10 @@ export class BotStoreService {
           )
         }
 
-        const pass = deliveryData.password ? decryptCredential(deliveryData.password) : '••••••'
         return (
           `👤 **اطلاعات اکانت اختصاصی:**\n` +
           `📧 **نام کاربری / ایمیل:** \`${deliveryData.email || deliveryData.username}\`\n` +
-          `🔑 **رمز عبور:** \`${pass}\`\n\n` +
+          `🔑 **رمز عبور:** برای مشاهده رمز، به پنل کاربری مراجعه فرمایید.\n\n` +
           `⚠️ ${deliveryData.note || 'لطفاً بلافاصله پس از ورود، رمز عبور را تغییر دهید.'}`
         )
       }

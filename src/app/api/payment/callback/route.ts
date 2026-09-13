@@ -339,14 +339,19 @@ export async function GET(req: NextRequest) {
           ).catch((err) => console.error('Telegram notification error:', err))
         }
       } else if (deliveryType === 'PRE_CREATED_ACCOUNT') {
+        const orderUrl = `${appUrl}/orders?orderId=${payment.orderId}`
         const accountMsg =
           `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
           `📦 **محصول:** ${productTitle}\n` +
           `👤 **نام کاربری / ایمیل:** \`${deliveryData.email || deliveryData.username}\`\n` +
-          `🔑 **رمز عبور:** \`${deliveryData.password || '••••••'}\`\n\n` +
+          `🔑 **رمز عبور:** برای مشاهده رمز، به پنل کاربری مراجعه فرمایید.\n\n` +
           `⚠️ ${deliveryData.note || 'لطفاً بلافاصله پس از ورود، کلمه عبور را تغییر دهید.'}`
 
-        await sendTelegramNotification(targetChatId, accountMsg).catch((err) =>
+        await sendTelegramNotification(
+          targetChatId,
+          accountMsg,
+          new InlineKeyboard().url('🔐 مشاهده اطلاعات ورود', orderUrl)
+        ).catch((err) =>
           console.error('Telegram notification error:', err)
         )
       } else {
