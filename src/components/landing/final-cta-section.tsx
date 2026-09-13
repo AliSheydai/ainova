@@ -33,7 +33,7 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
             دسترسی آنی و قانونی به کامل‌ترین مجموعه اشتراک‌های پیشرفته هوش مصنوعی جهان
           </p>
           <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-            <Link href='#products'>
+            <Link href='/products'>
               <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
                 مشاهده محصولات و شروع خرید
               </Button>

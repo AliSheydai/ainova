@@ -715,12 +715,12 @@ function CheckoutContent() {
       {/* Main Checkout Section */}
       <main className='flex-1 container mx-auto px-3.5 sm:px-6 py-5 sm:py-8 md:py-10 max-w-xl'>
         {/* Breadcrumb */}
-        <nav className='mb-5 sm:mb-6 flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground flex-wrap'>
+        <nav aria-label='مسیر جاری' className='mb-5 sm:mb-6 flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground flex-wrap font-sans'>
           <Link href='/' className='hover:text-foreground transition-colors shrink-0'>
-            صفحه اصلی
+            خانه
           </Link>
           <ChevronLeft className='size-3 shrink-0' />
-          <Link href='/#products' className='hover:text-foreground transition-colors shrink-0'>
+          <Link href='/products' className='hover:text-foreground transition-colors shrink-0'>
             محصولات
           </Link>
           {product && (

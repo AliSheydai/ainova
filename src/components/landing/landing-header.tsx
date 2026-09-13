@@ -212,7 +212,7 @@ function UserDropdown({
 }
 
 const navLinks = [
-  { label: 'محصولات', href: '/#products' },
+  { label: 'محصولات', href: '/products' },
   { label: 'امکانات و مزایا', href: '/#features' },
   { label: 'نحوه فعال‌سازی', href: '/#how-it-works' },
   { label: 'سوالات متداول', href: '/#faq' },
@@ -507,7 +507,7 @@ export function LandingHeader() {
                   isScrolled ? 'h-8 px-3 text-xs' : 'h-9 px-4 text-sm'
                 )}
               >
-                <Link href='/#products'>
+                <Link href='/products'>
                   مشاهده محصولات
                 </Link>
               </Button>
@@ -667,7 +667,7 @@ export function LandingHeader() {
                         ورود به حساب
                       </Button>
                     )}
-                    <Link href='/#products' onClick={() => setOpen(false)}>
+                    <Link href='/products' onClick={() => setOpen(false)}>
                       <Button className='w-full justify-center text-sm'>
                         مشاهده و خرید محصولات
                       </Button>

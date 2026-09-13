@@ -67,7 +67,7 @@ export function MobileBottomNav({ onOpenDashboard, hidden = false }: MobileBotto
           size='default'
           className='flex-1 h-11 rounded-xl text-xs sm:text-sm font-semibold shadow-sm gap-2 transition-transform active:scale-[0.98]'
         >
-          <Link href='/#products' onClick={handleProductsClick}>
+          <Link href='/products'>
             <Sparkles className='size-4 shrink-0' />
             <span className='truncate'>مشاهده محصولات</span>
           </Link>

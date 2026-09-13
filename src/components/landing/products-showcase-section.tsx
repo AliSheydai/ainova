@@ -133,6 +133,26 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
             )
           })}
         </motion.div>
+
+        {/* View All Products CTA */}
+        <motion.div
+          className='mt-10 sm:mt-12 text-center'
+          initial='hidden'
+          whileInView='visible'
+          viewport={viewportOnce}
+          variants={fadeUp}
+        >
+          <Link href='/products'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-11 sm:h-12 px-6 sm:px-8 text-xs sm:text-sm font-semibold gap-2 border-border/80 bg-background/80 hover:bg-accent/60 transition-all rounded-xl shadow-xs'
+            >
+              <span>مشاهده همه محصولات و فیلتر پیشرفته</span>
+              <ArrowLeft className='size-4' />
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   )

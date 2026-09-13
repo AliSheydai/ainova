@@ -217,7 +217,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           <Button
             onClick={() => {
               if (onGoToBuy) onGoToBuy()
-              else window.location.href = '/#products'
+              else window.location.href = '/products'
             }}
             className="mt-4 gap-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
           >

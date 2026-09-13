@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator'
 
 const footerLinks = [
   { label: 'صفحه اصلی', href: '/' },
-  { label: 'محصولات و اشتراک‌ها', href: '#products' },
+  { label: 'محصولات و اشتراک‌ها', href: '/products' },
   { label: 'امکانات و مزایا', href: '#features' },
   { label: 'نحوه فعال‌سازی', href: '#how-it-works' },
   { label: 'سوالات متداول', href: '#faq' },

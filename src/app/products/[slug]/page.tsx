@@ -101,16 +101,16 @@ export default async function ProductDetailPage(props: ProductPageProps) {
         <div className='container mx-auto px-4 sm:px-6 max-w-5xl'>
 
           {/* Breadcrumb */}
-          <nav className='mb-6 flex items-center gap-1.5 text-xs text-muted-foreground'>
+          <nav aria-label='مسیر جاری' className='mb-6 flex items-center gap-1.5 text-xs text-muted-foreground font-sans'>
             <Link href='/' className='hover:text-foreground transition-colors'>
-              صفحه اصلی
+              خانه
             </Link>
             <ChevronLeft className='size-3 shrink-0' />
-            <Link href='/#products' className='hover:text-foreground transition-colors'>
+            <Link href='/products' className='hover:text-foreground transition-colors'>
               محصولات
             </Link>
             <ChevronLeft className='size-3 shrink-0' />
-            <span className='truncate text-foreground'>{product.title}</span>
+            <span className='truncate text-foreground font-medium'>{product.title}</span>
           </nav>
 
           {/* Main Grid: Image (right) + Content (left) */}
