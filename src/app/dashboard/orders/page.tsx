@@ -132,6 +132,10 @@ interface AdminOrder {
     data: any
     deliveredAt: string | null
   } | null
+  adminNote?: string | null
+  customerActionRequired?: boolean | null
+  actionRequiredReason?: string | null
+  credentialsUpdatedAt?: string | null
 }
 
 interface ProductOption {
@@ -160,6 +164,7 @@ interface OrdersResponse {
     failedOrCancelled: number
     refunded: number
     expired: number
+    actionRequired: number
   }
   filterOptions: {
     products: ProductOption[]
@@ -351,6 +356,7 @@ export default function AdminOrdersPage() {
     failedOrCancelled: 0,
     refunded: 0,
     expired: 0,
+    actionRequired: 0,
   })
 
   // Selected Order & Modals
@@ -375,6 +381,11 @@ export default function AdminOrdersPage() {
   // Customer Provisioning Confirmation State
   const [confirmingProvisioning, setConfirmingProvisioning] = useState(false)
   const [provisionAdminNote, setProvisionAdminNote] = useState('')
+
+  // Customer Action Request State (Wrong password, 2FA, etc.)
+  const [requestActionNote, setRequestActionNote] = useState('')
+  const [requestActionReason, setRequestActionReason] = useState('WRONG_PASSWORD')
+  const [requestingAction, setRequestingAction] = useState(false)
 
   // Search Debounce Handler
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -418,7 +429,12 @@ export default function AdminOrdersPage() {
           setOrders(data.orders || [])
           setTotalOrders(data.pagination.total || 0)
           setTotalPages(data.pagination.totalPages || 1)
-          if (data.counts) setCounts(data.counts)
+          if (data.counts) {
+            setCounts({
+              ...data.counts,
+              actionRequired: data.counts.actionRequired ?? 0,
+            })
+          }
           if (data.filterOptions?.products) setProductsList(data.filterOptions.products)
         })
       } else {
@@ -622,6 +638,49 @@ export default function AdminOrdersPage() {
       toast.error('خطای ارتباط با سرور.')
     } finally {
       setConfirmingProvisioning(false)
+    }
+  }
+
+  // Request Customer Action (Wrong password, 2FA, etc.)
+  const handleRequestCustomerAction = async () => {
+    if (!selectedOrder) return
+    if (!requestActionNote.trim()) {
+      toast.error('لطفاً پیام یا علت نیاز به اقدام را برای خریدار وارد فرمایید.')
+      return
+    }
+
+    setRequestingAction(true)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          action: 'REQUEST_CUSTOMER_ACTION',
+          reason: requestActionReason,
+          adminNote: requestActionNote.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message || 'درخواست اصلاح اطلاعات با موفقیت برای خریدار ثبت و ارسال گردید.')
+        setRequestActionNote('')
+        fetchOrders()
+        if (selectedOrder) {
+          setSelectedOrder({
+            ...selectedOrder,
+            customerActionRequired: true,
+            actionRequiredReason: requestActionReason,
+            adminNote: requestActionNote.trim(),
+          })
+        }
+      } else {
+        toast.error(data.error || 'خطا در ارسال درخواست.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setRequestingAction(false)
     }
   }
 
@@ -1524,14 +1583,28 @@ export default function AdminOrdersPage() {
                           </td>
 
                           {/* Order Status */}
-                          <td className='py-3.5 px-4 whitespace-nowrap min-w-[130px]'>
-                            <Badge
-                              variant={statusBadge.variant}
-                              className={`text-[10px] gap-1 py-0.5 font-medium border ${statusBadge.className}`}
-                            >
-                              <StatusIcon className='size-3 shrink-0' />
-                              <span>{statusBadge.label}</span>
-                            </Badge>
+                          <td className='py-3.5 px-4 whitespace-nowrap min-w-[140px]'>
+                            <div className='flex flex-col gap-1 items-start'>
+                              <Badge
+                                variant={statusBadge.variant}
+                                className={`text-[10px] gap-1 py-0.5 font-medium border ${statusBadge.className}`}
+                              >
+                                <StatusIcon className='size-3 shrink-0' />
+                                <span>{statusBadge.label}</span>
+                              </Badge>
+                              {ord.customerActionRequired && (
+                                <Badge variant='outline' className='text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1'>
+                                  <AlertTriangle className='size-2.5' />
+                                  <span>نیاز به اقدام خریدار</span>
+                                </Badge>
+                              )}
+                              {ord.credentialsUpdatedAt && !ord.customerActionRequired && ord.status === 'PAID' && (
+                                <Badge variant='outline' className='text-[9px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1'>
+                                  <RefreshCw className='size-2.5' />
+                                  <span>اطلاعات اصلاح شد</span>
+                                </Badge>
+                              )}
+                            </div>
                           </td>
 
                           {/* Delivery Status */}
@@ -1625,13 +1698,27 @@ export default function AdminOrdersPage() {
                           </button>
                         </div>
 
-                        <Badge
-                          variant={statusBadge.variant}
-                          className={`text-[10px] gap-1 py-0.5 font-medium border ${statusBadge.className}`}
-                        >
-                          <StatusIcon className='size-3 shrink-0' />
-                          <span>{statusBadge.label}</span>
-                        </Badge>
+                        <div className='flex items-center gap-1.5 flex-wrap justify-end'>
+                          {ord.customerActionRequired && (
+                            <Badge variant='outline' className='text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1'>
+                              <AlertTriangle className='size-2.5' />
+                              <span>نیاز به اقدام خریدار</span>
+                            </Badge>
+                          )}
+                          {ord.credentialsUpdatedAt && !ord.customerActionRequired && ord.status === 'PAID' && (
+                            <Badge variant='outline' className='text-[9px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1'>
+                              <RefreshCw className='size-2.5' />
+                              <span>اطلاعات اصلاح شد</span>
+                            </Badge>
+                          )}
+                          <Badge
+                            variant={statusBadge.variant}
+                            className={`text-[10px] gap-1 py-0.5 font-medium border ${statusBadge.className}`}
+                          >
+                            <StatusIcon className='size-3 shrink-0' />
+                            <span>{statusBadge.label}</span>
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* Product & Plan */}
@@ -2314,18 +2401,58 @@ export default function AdminOrdersPage() {
                     <div
                       className='rounded-xl border border-primary/25 bg-primary/5 p-3.5 space-y-3 min-w-0 overflow-hidden'
                     >
-                      <div className='flex items-center gap-2'>
-                        <div
-                          className='size-6 rounded-lg flex items-center justify-center shrink-0 bg-primary/15'
-                        >
-                          <User className='size-3.5 text-primary' />
+                      <div className='flex items-center justify-between gap-2 flex-wrap'>
+                        <div className='flex items-center gap-2'>
+                          <div
+                            className='size-6 rounded-lg flex items-center justify-center shrink-0 bg-primary/15'
+                          >
+                            <User className='size-3.5 text-primary' />
+                          </div>
+                          <span
+                            className='text-[11px] font-bold text-primary'
+                          >
+                            {isPending ? '⏳ در انتظار فعال‌سازی روی اکانت مشتری' : '✅ فعال‌سازی روی اکانت مشتری انجام شد'}
+                          </span>
                         </div>
-                        <span
-                          className='text-[11px] font-bold text-primary'
-                        >
-                          {isPending ? '⏳ در انتظار فعال‌سازی روی اکانت مشتری' : '✅ فعال‌سازی روی اکانت مشتری انجام شد'}
-                        </span>
+                        {selectedOrder.customerActionRequired && (
+                          <Badge variant='outline' className='text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1'>
+                            <AlertTriangle className='size-3' />
+                            <span>در انتظار پاسخ خریدار</span>
+                          </Badge>
+                        )}
                       </div>
+
+                      {/* Alert: If customer action is required */}
+                      {selectedOrder.customerActionRequired && (
+                        <div className='p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs space-y-1'>
+                          <div className='flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400'>
+                            <AlertTriangle className='size-3.5' />
+                            <span>اخطار نقص اطلاعات برای خریدار ارسال شده است</span>
+                          </div>
+                          <p className='text-[11px] text-muted-foreground'>
+                            پیام ارسال‌شده: <strong className='text-foreground'>{selectedOrder.adminNote || 'رمز عبور یا اطلاعات اکانت اشتباه است.'}</strong>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Alert: If customer just updated credentials */}
+                      {selectedOrder.credentialsUpdatedAt && !selectedOrder.customerActionRequired && isPending && (
+                        <div className='p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs space-y-1'>
+                          <div className='flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400'>
+                            <RefreshCw className='size-3.5' />
+                            <span>خریدار اطلاعات اکانت خود را به‌روزرسانی کرد!</span>
+                          </div>
+                          <p className='text-[11px] text-muted-foreground'>
+                            تاریخ ثبت اطلاعات جدید: {formatDate(selectedOrder.credentialsUpdatedAt)}
+                          </p>
+                          {(selectedOrder.checkoutData as any)?.customer_correction_note && (
+                            <p className='text-[11px] text-foreground pt-0.5'>
+                              یادداشت خریدار: {(selectedOrder.checkoutData as any).customer_correction_note}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       <div className='text-[11px] space-y-1 bg-background/70 rounded-lg p-2.5 border border-border/50 min-w-0 overflow-hidden'>
                         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0'>
                           <span className='text-muted-foreground shrink-0'>جیمیل مشتری:</span>
@@ -2365,7 +2492,7 @@ export default function AdminOrdersPage() {
 
                       {/* Confirm Provisioning Action */}
                       {isPending && (
-                        <div className='space-y-2'>
+                        <div className='space-y-2 pt-1'>
                           <Textarea
                             placeholder='یادداشت برای مشتری (اختیاری): مثلاً راهنمای ورود، زمان فعال‌سازی...'
                             value={provisionAdminNote}
@@ -2378,13 +2505,79 @@ export default function AdminOrdersPage() {
                             onClick={handleConfirmCustomerProvisioning}
                             disabled={confirmingProvisioning}
                             aria-busy={confirmingProvisioning}
-                            className='w-full text-xs font-bold gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 shadow-sm'
+                            className='w-full text-xs font-bold gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-9 shadow-sm'
                           >
                             {confirmingProvisioning
                               ? <Loader2 className='size-3.5 animate-spin' />
                               : <Check className='size-3.5' />
                             }
                             <span>تأیید فعال‌سازی روی اکانت مشتری</span>
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Report Issue / Request Correction from Customer (e.g. Wrong Password) */}
+                      {isPending && (
+                        <div className='pt-3 border-t border-border/50 space-y-2.5'>
+                          <div className='flex items-center justify-between'>
+                            <span className='text-[11px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5'>
+                              <AlertTriangle className='size-3.5' />
+                              <span>گزارش مشکل در ورود / درخواست اصلاح رمز از خریدار:</span>
+                            </span>
+                          </div>
+
+                          {/* Quick Presets */}
+                          <div className='flex flex-wrap gap-1.5'>
+                            <button
+                              type='button'
+                              onClick={() => {
+                                setRequestActionReason('WRONG_PASSWORD')
+                                setRequestActionNote('رمز عبور وارد شده برای اکانت شما نادرست است. لطفاً رمز عبور صحیح را ثبت فرمایید.')
+                              }}
+                              className='text-[10px] px-2.5 py-1 rounded-md bg-background/80 hover:bg-amber-500/15 border border-border/70 hover:border-amber-500/30 text-foreground transition-colors'
+                            >
+                              🔑 رمز عبور اشتباه است
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() => {
+                                setRequestActionReason('TWO_FACTOR_REQUIRED')
+                                setRequestActionNote('تایید دو مرحله‌ای (2FA) روی اکانت شما فعال است. لطفاً جهت ورود ادمین، آن را موقتاً خاموش کرده یا کد بکاپ را ثبت فرمایید.')
+                              }}
+                              className='text-[10px] px-2.5 py-1 rounded-md bg-background/80 hover:bg-amber-500/15 border border-border/70 hover:border-amber-500/30 text-foreground transition-colors'
+                            >
+                              🛡️ تایید دو مرحله‌ای فعال است
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() => {
+                                setRequestActionReason('INVALID_ACCOUNT')
+                                setRequestActionNote('آدرس جیمیل وارد شده معتبر نیست یا وجود ندارد. لطفاً جیمیل صحیح را وارد فرمایید.')
+                              }}
+                              className='text-[10px] px-2.5 py-1 rounded-md bg-background/80 hover:bg-amber-500/15 border border-border/70 hover:border-amber-500/30 text-foreground transition-colors'
+                            >
+                              ✉️ جیمیل اشتباه است
+                            </button>
+                          </div>
+
+                          <Textarea
+                            placeholder='متن پیام برای خریدار: مثلاً رمز اشتباه بود، دو مرحله‌ای را غیرفعال کنید...'
+                            value={requestActionNote}
+                            onChange={(e) => setRequestActionNote(e.target.value)}
+                            className='text-xs min-h-[55px] resize-none rounded-lg bg-background/90'
+                            rows={2}
+                          />
+
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            onClick={handleRequestCustomerAction}
+                            disabled={requestingAction}
+                            aria-busy={requestingAction}
+                            className='w-full text-xs font-semibold gap-1.5 text-amber-700 dark:text-amber-400 border-amber-500/40 hover:bg-amber-500/10 rounded-xl h-9'
+                          >
+                            {requestingAction ? <Loader2 className='size-3.5 animate-spin' /> : <Send className='size-3.5' />}
+                            <span>ارسال اخطار به خریدار جهت اصلاح رمز / اطلاعات</span>
                           </Button>
                         </div>
                       )}
@@ -2443,6 +2636,19 @@ export default function AdminOrdersPage() {
                     {selectedOrder.refundReason && <div className='col-span-1 sm:col-span-2'>علت: {selectedOrder.refundReason}</div>}
                     {selectedOrder.refundedAt && <div className='col-span-1 sm:col-span-2 text-muted-foreground'>زمان استرداد: {formatDate(selectedOrder.refundedAt)}</div>}
                   </div>
+                </div>
+              )}
+
+              {/* Admin Note Banner if present on order */}
+              {selectedOrder.adminNote && (
+                <div className='p-3.5 rounded-xl border border-primary/20 bg-primary/5 space-y-1 text-xs text-foreground'>
+                  <div className='flex items-center gap-1.5 font-bold text-primary'>
+                    <FileText className='size-3.5' />
+                    <span>یادداشت و پیام ثبت‌شده مدیر برای این سفارش:</span>
+                  </div>
+                  <p className='text-xs leading-relaxed whitespace-pre-wrap text-foreground select-all pt-1'>
+                    {selectedOrder.adminNote}
+                  </p>
                 </div>
               )}
 

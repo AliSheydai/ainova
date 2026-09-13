@@ -13,6 +13,11 @@ export type BotSessionStep =
   | 'AWAITING_GMAIL'
   | 'AWAITING_GMAIL_PASSWORD'
   | 'AWAITING_COUPON'
+  | 'AWAITING_CREDENTIALS_FIX'
+  | 'FIX_CRED_GMAIL'
+  | 'FIX_CRED_PASSWORD'
+  | 'FIX_CRED_NOTE'
+  | 'FIX_CRED_CONFIRM'
 
 export interface BotLoginSession {
   step: BotSessionStep
@@ -20,12 +25,18 @@ export interface BotLoginSession {
   lastSentAt?: number
   planId?: string
   productId?: string
+  orderId?: string
   currentFieldKey?: string
   currentFieldLabel?: string
   checkoutData?: Record<string, any>
   deliveryPreference?: 'ready_account' | 'own_account'
   couponCode?: string
   couponDiscount?: number
+  fixData?: {
+    email?: string
+    password?: string
+    note?: string
+  }
 }
 
 // In-memory cache for quick response in long-running processes

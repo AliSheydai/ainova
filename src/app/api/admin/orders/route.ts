@@ -41,6 +41,8 @@ export async function GET(req: NextRequest) {
           { delivery: null },
           { delivery: { status: { not: 'DELIVERED' } } },
         ]
+      } else if (statusFilter === 'ACTION_REQUIRED') {
+        where.customerActionRequired = true
       } else if (Object.values(OrderStatus).includes(statusFilter as OrderStatus)) {
         where.status = statusFilter as OrderStatus
       }
@@ -183,11 +185,10 @@ export async function GET(req: NextRequest) {
         prisma.order.count({ where: { status: OrderStatus.PAID } }),
         prisma.order.count({ where: { status: OrderStatus.COMPLETED } }),
         prisma.order.count({ where: { status: OrderStatus.PENDING_PAYMENT } }),
-        prisma.order.count({
-          where: { status: { in: [OrderStatus.FAILED, OrderStatus.CANCELLED] } },
-        }),
+        prisma.order.count({ where: { status: { in: [OrderStatus.FAILED, OrderStatus.CANCELLED] } } }),
         prisma.order.count({ where: { status: OrderStatus.REFUNDED } }),
         prisma.order.count({ where: { status: OrderStatus.EXPIRED } }),
+        prisma.order.count({ where: { customerActionRequired: true } }),
       ]),
       prisma.product.findMany({
         select: { id: true, title: true, slug: true },
@@ -237,6 +238,7 @@ export async function GET(req: NextRequest) {
         failedOrCancelled: counts[5],
         refunded: counts[6],
         expired: counts[7],
+        actionRequired: counts[8],
       },
       filterOptions: {
         products,
@@ -455,7 +457,7 @@ export async function PATCH(req: NextRequest) {
       const deliveryData = {
         email: customerEmail,
         serviceName,
-        provisionDetails: `اشتراک ${serviceName} توسط مدیر سیستم روی حساب «${customerEmail}» فعال‌سازی شد.${adminNote ? ' یادداشت: ' + adminNote : ''}`,
+        provisionDetails: `اشتراک ${serviceName} توسط مدیر سیستم روی حساب «${customerEmail}» فعال‌سازی شد.${adminNote ? '\nیادداشت مدیر: ' + adminNote : ''}`,
         accountInfo: `ایمیل فعال‌شده: ${customerEmail}`,
         status: 'COMPLETED' as const,
         confirmedByAdminId: user.id,
@@ -468,13 +470,13 @@ export async function PATCH(req: NextRequest) {
           where: { orderId },
           create: {
             orderId,
-            type: 'PRE_CREATED_ACCOUNT',
+            type: 'CUSTOMER_PROVISIONING',
             status: 'DELIVERED',
             data: deliveryData,
             deliveredAt: now,
           },
           update: {
-            type: 'PRE_CREATED_ACCOUNT',
+            type: 'CUSTOMER_PROVISIONING',
             status: 'DELIVERED',
             data: deliveryData,
             deliveredAt: now,
@@ -486,6 +488,8 @@ export async function PATCH(req: NextRequest) {
           data: {
             status: 'COMPLETED',
             fulfillmentStatus: 'COMPLETED',
+            adminNote: adminNote || null,
+            customerActionRequired: false,
           },
         })
       })
@@ -504,10 +508,11 @@ export async function PATCH(req: NextRequest) {
       }
 
       if (targetOrder.userId) {
+        const notifMsg = `اشتراک ${serviceName} روی حساب «${customerEmail}» با موفقیت فعال شد.${adminNote ? `\n📝 یادداشت مدیر: ${adminNote}` : ''}`
         UserNotificationService.createNotification({
           userId: targetOrder.userId,
           title: 'اشتراک شما فعال شد!',
-          message: `اشتراک ${serviceName} روی حساب «${customerEmail}» با موفقیت فعال شد.`,
+          message: notifMsg,
           type: NotificationType.ORDER_READY,
           metadata: { orderId: targetOrder.id },
         }).catch(() => {})
@@ -519,6 +524,86 @@ export async function PATCH(req: NextRequest) {
       })
     }
 
+    // Special Action: Request Customer Action (e.g. wrong password, 2FA required)
+    if (action === 'REQUEST_CUSTOMER_ACTION') {
+      const targetOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          plan: { include: { product: true } },
+          product: true,
+        },
+      })
+
+      if (!targetOrder) {
+        return NextResponse.json(
+          { success: false, error: 'سفارش مورد نظر یافت نشد.' },
+          { status: 404 }
+        )
+      }
+
+      const reason = body.reason?.trim() || 'WRONG_PASSWORD'
+      const adminNote = body.adminNote?.trim() || 'اطلاعات ورود به اکانت نامعتبر است. لطفاً رمز عبور را بررسی و اصلاح فرمایید.'
+      const serviceName = targetOrder.product?.title || targetOrder.plan?.product?.title || 'اشتراک'
+
+      const updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          customerActionRequired: true,
+          actionRequiredReason: reason,
+          adminNote,
+          fulfillmentStatus: 'PROCESSING',
+        },
+        include: {
+          user: true,
+          plan: true,
+          product: true,
+          delivery: true,
+        },
+      })
+
+      // Send in-app notification to customer
+      if (targetOrder.userId) {
+        UserNotificationService.createNotification({
+          userId: targetOrder.userId,
+          title: '⚠️ نیاز به اصلاح اطلاعات سفارش',
+          message: `در سفارش ${serviceName}: ${adminNote}`,
+          type: NotificationType.ORDER_ACTION_REQUIRED,
+          link: '/?tab=orders',
+          metadata: { orderId: targetOrder.id, actionRequired: true, reason },
+        }).catch(() => {})
+      }
+
+      // Send Telegram notification if available
+      const customerTelegram = targetOrder.telegramChatId || targetOrder.user?.telegramId
+      if (customerTelegram) {
+        const msg =
+          `⚠️ **نیاز به بررسی و اصلاح اطلاعات سفارش #${targetOrder.id.slice(-6).toUpperCase()}**\n\n` +
+          `📦 **محصول:** ${serviceName}\n` +
+          `📝 **پیام مدیر:** ${adminNote}\n\n` +
+          `👇 لطفاً با کلیک روی دکمه زیر، اطلاعات اکانت (جیمیل، رمز عبور یا یادداشت) خود را ویرایش و ارسال فرمایید:`
+
+        const inlineKeyboard = {
+          inline_keyboard: [
+            [
+              {
+                text: '✏️ ویرایش اطلاعات اکانت',
+                callback_data: `fix_cred:${targetOrder.id}`,
+              },
+            ],
+          ],
+        }
+
+        sendTelegramNotification(customerTelegram, msg, inlineKeyboard).catch(() => {})
+      }
+
+      return NextResponse.json({
+        success: true,
+        order: updatedOrder,
+        message: 'درخواست اصلاح اطلاعات با موفقیت برای خریدار ارسال و ثبت گردید.',
+      })
+    }
+
     // Standard Status Update
     if (!status || !Object.values(OrderStatus).includes(status)) {
       return NextResponse.json(
@@ -527,15 +612,48 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
+    const adminNote = body.adminNote?.trim() || null
+
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: { status },
+      data: {
+        status,
+        ...(adminNote !== null ? { adminNote } : {}),
+        customerActionRequired: false,
+      },
       include: {
         user: true,
         plan: true,
         delivery: true,
       },
     })
+
+    // If status is CANCELLED or FAILED, notify the customer with explanation
+    if (updatedOrder.userId && (status === OrderStatus.CANCELLED || status === OrderStatus.FAILED)) {
+      const isCancelled = status === OrderStatus.CANCELLED
+      const title = isCancelled ? 'سفارش شما لغو شد' : 'سفارش با خطا مواجه شد'
+      const defaultMsg = isCancelled
+        ? `سفارش #${updatedOrder.id.slice(-6).toUpperCase()} لغو گردید.`
+        : `سفارش #${updatedOrder.id.slice(-6).toUpperCase()} با خطا مواجه شد.`
+      const message = adminNote ? `${defaultMsg}\nعلت: ${adminNote}` : defaultMsg
+
+      UserNotificationService.createNotification({
+        userId: updatedOrder.userId,
+        title,
+        message,
+        type: NotificationType.ORDER_FAILED,
+        metadata: { orderId: updatedOrder.id },
+      }).catch(() => {})
+
+      const customerTelegram = updatedOrder.telegramChatId || updatedOrder.user?.telegramId
+      if (customerTelegram) {
+        const msg =
+          `❌ **${title}**\n\n` +
+          `سفارش: #${updatedOrder.id.slice(-6).toUpperCase()}\n` +
+          (adminNote ? `📝 **توضیحات مدیر:** ${adminNote}\n` : '')
+        sendTelegramNotification(customerTelegram, msg).catch(() => {})
+      }
+    }
 
     return NextResponse.json({
       success: true,

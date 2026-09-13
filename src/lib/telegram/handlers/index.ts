@@ -3,7 +3,16 @@ import { BUTTONS, mainMenuKeyboard } from '../keyboards'
 import { MESSAGES } from '../messages'
 import { handleStart } from './start'
 import { handleShowProducts, handleSelectProduct, handleBuyProduct, handleBuyCallback } from './buy'
-import { handleOrders } from './orders'
+import {
+  handleOrders,
+  handleFixCredentialsPrompt,
+  handleCancelFixCredentials,
+  handleProcessCredentialsFix,
+  handleKeepEmail,
+  handleKeepPassword,
+  handleSkipNote,
+  handleSubmitCredentials,
+} from './orders'
 import {
   handleNotifications,
   handleNotificationRead,
@@ -366,6 +375,24 @@ export function registerHandlers(bot: Bot) {
     }
   })
 
+  // Callback Queries: Fix credentials wizard callbacks
+  bot.callbackQuery('fix_cred:keep_email', handleKeepEmail)
+  bot.callbackQuery('fix_cred:keep_pass', handleKeepPassword)
+  bot.callbackQuery('fix_cred:skip_note', handleSkipNote)
+  bot.callbackQuery('fix_cred:submit', handleSubmitCredentials)
+
+  // Callback Queries: Fix credentials for order
+  bot.callbackQuery(/^fix_cred:(.+)$/, async (ctx) => {
+    const orderId = ctx.match[1]
+    await handleFixCredentialsPrompt(ctx, orderId)
+  })
+
+  // Callback Queries: Cancel fix credentials
+  bot.callbackQuery(/^order:fix_cancel:(.+)$/, async (ctx) => {
+    const orderId = ctx.match[1]
+    await handleCancelFixCredentials(ctx, orderId)
+  })
+
   // Callback Queries: No-op
   bot.callbackQuery('noop', async (ctx) => {
     await ctx.answerCallbackQuery().catch(() => {})
@@ -378,6 +405,16 @@ export function registerHandlers(bot: Bot) {
 
     if (telegramId) {
       const session = await getBotLoginSession(telegramId)
+
+      // 0. If user is fixing credentials / password / note for an order
+      if (
+        session &&
+        (session.step?.startsWith('FIX_CRED_') || session.step === 'AWAITING_CREDENTIALS_FIX') &&
+        session.orderId
+      ) {
+        const handled = await handleProcessCredentialsFix(ctx, telegramId, session, text)
+        if (handled) return
+      }
 
       // 1. If user is entering personal Gmail address for activation
       if (session?.step === 'AWAITING_GMAIL' && session.planId) {

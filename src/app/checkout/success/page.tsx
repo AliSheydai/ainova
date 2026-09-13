@@ -535,12 +535,12 @@ export default function CheckoutSuccessPage() {
 
           <div className='flex items-center gap-3'>
             <ThemeSwitch />
-            <Link href='/'>
+            {/* <Link href='/'>
               <Button variant='ghost' size='sm' className='text-xs sm:text-sm flex items-center gap-1.5'>
                 <ArrowRight className='size-4' />
                 <span>صفحه اصلی</span>
               </Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </header>

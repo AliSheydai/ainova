@@ -203,6 +203,12 @@ model Order {
   refundRefId       String?           // Bank / Sheba tracking reference ID
   refundedAt        DateTime?         // Timestamp of refund
 
+  // Admin Review / Provisioning & Customer Action
+  adminNote              String?           // Message / feedback / note from admin to customer
+  customerActionRequired Boolean           @default(false) // True when user needs to fix credentials
+  actionRequiredReason   String?           // WRONG_PASSWORD | TWO_FACTOR_REQUIRED | INVALID_ACCOUNT | CUSTOM
+  credentialsUpdatedAt   DateTime?         // Timestamp when customer updated credentials
+
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -390,6 +396,7 @@ enum NotificationType {
   ORDER_FAILED
   ORDER_READY
   ORDER_PENDING_DELIVERY
+  ORDER_ACTION_REQUIRED
   SUPPORT_REPLY
   SYSTEM_ANNOUNCEMENT
   PROMOTION

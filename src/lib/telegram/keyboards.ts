@@ -171,8 +171,19 @@ export function orderSummaryKeyboard(
   return kb
 }
 
-export function ordersPaginationKeyboard(page: number, totalPages: number) {
+export function ordersPaginationKeyboard(
+  page: number,
+  totalPages: number,
+  actionRequiredOrders?: Array<{ id: string; code: string }>
+) {
   const keyboard = new InlineKeyboard()
+
+  // If there are orders waiting for user credential fix, show action buttons on top
+  if (actionRequiredOrders && actionRequiredOrders.length > 0) {
+    for (const item of actionRequiredOrders) {
+      keyboard.text(`✏️ ویرایش اطلاعات اکانت #${item.code}`, `fix_cred:${item.id}`).row()
+    }
+  }
 
   if (totalPages > 1) {
     if (page > 1) {
@@ -189,6 +200,47 @@ export function ordersPaginationKeyboard(page: number, totalPages: number) {
   keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
 
   return keyboard
+}
+
+export function fixCredentialsEmailKeyboard(orderId: string, currentEmail?: string) {
+  const kb = new InlineKeyboard()
+  if (currentEmail) {
+    kb.text(`⏭️ تأیید همین جیمیل (${currentEmail})`, 'fix_cred:keep_email').row()
+  }
+  kb.text('❌ انصراف', `order:fix_cancel:${orderId}`)
+  return kb
+}
+
+export function fixCredentialsPasswordKeyboard(orderId: string, hasExistingPassword?: boolean) {
+  const kb = new InlineKeyboard()
+  if (hasExistingPassword) {
+    kb.text('⏭️ رمز عبور قبلی تغییر نکند', 'fix_cred:keep_pass').row()
+  }
+  kb.text('❌ انصراف', `order:fix_cancel:${orderId}`)
+  return kb
+}
+
+export function fixCredentialsNoteKeyboard(orderId: string) {
+  return new InlineKeyboard()
+    .text('⏭️ بدون یادداشت (رد شدن)', 'fix_cred:skip_note')
+    .row()
+    .text('❌ انصراف', `order:fix_cancel:${orderId}`)
+}
+
+export function fixCredentialsConfirmKeyboard(orderId: string) {
+  return new InlineKeyboard()
+    .text('✅ ثبت و ارسال اطلاعات به مدیر', 'fix_cred:submit')
+    .row()
+    .text('🔄 ویرایش مجدد از ابتدا', `fix_cred:${orderId}`)
+    .row()
+    .text('❌ انصراف', `order:fix_cancel:${orderId}`)
+}
+
+export function fixCredentialsCancelKeyboard(orderId: string) {
+  return new InlineKeyboard()
+    .text('❌ انصراف', `order:fix_cancel:${orderId}`)
+    .row()
+    .text('🔙 بازگشت به سفارش‌ها', 'orders:page:1')
 }
 
 function getValidWebUrl(path: string, customUrl?: string): string {

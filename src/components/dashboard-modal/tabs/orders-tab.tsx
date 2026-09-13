@@ -18,11 +18,25 @@ import {
   EyeOff,
   Clock,
   Calendar,
+  Receipt,
+  Send,
+  AlertTriangle,
+  FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer, scaleIn } from '@/lib/motion'
 import { formatPrice, formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
@@ -31,10 +45,19 @@ import { cn } from '@/lib/utils'
 interface OrderItem {
   id: string
   amount: number
-  status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  status: 'PENDING_PAYMENT' | 'PAID' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REFUNDED' | 'EXPIRED'
   fulfillmentStatus?: string
   source?: string | null
   createdAt: string
+  adminNote?: string | null
+  customerActionRequired?: boolean | null
+  actionRequiredReason?: string | null
+  credentialsUpdatedAt?: string | null
+  refundAmount?: number | null
+  refundReason?: string | null
+  refundRefId?: string | null
+  refundedAt?: string | null
+  checkoutData?: Record<string, any> | null
   product?: {
     title: string
     name: string
@@ -125,8 +148,76 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
     }))
   }
 
-  const renderStatusBadge = (status: OrderItem['status'], fulfillmentStatus?: string) => {
-    switch (status) {
+  const [selectedCorrectionOrder, setSelectedCorrectionOrder] = useState<OrderItem | null>(null)
+  const [correctionPassword, setCorrectionPassword] = useState('')
+  const [correctionEmail, setCorrectionEmail] = useState('')
+  const [correctionNote, setCorrectionNote] = useState('')
+  const [submittingCorrection, setSubmittingCorrection] = useState(false)
+
+  const handleOpenCorrection = (order: OrderItem) => {
+    setSelectedCorrectionOrder(order)
+    const cdata = (order.checkoutData as Record<string, any>) || {}
+    setCorrectionEmail(cdata.customer_email || cdata.customer_gmail || '')
+    setCorrectionPassword('')
+    setCorrectionNote('')
+  }
+
+  const handleSubmitCorrection = async () => {
+    if (!selectedCorrectionOrder) return
+    if (!correctionPassword.trim()) {
+      toast.error('لطفاً رمز عبور صحیح اکانت را وارد فرمایید.')
+      return
+    }
+
+    setSubmittingCorrection(true)
+    try {
+      const res = await fetch(`/api/orders/${selectedCorrectionOrder.id}/update-credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: correctionPassword.trim(),
+          email: correctionEmail.trim() || undefined,
+          customerNote: correctionNote.trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message || 'اطلاعات با موفقیت ثبت شد.')
+        setSelectedCorrectionOrder(null)
+        setCorrectionPassword('')
+        setCorrectionEmail('')
+        setCorrectionNote('')
+        fetchOrders()
+      } else {
+        toast.error(data.message || 'خطا در ثبت اطلاعات.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setSubmittingCorrection(false)
+    }
+  }
+
+  const renderStatusBadge = (order: OrderItem) => {
+    if (order.customerActionRequired) {
+      return (
+        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-medium gap-1 text-[11px] animate-pulse">
+          <AlertTriangle className="size-3" />
+          نیازمند اقدام شما (رمز اشتباه)
+        </Badge>
+      )
+    }
+
+    if (order.credentialsUpdatedAt && !order.customerActionRequired && order.status === 'PAID') {
+      return (
+        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-medium gap-1 text-[11px]">
+          <RefreshCw className="size-3" />
+          اطلاعات ارسال شد (در حال بررسی)
+        </Badge>
+      )
+    }
+
+    switch (order.status) {
       case 'COMPLETED':
         return (
           <Badge className="bg-primary/10 text-primary border border-primary/20 font-medium gap-1 text-[11px]">
@@ -154,6 +245,13 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           <Badge className="bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-medium gap-1 text-[11px]">
             <XCircle className="size-3" />
             ناموفق / لغو شده
+          </Badge>
+        )
+      case 'REFUNDED':
+        return (
+          <Badge className="bg-muted text-muted-foreground border border-border/80 font-medium gap-1 text-[11px]">
+            <Receipt className="size-3" />
+            استرداد شده
           </Badge>
         )
       default:
@@ -285,7 +383,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               🤖 تلگرام
                             </Badge>
                           )}
-                          {renderStatusBadge(order.status, order.fulfillmentStatus)}
+                          {renderStatusBadge(order)}
                         </div>
                       </div>
 
@@ -505,32 +603,101 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
 
                       {/* 3. CUSTOMER PROVISIONING */}
                       {order.status === 'COMPLETED' && deliveryType === 'CUSTOMER_PROVISIONING' && (
-                        <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs space-y-1">
-                          <div className="flex items-center gap-1.5 font-bold text-primary">
-                            <CheckCircle2 className="size-3.5" />
-                            <span>اشتراک روی حساب شما فعال گردید</span>
+                        <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-xs space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 font-bold text-primary">
+                              <CheckCircle2 className="size-4" />
+                              <span>اشتراک روی حساب شما فعال گردید</span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">فعال‌سازی اختصاصی</span>
                           </div>
-                          <p className="text-muted-foreground">
-                            {deliveryData.provisionDetails || 'فعال‌سازی با موفقیت انجام شد.'}
+                          <p className="text-muted-foreground leading-relaxed">
+                            {deliveryData.provisionDetails || 'اشتراک با موفقیت روی اکانت شما فعال شد.'}
                           </p>
+                          {(deliveryData.adminNote || order.adminNote) && (
+                            <div className="p-2.5 rounded-lg bg-background/90 border border-primary/20 text-xs text-foreground leading-relaxed">
+                              <span className="font-bold text-primary flex items-center gap-1 mb-1">
+                                <FileText className="size-3 text-primary" />
+                                یادداشت مدیر سیستم:
+                              </span>
+                              {deliveryData.adminNote || order.adminNote}
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {/* 4. MANUAL DELIVERY */}
                       {order.status === 'COMPLETED' && deliveryType === 'MANUAL' && (
-                        <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3 text-xs space-y-1">
+                        <div className="mt-1 rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-xs space-y-2">
                           <div className="flex items-center gap-1.5 font-bold text-primary">
-                            <CheckCircle2 className="size-3.5" />
+                            <CheckCircle2 className="size-4" />
                             <span>تحویل پشتیبانی:</span>
                           </div>
-                          <p className="text-foreground whitespace-pre-line">
+                          <p className="text-foreground whitespace-pre-line leading-relaxed">
                             {deliveryData.manualNote || 'سفارش شما با موفقیت انجام و تحویل داده شد.'}
+                          </p>
+                          {order.adminNote && !deliveryData.manualNote?.includes(order.adminNote) && (
+                            <div className="p-2.5 rounded-lg bg-background/90 border border-primary/20 text-xs text-foreground leading-relaxed">
+                              <span className="font-bold text-primary flex items-center gap-1 mb-1">
+                                <FileText className="size-3 text-primary" />
+                                توضیحات تکمیلی:
+                              </span>
+                              {order.adminNote}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 5. CUSTOMER ACTION REQUIRED (رمز اشتباه یا نقص اطلاعات) */}
+                      {order.customerActionRequired && (
+                        <div className="mt-1 rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 sm:p-4 text-xs space-y-2.5">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                              <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                              <span>نیاز به بررسی و اصلاح اطلاعات اکانت</span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/30">
+                              نیاز به اقدام خریدار
+                            </Badge>
+                          </div>
+
+                          <p className="text-muted-foreground leading-relaxed">
+                            مدیر سیستم هنگام فعال‌سازی اشتراک با مشکل مواجه شده است:
+                          </p>
+
+                          <div className="p-2.5 rounded-lg bg-background/90 border border-amber-500/25 text-xs text-foreground font-medium leading-relaxed">
+                            <span className="font-bold text-amber-700 dark:text-amber-400 block mb-1">پیام مدیر:</span>
+                            {order.adminNote || 'رمز عبور یا اطلاعات ورود به اکانت اشتباه است. لطفاً اطلاعات صحیح را ثبت فرمایید.'}
+                          </div>
+
+                          <div className="flex items-center justify-end pt-1">
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenCorrection(order)}
+                              className="gap-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                            >
+                              <Key className="size-3.5" />
+                              <span>ویرایش و ارسال رمز جدید</span>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 6. CORRECTION SUBMITTED AND WAITING FOR ADMIN */}
+                      {order.status === 'PAID' && !order.customerActionRequired && order.credentialsUpdatedAt && (
+                        <div className="mt-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs space-y-1.5">
+                          <div className="flex items-center gap-2 font-bold text-emerald-700 dark:text-emerald-300">
+                            <RefreshCw className="size-3.5" />
+                            <span>اطلاعات اصلاح‌شده شما ثبت شد</span>
+                          </div>
+                          <p className="text-muted-foreground leading-relaxed">
+                            اطلاعات ورود جدید شما با موفقیت به مدیر ارجاع گردید و در صف اقدام مجدد قرار دارد.
                           </p>
                         </div>
                       )}
 
-                      {/* 5. MANUAL PENDING */}
-                      {order.status === 'PAID' && (
+                      {/* 7. STANDARD PAID PENDING */}
+                      {order.status === 'PAID' && !order.customerActionRequired && !order.credentialsUpdatedAt && (
                         <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs space-y-1">
                           <div className="flex items-center gap-1.5 font-bold text-primary">
                             <Clock className="size-3.5" />
@@ -541,6 +708,35 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                           </p>
                         </div>
                       )}
+
+                      {/* 8. CANCELLED / FAILED WITH REASON */}
+                      {(order.status === 'CANCELLED' || order.status === 'FAILED') && (
+                        <div className="mt-1 rounded-xl border border-rose-500/25 bg-rose-500/5 p-3.5 text-xs space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                            <XCircle className="size-4" />
+                            <span>{order.status === 'CANCELLED' ? 'سفارش لغو شد' : 'سفارش ناموفق'}</span>
+                          </div>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {order.adminNote ? `علت: ${order.adminNote}` : 'این سفارش لغو گردید. در صورت نیاز می‌توانید با پشتیبانی ارتباط برقرار نمایید.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 9. REFUNDED */}
+                      {order.status === 'REFUNDED' && (
+                        <div className="mt-1 rounded-xl border border-border/70 bg-muted/40 p-3.5 text-xs space-y-2">
+                          <div className="flex items-center gap-1.5 font-bold text-foreground">
+                            <Receipt className="size-4 text-primary" />
+                            <span>مبلغ این سفارش استرداد گردید</span>
+                          </div>
+                          <div className="text-muted-foreground space-y-1 text-[11px]">
+                            <div>مبلغ بازگشتی: <strong className="font-sans font-bold text-foreground">{formatPrice(order.refundAmount || order.amount)}</strong></div>
+                            {order.refundRefId && <div>کد پیگیری بانکی / شبا: <code className="font-mono font-bold text-foreground">{order.refundRefId}</code></div>}
+                            {order.refundReason && <div>علت استرداد: {order.refundReason}</div>}
+                            {order.refundedAt && <div>تاریخ استرداد: {formatPersianDate(order.refundedAt)}</div>}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -549,6 +745,90 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
           })}
         </motion.div>
       )}
+
+      {/* Credential Correction Modal for Customer */}
+      <Dialog open={!!selectedCorrectionOrder} onOpenChange={(open) => !open && setSelectedCorrectionOrder(null)}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Key className="size-4 text-primary" />
+              <span>اصلاح اطلاعات اکانت #{selectedCorrectionOrder?.id.slice(-6).toUpperCase()}</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              رمز عبور صحیح یا اطلاعات ورود اکانت خود را وارد نمایید تا مدیر سیستم بتواند اشتراک را برای شما فعال‌سازی کند.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedCorrectionOrder?.adminNote && (
+            <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-foreground space-y-1">
+              <span className="font-bold text-amber-700 dark:text-amber-400 block text-[11px]">پیام مدیر سیستم:</span>
+              <p className="text-[11px] leading-relaxed">{selectedCorrectionOrder.adminNote}</p>
+            </div>
+          )}
+
+          <div className="space-y-3 py-1 text-xs">
+            <div>
+              <label className="font-semibold block mb-1">آدرس جیمیل:</label>
+              <Input
+                type="email"
+                dir="ltr"
+                value={correctionEmail}
+                onChange={(e) => setCorrectionEmail(e.target.value)}
+                placeholder="example@gmail.com"
+                className="text-xs rounded-xl font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold block mb-1">رمز عبور جدید یا صحیح: *</label>
+              <Input
+                type="text"
+                dir="ltr"
+                value={correctionPassword}
+                onChange={(e) => setCorrectionPassword(e.target.value)}
+                placeholder="رمز عبور اکانت..."
+                className="text-xs rounded-xl font-mono"
+              />
+              <span className="text-[10px] text-muted-foreground block mt-1">
+                اگر تایید دو مرحله‌ای (2FA) فعال است، لطفاً آن را موقتاً خاموش کنید یا کدهای بکاپ را در یادداشت بنویسید.
+              </span>
+            </div>
+
+            <div>
+              <label className="font-semibold block mb-1">یادداشت برای پشتیبانی (اختیاری):</label>
+              <Textarea
+                rows={2}
+                value={correctionNote}
+                onChange={(e) => setCorrectionNote(e.target.value)}
+                placeholder="مثلاً: رمز رو تغییر دادم / تایید دو مرحله‌ای خاموش شد..."
+                className="text-xs rounded-xl resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedCorrectionOrder(null)}
+              disabled={submittingCorrection}
+              className="text-xs rounded-xl h-9 w-full sm:w-auto"
+            >
+              انصراف
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSubmitCorrection}
+              disabled={submittingCorrection}
+              aria-busy={submittingCorrection}
+              className="text-xs font-bold rounded-xl h-9 w-full sm:w-auto gap-1.5"
+            >
+              {submittingCorrection ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+              <span>ثبت و ارسال اطلاعات به مدیر</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -406,6 +406,20 @@ export class BotStoreService {
     }
 
     if (order.status === 'PAID') {
+      if (order.customerActionRequired) {
+        return (
+          `⚠️ **نیاز به اقدام خریدار:** اطلاعات ورود اکانت نیازمند اصلاح است.\n` +
+          `📝 **پیام مدیر:** ${order.adminNote || 'اطلاعات ورود نیازمند بررسی و اصلاح است.'}\n` +
+          `👇 لطفاً از دکمه «✏️ ویرایش اطلاعات اکانت» در زیر همین پیام برای ثبت جیمیل، رمز عبور یا یادداشت استفاده فرمایید.`
+        )
+      }
+
+      if (order.credentialsUpdatedAt && !order.customerActionRequired) {
+        return (
+          `⏳ **وضعیت:** اطلاعات جدید شما ثبت شد و سفارش مجدداً در صف بررسی و فعال‌سازی توسط کارشناس قرار گرفت.`
+        )
+      }
+
       if (isOwnAccount || deliveryType === 'CUSTOMER_PROVISIONING') {
         const email = checkoutData.customer_gmail || checkoutData.customer_email || ''
         return (

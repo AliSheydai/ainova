@@ -275,4 +275,35 @@ export class AdminNotificationService {
       }
     }
   }
+
+  /**
+   * 6. Notification when customer updates their credentials after admin requested action.
+   */
+  static async notifyCustomerUpdatedCredentials(
+    orderId: string,
+    customerInfo: string,
+    serviceName: string
+  ): Promise<boolean> {
+    try {
+      if (!(await this.isNotificationEnabled())) return false
+      const chatId = await this.getAdminChatId()
+      if (!chatId) return false
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const shortOrderId = orderId.slice(-6).toUpperCase()
+
+      const text =
+        `🔄 **اطلاعات اکانت توسط خریدار اصلاح شد!**\n\n` +
+        `خریدار سفارش **#${shortOrderId}** اطلاعات ورود یا رمز عبور جدید را ثبت کرد.\n` +
+        `📦 **محصول:** ${serviceName}\n` +
+        `👤 **خریدار:** ${customerInfo}\n\n` +
+        `⚡ این سفارش اکنون آماده بررسی و فعال‌سازی مجدد توسط ادمین است.\n` +
+        `🔗 [بررسی سفارش در پنل مدیریت](${appUrl}/dashboard/orders)`
+
+      return await sendTelegramNotification(chatId, text)
+    } catch (err) {
+      console.error('Failed to send credentials update notification:', err)
+      return false
+    }
+  }
 }
