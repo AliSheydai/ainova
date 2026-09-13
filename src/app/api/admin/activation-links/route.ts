@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       orderBy = { createdAt: 'asc' }
     }
 
-    const [totalFiltered, items, total, available, reserved, used, invalid, products] = await Promise.all([
+    const [totalFiltered, items, total, available, reserved, used, invalid, products, availableCounts] = await Promise.all([
       prisma.inventoryItem.count({ where }),
       prisma.inventoryItem.findMany({
         where,
@@ -85,7 +85,45 @@ export async function GET(req: NextRequest) {
         orderBy: { sortOrder: 'asc' },
         include: { plans: true },
       }),
+      prisma.inventoryItem.groupBy({
+        by: ['productId', 'planId'],
+        where: {
+          type: InventoryType.ACTIVATION_LINK,
+          status: LinkStatus.AVAILABLE,
+        },
+        _count: { _all: true },
+      }),
     ])
+
+    // Calculate available count maps
+    const productAvailableMap = new Map<string, number>()
+    const planAvailableMap = new Map<string, number>()
+
+    for (const group of availableCounts) {
+      const count = group._count._all
+      if (group.productId) {
+        productAvailableMap.set(
+          group.productId,
+          (productAvailableMap.get(group.productId) || 0) + count
+        )
+      }
+      if (group.planId) {
+        planAvailableMap.set(
+          group.planId,
+          (planAvailableMap.get(group.planId) || 0) + count
+        )
+      }
+    }
+
+    const productsWithCounts = products.map((p) => ({
+      ...p,
+      name: p.title,
+      availableCount: productAvailableMap.get(p.id) || 0,
+      plans: p.plans.map((pl) => ({
+        ...pl,
+        availableCount: planAvailableMap.get(pl.id) || 0,
+      })),
+    }))
 
     // Format items
     const formattedLinks = items.map((item) => {
@@ -129,7 +167,7 @@ export async function GET(req: NextRequest) {
         used,
         invalid,
       },
-      products,
+      products: productsWithCounts,
     })
   } catch (error: unknown) {
     console.error('Error in GET /api/admin/activation-links:', error)

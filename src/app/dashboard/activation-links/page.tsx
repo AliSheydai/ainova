@@ -38,7 +38,6 @@ import { formatPersianDate, formatRelativeTime, toPersianDigits } from '@/lib/pe
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -48,14 +47,6 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,6 +54,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { BulkAddLinksDialog } from './bulk-add-dialog'
 
 interface ActivationLinkItem {
   id: string
@@ -102,7 +94,8 @@ interface ProductOption {
   title: string
   name: string
   slug: string
-  plans?: Array<{ id: string; name: string }>
+  availableCount?: number
+  plans?: Array<{ id: string; name: string; availableCount?: number }>
 }
 
 function formatDate(dateStr: string | null): string {
@@ -177,10 +170,6 @@ export default function AdminActivationLinksPage() {
 
   // Bulk Add Dialog
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
-  const [bulkProductId, setBulkProductId] = useState('')
-  const [bulkPlanId, setBulkPlanId] = useState('ALL')
-  const [bulkText, setBulkText] = useState('')
-  const [importing, setImporting] = useState(false)
 
   // Debounced search
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -223,9 +212,6 @@ export default function AdminActivationLinksPage() {
           if (data.stats) setStats(data.stats)
           if (data.products) {
             setProducts(data.products)
-            if (!bulkProductId && data.products.length > 0) {
-              setBulkProductId(data.products[0].id)
-            }
           }
         })
       } else {
@@ -236,7 +222,7 @@ export default function AdminActivationLinksPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, limit, debouncedSearch, statusFilter, productFilter, planFilter, sortBy, bulkProductId])
+  }, [page, limit, debouncedSearch, statusFilter, productFilter, planFilter, sortBy])
 
   useEffect(() => {
     fetchLinks()
@@ -290,48 +276,8 @@ export default function AdminActivationLinksPage() {
     }
   }
 
-  const handleBulkImport = async () => {
-    if (!bulkProductId) {
-      toast.error('لطفاً محصول مورد نظر را انتخاب کنید.')
-      return
-    }
-
-    const lines = bulkText.split('\n')
-    if (lines.length === 0 || !bulkText.trim()) {
-      toast.error('حداقل یک لینک معتبر وارد کنید.')
-      return
-    }
-
-    setImporting(true)
-    try {
-      const res = await fetch('/api/admin/activation-links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: bulkProductId,
-          planId: bulkPlanId && bulkPlanId !== 'ALL' ? bulkPlanId : undefined,
-          links: lines,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        toast.success(data.message || 'لینک‌ها با موفقیت افزوده شدند.')
-        setBulkDialogOpen(false)
-        setBulkText('')
-        setBulkPlanId('ALL')
-        fetchLinks()
-      } else {
-        toast.error(data.error || 'خطا در افزودن لینک‌ها.')
-      }
-    } catch {
-      toast.error('خطای ارتباط با سرور.')
-    } finally {
-      setImporting(false)
-    }
-  }
-
   const selectedProductPlans =
-    products.find((p) => p.id === (bulkProductId || productFilter))?.plans || []
+    products.find((p) => p.id === productFilter)?.plans || []
 
   return (
     <>
@@ -1070,96 +1016,12 @@ export default function AdminActivationLinksPage() {
       </Main>
 
       {/* Bulk Add Links Dialog */}
-      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-        <DialogContent className='sm:max-w-md rounded-2xl'>
-          <DialogHeader>
-            <DialogTitle className='text-base font-bold flex items-center gap-2'>
-              <Plus className='size-4 text-primary' />
-              <span>افزودن دسته‌جمعی لینک‌های فعال‌سازی</span>
-            </DialogTitle>
-            <DialogDescription className='text-xs'>
-              لینک‌های خام را در کادر زیر وارد کنید (هر لینک در یک خط).
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className='space-y-3 py-2 text-xs'>
-            <div>
-              <label className='font-semibold block mb-1'>محصول مقصد: *</label>
-              <Select value={bulkProductId} onValueChange={(val) => {
-                setBulkProductId(val)
-                setBulkPlanId('ALL')
-              }}>
-                <SelectTrigger className='text-xs rounded-xl h-9'>
-                  <SelectValue placeholder='انتخاب محصول' />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedProductPlans.length > 0 && (
-              <div>
-                <label className='font-semibold block mb-1'>پلن اختصاصی (اختیاری):</label>
-                <Select value={bulkPlanId} onValueChange={setBulkPlanId}>
-                  <SelectTrigger className='text-xs rounded-xl h-9'>
-                    <SelectValue placeholder='همه پلن‌های این محصول' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL'>همه پلن‌های این محصول</SelectItem>
-                    {selectedProductPlans.map((pl) => (
-                      <SelectItem key={pl.id} value={pl.id}>
-                        {pl.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div>
-              <label className='font-semibold block mb-1'>آدرس‌های لینک فعال‌سازی (هر خط یک لینک): *</label>
-              <Textarea
-                rows={5}
-                value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
-                placeholder={'https://one.google.com/promo/offer/xyz-1\nhttps://one.google.com/promo/offer/xyz-2'}
-                className='font-mono text-xs rounded-xl'
-                dir='ltr'
-              />
-              <span className='text-[10px] text-muted-foreground mt-1 block'>
-                تعداد خطوط واردشده: {bulkText.split('\n').filter((l) => l.trim().length > 5).length} لینک
-              </span>
-            </div>
-          </div>
-
-          <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setBulkDialogOpen(false)}
-              disabled={importing}
-              className='text-xs w-full sm:w-auto h-9 rounded-xl'
-            >
-              انصراف
-            </Button>
-            <Button
-              size='sm'
-              onClick={handleBulkImport}
-              disabled={importing}
-              aria-busy={importing}
-              className='text-xs font-semibold w-full sm:w-auto h-9 rounded-xl'
-            >
-              {importing && <Loader2 className='size-3.5 animate-spin me-1.5' aria-hidden='true' />}
-              ذخیره در انبار
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BulkAddLinksDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        products={products}
+        onSuccess={fetchLinks}
+      />
     </>
   )
 }
