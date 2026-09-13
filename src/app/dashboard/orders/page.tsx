@@ -177,6 +177,33 @@ function formatDate(dateStr: string): string {
   })
 }
 
+const DELIVERY_FIELD_LABELS: Record<string, string> = {
+  instructions: 'دستورالعمل و راهنما',
+  instruction: 'دستورالعمل و راهنما',
+  url: 'لینک فعال‌سازی',
+  link: 'لینک فعال‌سازی',
+  email: 'ایمیل / نام‌کاربری',
+  username: 'نام‌کاربری',
+  password: 'رمز عبور',
+  backupCodes: 'کدهای پشتیبان',
+  licenseKey: 'کلید لایسنس',
+  code: 'کد فعال‌سازی',
+  manualNote: 'یادداشت تحویل دستی',
+  provisionDetails: 'جزئیات فعال‌سازی روی اکانت',
+  notes: 'یادداشت‌ها',
+  note: 'یادداشت',
+}
+
+function isLtrValue(val: string): boolean {
+  if (!val) return false
+  const trimmed = val.trim()
+  return (
+    /^https?:\/\//i.test(trimmed) ||
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmed) ||
+    /^[a-zA-Z0-9_.\-/:?&=#+@!$%^*()]+$/.test(trimmed)
+  )
+}
+
 function getFulfillmentBadge(type?: string) {
   switch (type) {
     case 'ACTIVATION_LINK':
@@ -1792,11 +1819,11 @@ export default function AdminOrdersPage() {
           if (!open) setSelectedOrder(null)
         }}
       >
-        <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl'>
+        <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 rounded-2xl w-full max-w-full'>
           {selectedOrder && (
-            <div className='space-y-4 text-xs'>
+            <div className='space-y-4 text-xs w-full min-w-0'>
               {/* Modal Header */}
-              <DialogHeader className='text-start pb-3 border-b border-border/60 space-y-1.5'>
+              <DialogHeader className='text-start pb-3 border-b border-border/60 space-y-1.5 min-w-0'>
                 <div className='flex items-center justify-between flex-wrap gap-2'>
                   <DialogTitle className='text-base sm:text-lg font-bold flex items-center gap-2 text-foreground'>
                     <Package className='size-5 text-primary' />
@@ -1825,12 +1852,12 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <div className='flex items-center gap-2 text-[11px] text-muted-foreground'>
-                  <span className='font-mono select-all'>شناسه: {selectedOrder.id}</span>
+                <div className='flex items-center gap-2 text-[11px] text-muted-foreground min-w-0 flex-wrap'>
+                  <span className='font-mono select-all break-all'>شناسه: {selectedOrder.id}</span>
                   <button
                     type='button'
                     onClick={() => handleCopyText(selectedOrder.id, 'modal-id', 'شناسه سفارش کپی شد.')}
-                    className='hover:text-foreground'
+                    className='hover:text-foreground shrink-0'
                   >
                     {copiedId === 'modal-id' ? <Check className='size-3 text-primary' /> : <Copy className='size-3' />}
                   </button>
@@ -1949,20 +1976,28 @@ export default function AdminOrdersPage() {
 
               {/* Checkout Form Snapshot (Customer Inputs) */}
               {selectedOrder.checkoutData && Object.keys(selectedOrder.checkoutData).length > 0 && (
-                <div className='p-3.5 rounded-xl border border-primary/25 bg-primary/5 space-y-2'>
+                <div className='p-3.5 rounded-xl border border-primary/25 bg-primary/5 space-y-2 min-w-0 overflow-hidden'>
                   <h4 className='font-bold text-foreground text-xs flex items-center gap-1.5'>
                     داده‌های وارد شده توسط مشتری هنگام خرید (Checkout Data):
                   </h4>
-                  <div className='grid grid-cols-1 gap-1.5 text-xs bg-background/90 p-3 rounded-lg border border-border/70'>
+                  <div className='grid grid-cols-1 gap-1 text-xs bg-background/90 p-3 rounded-lg border border-border/70 min-w-0 overflow-hidden'>
                     {Object.entries(selectedOrder.checkoutData).map(([k, v]) => (
-                      <div key={k} className='flex items-center justify-between py-1 border-b border-border/30 last:border-b-0'>
-                        <span className='text-muted-foreground font-medium'>{k}:</span>
-                        <div className='flex items-center gap-1.5'>
-                          <span className='font-mono font-bold text-foreground select-all'>{String(v)}</span>
+                      <div
+                        key={k}
+                        className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 border-b border-border/30 last:border-b-0 min-w-0'
+                      >
+                        <span className='text-muted-foreground font-medium text-[11px] sm:text-xs shrink-0'>{k}:</span>
+                        <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1 max-w-full'>
+                          <span
+                            className='font-mono font-bold text-foreground select-all text-xs break-all sm:truncate min-w-0'
+                            dir={isLtrValue(String(v)) ? 'ltr' : undefined}
+                          >
+                            {String(v)}
+                          </span>
                           <button
                             type='button'
                             onClick={() => handleCopyText(String(v), `checkout-${k}`)}
-                            className='text-muted-foreground hover:text-foreground'
+                            className='text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0'
                             title='کپی'
                           >
                             <Copy className='size-3' />
@@ -1975,8 +2010,8 @@ export default function AdminOrdersPage() {
               )}
 
               {/* Delivery / Fulfillment Section */}
-              <div className='p-3.5 rounded-xl border border-border/70 bg-card space-y-3'>
-                <div className='flex items-center justify-between'>
+              <div className='p-3.5 rounded-xl border border-border/70 bg-card space-y-3 min-w-0 overflow-hidden'>
+                <div className='flex items-center justify-between flex-wrap gap-2'>
                   <h4 className='font-bold text-foreground text-xs flex items-center gap-1.5'>
                     <Key className='size-3.5 text-primary' />
                     اطلاعات تحویل و فعال‌سازی (Delivery):
@@ -1995,31 +2030,224 @@ export default function AdminOrdersPage() {
                   )}
                 </div>
 
-                {selectedOrder.delivery?.data && Object.keys(selectedOrder.delivery.data).length > 0 ? (
-                  <div className='p-3 rounded-xl bg-muted/40 border border-border/60 space-y-2 text-xs'>
-                    {Object.entries(selectedOrder.delivery.data).map(([k, v]) => (
-                      <div key={k} className='flex items-center justify-between py-1 border-b border-border/40 last:border-0'>
-                        <span className='text-muted-foreground font-sans'>{k}:</span>
-                        <div className='flex items-center gap-1.5'>
-                          <span className='font-mono font-bold text-foreground select-all truncate max-w-[280px]'>
-                            {String(v)}
-                          </span>
-                          <button
-                            type='button'
-                            onClick={() => handleCopyText(String(v), `deliv-${k}`)}
-                            className='text-muted-foreground hover:text-foreground'
-                            title='کپی'
-                          >
-                            <Copy className='size-3' />
-                          </button>
+                {selectedOrder.delivery?.data && Object.keys(selectedOrder.delivery.data).length > 0 ? (() => {
+                  const deliveryEntries = Object.entries(selectedOrder.delivery.data)
+
+                  const isInstructionsField = (key: string) => {
+                    const lk = key.toLowerCase()
+                    return lk === 'instructions' || lk === 'instruction' || lk.includes('instruction') || lk.includes('راهنما') || lk.includes('guide')
+                  }
+
+                  const isUrlField = (key: string, val: string) => {
+                    const lk = key.toLowerCase()
+                    return lk === 'url' || lk === 'link' || /^https?:\/\//i.test(val.trim())
+                  }
+
+                  const isLongNoteField = (key: string, val: string) => {
+                    const lk = key.toLowerCase()
+                    return lk === 'manualnote' || lk === 'notes' || lk === 'note' || lk === 'provisiondetails' || val.length > 70
+                  }
+
+                  const specialBlocks = deliveryEntries.filter(([k, v]) => {
+                    const str = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? '')
+                    return isInstructionsField(k) || isUrlField(k, str) || isLongNoteField(k, str)
+                  })
+
+                  const standardFields = deliveryEntries.filter(([k, v]) => {
+                    const str = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? '')
+                    return !isInstructionsField(k) && !isUrlField(k, str) && !isLongNoteField(k, str)
+                  })
+
+                  return (
+                    <div className='space-y-2.5 min-w-0 w-full'>
+                      {/* Standard Short Fields (email, username, password, tokens, etc.) */}
+                      {standardFields.length > 0 && (
+                        <div className='p-3 rounded-xl bg-muted/40 border border-border/60 space-y-1.5 text-xs min-w-0 overflow-hidden'>
+                          {standardFields.map(([k, v]) => {
+                            const valStr =
+                              typeof v === 'object' && v !== null
+                                ? Array.isArray(v)
+                                  ? v.join(', ')
+                                  : JSON.stringify(v)
+                                : String(v ?? '')
+                            const isLtr = isLtrValue(valStr)
+
+                            return (
+                              <div
+                                key={k}
+                                className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 py-1.5 border-b border-border/40 last:border-0 min-w-0'
+                              >
+                                <span className='text-muted-foreground font-medium text-[11px] sm:text-xs shrink-0 flex items-center gap-1.5'>
+                                  {k.toLowerCase().includes('email') || k.toLowerCase().includes('user') ? (
+                                    <User className='size-3 text-primary shrink-0' />
+                                  ) : null}
+                                  {k.toLowerCase().includes('pass') ? (
+                                    <Key className='size-3 text-primary shrink-0' />
+                                  ) : null}
+                                  <span>{DELIVERY_FIELD_LABELS[k] || k}:</span>
+                                </span>
+
+                                <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1 max-w-full'>
+                                  <span
+                                    className='font-mono font-bold text-foreground select-all text-xs break-all sm:truncate min-w-0'
+                                    dir={isLtr ? 'ltr' : undefined}
+                                  >
+                                    {valStr}
+                                  </span>
+                                  <button
+                                    type='button'
+                                    onClick={() => handleCopyText(valStr, `deliv-${k}`)}
+                                    className='text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0'
+                                    title='کپی'
+                                  >
+                                    {copiedId === `deliv-${k}` ? (
+                                      <Check className='size-3 text-emerald-500' />
+                                    ) : (
+                                      <Copy className='size-3' />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : selectedOrder.activationLink?.url ? (
-                  <div className='space-y-2'>
-                    <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/40'>
-                      <span className='font-mono text-[11px] truncate flex-1 select-all' dir='ltr'>
+                      )}
+
+                      {/* Special Blocks: Instructions, URLs, and Long Notes */}
+                      {specialBlocks.map(([k, v]) => {
+                        const valStr =
+                          typeof v === 'object' && v !== null
+                            ? Array.isArray(v)
+                              ? v.join('\n')
+                              : JSON.stringify(v, null, 2)
+                            : String(v ?? '')
+
+                        // 1. Instructions Block
+                        if (isInstructionsField(k)) {
+                          return (
+                            <div
+                              key={k}
+                              className='rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-3.5 space-y-2 min-w-0 w-full overflow-hidden'
+                            >
+                              <div className='flex items-center justify-between gap-2 flex-wrap'>
+                                <span className='text-[11px] font-bold text-primary flex items-center gap-1.5 shrink-0'>
+                                  <FileText className='size-3.5' />
+                                  <span>دستورالعمل و راهنما ({k}):</span>
+                                </span>
+                                <button
+                                  type='button'
+                                  onClick={() => handleCopyText(valStr, `deliv-${k}`, 'دستورالعمل کپی شد.')}
+                                  className='inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/90 bg-primary/10 hover:bg-primary/15 px-2 py-1 rounded-md transition-colors shrink-0'
+                                  title='کپی دستورالعمل'
+                                >
+                                  {copiedId === `deliv-${k}` ? (
+                                    <>
+                                      <Check className='size-3 text-emerald-600 dark:text-emerald-400' />
+                                      <span className='text-emerald-600 dark:text-emerald-400'>کپی شد</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className='size-3' />
+                                      <span>کپی راهنما</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              <div className='p-2.5 sm:p-3 rounded-lg bg-background/90 border border-border/60 text-xs font-sans text-foreground leading-relaxed break-words whitespace-pre-wrap select-all max-w-full'>
+                                {valStr}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // 2. URL Block
+                        if (isUrlField(k, valStr)) {
+                          return (
+                            <div
+                              key={k}
+                              className='rounded-xl border border-blue-500/25 bg-blue-500/5 p-3 sm:p-3.5 space-y-2 min-w-0 w-full overflow-hidden'
+                            >
+                              <div className='flex items-center justify-between gap-2 flex-wrap'>
+                                <span className='text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 shrink-0'>
+                                  <ExternalLink className='size-3.5' />
+                                  <span>لینک تحویل ({k}):</span>
+                                </span>
+                                <div className='flex items-center gap-1 shrink-0'>
+                                  <button
+                                    type='button'
+                                    onClick={() => handleCopyText(valStr, `deliv-${k}`, 'لینک کپی شد.')}
+                                    className='inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 bg-blue-500/10 hover:bg-blue-500/15 px-2 py-1 rounded-md transition-colors'
+                                    title='کپی لینک'
+                                  >
+                                    {copiedId === `deliv-${k}` ? (
+                                      <>
+                                        <Check className='size-3 text-emerald-600 dark:text-emerald-400' />
+                                        <span className='text-emerald-600 dark:text-emerald-400'>کپی شد</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className='size-3' />
+                                        <span>کپی لینک</span>
+                                      </>
+                                    )}
+                                  </button>
+                                  <a
+                                    href={valStr}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='inline-flex items-center justify-center size-7 rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-colors'
+                                    title='باز کردن لینک در صفحه جدید'
+                                  >
+                                    <ExternalLink className='size-3.5' />
+                                  </a>
+                                </div>
+                              </div>
+                              <div
+                                dir='ltr'
+                                className='p-2.5 rounded-lg bg-background/90 border border-border/60 text-xs font-mono text-foreground break-all select-all leading-normal max-w-full'
+                              >
+                                {valStr}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // 3. Notes / Long Text Block
+                        return (
+                          <div
+                            key={k}
+                            className='rounded-xl border border-border/70 bg-muted/30 p-3 sm:p-3.5 space-y-1.5 min-w-0 w-full overflow-hidden'
+                          >
+                            <div className='flex items-center justify-between gap-2 flex-wrap'>
+                              <span className='text-[11px] font-bold text-foreground flex items-center gap-1.5 shrink-0'>
+                                <FileText className='size-3.5 text-primary' />
+                                <span>{DELIVERY_FIELD_LABELS[k] || k}:</span>
+                              </span>
+                              <button
+                                type='button'
+                                onClick={() => handleCopyText(valStr, `deliv-${k}`)}
+                                className='text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0'
+                                title='کپی'
+                              >
+                                {copiedId === `deliv-${k}` ? (
+                                  <Check className='size-3 text-emerald-500' />
+                                ) : (
+                                  <Copy className='size-3' />
+                                )}
+                              </button>
+                            </div>
+                            <div className='p-2.5 rounded-lg bg-background/90 border border-border/60 text-xs font-sans text-foreground leading-relaxed break-words whitespace-pre-wrap select-all max-w-full'>
+                              {valStr}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })() : selectedOrder.activationLink?.url ? (
+                  <div className='space-y-2 min-w-0'>
+                    <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/40 min-w-0'>
+                      <span className='font-mono text-[11px] truncate flex-1 min-w-0 select-all' dir='ltr'>
                         {selectedOrder.activationLink.url}
                       </span>
                       <Button
@@ -2059,42 +2287,59 @@ export default function AdminOrdersPage() {
                   const isPending = selectedOrder.status === 'PAID' && selectedOrder.fulfillmentStatus !== 'COMPLETED'
                   if (!customerEmail) return null
                   return (
-                    <div className={`rounded-xl border p-3.5 space-y-3 ${
-                      isPending
-                        ? 'border-blue-500/30 bg-blue-500/5'
-                        : 'border-emerald-500/30 bg-emerald-500/5'
-                    }`}>
+                    <div
+                      className={`rounded-xl border p-3.5 space-y-3 min-w-0 overflow-hidden ${
+                        isPending
+                          ? 'border-blue-500/30 bg-blue-500/5'
+                          : 'border-emerald-500/30 bg-emerald-500/5'
+                      }`}
+                    >
                       <div className='flex items-center gap-2'>
-                        <div className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
-                          isPending ? 'bg-blue-500/15' : 'bg-emerald-500/15'
-                        }`}>
+                        <div
+                          className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
+                            isPending ? 'bg-blue-500/15' : 'bg-emerald-500/15'
+                          }`}
+                        >
                           <User className={`size-3.5 ${isPending ? 'text-blue-500' : 'text-emerald-500'}`} />
                         </div>
-                        <span className={`text-[11px] font-bold ${isPending ? 'text-blue-700 dark:text-blue-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                        <span
+                          className={`text-[11px] font-bold ${
+                            isPending
+                              ? 'text-blue-700 dark:text-blue-300'
+                              : 'text-emerald-700 dark:text-emerald-300'
+                          }`}
+                        >
                           {isPending ? '⏳ در انتظار فعال‌سازی روی اکانت مشتری' : '✅ فعال‌سازی روی اکانت مشتری انجام شد'}
                         </span>
                       </div>
-                      <div className='text-[11px] space-y-1 bg-background/70 rounded-lg p-2.5 border border-border/50'>
-                        <div className='flex items-center justify-between'>
-                          <span className='text-muted-foreground'>جیمیل مشتری:</span>
-                          <div className='flex items-center gap-1.5'>
-                            <span className='font-mono font-bold text-foreground' dir='ltr'>{customerEmail}</span>
-                            <button type='button' onClick={() => handleCopyText(customerEmail, 'cust-gmail')} className='text-muted-foreground hover:text-primary' title='کپی'>
+                      <div className='text-[11px] space-y-1 bg-background/70 rounded-lg p-2.5 border border-border/50 min-w-0 overflow-hidden'>
+                        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0'>
+                          <span className='text-muted-foreground shrink-0'>جیمیل مشتری:</span>
+                          <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1'>
+                            <span className='font-mono font-bold text-foreground break-all select-all min-w-0' dir='ltr'>
+                              {customerEmail}
+                            </span>
+                            <button
+                              type='button'
+                              onClick={() => handleCopyText(customerEmail, 'cust-gmail')}
+                              className='text-muted-foreground hover:text-primary p-1 shrink-0'
+                              title='کپی'
+                            >
                               <Copy className='size-3' />
                             </button>
                           </div>
                         </div>
                         {cdata?.customer_password && (
-                          <div className='flex items-center justify-between'>
-                            <span className='text-muted-foreground'>رمزعبور اکانت:</span>
-                            <div className='flex items-center gap-1.5'>
-                              <span className='font-mono font-bold text-foreground select-all' dir='ltr'>
+                          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0 pt-1 border-t border-border/30'>
+                            <span className='text-muted-foreground shrink-0'>رمزعبور اکانت:</span>
+                            <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1'>
+                              <span className='font-mono font-bold text-foreground select-all break-all min-w-0' dir='ltr'>
                                 {cdata.customer_password}
                               </span>
                               <button
                                 type='button'
                                 onClick={() => handleCopyText(cdata.customer_password, 'cust-pass', 'رمزعبور کپی شد.')}
-                                className='text-muted-foreground hover:text-primary'
+                                className='text-muted-foreground hover:text-primary p-1 shrink-0'
                                 title='کپی رمزعبور'
                               >
                                 <Copy className='size-3' />
@@ -2249,7 +2494,7 @@ export default function AdminOrdersPage() {
                   className='w-full text-xs font-semibold gap-1.5 rounded-xl h-9'
                 >
                   <Receipt className='size-3.5' />
-                  <span>کپی خلاصه فاکتور سفارش جهت ارسال به کاربر (تلگرام/پیامک)</span>
+                  <span>کپی خلاصه فاکتور سفارش جهت ارسال به کاربر</span>
                 </Button>
               </div>
             </div>

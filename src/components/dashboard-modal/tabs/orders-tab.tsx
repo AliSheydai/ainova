@@ -416,6 +416,12 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               </Button>
                             </a>
                           </div>
+                          {deliveryData.instructions && (
+                            <div className="mt-2.5 p-2.5 rounded-lg bg-background/80 border border-primary/15 text-xs font-sans text-muted-foreground leading-relaxed break-words whitespace-pre-wrap select-all">
+                              <span className="font-semibold text-foreground block mb-1">راهنمای فعال‌سازی:</span>
+                              {deliveryData.instructions}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -488,6 +494,12 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               </div>
                             </div>
                           </div>
+                          {deliveryData.instructions && (
+                            <div className="p-2.5 rounded-lg bg-background/80 border border-primary/15 text-xs font-sans text-muted-foreground leading-relaxed break-words whitespace-pre-wrap select-all">
+                              <span className="font-semibold text-foreground block mb-1">راهنمای فعال‌سازی:</span>
+                              {deliveryData.instructions}
+                            </div>
+                          )}
                         </div>
                       )}
 
