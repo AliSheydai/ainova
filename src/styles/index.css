@@ -24,6 +24,7 @@
     @apply min-h-svh w-full bg-background text-foreground font-sans has-[div[data-variant='inset']]:bg-sidebar;
     font-family: var(--font-vazirmatn), 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: 'ss01' 1;
+    overflow-wrap: break-word;
   }
   input, button, select, textarea, optgroup {
     font-family: var(--font-vazirmatn), 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;

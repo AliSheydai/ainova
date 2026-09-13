@@ -33,15 +33,15 @@ export function SecuritySection() {
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <div className='mb-4 flex justify-center'>
-            <div className='flex size-14 items-center justify-center rounded-2xl bg-primary/10'>
-              <ShieldCheck className='size-7 text-primary' />
+          <div className='mb-3.5 sm:mb-4 flex justify-center'>
+            <div className='flex size-12 sm:size-14 items-center justify-center rounded-2xl bg-primary/10'>
+              <ShieldCheck className='size-6 sm:size-7 text-primary' />
             </div>
           </div>
-          <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
+          <h2 className='mb-3 text-xl sm:text-2xl md:text-3xl font-bold text-foreground'>
             حساب کاربری شما در امنیت کامل می‌ماند
           </h2>
-          <p className='mb-10 text-sm leading-relaxed text-muted-foreground sm:text-base'>
+          <p className='mb-8 sm:mb-10 text-xs sm:text-sm md:text-base leading-relaxed text-muted-foreground'>
             برای فعال‌سازی اشتراک‌ها نیازی به ارسال رمز عبور، اطلاعات ورود یا دسترسی به
             حسابتان ندارید. شما مستقیماً از طریق پیوندها و راهکارهای رسمی و امن، اشتراک را روی
             حساب کاربری خود فعال می‌کنید.
@@ -49,7 +49,7 @@ export function SecuritySection() {
         </motion.div>
 
         <motion.div
-          className='mx-auto grid max-w-3xl gap-4 sm:grid-cols-3'
+          className='mx-auto grid max-w-3xl gap-3 sm:gap-4 sm:grid-cols-3'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}
@@ -61,17 +61,17 @@ export function SecuritySection() {
               variants={fadeUp}
               whileHover={{ y: -3 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className='rounded-xl border border-border/75 bg-card p-5 text-center shadow-xs transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5'
+              className='rounded-2xl border border-border/75 bg-card p-4 sm:p-5 text-center shadow-xs transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5'
             >
               <div className='mb-3 flex justify-center'>
-                <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10'>
-                  <point.icon className='size-5 text-primary' />
+                <div className='flex size-9 sm:size-10 items-center justify-center rounded-xl bg-primary/10'>
+                  <point.icon className='size-4.5 sm:size-5 text-primary' />
                 </div>
               </div>
-              <h3 className='mb-1.5 text-sm font-semibold text-foreground'>
+              <h3 className='mb-1.5 text-xs sm:text-sm font-semibold text-foreground'>
                 {point.title}
               </h3>
-              <p className='text-xs leading-relaxed text-muted-foreground'>
+              <p className='text-[11px] sm:text-xs leading-relaxed text-muted-foreground'>
                 {point.description}
               </p>
             </motion.div>

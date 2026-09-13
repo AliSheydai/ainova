@@ -66,14 +66,14 @@ export function HowItWorksSection() {
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <div className='mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary shadow-xs'>
+          <div className='mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold text-primary shadow-xs'>
             <span>مسیر ساده و شفاف</span>
           </div>
 
-          <h2 className='mb-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl'>
+          <h2 className='mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground'>
             چگونه در ۳ مرحله ساده اشتراکتان فعال می‌شود؟
           </h2>
-          <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+          <p className='text-xs sm:text-sm md:text-base leading-relaxed text-muted-foreground'>
             سریع، خودکار و بدون معطلی؛ فعال‌سازی فوری انواع اشتراک‌های هوش مصنوعی و دیجیتال
           </p>
         </motion.div>
@@ -81,7 +81,7 @@ export function HowItWorksSection() {
         {/* Steps Flow Grid */}
         <div className='mx-auto max-w-5xl'>
           <motion.div
-            className='grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6'
+            className='grid grid-cols-1 gap-3.5 md:grid-cols-3 md:gap-6'
             initial='hidden'
             whileInView='visible'
             viewport={viewportOnce}
@@ -94,16 +94,16 @@ export function HowItWorksSection() {
                 className='relative flex flex-col'
               >
                 {/* Step Card */}
-                <div className='group relative flex h-full flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
+                <div className='group relative flex h-full flex-col justify-between rounded-2xl border border-border/70 bg-card p-4 sm:p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
                   {/* Card Top: Icon & Step Badge */}
                   <div>
                     <div className='flex items-center justify-between'>
-                      <div className='flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-all duration-300 group-hover:scale-105 group-hover:bg-primary group-hover:text-primary-foreground'>
-                        <step.icon className='size-6' />
+                      <div className='flex size-10 sm:size-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-all duration-300 group-hover:scale-105 group-hover:bg-primary group-hover:text-primary-foreground'>
+                        <step.icon className='size-5 sm:size-6' />
                       </div>
 
-                      <div className='flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/70 px-2.5 py-1 text-xs font-semibold text-foreground/80'>
-                        <span className='font-bold text-primary'>
+                      <div className='flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/70 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-foreground/80'>
+                        <span className='font-bold text-primary font-sans'>
                           {step.number}
                         </span>
                         <span className='text-border font-normal'>|</span>
@@ -112,23 +112,23 @@ export function HowItWorksSection() {
                     </div>
 
                     {/* Step Tag */}
-                    <div className='mt-4'>
-                      <span className='inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary'>
+                    <div className='mt-3 sm:mt-4'>
+                      <span className='inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-primary'>
                         {step.tag}
                       </span>
                     </div>
 
                     {/* Title & Description */}
-                    <h3 className='mt-2.5 text-base font-bold text-foreground sm:text-lg'>
+                    <h3 className='mt-2 sm:mt-2.5 text-sm sm:text-base font-bold text-foreground'>
                       {step.title}
                     </h3>
-                    <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>
+                    <p className='mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-muted-foreground'>
                       {step.description}
                     </p>
                   </div>
 
                   {/* Card Bottom: Timing indicator */}
-                  <div className='mt-6 flex items-center justify-between border-t border-border/50 pt-3.5 text-xs text-muted-foreground'>
+                  <div className='mt-5 sm:mt-6 flex items-center justify-between border-t border-border/50 pt-3 text-[11px] sm:text-xs text-muted-foreground'>
                     <span>سرعت فرآیند:</span>
                     <span className='flex items-center gap-1 font-medium text-foreground'>
                       <Clock className='size-3 text-primary' />

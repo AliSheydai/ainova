@@ -46,22 +46,22 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   return (
     <div className='border-b border-border/60 last:border-0'>
       <button
-        className='flex w-full items-center justify-between gap-3 py-4 text-start text-sm font-medium text-foreground transition-colors hover:text-primary'
+        className='flex w-full items-center justify-between gap-3 py-3.5 sm:py-4 text-start text-xs sm:text-sm font-medium text-foreground transition-colors hover:text-primary cursor-pointer'
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
         <span>{q}</span>
         <ChevronDown
           className={cn(
-            'size-4 shrink-0 text-muted-foreground transition-transform duration-200',
+            'size-3.5 sm:size-4 shrink-0 text-muted-foreground transition-transform duration-200',
             open && 'rotate-180'
           )}
         />
       </button>
       <div
         className={cn(
-          'overflow-hidden text-sm text-muted-foreground transition-all duration-300',
-          open ? 'max-h-40 pb-4' : 'max-h-0'
+          'overflow-hidden text-xs sm:text-sm text-muted-foreground transition-all duration-300',
+          open ? 'max-h-96 pb-3.5 sm:pb-4' : 'max-h-0'
         )}
       >
         <p className='leading-relaxed'>{a}</p>
@@ -72,24 +72,24 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export function FaqSection() {
   return (
-    <section id='faq' className='bg-muted/50 py-20 md:py-24'>
+    <section id='faq' className='bg-muted/50 py-16 sm:py-20 md:py-24'>
       <div className='container mx-auto px-4 sm:px-6'>
         <motion.div
-          className='mb-10 text-center'
+          className='mb-8 sm:mb-10 text-center'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <h2 className='mb-2 text-2xl font-bold text-foreground sm:text-3xl'>
+          <h2 className='mb-2 text-xl sm:text-2xl md:text-3xl font-bold text-foreground'>
             سوالات متداول
           </h2>
-          <p className='text-sm text-muted-foreground'>
+          <p className='text-xs sm:text-sm text-muted-foreground leading-relaxed'>
             پاسخ به سوال‌های پرتکرار کاربران درباره اشتراک‌های هوش مصنوعی و روند سفارش
           </p>
         </motion.div>
         <motion.div
-          className='mx-auto max-w-2xl rounded-xl border border-border/75 bg-card px-5 shadow-xs'
+          className='mx-auto max-w-2xl rounded-2xl border border-border/75 bg-card px-4 sm:px-5 shadow-xs'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}

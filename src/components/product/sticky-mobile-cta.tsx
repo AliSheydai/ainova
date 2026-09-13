@@ -43,20 +43,20 @@ export function StickyMobileCta({ price, isAvailable, slug, planId }: StickyMobi
 
   return (
     <div
-      className='fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur-sm lg:hidden'
+      className='fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border/60 bg-background/95 px-4 py-2.5 sm:py-3 backdrop-blur-sm lg:hidden'
       dir='rtl'
     >
       <div>
-        <p className='text-[10px] text-muted-foreground'>قیمت</p>
-        <p className='text-base font-bold text-foreground'>{formatPrice(price)}</p>
+        <p className='text-[10px] text-muted-foreground'>قیمت اشتراک</p>
+        <p className='text-sm sm:text-base font-bold text-foreground font-sans'>{formatPrice(price)}</p>
       </div>
       <Button
         size='sm'
-        className='h-10 gap-2 px-5 text-sm font-semibold'
+        className='h-9 sm:h-10 gap-1.5 px-4 sm:px-5 text-xs sm:text-sm font-semibold rounded-xl'
         disabled={!isAvailable}
         onClick={handleBuy}
       >
-        <ShoppingCart className='size-4' aria-hidden='true' />
+        <ShoppingCart className='size-3.5 sm:size-4' aria-hidden='true' />
         {isAvailable ? 'ادامه خرید' : 'ناموجود'}
       </Button>
     </div>

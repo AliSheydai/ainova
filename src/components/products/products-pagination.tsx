@@ -88,14 +88,14 @@ export function ProductsPagination({
       )}
 
       {/* Pagination controls */}
-      <nav aria-label='صفحه‌بندی محصولات' className='flex items-center gap-1.5 order-1 sm:order-2'>
+      <nav aria-label='صفحه‌بندی محصولات' className='flex items-center gap-1 sm:gap-1.5 order-1 sm:order-2'>
         {/* Previous page (In RTL, previous is on the right) */}
         <Button
           variant='outline'
           size='sm'
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className='h-9 px-2.5 sm:px-3 text-xs gap-1 font-sans rounded-lg border-border/70 hover:bg-accent disabled:opacity-40 cursor-pointer'
+          className='h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs gap-1 font-sans rounded-lg border-border/70 hover:bg-accent disabled:opacity-40 cursor-pointer'
           aria-label='صفحه قبل'
         >
           <ChevronRight className='size-3.5' />
@@ -103,13 +103,13 @@ export function ProductsPagination({
         </Button>
 
         {/* Numbered pages */}
-        <div className='flex items-center gap-1'>
+        <div className='flex items-center gap-0.5 sm:gap-1'>
           {pageNumbers.map((page, idx) => {
             if (page === '...') {
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className='size-9 flex items-center justify-center text-xs text-muted-foreground font-sans select-none'
+                  className='size-8 sm:size-9 flex items-center justify-center text-xs text-muted-foreground font-sans select-none'
                 >
                   …
                 </span>
@@ -126,7 +126,7 @@ export function ProductsPagination({
                 onClick={() => onPageChange(pageNum)}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'size-9 rounded-lg text-xs font-medium font-sans transition-all duration-150 flex items-center justify-center cursor-pointer',
+                  'size-8 sm:size-9 rounded-lg text-xs font-medium font-sans transition-all duration-150 flex items-center justify-center cursor-pointer',
                   isActive
                     ? 'bg-primary text-primary-foreground font-bold shadow-xs'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent hover:border-border/60'
@@ -144,7 +144,7 @@ export function ProductsPagination({
           size='sm'
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className='h-9 px-2.5 sm:px-3 text-xs gap-1 font-sans rounded-lg border-border/70 hover:bg-accent disabled:opacity-40 cursor-pointer'
+          className='h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs gap-1 font-sans rounded-lg border-border/70 hover:bg-accent disabled:opacity-40 cursor-pointer'
           aria-label='صفحه بعد'
         >
           <span className='hidden sm:inline'>صفحه بعد</span>

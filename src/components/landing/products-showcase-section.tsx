@@ -37,10 +37,10 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold mb-3'>
+          <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[11px] sm:text-xs font-semibold mb-3'>
             <span>محصولات و اشتراک‌های برگزیده</span>
           </div>
-          <h2 className='text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight'>
+          <h2 className='text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight'>
             ویترین اشتراک‌های هوش مصنوعی و دیجیتال
           </h2>
           <p className='text-xs sm:text-sm text-muted-foreground mt-2 max-w-xl mx-auto leading-relaxed'>
@@ -49,7 +49,7 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
         </motion.div>
 
         <motion.div
-          className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto'
+          className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}
@@ -60,11 +60,11 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
             const displayPrice = prod.minPrice ?? prod.price
             return (
               <motion.div key={prod.id} variants={fadeUp} whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
-                <Card className='h-full flex flex-col justify-between overflow-hidden border-border/70 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200 bg-card'>
-                  <CardHeader className='pb-3'>
+                <Card className='h-full flex flex-col justify-between overflow-hidden border-border/70 shadow-xs hover:shadow-md hover:border-primary/40 transition-all duration-200 bg-card rounded-2xl'>
+                  <CardHeader className='p-4 sm:p-5 pb-3'>
                     <div className='flex items-start justify-between gap-2 mb-2'>
                       {prod.image ? (
-                        <div className='size-12 rounded-xl overflow-hidden border border-border/70 bg-muted/30 shrink-0 shadow-xs transition-transform duration-200'>
+                        <div className='size-11 sm:size-12 rounded-xl overflow-hidden border border-border/70 bg-muted/30 shrink-0 shadow-2xs transition-transform duration-200'>
                           <img
                             src={prod.image}
                             alt={prod.title}
@@ -76,12 +76,12 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                           />
                         </div>
                       ) : (
-                        <div className='size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0 border border-primary/15 shadow-xs'>
+                        <div className='size-11 sm:size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0 border border-primary/15 shadow-2xs'>
                           <Package className='size-5' />
                         </div>
                       )}
                       {isAvailable ? (
-                        <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]'>
+                        <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-medium'>
                           <Zap className='size-2.5 me-1' />
                           تحویل آنی
                         </Badge>
@@ -91,38 +91,38 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                         </Badge>
                       )}
                     </div>
-                    <CardTitle className='text-base font-bold text-foreground line-clamp-1'>
+                    <CardTitle className='text-sm sm:text-base font-bold text-foreground line-clamp-1'>
                       {prod.title}
                     </CardTitle>
                     {prod.shortDescription && (
-                      <CardDescription className='text-xs line-clamp-2 mt-1'>
+                      <CardDescription className='text-xs line-clamp-2 mt-1 leading-relaxed text-muted-foreground min-h-[2rem]'>
                         {prod.shortDescription}
                       </CardDescription>
                     )}
                   </CardHeader>
 
-                  <CardContent className='pt-0 space-y-4 flex-1 flex flex-col justify-end'>
+                  <CardContent className='p-4 sm:p-5 pt-0 space-y-3.5 flex-1 flex flex-col justify-end'>
                     <div className='pt-3 border-t border-border/40 flex items-baseline justify-between'>
-                      <span className='text-[11px] text-muted-foreground'>
+                      <span className='text-[10px] sm:text-[11px] text-muted-foreground'>
                         {prod.hasMultiplePlans ? 'شروع قیمت:' : 'قیمت اشتراک:'}
                       </span>
                       <div className='flex items-baseline gap-1'>
                         {prod.hasMultiplePlans && (
-                          <span className='text-[11px] font-medium text-muted-foreground'>شروع از</span>
+                          <span className='text-[10px] sm:text-[11px] font-medium text-muted-foreground'>شروع از</span>
                         )}
-                        <strong className='text-lg font-bold text-primary font-sans'>
+                        <strong className='text-base sm:text-lg font-bold text-primary font-sans'>
                           {formatPrice(displayPrice)}
                         </strong>
                       </div>
                     </div>
 
-                    <div className='flex items-center justify-between text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-lg'>
+                    <div className='flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-xl font-sans'>
                       <span>موجودی: {isAvailable ? `${toPersianDigits(prod.stock)} عدد` : 'ناموجود'}</span>
                       <span>{toPersianDigits(prod.purchaseCount)} خرید موفق</span>
                     </div>
 
                     <Link href={`/products/${prod.slug}`} className='block w-full'>
-                      <Button className='w-full text-xs font-semibold gap-1.5 h-9'>
+                      <Button className='w-full text-xs sm:text-sm font-semibold gap-1.5 h-9 sm:h-10 rounded-xl'>
                         <span>مشاهده و خرید محصول</span>
                         <ArrowLeft className='size-3.5' />
                       </Button>

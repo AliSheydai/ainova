@@ -333,7 +333,7 @@ function LoginForm() {
           </div>
 
           <CardHeader className="text-center pb-3 pt-6">
-            <CardTitle className="text-xl font-bold tracking-tight">
+            <CardTitle className="text-lg sm:text-xl font-bold tracking-tight">
               {step === 'phone' && 'ورود یا ثبت‌نام با موبایل'}
               {step === 'otp' && 'تأیید شماره موبایل'}
               {step === 'name' && 'تکمیل نام و نام خانوادگی'}
@@ -465,26 +465,26 @@ function LoginForm() {
                       disabled={loading}
                       autoFocus
                     >
-                      <InputOTPGroup className="gap-2 sm:gap-2.5">
+                      <InputOTPGroup className="gap-1.5 sm:gap-2.5">
                         <InputOTPSlot
                           index={0}
-                          className="h-13 w-11 sm:w-12 text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
+                          className="h-11 sm:h-13 w-10 sm:w-12 text-lg sm:text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
                         />
                         <InputOTPSlot
                           index={1}
-                          className="h-13 w-11 sm:w-12 text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
+                          className="h-11 sm:h-13 w-10 sm:w-12 text-lg sm:text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
                         />
                         <InputOTPSlot
                           index={2}
-                          className="h-13 w-11 sm:w-12 text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
+                          className="h-11 sm:h-13 w-10 sm:w-12 text-lg sm:text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
                         />
                         <InputOTPSlot
                           index={3}
-                          className="h-13 w-11 sm:w-12 text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
+                          className="h-11 sm:h-13 w-10 sm:w-12 text-lg sm:text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
                         />
                         <InputOTPSlot
                           index={4}
-                          className="h-13 w-11 sm:w-12 text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
+                          className="h-11 sm:h-13 w-10 sm:w-12 text-lg sm:text-xl font-bold font-sans rounded-xl border-border/80 shadow-xs focus-visible:ring-primary"
                         />
                       </InputOTPGroup>
                     </InputOTP>

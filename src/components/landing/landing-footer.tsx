@@ -36,12 +36,12 @@ export function LandingFooter() {
           </div>
 
           {/* Links */}
-          <nav className='flex flex-wrap gap-x-5 gap-y-2'>
+          <nav className='flex flex-wrap gap-x-4 sm:gap-x-5 gap-y-2'>
             {footerLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className='text-sm text-muted-foreground transition-colors hover:text-foreground'
+                className='text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground'
               >
                 {link.label}
               </Link>
@@ -49,7 +49,7 @@ export function LandingFooter() {
           </nav>
 
           {/* Contact */}
-          <div className='flex flex-col gap-2 text-sm text-muted-foreground'>
+          <div className='flex flex-col gap-2 text-xs sm:text-sm text-muted-foreground'>
             <Link
               href='https://t.me/support'
               target='_blank'
@@ -65,11 +65,11 @@ export function LandingFooter() {
         <Separator className='my-6' />
 
         {/* Bottom */}
-        <div className='flex flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row'>
+        <div className='flex flex-col items-center justify-between gap-2 text-[11px] sm:text-xs text-muted-foreground sm:flex-row text-center sm:text-start'>
           <p>
             © {new Date().getFullYear()} آریوچت — تمامی حقوق محفوظ است.
           </p>
-          <p className='text-center text-xs text-muted-foreground'>
+          <p className='text-center text-[11px] sm:text-xs text-muted-foreground leading-relaxed'>
             بستری امن و آسان برای دسترسی مستقیم و قانونی به ابزارهای بین‌المللی هوش مصنوعی روی حساب‌های شخصی.
           </p>
         </div>

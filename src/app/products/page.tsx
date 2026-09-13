@@ -101,15 +101,15 @@ export default async function ProductsPage() {
           </nav>
 
           {/* Page Hero Header */}
-          <div className='mb-8 sm:mb-10 text-center max-w-2xl mx-auto'>
-            <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold mb-3'>
+          <div className='mb-6 sm:mb-10 text-center max-w-2xl mx-auto'>
+            <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[11px] sm:text-xs font-semibold mb-2.5 sm:mb-3'>
               <Sparkles className='size-3.5' />
               <span>فروشگاه تخصصی سرویس‌های هوش مصنوعی</span>
             </div>
-            <h1 className='text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground tracking-tight'>
+            <h1 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight'>
               آرشیو کامل محصولات و اشتراک‌ها
             </h1>
-            <p className='text-xs sm:text-sm text-muted-foreground mt-2.5 leading-relaxed'>
+            <p className='text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-2.5 leading-relaxed'>
               دسترسی قانونی و مستقیم به برترین هوش‌های مصنوعی جهان؛ فعال‌سازی فوری، تضمین اصالت و بدون نیاز به اطلاعات حساس حساب کاربری.
             </p>
 

@@ -21,26 +21,26 @@ export function FinalCtaSection({ price }: FinalCtaSectionProps) {
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <div className='mb-4 flex justify-center'>
-            <div className='flex size-14 items-center justify-center rounded-2xl bg-primary/10'>
-              <Sparkles className='size-7 text-primary' />
+          <div className='mb-3.5 sm:mb-4 flex justify-center'>
+            <div className='flex size-12 sm:size-14 items-center justify-center rounded-2xl bg-primary/10'>
+              <Sparkles className='size-6 sm:size-7 text-primary' />
             </div>
           </div>
-          <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
+          <h2 className='mb-3 text-xl sm:text-2xl md:text-3xl font-bold text-foreground'>
             آماده‌اید سرعت و بهره‌وری کارهایتان را چند برابر کنید؟
           </h2>
-          <p className='mb-6 text-sm text-muted-foreground sm:text-base'>
+          <p className='mb-6 text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto'>
             دسترسی آنی و قانونی به کامل‌ترین مجموعه اشتراک‌های پیشرفته هوش مصنوعی جهان
           </p>
-          <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-            <Link href='/products'>
-              <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
+          <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full'>
+            <Link href='/products' className='w-full sm:w-auto'>
+              <Button size='lg' className='w-full sm:w-auto h-11 sm:h-12 gap-2 px-6 sm:px-8 text-sm sm:text-base font-semibold shadow-md transition-transform active:scale-[0.98] rounded-xl'>
                 مشاهده محصولات و شروع خرید
               </Button>
             </Link>
           </div>
-          <div className='mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground'>
-            <ShieldCheck className='size-3.5 text-primary' />
+          <div className='mt-5 flex flex-wrap items-center justify-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground text-center'>
+            <ShieldCheck className='size-3.5 text-primary shrink-0' />
             <span>تحویل ۱۰۰٪ آنی و خودکار • فعال‌سازی قانونی و امن • پشتیبانی دائمی</span>
           </div>
         </motion.div>

@@ -290,10 +290,10 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                       </div>
 
                       {/* Order Details Badges: Order ID, Tracking Code, Amount Paid */}
-                      <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 border-t border-border/40 pt-3 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3.5 border-t border-border/40 pt-3 text-[11px] sm:text-xs">
                         {/* 1. شماره سفارش (Copyable Badge) */}
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground text-xs">شماره سفارش:</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <span className="text-muted-foreground text-[11px] sm:text-xs">شماره سفارش:</span>
                           <button
                             type="button"
                             onClick={() => copyOrderNumberToClipboard(order.id)}
@@ -304,7 +304,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                             <Badge
                               variant="outline"
                               className={cn(
-                                'cursor-pointer select-none font-sans text-xs px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1.5 active:scale-95 border',
+                                'cursor-pointer select-none font-sans text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1 sm:gap-1.5 active:scale-95 border',
                                 copiedOrderId === order.id
                                   ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
                                   : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
@@ -330,8 +330,8 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
 
                         {/* 2. کد پیگیری (Copyable Badge) */}
                         {order.payment?.refId && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-muted-foreground text-xs">کد پیگیری:</span>
+                          <div className="flex items-center gap-1 sm:gap-1.5">
+                            <span className="text-muted-foreground text-[11px] sm:text-xs">کد پیگیری:</span>
                             <button
                               type="button"
                               onClick={() => copyRefToClipboard(order.payment!.refId!, order.id)}
@@ -342,7 +342,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  'cursor-pointer select-none font-sans text-xs px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1.5 active:scale-95 border',
+                                  'cursor-pointer select-none font-sans text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-lg transition-all duration-200 gap-1 sm:gap-1.5 active:scale-95 border',
                                   copiedRefId === order.id
                                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20'
                                     : 'bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary border-border/70 hover:border-primary/40 shadow-2xs'
@@ -368,11 +368,11 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         )}
 
                         {/* 3. مبلغ پرداختی */}
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground text-xs">مبلغ پرداختی:</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <span className="text-muted-foreground text-[11px] sm:text-xs">مبلغ پرداختی:</span>
                           <Badge
                             variant="secondary"
-                            className="bg-secondary/70 hover:bg-secondary/70 text-foreground border border-border/60 font-sans font-bold text-xs px-2.5 py-0.5 rounded-lg shadow-2xs"
+                            className="bg-secondary/70 hover:bg-secondary/70 text-foreground border border-border/60 font-sans font-bold text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-lg shadow-2xs"
                           >
                             {formatPrice(order.amount)}
                           </Badge>

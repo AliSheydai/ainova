@@ -337,7 +337,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                 type='button'
                 onClick={() => handleFilterChange(() => setOnlyInStock(!onlyInStock))}
                 className={cn(
-                  'h-9 px-3 rounded-xl text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer select-none font-sans',
+                  'h-9 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer select-none font-sans shrink-0',
                   onlyInStock
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : 'bg-background/80 text-muted-foreground border-border/80 hover:bg-accent/60 hover:text-foreground'

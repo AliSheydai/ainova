@@ -1662,7 +1662,7 @@ export default function AdminOrdersPage() {
                           variant='outline'
                           size='sm'
                           onClick={() => setSelectedOrder(ord)}
-                          className='w-full text-xs h-8 gap-1.5 font-semibold'
+                          className='text-xs h-8 gap-1.5 font-semibold'
                         >
                           <Eye className='size-3.5' />
                           <span>بررسی جزئیات سفارش</span>

@@ -125,23 +125,23 @@ export default async function ProductDetailPage(props: ProductPageProps) {
             <div className='space-y-8'>
 
               {/* Title & Status */}
-              <div className='space-y-3'>
+              <div className='space-y-2.5 sm:space-y-3'>
                 {isAvailable ? (
-                  <Badge className='bg-primary/8 text-primary border-primary/20 text-xs'>
+                  <Badge className='bg-primary/8 text-primary border-primary/20 text-[11px] sm:text-xs'>
                     آماده تحویل آنی
                   </Badge>
                 ) : (
-                  <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-xs'>
+                  <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-[11px] sm:text-xs'>
                     اتمام موجودی موقت
                   </Badge>
                 )}
 
-                <h1 className='text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-3xl'>
+                <h1 className='text-lg font-bold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-3xl'>
                   {product.title}
                 </h1>
 
                 {product.shortDescription && (
-                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                  <p className='text-xs sm:text-sm leading-relaxed text-muted-foreground'>
                     {product.shortDescription}
                   </p>
                 )}
@@ -164,11 +164,11 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
               {/* Full Description */}
               {product.description && (
-                <div className='space-y-3'>
+                <div className='space-y-2.5 sm:space-y-3'>
                   <h2 className='text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
                     توضیحات محصول
                   </h2>
-                  <div className='prose-sm text-sm leading-relaxed text-foreground/90'>
+                  <div className='prose-sm text-xs sm:text-sm leading-relaxed text-foreground/90'>
                     <MarkdownView content={product.description} />
                   </div>
                 </div>
@@ -178,14 +178,14 @@ export default async function ProductDetailPage(props: ProductPageProps) {
               {productFeatures && (
                 <>
                   <hr className='border-border/50' />
-                  <div className='space-y-3'>
+                  <div className='space-y-2.5 sm:space-y-3'>
                     <h2 className='text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
                       ویژگی‌ها
                     </h2>
                     <ul className='space-y-2'>
                       {productFeatures.map((feat, i) => (
-                        <li key={i} className='flex items-start gap-2.5 text-sm text-foreground/85'>
-                          <Check className='mt-0.5 size-4 shrink-0 text-muted-foreground' />
+                        <li key={i} className='flex items-start gap-2.5 text-xs sm:text-sm text-foreground/85 leading-relaxed'>
+                          <Check className='mt-0.5 size-3.5 sm:size-4 shrink-0 text-muted-foreground' />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -196,17 +196,17 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
               {/* Trust Bar */}
               <hr className='border-border/50' />
-              <div className='flex flex-wrap gap-x-6 gap-y-2.5 text-xs text-muted-foreground'>
+              <div className='flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-[11px] sm:text-xs text-muted-foreground'>
                 <span className='flex items-center gap-1.5'>
-                  <ShieldCheck className='size-3.5 shrink-0' />
+                  <ShieldCheck className='size-3.5 shrink-0 text-primary' />
                   فعال‌سازی قانونی و رسمی
                 </span>
                 <span className='flex items-center gap-1.5'>
-                  <Zap className='size-3.5 shrink-0' />
+                  <Zap className='size-3.5 shrink-0 text-primary' />
                   تحویل خودکار پس از پرداخت
                 </span>
                 <span className='flex items-center gap-1.5'>
-                  <Clock className='size-3.5 shrink-0' />
+                  <Clock className='size-3.5 shrink-0 text-primary' />
                   پشتیبانی همه‌روزه
                 </span>
               </div>

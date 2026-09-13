@@ -38,10 +38,10 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
           animate='visible'
         >
           {/* Badge */}
-          <motion.div variants={fadeUp} className='mb-6 flex justify-center'>
+          <motion.div variants={fadeUp} className='mb-5 sm:mb-6 flex justify-center'>
             <Badge
               variant='secondary'
-              className='rounded-full px-4 py-1.5 text-sm font-medium'
+              className='rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium'
             >
               <Sparkles className='me-1.5 size-3.5 text-primary' />
               مرجع تخصصی اشتراک‌های هوش مصنوعی و دیجیتال
@@ -51,7 +51,7 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
           {/* Headline */}
           <motion.h1
             variants={fadeUp}
-            className='mb-5 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl'
+            className='mb-4 sm:mb-5 text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-foreground'
           >
             کارهایتان را با قدرت{' '}
             <span className='text-primary'>هوش مصنوعی</span> متحول کنید
@@ -60,7 +60,7 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
           {/* Subtitle */}
           <motion.p
             variants={fadeUp}
-            className='mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg'
+            className='mb-7 sm:mb-8 text-xs sm:text-base md:text-lg leading-relaxed text-muted-foreground'
           >
             دسترسی قانونی و بی‌واسطه به برترین سرویس‌های هوش مصنوعی جهان؛ فعال‌سازی سریع روی
             حساب شخصی شما، کاملاً امن، بدون نیاز به پسورد و با ضمانت اصالت.
@@ -69,18 +69,18 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
           {/* CTAs */}
           <motion.div
             variants={fadeUp}
-            className='mb-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'
+            className='mb-8 sm:mb-10 flex flex-col items-center gap-2.5 sm:gap-3 sm:flex-row sm:justify-center'
           >
-            <Link href='/products'>
-              <Button size='lg' className='h-12 gap-2 px-8 text-base font-semibold shadow-md transition-transform active:scale-[0.98]'>
+            <Link href='/products' className='w-full sm:w-auto'>
+              <Button size='lg' className='w-full sm:w-auto h-11 sm:h-12 gap-2 px-6 sm:px-8 text-sm sm:text-base font-semibold shadow-md transition-transform active:scale-[0.98] rounded-xl'>
                 مشاهده و خرید محصولات
               </Button>
             </Link>
-            <Link href='#how-it-works'>
+            <Link href='#how-it-works' className='w-full sm:w-auto'>
               <Button
                 variant='outline'
                 size='lg'
-                className='h-12 gap-2 px-6 text-base transition-transform active:scale-[0.98]'
+                className='w-full sm:w-auto h-11 sm:h-12 gap-2 px-5 sm:px-6 text-xs sm:text-base transition-transform active:scale-[0.98] rounded-xl'
               >
                 <BookOpen className='size-4' />
                 نحوه تحویل و فعال‌سازی
@@ -92,15 +92,15 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
           {/* Trust items */}
           <motion.div
             variants={staggerContainer(0.06)}
-            className='flex flex-wrap items-center justify-center gap-x-6 gap-y-2'
+            className='flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2'
           >
             {trustItems.map((item) => (
               <motion.div
                 key={item.text}
                 variants={fadeIn}
-                className='flex items-center gap-1.5 text-sm text-muted-foreground'
+                className='flex items-center gap-1.5 text-[11px] sm:text-sm text-muted-foreground'
               >
-                <item.icon className='size-4 shrink-0 text-primary' />
+                <item.icon className='size-3.5 sm:size-4 shrink-0 text-primary' />
                 <span>{item.text}</span>
               </motion.div>
             ))}

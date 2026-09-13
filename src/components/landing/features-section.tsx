@@ -94,13 +94,13 @@ export function FeaturesSection() {
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          <div className='mb-3 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary'>
+          <div className='mb-3 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold text-primary'>
             <span>امکانات و توانمندی‌ها</span>
           </div>
-          <h2 className='mb-3 text-2xl font-bold text-foreground sm:text-3xl'>
+          <h2 className='mb-3 text-xl sm:text-2xl md:text-3xl font-bold text-foreground'>
             با اشتراک‌های هوش مصنوعی چه امکاناتی به دست می‌آورید؟
           </h2>
-          <p className='mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base'>
+          <p className='mx-auto max-w-2xl text-xs sm:text-sm md:text-base leading-relaxed text-muted-foreground'>
             دسترسی نامحدود به قدرتمندترین مدل‌های استدلال و کدنویسی جهان، استودیوهای تولید ویدیو و تصویر،
             دستیارهای پژوهشی پیشرفته و زیرساخت ابری اختصاصی.
           </p>
@@ -108,7 +108,7 @@ export function FeaturesSection() {
 
         {/* Grid */}
         <motion.div
-          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          className='grid gap-3.5 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3'
           initial='hidden'
           whileInView='visible'
           viewport={viewportOnce}
@@ -121,25 +121,25 @@ export function FeaturesSection() {
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              <Card className='group h-full border border-border/70 bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5'>
-                <CardHeader className='pb-2'>
+              <Card className='group h-full border border-border/70 bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 rounded-2xl'>
+                <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-2'>
                   <div className='mb-3 flex items-center justify-between'>
-                    <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-200 group-hover:scale-105 group-hover:bg-primary/15'>
-                      <feature.icon className='size-5' />
+                    <div className='flex size-9 sm:size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-200 group-hover:scale-105 group-hover:bg-primary/15'>
+                      <feature.icon className='size-4.5 sm:size-5' />
                     </div>
                     <Badge
                       variant='secondary'
-                      className='border border-primary/20 bg-primary/10 text-[11px] font-medium text-primary dir-ltr'
+                      className='border border-primary/20 bg-primary/10 text-[10px] sm:text-[11px] font-medium text-primary dir-ltr'
                     >
                       {feature.tag}
                     </Badge>
                   </div>
-                  <h3 className='text-base font-semibold text-foreground transition-colors duration-200 group-hover:text-primary'>
+                  <h3 className='text-sm sm:text-base font-semibold text-foreground transition-colors duration-200 group-hover:text-primary'>
                     {feature.title}
                   </h3>
                 </CardHeader>
-                <CardContent>
-                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                <CardContent className='p-4 sm:p-6 pt-0 sm:pt-0'>
+                  <p className='text-xs sm:text-sm leading-relaxed text-muted-foreground'>
                     {feature.description}
                   </p>
                 </CardContent>

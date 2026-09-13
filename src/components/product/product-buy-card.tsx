@@ -72,7 +72,7 @@ export function ProductBuyCard({
           <span id='plan-label' className='text-xs font-medium text-muted-foreground'>
             انتخاب پلن:
           </span>
-          <div className='flex flex-wrap gap-2' role='radiogroup' aria-labelledby='plan-label'>
+          <div className='flex flex-wrap gap-1.5 sm:gap-2' role='radiogroup' aria-labelledby='plan-label'>
             {plans.map((p) => {
               const isSelected = selectedPlan?.id === p.id
               const isPlanPreCreated = p.fulfillmentType === 'PRE_CREATED_ACCOUNT'
@@ -85,7 +85,7 @@ export function ProductBuyCard({
                   role='radio'
                   aria-checked={isSelected}
                   onClick={() => setSelectedPlanId(p.id)}
-                  className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm transition-colors cursor-pointer ${
                     isSelected
                       ? 'border-primary bg-primary/8 text-foreground font-semibold ring-1 ring-primary/30'
                       : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -110,15 +110,15 @@ export function ProductBuyCard({
       )}
 
       {/* Price + Status */}
-      <div className='flex items-end justify-between gap-3 border-t border-border/50 pt-5'>
+      <div className='flex items-end justify-between gap-3 border-t border-border/50 pt-4 sm:pt-5'>
         <div>
           <span className='mb-1 block text-xs text-muted-foreground'>قیمت نهایی:</span>
-          <span className='text-2xl font-bold text-foreground'>{formatPrice(effectivePrice)}</span>
+          <span className='text-xl sm:text-2xl font-bold text-foreground font-sans'>{formatPrice(effectivePrice)}</span>
         </div>
         {isPreCreated ? (
           planStock > 0 ? (
             <div className='flex flex-col items-end gap-1'>
-              <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-medium'>
+              <Badge className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] sm:text-xs font-medium'>
                 تحویل آنی اکانت آماده
               </Badge>
               <span className='text-[10px] text-muted-foreground'>
@@ -127,7 +127,7 @@ export function ProductBuyCard({
             </div>
           ) : (
             <div className='flex flex-col items-end gap-1'>
-              <Badge className='bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-xs font-medium'>
+              <Badge className='bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] sm:text-xs font-medium'>
                 فعال‌سازی روی اکانت شخصی
               </Badge>
               <span className='text-[10px] text-amber-600 dark:text-amber-400 font-medium'>
@@ -136,11 +136,11 @@ export function ProductBuyCard({
             </div>
           )
         ) : isAvailable ? (
-          <Badge className='bg-primary/8 text-primary border-primary/20 text-xs'>
+          <Badge className='bg-primary/8 text-primary border-primary/20 text-[10px] sm:text-xs'>
             آماده تحویل
           </Badge>
         ) : (
-          <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-xs'>
+          <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-[10px] sm:text-xs'>
             ناموجود
           </Badge>
         )}
@@ -160,7 +160,7 @@ export function ProductBuyCard({
           disabled={buying || !isAvailable}
           aria-busy={buying}
           size='lg'
-          className='h-12 w-full text-sm font-semibold'
+          className='h-11 sm:h-12 w-full text-xs sm:text-sm font-semibold rounded-xl'
         >
           {buying ? (
             <>
@@ -177,7 +177,7 @@ export function ProductBuyCard({
           )}
         </Button>
 
-        <p className='text-center text-xs text-muted-foreground'>
+        <p className='text-center text-[11px] sm:text-xs text-muted-foreground'>
           <Lock className='me-1 inline size-3' aria-hidden='true' />
           پرداخت امن — تحویل بلافاصله پس از پرداخت
         </p>
