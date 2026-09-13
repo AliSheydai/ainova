@@ -110,12 +110,25 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
     const rawData =
       typeof chosenAccount.data === 'string'
         ? JSON.parse(chosenAccount.data)
-        : chosenAccount.data
+        : (chosenAccount.data as Record<string, any>)
 
     const email = rawData?.email || rawData?.username || ''
     // Ensure password is safe
     const rawPassword = rawData?.password ? decryptCredential(rawData.password) : ''
     const encryptedPassword = encryptCredential(rawPassword)
+
+    // Self-healing: Ensure inventoryItem data is stored encrypted in database
+    if (rawData?.password && rawData.password !== encryptedPassword) {
+      await tx.inventoryItem.update({
+        where: { id: chosenAccount.id },
+        data: {
+          data: {
+            ...rawData,
+            password: encryptedPassword,
+          },
+        },
+      }).catch(() => {})
+    }
 
     const deliveryData: AccountCredentialsDeliveryData = {
       email,

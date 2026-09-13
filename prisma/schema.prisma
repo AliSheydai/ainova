@@ -436,4 +436,20 @@ model NotificationRead {
   @@map("notification_reads")
 }
 
+// =====================
+// Telegram Bot Session
+// =====================
+model BotSession {
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  data       Json
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([telegramId])
+  @@index([expiresAt])
+  @@map("bot_sessions")
+}
+
 

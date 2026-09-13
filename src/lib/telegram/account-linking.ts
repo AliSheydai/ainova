@@ -46,24 +46,22 @@ export async function setBotLoginSession(telegramId: string, session: BotLoginSe
   const expiresAt = Date.now() + 15 * 60 * 1000 // 15 minutes
   memorySessionStore.set(telegramId, { session, expiresAt })
 
-  // Also persist to DB via otpToken for cross-instance / serverless resilience
+  // Persist directly to dedicated BotSession table for cross-instance and server restart durability
   try {
-    const sessionKey = `tg_sess_${telegramId}`
-    await prisma.otpToken.updateMany({
-      where: { phone: sessionKey, used: false },
-      data: { used: true },
-    })
-
-    await prisma.otpToken.create({
-      data: {
-        phone: sessionKey,
-        code: JSON.stringify(session),
+    await prisma.botSession.upsert({
+      where: { telegramId },
+      create: {
+        telegramId,
+        data: session as any,
         expiresAt: new Date(expiresAt),
-        used: false,
+      },
+      update: {
+        data: session as any,
+        expiresAt: new Date(expiresAt),
       },
     })
   } catch (err) {
-    console.error('Error saving bot session in DB:', err)
+    console.error(`[BotSession] Error saving session for telegramId ${telegramId} in DB:`, err)
   }
 }
 
@@ -74,28 +72,27 @@ export async function getBotLoginSession(telegramId: string): Promise<BotLoginSe
     return cached.session
   }
 
-  // Fallback to DB
+  // Fallback to database (e.g. after server restart or multi-process environment)
   try {
-    const sessionKey = `tg_sess_${telegramId}`
-    const record = await prisma.otpToken.findFirst({
-      where: {
-        phone: sessionKey,
-        used: false,
-        expiresAt: { gt: new Date() },
-      },
-      orderBy: { createdAt: 'desc' },
+    const record = await prisma.botSession.findUnique({
+      where: { telegramId },
     })
 
     if (record) {
-      const parsed = JSON.parse(record.code) as BotLoginSession
-      memorySessionStore.set(telegramId, {
-        session: parsed,
-        expiresAt: record.expiresAt.getTime(),
-      })
-      return parsed
+      if (record.expiresAt.getTime() > Date.now()) {
+        const parsed = record.data as unknown as BotLoginSession
+        memorySessionStore.set(telegramId, {
+          session: parsed,
+          expiresAt: record.expiresAt.getTime(),
+        })
+        return parsed
+      } else {
+        // Asynchronously prune expired session
+        prisma.botSession.delete({ where: { telegramId } }).catch(() => {})
+      }
     }
   } catch (err) {
-    console.error('Error retrieving bot session from DB:', err)
+    console.error(`[BotSession] Error retrieving session for telegramId ${telegramId} from DB:`, err)
   }
 
   return null
@@ -104,13 +101,11 @@ export async function getBotLoginSession(telegramId: string): Promise<BotLoginSe
 export async function clearBotLoginSession(telegramId: string): Promise<void> {
   memorySessionStore.delete(telegramId)
   try {
-    const sessionKey = `tg_sess_${telegramId}`
-    await prisma.otpToken.updateMany({
-      where: { phone: sessionKey, used: false },
-      data: { used: true },
+    await prisma.botSession.deleteMany({
+      where: { telegramId },
     })
   } catch (err) {
-    console.error('Error clearing bot session in DB:', err)
+    console.error(`[BotSession] Error clearing session for telegramId ${telegramId} in DB:`, err)
   }
 }
 

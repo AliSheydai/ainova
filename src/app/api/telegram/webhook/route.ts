@@ -7,13 +7,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN is not configured' }, { status: 500 })
   }
 
-  // Verify secret token if configured
+  // Enforce mandatory secret token validation
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET
-  if (secret) {
-    const headerSecret = req.headers.get('x-telegram-bot-api-secret-token')
-    if (headerSecret !== secret) {
-      return NextResponse.json({ error: 'Unauthorized secret token' }, { status: 403 })
-    }
+  if (!secret) {
+    console.error('SECURITY: TELEGRAM_WEBHOOK_SECRET is not configured!')
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
+
+  const headerSecret = req.headers.get('x-telegram-bot-api-secret-token')
+  if (headerSecret !== secret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
   try {
