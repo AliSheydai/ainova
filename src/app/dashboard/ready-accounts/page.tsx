@@ -13,17 +13,12 @@ import {
   Copy,
   Check,
   Trash2,
-  Package,
-  Filter,
   X,
   Eye,
   EyeOff,
   Mail,
-  KeyRound,
   AlertCircle,
-  ChevronDown,
 } from 'lucide-react'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -31,14 +26,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -48,6 +35,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { formatPersianDate, toPersianDigits } from '@/lib/persian-utils'
+import { AddAccountDialog, type ProductOption } from './add-account-dialog'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface InventoryAccount {
@@ -72,9 +60,6 @@ interface InventoryAccount {
   order?: { id: string; user?: { phone?: string | null; name?: string | null } } | null
 }
 
-interface ProductOption { id: string; title: string; slug: string }
-interface PlanOption { id: string; name: string; productId: string }
-
 interface InventoryResponse {
   success: boolean
   items: InventoryAccount[]
@@ -95,187 +80,8 @@ function getStatusBadge(status: string) {
   }
 }
 
-// ─── Add Account Modal / Bottom Sheet Content ──────────────────────────────────
-interface AddAccountFormProps {
-  products: ProductOption[]
-  onClose: () => void
-  onAdded: () => void
-}
-
-function AddAccountForm({ products, onClose, onAdded }: AddAccountFormProps) {
-  const [selectedProductId, setSelectedProductId] = useState('')
-  const [plans, setPlans] = useState<PlanOption[]>([])
-  const [selectedPlanId, setSelectedPlanId] = useState('NONE')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [recoveryEmail, setRecoveryEmail] = useState('')
-  const [note, setNote] = useState('')
-  const [bulkMode, setBulkMode] = useState(false)
-  const [bulkText, setBulkText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [loadingPlans, setLoadingPlans] = useState(false)
-
-  // Load plans when product changes
-  useEffect(() => {
-    if (!selectedProductId) { setPlans([]); setSelectedPlanId('NONE'); return }
-    setLoadingPlans(true)
-    fetch(`/api/admin/plans?productId=${selectedProductId}`)
-      .then(r => r.json())
-      .then(d => {
-        const filtered = (d.plans || []).filter((p: any) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT')
-        setPlans(filtered)
-        if (filtered.length === 1) setSelectedPlanId(filtered[0].id)
-        else setSelectedPlanId('NONE')
-      })
-      .catch(() => {})
-      .finally(() => setLoadingPlans(false))
-  }, [selectedProductId])
-
-  const handleSubmit = async () => {
-    if (!selectedProductId) { toast.error('لطفاً محصول را انتخاب کنید.'); return }
-
-    const finalPlanId = selectedPlanId && selectedPlanId !== 'NONE' ? selectedPlanId : null
-
-    let body: object
-
-    if (bulkMode) {
-      if (!bulkText.trim()) { toast.error('لطفاً داده‌های اکانت را وارد کنید.'); return }
-      body = {
-        productId: selectedProductId,
-        planId: finalPlanId,
-        type: 'PRE_CREATED_ACCOUNT',
-        rawContent: bulkText,
-      }
-    } else {
-      if (!email.trim()) { toast.error('لطفاً آدرس ایمیل را وارد کنید.'); return }
-      body = {
-        productId: selectedProductId,
-        planId: finalPlanId,
-        type: 'PRE_CREATED_ACCOUNT',
-        items: [{ email: email.trim(), password: password.trim(), recoveryEmail: recoveryEmail.trim() || null, note: note.trim() || null }],
-      }
-    }
-
-    setSubmitting(true)
-    try {
-      const res = await fetch('/api/admin/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json()
-      if (data.success) {
-        toast.success(data.message || 'اکانت با موفقیت افزوده شد.')
-        onAdded()
-        onClose()
-      } else {
-        toast.error(data.error || 'خطا در افزودن اکانت.')
-      }
-    } catch { toast.error('خطای ارتباط با سرور.') }
-    finally { setSubmitting(false) }
-  }
-
-  return (
-    <div className='space-y-4 text-xs' dir='rtl'>
-      {/* Product & Plan selectors */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-        <div className='space-y-1.5'>
-          <label className='text-xs font-semibold text-foreground flex items-center gap-1'>
-            محصول <span className='text-rose-500'>*</span>
-          </label>
-          <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-            <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
-              <SelectValue placeholder='انتخاب محصول...' />
-            </SelectTrigger>
-            <SelectContent>
-              {products.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className='space-y-1.5'>
-          <label className='text-xs font-semibold text-foreground'>پلن (اختیاری)</label>
-          <Select value={selectedPlanId} onValueChange={setSelectedPlanId} disabled={!selectedProductId || loadingPlans}>
-            <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
-              <SelectValue placeholder={loadingPlans ? 'در حال بارگذاری...' : 'بدون پلن خاص'} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='NONE'>بدون پلن خاص (سطح محصول)</SelectItem>
-              {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Mode toggle */}
-      <div className='flex items-center rounded-xl border border-border/60 p-0.5 bg-muted/30 text-xs w-full sm:w-fit'>
-        <button type='button' onClick={() => setBulkMode(false)} className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg font-medium transition-all ${!bulkMode ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
-          افزودن تکی
-        </button>
-        <button type='button' onClick={() => setBulkMode(true)} className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg font-medium transition-all ${bulkMode ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
-          افزودن دسته‌ای
-        </button>
-      </div>
-
-      {bulkMode ? (
-        <div className='space-y-1.5'>
-          <label className='text-xs font-semibold text-foreground'>اکانت‌ها (هر خط: ایمیل:پسورد)</label>
-          <textarea
-            placeholder={'example@gmail.com:MyPass123\nexample2@gmail.com:SecurePass456'}
-            value={bulkText}
-            onChange={e => setBulkText(e.target.value)}
-            className='w-full min-h-[120px] text-xs font-mono rounded-xl border border-input bg-background/90 p-3 resize-y outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all'
-            dir='ltr'
-          />
-          <p className='text-[10.5px] text-muted-foreground'>فرمت هر خط: <code className='font-mono bg-muted px-1 rounded'>email:password</code> یا <code className='font-mono bg-muted px-1 rounded'>email:password:یادداشت</code></p>
-        </div>
-      ) : (
-        <div className='space-y-3'>
-          {/* Email */}
-          <div className='space-y-1.5'>
-            <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
-              <Mail className='size-3.5 text-purple-500' />
-              آدرس ایمیل (جیمیل) <span className='text-rose-500'>*</span>
-            </label>
-            <Input type='email' placeholder='example@gmail.com' value={email} onChange={e => setEmail(e.target.value)} className='h-9 font-mono text-xs' dir='ltr' />
-          </div>
-          {/* Password */}
-          <div className='space-y-1.5'>
-            <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
-              <KeyRound className='size-3.5 text-purple-500' />
-              رمزعبور
-            </label>
-            <div className='relative'>
-              <Input type={showPassword ? 'text' : 'password'} placeholder='رمزعبور اکانت...' value={password} onChange={e => setPassword(e.target.value)} className='h-9 font-mono text-xs pe-9' dir='ltr' />
-              <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'>
-                {showPassword ? <EyeOff className='size-3.5' /> : <Eye className='size-3.5' />}
-              </button>
-            </div>
-          </div>
-          {/* Recovery Email */}
-          <div className='space-y-1.5'>
-            <label className='text-xs font-semibold text-foreground'>ایمیل ریکاوری (اختیاری)</label>
-            <Input type='email' placeholder='recovery@example.com' value={recoveryEmail} onChange={e => setRecoveryEmail(e.target.value)} className='h-9 font-mono text-xs' dir='ltr' />
-          </div>
-          {/* Note */}
-          <div className='space-y-1.5'>
-            <label className='text-xs font-semibold text-foreground'>یادداشت (اختیاری)</label>
-            <Input placeholder='مثلاً: اکانت تازه ساخته شده، بدون اطلاعات اضافه...' value={note} onChange={e => setNote(e.target.value)} className='h-9 text-xs' dir='rtl' />
-          </div>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className='flex flex-col-reverse sm:flex-row gap-2 pt-1 border-t border-border/50'>
-        <Button variant='outline' size='sm' onClick={onClose} className='h-9 text-xs rounded-xl'>انصراف</Button>
-        <Button size='sm' onClick={handleSubmit} disabled={submitting} className='h-9 text-xs font-semibold rounded-xl flex-1 sm:flex-none gap-1.5'>
-          {submitting ? <Loader2 className='size-3.5 animate-spin' /> : <Plus className='size-3.5' />}
-          افزودن به انبار
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function ReadyAccountsPage() {
-  const isMobile = useIsMobile()
   const [accounts, setAccounts] = useState<InventoryAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, available: 0, used: 0 })
@@ -376,57 +182,13 @@ export default function ReadyAccountsPage() {
 
   const activeFilters = [statusFilter !== 'ALL', productFilter !== 'ALL', debouncedSearch.length > 0].filter(Boolean).length
 
-  // ─── Add Modal / Bottom Sheet ────────────────────────────────────────────────
-  const AddModalOrSheet = isMobile ? (
-    // Mobile: Bottom Sheet via Dialog with bottom slide
-    <Dialog open={addOpen} onOpenChange={setAddOpen}>
-      <DialogContent
-        className='fixed inset-x-0 bottom-0 top-auto rounded-t-2xl rounded-b-none max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-full max-w-none'
-        style={{ transform: 'none' }}
-      >
-        <DialogHeader className='pb-3 border-b border-border/50'>
-          <div className='flex items-center gap-2'>
-            <div className='size-8 rounded-xl bg-purple-500/15 flex items-center justify-center'>
-              <Archive className='size-4 text-purple-500' />
-            </div>
-            <div>
-              <DialogTitle className='text-sm font-bold'>افزودن اکانت به انبار</DialogTitle>
-              <DialogDescription className='text-[11px]'>اکانت‌های آماده برای تحویل به کاربران</DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className='pt-4'>
-          <AddAccountForm products={products} onClose={() => setAddOpen(false)} onAdded={fetchAccounts} />
-        </div>
-      </DialogContent>
-    </Dialog>
-  ) : (
-    // Desktop: Regular Dialog
-    <Dialog open={addOpen} onOpenChange={setAddOpen}>
-      <DialogContent className='sm:max-w-xl rounded-2xl p-5'>
-        <DialogHeader className='pb-3 border-b border-border/50'>
-          <div className='flex items-center gap-2'>
-            <div className='size-8 rounded-xl bg-purple-500/15 flex items-center justify-center'>
-              <Archive className='size-4 text-purple-500' />
-            </div>
-            <div>
-              <DialogTitle className='text-sm font-bold'>افزودن اکانت به انبار</DialogTitle>
-              <DialogDescription className='text-[11px]'>اکانت‌های آماده برای تحویل به کاربران</DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className='pt-4'>
-          <AddAccountForm products={products} onClose={() => setAddOpen(false)} onAdded={fetchAccounts} />
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+
 
   return (
     <>
       <Header>
         <div className='hidden sm:flex items-center gap-2.5 min-w-0'>
-          <div className='size-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 shrink-0'>
+          <div className='size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0'>
             <Archive className='size-4' />
           </div>
           <div className='min-w-0'>
@@ -673,7 +435,7 @@ export default function ReadyAccountsPage() {
                         <div key={acc.id} className='p-4 space-y-2.5 bg-card hover:bg-muted/20 transition-colors'>
                           <div className='flex items-start justify-between gap-2'>
                             <div className='flex items-center gap-1.5 min-w-0 flex-1'>
-                              <Mail className='size-3.5 text-purple-500 shrink-0' />
+                              <Mail className='size-3.5 text-primary shrink-0' />
                               <span className='font-mono text-xs text-foreground truncate select-all' dir='ltr'>{email}</span>
                               <button type='button' onClick={() => handleCopy(email, `m-email-${acc.id}`)} className='text-muted-foreground hover:text-primary shrink-0'>
                                 {copiedId === `m-email-${acc.id}` ? <Check className='size-3 text-primary' /> : <Copy className='size-3' />}
@@ -713,8 +475,13 @@ export default function ReadyAccountsPage() {
         </div>
       </Main>
 
-      {/* Add Modal / Bottom Sheet */}
-      {AddModalOrSheet}
+      {/* Add Account Modal */}
+      <AddAccountDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        products={products}
+        onSuccess={fetchAccounts}
+      />
     </>
   )
 }

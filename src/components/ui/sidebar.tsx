@@ -165,6 +165,17 @@ function Sidebar({
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { dir } = useDirection()
+
+  // In RTL layouts, the logical start sidebar ('left') corresponds to the physical 'right' side for SheetContent.
+  const sheetSide =
+    side === 'left'
+      ? dir === 'rtl'
+        ? 'right'
+        : 'left'
+      : dir === 'rtl'
+        ? 'left'
+        : 'right'
 
   if (collapsible === 'none') {
     return (
@@ -194,7 +205,8 @@ function Sidebar({
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
           }
-          side={side}
+          side={sheetSide}
+          dir={dir}
         >
           <SheetHeader className='sr-only'>
             <SheetTitle>Sidebar</SheetTitle>
@@ -274,7 +286,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftIcon className='rtl:rotate-180' />
       <span className='sr-only'>Toggle Sidebar</span>
     </Button>
   )
