@@ -4,7 +4,11 @@ import { PaymentService } from '@/lib/payment'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
 import { encryptCredential } from '@/lib/security/crypto'
+import { InMemoryRateLimiter } from '@/lib/security/rate-limit'
 import { type FulfillmentType, type Prisma } from '@prisma/client'
+
+const botOrderRateLimiter = new InMemoryRateLimiter(5 * 60 * 1000, 3) // 3 orders per 5 minutes
+const ALLOWED_BOT_SOURCES = ['telegram', 'bale', 'rubika', 'soroush'] as const
 
 export interface BotProductSummary {
   id: string
@@ -138,6 +142,26 @@ export class BotStoreService {
     mobile?: string | null
   }) {
     const { userId, planId, checkoutData = {}, couponCode, source, chatId, mobile } = options
+
+    const rateKey = chatId || userId
+    const rateCheck = botOrderRateLimiter.check(rateKey)
+    if (!rateCheck.success) {
+      throw new Error('تعداد درخواست‌های ثبت سفارش بیش از حد مجاز است. لطفاً ۵ دقیقه دیگر مجدداً تلاش فرمایید.')
+    }
+
+    // Check for excessive active pending orders (Bug 3.2)
+    const pendingOrders = await prisma.order.count({
+      where: {
+        userId,
+        status: 'PENDING_PAYMENT',
+        createdAt: { gte: new Date(Date.now() - 30 * 60 * 1000) },
+      },
+    })
+    if (pendingOrders >= 3) {
+      throw new Error('شما سفارش‌های پرداخت‌نشده فعالی دارید. لطفاً ابتدا آنها را تکمیل یا منتظر انقضای آنها بمانید.')
+    }
+
+    const validSource = (ALLOWED_BOT_SOURCES as readonly string[]).includes(source) ? source : 'telegram'
 
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
@@ -322,7 +346,7 @@ export class BotStoreService {
             checkoutData: secureCheckoutData as Prisma.InputJsonValue,
             status: 'PENDING_PAYMENT',
             fulfillmentStatus: 'PENDING',
-            source,
+            source: validSource,
             telegramChatId: chatId,
           },
         })

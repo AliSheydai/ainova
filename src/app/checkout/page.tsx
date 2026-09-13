@@ -516,6 +516,12 @@ function CheckoutContent() {
       return
     }
 
+    if (!currentUser) {
+      setAuthModalOpen(true)
+      toast.error('برای استفاده از کد تخفیف ابتدا وارد حساب کاربری خود شوید.')
+      return
+    }
+
     setValidatingCoupon(true)
     try {
       const res = await fetch('/api/coupons/validate', {
@@ -528,6 +534,13 @@ function CheckoutContent() {
         }),
       })
       const data = await res.json()
+
+      if (res.status === 401) {
+        setAuthModalOpen(true)
+        toast.error('برای استفاده از کد تخفیف ابتدا وارد حساب کاربری خود شوید.')
+        return
+      }
+
       if (data.success && data.coupon) {
         setAppliedCoupon({
           code: data.coupon.code,

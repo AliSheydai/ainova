@@ -6,9 +6,24 @@ import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfil
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
 import { encryptCredential } from '@/lib/security/crypto'
+import { InMemoryRateLimiter, getClientIp } from '@/lib/security/rate-limit'
+
+const ALLOWED_SOURCES = ['web', 'telegram', 'bale', 'rubika', 'soroush'] as const
+type AllowedSource = (typeof ALLOWED_SOURCES)[number]
+
+const orderRateLimiter = new InMemoryRateLimiter(60 * 1000, 5) // 5 orders per minute per IP
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req.headers)
+    const rateCheck = orderRateLimiter.check(ip)
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { success: false, message: 'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی بعد تلاش کنید.' },
+        { status: 429 }
+      )
+    }
+
     // Trigger non-blocking lazy cleanup for stale orders
     OrderExpirationService.triggerBackgroundCleanup()
 
@@ -21,8 +36,31 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Check for excessive active pending orders (Bug 3.2)
+    const pendingOrders = await prisma.order.count({
+      where: {
+        userId: session.userId,
+        status: 'PENDING_PAYMENT',
+        createdAt: { gte: new Date(Date.now() - 30 * 60 * 1000) },
+      },
+    })
+    if (pendingOrders >= 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'شما سفارش‌های پرداخت‌نشده فعالی دارید. لطفاً ابتدا آنها را تکمیل کنید.',
+        },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json()
     const { productId, slug, planId, checkoutData, source, couponCode } = body
+
+    const validSource: AllowedSource =
+      typeof source === 'string' && (ALLOWED_SOURCES as readonly string[]).includes(source)
+        ? (source as AllowedSource)
+        : 'web'
 
     // 1. Resolve product and plan
     let product = null
@@ -296,7 +334,7 @@ export async function POST(req: NextRequest) {
             checkoutData: secureCheckoutData,
             status: 'PENDING_PAYMENT',
             fulfillmentStatus: 'PENDING',
-            source: source || 'web',
+            source: validSource,
           },
         })
 

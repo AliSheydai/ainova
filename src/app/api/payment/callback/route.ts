@@ -9,6 +9,7 @@ import { AdminNotificationService } from '@/lib/notifications/admin-notification
 import { UserNotificationService } from '@/lib/notifications/user-notification-service'
 import { NotificationType } from '@prisma/client'
 import { CouponService } from '@/lib/discounts/coupon-service'
+import { getCurrentUser } from '@/lib/auth/jwt'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -56,6 +57,14 @@ export async function GET(req: NextRequest) {
     querySource === 'telegram' ||
     payment.order.source === 'telegram' ||
     Boolean(payment.order.telegramChatId)
+
+  // Validation for web order ownership (Bug 3.4)
+  if (!isTelegram) {
+    const session = await getCurrentUser()
+    if (session && session.userId !== payment.order.userId) {
+      return NextResponse.redirect(`${appUrl}/?payment=unauthorized`)
+    }
+  }
 
   // 1. Idempotency Check: Already processed & paid/completed?
   if (

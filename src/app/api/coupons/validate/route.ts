@@ -1,8 +1,29 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { CouponService } from '@/lib/discounts/coupon-service'
+import { getCurrentUser } from '@/lib/auth/jwt'
+import { InMemoryRateLimiter, getClientIp } from '@/lib/security/rate-limit'
+
+const couponRateLimiter = new InMemoryRateLimiter(60 * 1000, 10) // 10 attempts per minute per IP
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getCurrentUser()
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'ابتدا وارد حساب کاربری خود شوید.' },
+        { status: 401 }
+      )
+    }
+
+    const ip = getClientIp(req.headers)
+    const rateCheck = couponRateLimiter.check(ip)
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { success: false, error: 'تعداد تلاش‌ها بیش از حد مجاز است. لطفاً یک دقیقه دیگر تلاش فرمایید.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json()
     const { code, amount, productId } = body
 
