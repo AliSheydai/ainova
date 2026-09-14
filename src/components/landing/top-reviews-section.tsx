@@ -59,7 +59,7 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
   return (
     <section
       id='testimonials'
-      className='py-14 sm:py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background border-t border-border/40'
+      className='py-14 sm:py-20 md:py-28 relative overflow-hidden'
       dir='rtl'
     >
       <div className='container mx-auto px-4 sm:px-6 relative z-10'>

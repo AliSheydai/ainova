@@ -296,8 +296,6 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
     // pan-y ensures vertical page scrolling on mobile devices works naturally without being trapped!
     touchAction: dragEnabled ? 'pan-y' : 'auto',
     userSelect: dragEnabled ? 'none' : 'auto',
-    maskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
   } as CSSProperties;
 
   const stopDragging = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -339,7 +337,7 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
   return (
     <div
       ref={rootRef}
-      className={`relative isolate h-full min-h-80 w-full overflow-hidden select-none ${className}`}
+      className={`relative h-full min-h-80 w-full overflow-hidden select-none ${className}`}
       style={rootStyle}
       onMouseEnter={() => {
         hoveredRef.current = true;
