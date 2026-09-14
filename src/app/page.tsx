@@ -7,6 +7,7 @@ import { FeaturesSection } from '@/components/landing/features-section'
 import { PricingSection } from '@/components/landing/pricing-section'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
 import { SecuritySection } from '@/components/landing/security-section'
+import { TopReviewsSection } from '@/components/landing/top-reviews-section'
 import { FaqSection } from '@/components/landing/faq-section'
 import { FinalCtaSection } from '@/components/landing/final-cta-section'
 import { LandingFooter } from '@/components/landing/landing-footer'
@@ -22,6 +23,38 @@ export const metadata: Metadata = {
 
 function formatPrice(amount: number): string {
   return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان'
+}
+
+async function getTopReviewsData() {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: {
+        status: 'APPROVED',
+        isFeatured: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 12,
+      select: {
+        id: true,
+        userName: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        product: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            image: true,
+          },
+        },
+      },
+    })
+    return reviews
+  } catch (error) {
+    console.error('Error fetching top reviews for landing:', error)
+    return []
+  }
 }
 
 async function getProductsData() {
@@ -79,7 +112,10 @@ async function getProductsData() {
 }
 
 export default async function LandingPage() {
-  const products = await getProductsData()
+  const [products, topReviews] = await Promise.all([
+    getProductsData(),
+    getTopReviewsData(),
+  ])
   const primaryProduct = products.find((p) => p.slug === 'google-ai-pro') || products[0]
   const formattedPrice = primaryProduct ? formatPrice(primaryProduct.price) : '۳۹۰،۰۰۰ تومان'
 
@@ -99,6 +135,8 @@ export default async function LandingPage() {
           productSlug={primaryProduct?.slug}
         />
         <SecuritySection />
+        {/* Top featured customer reviews showcase */}
+        <TopReviewsSection reviews={topReviews} />
         <FaqSection />
         <FinalCtaSection price={formattedPrice} />
       </main>

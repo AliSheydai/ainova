@@ -100,12 +100,13 @@ export default async function ProductDetailPage(props: ProductPageProps) {
       productId: product.id,
       status: 'APPROVED',
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
     select: {
       id: true,
       userName: true,
       rating: true,
       comment: true,
+      isFeatured: true,
       createdAt: true,
     },
   })
@@ -124,6 +125,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
     userName: r.userName,
     rating: r.rating,
     comment: r.comment,
+    isFeatured: r.isFeatured,
     createdAt: r.createdAt.toISOString(),
   }))
 

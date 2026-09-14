@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   X,
   User as UserIcon,
+  Sparkles,
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Header } from '@/components/layout/header'
@@ -72,6 +73,7 @@ interface AdminReviewItem {
   rating: number
   comment: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  isFeatured: boolean
   adminNote: string | null
   createdAt: string
   updatedAt: string
@@ -93,6 +95,7 @@ interface ReviewCounts {
   pending: number
   approved: number
   rejected: number
+  featured?: number
   total: number
 }
 
@@ -159,6 +162,7 @@ export default function AdminReviewsPage() {
   }, [statusFilter, search, page, limit])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReviews()
   }, [fetchReviews])
 
@@ -192,6 +196,40 @@ export default function AdminReviewsPage() {
       toast.error('خطای ارتباط با سرور.')
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const handleToggleFeatured = async (reviewId: string, currentFeatured: boolean, currentStatus?: string) => {
+    if (!currentFeatured && currentStatus && currentStatus !== 'APPROVED') {
+      toast.error('تنها نظرات تاییدشده می‌توانند به عنوان نظر برتر انتخاب شوند. لطفاً ابتدا نظر را تایید کنید.')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewId,
+          isFeatured: !currentFeatured,
+        }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        toast.success(data.message)
+        setReviews((prev) =>
+          prev.map((r) => (r.id === reviewId ? { ...r, isFeatured: !currentFeatured } : r))
+        )
+        if (selectedReview?.id === reviewId) {
+          setSelectedReview((prev) => (prev ? { ...prev, isFeatured: !currentFeatured } : null))
+        }
+        fetchReviews()
+      } else {
+        toast.error(data.error || 'خطا در تغییر وضعیت نظر برتر.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
     }
   }
 
@@ -278,7 +316,7 @@ export default function AdminReviewsPage() {
 
           {/* Metric KPI Cards */}
           {counts && (
-            <div className='grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5'>
               {/* Pending */}
               <Card
                 className={`cursor-pointer transition-all border shadow-xs ${
@@ -331,6 +369,33 @@ export default function AdminReviewsPage() {
                 </CardContent>
               </Card>
 
+              {/* Featured (Top Reviews) */}
+              <Card
+                className={`cursor-pointer transition-all border shadow-xs ${
+                  statusFilter === 'FEATURED'
+                    ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-500/10'
+                    : 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                }`}
+                onClick={() => {
+                  startTransition(() => {
+                    setStatusFilter(statusFilter === 'FEATURED' ? 'ALL' : 'FEATURED')
+                    setPage(1)
+                  })
+                }}
+              >
+                <CardContent className='p-3 sm:p-4'>
+                  <div className='flex items-center justify-between text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium'>
+                    <span className='truncate'>نظرات برتر (لندینگ)</span>
+                    <Sparkles className='size-3.5 shrink-0 text-amber-500' />
+                  </div>
+                  <div className='text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5 font-sans'>
+                    {toPersianDigits(counts.featured ?? 0)}
+                    <span className='text-xs font-normal text-muted-foreground ms-1'>/ ۱۲</span>
+                  </div>
+                  <p className='text-[10px] text-muted-foreground mt-0.5'>نمایش در انتهای لندینگ</p>
+                </CardContent>
+              </Card>
+
               {/* Rejected */}
               <Card
                 className={`cursor-pointer transition-all border shadow-xs ${
@@ -359,7 +424,7 @@ export default function AdminReviewsPage() {
 
               {/* Total */}
               <Card
-                className={`cursor-pointer transition-all border shadow-xs ${
+                className={`cursor-pointer transition-all border shadow-xs col-span-2 sm:col-span-1 ${
                   statusFilter === 'ALL'
                     ? 'border-primary ring-2 ring-primary/20 bg-muted/40'
                     : 'border-border/60 hover:border-border bg-card'
@@ -422,11 +487,12 @@ export default function AdminReviewsPage() {
                     setPage(1)
                   }}
                 >
-                  <SelectTrigger className='w-full sm:w-44 h-9 text-xs'>
+                  <SelectTrigger className='w-full sm:w-48 h-9 text-xs'>
                     <SelectValue placeholder='وضعیت نظر' />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='ALL'>همه وضعیت‌ها</SelectItem>
+                    <SelectItem value='FEATURED'>نظرات برتر (لندینگ)</SelectItem>
                     <SelectItem value='PENDING'>در انتظار بررسی</SelectItem>
                     <SelectItem value='APPROVED'>تایید شده</SelectItem>
                     <SelectItem value='REJECTED'>رد شده</SelectItem>
@@ -492,6 +558,7 @@ export default function AdminReviewsPage() {
                         <th className='p-3 sm:px-4 text-start font-medium'>امتیاز</th>
                         <th className='p-3 sm:px-4 text-start font-medium min-w-[200px]'>متن نظر</th>
                         <th className='p-3 sm:px-4 text-start font-medium'>وضعیت</th>
+                        <th className='p-3 sm:px-4 text-center font-medium whitespace-nowrap'>نظر برتر (لندینگ)</th>
                         <th className='p-3 sm:px-4 text-start font-medium whitespace-nowrap'>تاریخ ثبت</th>
                         <th className='p-3 sm:px-4 text-center font-medium'>عملیات</th>
                       </tr>
@@ -567,6 +634,34 @@ export default function AdminReviewsPage() {
                             {renderStatusBadge(r.status)}
                           </td>
 
+                          {/* Top Review Toggle (Featured) */}
+                          <td className='p-3 sm:px-4 align-top text-center whitespace-nowrap'>
+                            <button
+                              type='button'
+                              onClick={() => handleToggleFeatured(r.id, r.isFeatured, r.status)}
+                              disabled={actionLoading}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all shadow-2xs ${
+                                r.isFeatured
+                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40 hover:bg-amber-500/25 ring-1 ring-amber-500/20'
+                                  : 'bg-muted/40 text-muted-foreground border border-border/60 hover:text-foreground hover:bg-muted/80'
+                              }`}
+                              title={
+                                r.isFeatured
+                                  ? 'برای حذف از نظرات برتر کلیک کنید'
+                                  : r.status === 'APPROVED'
+                                    ? 'برای انتخاب به عنوان نظر برتر در صفحه اصلی کلیک کنید'
+                                    : 'تنها پس از تایید، می‌توان نظر را برگزیده کرد'
+                              }
+                            >
+                              <Star
+                                className={`size-3.5 transition-transform ${
+                                  r.isFeatured ? 'fill-amber-500 text-amber-500 scale-110' : 'text-muted-foreground/50'
+                                }`}
+                              />
+                              <span>{r.isFeatured ? 'برگزیده' : 'افزودن به برتر'}</span>
+                            </button>
+                          </td>
+
                           {/* Date */}
                           <td className='p-3 sm:px-4 align-top whitespace-nowrap text-[11px] text-muted-foreground font-sans'>
                             {formatDate(r.createdAt)}
@@ -599,6 +694,15 @@ export default function AdminReviewsPage() {
                                   رد
                                 </Button>
                               )}
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className={`h-7 w-7 p-0 ${r.isFeatured ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                onClick={() => handleToggleFeatured(r.id, r.isFeatured)}
+                                title={r.isFeatured ? 'حذف از برگزیده‌ها' : 'علامت‌گذاری به عنوان برگزیده'}
+                              >
+                                <Star className={`size-3.5 ${r.isFeatured ? 'fill-primary' : ''}`} />
+                              </Button>
                               <Button
                                 variant='ghost'
                                 size='sm'
@@ -683,6 +787,26 @@ export default function AdminReviewsPage() {
                           <span>{r.adminNote}</span>
                         </div>
                       )}
+
+                      {/* Featured Top Review Toggle for mobile */}
+                      <div className='flex items-center justify-between p-2 rounded-lg border border-border/40 bg-muted/20 text-[11px]'>
+                        <span className='flex items-center gap-1.5 text-muted-foreground'>
+                          <Star className={`size-3.5 ${r.isFeatured ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/60'}`} />
+                          <span>نظر برتر (لندینگ):</span>
+                        </span>
+                        <button
+                          type='button'
+                          onClick={() => handleToggleFeatured(r.id, r.isFeatured, r.status)}
+                          disabled={actionLoading}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                            r.isFeatured
+                              ? 'bg-amber-500 text-white shadow-2xs hover:bg-amber-600'
+                              : 'bg-background border border-border/60 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <span>{r.isFeatured ? 'برگزیده (فعال)' : 'افزودن به برتر'}</span>
+                        </button>
+                      </div>
 
                       {/* Action buttons */}
                       <div className='flex items-center justify-end gap-2 pt-1 border-t border-border/30'>
@@ -831,6 +955,41 @@ export default function AdminReviewsPage() {
                 <div className='font-medium text-foreground'>متن نظر کاربر:</div>
                 <div className='p-3 rounded-lg border border-border/60 bg-muted/10 leading-relaxed text-foreground whitespace-pre-wrap break-words'>
                   {selectedReview.comment}
+                </div>
+              </div>
+
+              {/* Featured Review Toggle Card in Modal */}
+              <div className={`p-3 rounded-lg border transition-all ${
+                selectedReview.isFeatured
+                  ? 'border-amber-500/40 bg-amber-500/10'
+                  : 'border-border/60 bg-muted/20'
+              }`}>
+                <div className='flex items-center justify-between gap-3'>
+                  <div className='space-y-0.5'>
+                    <div className='font-medium text-foreground flex items-center gap-1.5 text-xs'>
+                      <Star className={`size-4 ${selectedReview.isFeatured ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'}`} />
+                      <span>نمایش به عنوان نظر برتر در لندینگ‌پیج</span>
+                    </div>
+                    <p className='text-[11px] text-muted-foreground'>
+                      {selectedReview.status !== 'APPROVED'
+                        ? 'تنها پس از تایید نظر، می‌توانید آن را به عنوان نظر برتر انتخاب کنید.'
+                        : 'با فعال‌سازی، این نظر در لیست متحرک نظرات برتر انتهای لندینگ نمایش داده می‌شود.'}
+                    </p>
+                  </div>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={selectedReview.isFeatured ? 'default' : 'outline'}
+                    disabled={actionLoading || selectedReview.status !== 'APPROVED'}
+                    className={`h-8 px-3 text-xs shrink-0 ${
+                      selectedReview.isFeatured
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-none shadow-2xs'
+                        : 'border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                    }`}
+                    onClick={() => handleToggleFeatured(selectedReview.id, selectedReview.isFeatured, selectedReview.status)}
+                  >
+                    {selectedReview.isFeatured ? 'خروج از نظرات برتر' : 'تیک نظر برتر'}
+                  </Button>
                 </div>
               </div>
 

@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export interface ApprovedReview {
   userName: string
   rating: number
   comment: string
+  isFeatured?: boolean
   createdAt: string
 }
 
@@ -241,10 +243,17 @@ export function ProductReviews({
                     {r.userName.slice(0, 1) || <User className='size-4' />}
                   </div>
                   <div className='min-w-0'>
-                    <div className='text-xs sm:text-sm font-semibold text-foreground truncate'>
-                      {r.userName}
+                    <div className='flex items-center gap-1.5'>
+                      <div className='text-xs sm:text-sm font-semibold text-foreground truncate'>
+                        {r.userName}
+                      </div>
+                      {r.isFeatured && (
+                        <Badge variant='outline' className='text-[10px] bg-primary/8 text-primary border-primary/20 px-1.5 py-0 h-4 font-normal'>
+                          برگزیده
+                        </Badge>
+                      )}
                     </div>
-                    <div className='text-[11px] text-muted-foreground font-sans flex items-center gap-1'>
+                    <div className='text-[11px] text-muted-foreground font-sans flex items-center gap-1 mt-0.5'>
                       <Clock className='size-3 shrink-0' />
                       <span>{formatRelativeTime(r.createdAt)}</span>
                     </div>

@@ -6,7 +6,40 @@ import { ReviewStatus } from '@prisma/client'
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    const featured = searchParams.get('featured') === 'true'
     const productId = searchParams.get('productId')
+
+    if (featured) {
+      const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '12', 10)))
+      const featuredReviews = await prisma.review.findMany({
+        where: {
+          status: ReviewStatus.APPROVED,
+          isFeatured: true,
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          userName: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          product: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              image: true,
+            },
+          },
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        reviews: featuredReviews,
+      })
+    }
 
     if (!productId) {
       return NextResponse.json(
@@ -20,12 +53,13 @@ export async function GET(req: NextRequest) {
         productId,
         status: ReviewStatus.APPROVED,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
       select: {
         id: true,
         userName: true,
         rating: true,
         comment: true,
+        isFeatured: true,
         createdAt: true,
         userId: true,
       },

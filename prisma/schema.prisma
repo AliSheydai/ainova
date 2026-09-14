@@ -465,22 +465,24 @@ enum ReviewStatus {
 }
 
 model Review {
-  id        String       @id @default(cuid())
-  productId String
-  userId    String?
-  userName  String
-  rating    Int          @default(5)
-  comment   String
-  status    ReviewStatus @default(PENDING)
-  adminNote String?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id         String       @id @default(cuid())
+  productId  String
+  userId     String?
+  userName   String
+  rating     Int          @default(5)
+  comment    String
+  status     ReviewStatus @default(PENDING)
+  isFeatured Boolean      @default(false)
+  adminNote  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([productId, status])
   @@index([status, createdAt])
+  @@index([isFeatured, status])
   @@index([productId])
   @@index([userId])
   @@map("reviews")
