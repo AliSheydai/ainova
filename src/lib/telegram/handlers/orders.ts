@@ -74,8 +74,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
 
     const { BotStoreService } = await import('@/lib/bot/bot-store-service')
 
-    let messageText = `📦 **لیست سفارش‌های شما (تعداد کل: ${totalOrders})**\n`
-    messageText += `━━━━━━━━━━━━━━━━━━━━\n\n`
+    let messageText = `📦 **سفارش‌های شما** (${totalOrders.toLocaleString('fa-IR')} سفارش)\n\n`
 
     const actionOrders: Array<{ id: string; code: string }> = []
 
@@ -95,16 +94,14 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         actionOrders.push({ id: order.id, code: orderCode })
       }
 
-      messageText += `🔢 **سفارش #${orderCode}**\n`
-      messageText += `📦 **محصول:** ${productTitle}\n`
-      messageText += `💰 **مبلغ:** ${order.amount.toLocaleString('fa-IR')} تومان\n`
-      messageText += `📅 **تاریخ:** ${dateStr}\n`
-      messageText += `📊 **وضعیت:** ${getStatusBadge(order.status)}\n\n`
+      messageText += `**سفارش #${orderCode}** — ${productTitle}\n`
+      messageText += `${dateStr} · ${order.amount.toLocaleString('fa-IR')} تومان\n`
+      messageText += `وضعیت: ${getStatusBadge(order.status)}\n\n`
 
       const deliveryMessage = BotStoreService.formatDeliveryMessage(order)
-      messageText += `${deliveryMessage}\n`
-
-      messageText += `\n────────────────────\n\n`
+      if (deliveryMessage) {
+        messageText += `${deliveryMessage}\n\n`
+      }
     }
 
     const keyboard = ordersPaginationKeyboard(validPage, totalPages, actionOrders)
@@ -203,18 +200,16 @@ export async function handleFixCredentialsPrompt(ctx: Context, orderId: string) 
 
     const adminMsg = order.adminNote || 'اطلاعات ورود نیازمند بررسی و اصلاح است.'
 
-    let promptText = `🛠 **ویرایش و اصلاح اطلاعات اکانت #${orderCode}**\n`
-    promptText += `━━━━━━━━━━━━━━━━━━━━\n`
-    promptText += `📦 **محصول:** ${productTitle}\n`
-    promptText += `📝 **پیام مدیر سیستم:**\n_${adminMsg}_\n\n`
-    promptText += `━━━━━━━━━━━━━━━━━━━━\n`
-    promptText += `**مرحله ۱ از ۳: آدرس جیمیل / ایمیل** 📧\n\n`
+    let promptText = `🛠 **ویرایش اطلاعات اکانت #${orderCode}**\n\n`
+    promptText += `محصول: ${productTitle}\n`
+    promptText += `پیام مدیر: _${adminMsg}_\n\n`
+    promptText += `**مرحله ۱ از ۳: آدرس جیمیل**\n\n`
     if (existingEmail) {
-      promptText += `ایمیل فعلی ثبت‌شده: \`${existingEmail}\`\n\n`
+      promptText += `ایمیل فعلی: \`${existingEmail}\`\n\n`
     }
-    promptText += `لطفاً **آدرس جیمیل صحیح** خود را در پیام بعدی ارسال فرمایید:\n`
+    promptText += `لطفاً آدرس جیمیل صحیح خود را ارسال کنید:\n`
     if (existingEmail) {
-      promptText += `(در صورتی که جیمیل صحیح است و نیازی به تغییر ندارد، دکمه «تأیید همین جیمیل» را لمس کنید)`
+      promptText += `(در صورتی که جیمیل صحیح است، دکمه «تأیید همین جیمیل» را لمس کنید)`
     }
 
     const { fixCredentialsEmailKeyboard } = await import('../keyboards')
@@ -236,14 +231,13 @@ export async function promptStepPassword(ctx: Context, telegramId: string, sessi
   const { fixCredentialsPasswordKeyboard } = await import('../keyboards')
   const hasPass = Boolean(session.fixData?.password)
 
-  let msg = `✅ آدرس جیمیل ثبت شد: \`${session.fixData?.email}\`\n`
-  msg += `━━━━━━━━━━━━━━━━━━━━\n`
-  msg += `**مرحله ۲ از ۳: رمز عبور اکانت** 🔑\n\n`
-  msg += `لطفاً **رمز عبور جدید یا صحیح** اکانت خود را ارسال فرمایید:\n`
+  let msg = `جیمیل ثبت شد: \`${session.fixData?.email}\`\n\n`
+  msg += `**مرحله ۲ از ۳: رمز عبور اکانت**\n\n`
+  msg += `لطفاً رمز عبور اکانت خود را ارسال فرمایید:\n`
   if (hasPass) {
-    msg += `(اگر رمز عبور قبلی صحیح بوده و تنها جیمیل نیاز به تغییر داشت، دکمه «رمز قبلی تغییر نکند» را لمس نمایید)\n\n`
+    msg += `(در صورت عدم تغییر، دکمه «رمز قبلی تغییر نکند» را لمس کنید)\n\n`
   }
-  msg += `💡 *نکته: در صورتی که تایید ۲ مرحله‌ای (2FA) فعال است، لطفاً آن را موقتاً خاموش نمایید.*`
+  msg += `نکته: در صورتی که تایید ۲ مرحله‌ای (2FA) فعال است، لطفاً آن را موقتاً خاموش نمایید.`
 
   await ctx.reply(msg, {
     parse_mode: 'Markdown',
@@ -258,11 +252,9 @@ export async function promptStepNote(ctx: Context, telegramId: string, session: 
 
   const { fixCredentialsNoteKeyboard } = await import('../keyboards')
 
-  let msg = `✅ رمز عبور اکانت ثبت شد.\n`
-  msg += `━━━━━━━━━━━━━━━━━━━━\n`
-  msg += `**مرحله ۳ از ۳: یادداشت برای پشتیبانی (اختیاری)** 📝\n\n`
-  msg += `اگر توضیح یا پیامی برای مدیر دارید (مانند: «تایید دو مرحله‌ای برداشته شد»، «کدهای بکاپ: ...» یا توضیحات تکمیلی)، لطفاً ارسال فرمایید:\n`
-  msg += `(در غیر این صورت، دکمه «بدون یادداشت (رد شدن)» را لمس نمایید)`
+  let msg = `رمز عبور ثبت شد.\n\n`
+  msg += `**مرحله ۳ از ۳: یادداشت برای پشتیبانی (اختیاری)**\n\n`
+  msg += `اگر توضیحی برای مدیر دارید ارسال کنید (یا دکمه «بدون یادداشت» را لمس نمایید):`
 
   await ctx.reply(msg, {
     parse_mode: 'Markdown',
@@ -287,14 +279,12 @@ export async function promptStepConfirm(ctx: Context, telegramId: string, sessio
 
   const { fixCredentialsConfirmKeyboard } = await import('../keyboards')
 
-  let msg = `📋 **پیش‌نمایش نهایی اطلاعات اصلاح‌شده سفارش #${orderCode}**\n`
-  msg += `━━━━━━━━━━━━━━━━━━━━\n`
-  msg += `📦 **محصول:** ${productTitle}\n`
-  msg += `📧 **آدرس جیمیل:** \`${session.fixData?.email || 'ثبت نشده'}\`\n`
-  msg += `🔑 **رمز عبور:** •••••••• (تنظیم شد)\n`
-  msg += `📝 **یادداشت برای پشتیبانی:** ${session.fixData?.note ? `_${session.fixData.note}_` : '— (بدون یادداشت)'}\n`
-  msg += `━━━━━━━━━━━━━━━━━━━━\n`
-  msg += `جهت ثبت و ارسال اطلاعات به مدیر سیستم، دکمه زیر را لمس فرمایید:`
+  let msg = `📋 **پیش‌نمایش اطلاعات سفارش #${orderCode}**\n\n`
+  msg += `محصول: ${productTitle}\n`
+  msg += `جیمیل: \`${session.fixData?.email || 'ثبت نشده'}\`\n`
+  msg += `رمز عبور: ••••••••\n`
+  msg += `یادداشت: ${session.fixData?.note ? `_${session.fixData.note}_` : '—'}\n\n`
+  msg += `جهت ارسال اطلاعات به مدیر، دکمه زیر را لمس فرمایید:`
 
   await ctx.reply(msg, {
     parse_mode: 'Markdown',

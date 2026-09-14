@@ -442,79 +442,52 @@ export class BotStoreService {
 
     if (order.status === 'COMPLETED') {
       if (deliveryType === 'ACTIVATION_LINK' && linkUrl) {
-        return `🔗 **لینک فعال‌سازی اشتراک شما:**\n\`${linkUrl}\`\n\n📌 *روی لینک کلیک کرده و پیشنهاد فعال‌سازی در اکانت گوگل خود را تأیید کنید.*`
+        return `لینک فعال‌سازی:\n${linkUrl}`
       }
 
       if (deliveryType === 'PRE_CREATED_ACCOUNT') {
         if (isOwnAccount) {
           const email = deliveryData.email || checkoutData.customer_gmail || checkoutData.customer_email || 'اکانت شما'
-          return (
-            `✅ **وضعیت فعال‌سازی:** تکمیل گردید\n` +
-            `📧 اشتراک با موفقیت روی اکانت شخصی شما (\`${email}\`) فعال شد.`
-          )
+          return `اشتراک روی اکانت شخصی شما (\`${email}\`) فعال شد.`
         }
 
         return (
-          `👤 **اطلاعات اکانت اختصاصی:**\n` +
-          `📧 **نام کاربری / ایمیل:** \`${deliveryData.email || deliveryData.username}\`\n` +
-          `🔑 **رمز عبور:** برای مشاهده رمز، به پنل کاربری مراجعه فرمایید.\n\n` +
-          `⚠️ ${deliveryData.note || 'لطفاً بلافاصله پس از ورود، رمز عبور را تغییر دهید.'}`
+          `اطلاعات اکانت:\n` +
+          `ایمیل: \`${deliveryData.email || deliveryData.username}\`\n` +
+          `رمز عبور: در پنل کاربری قابل مشاهده است.`
         )
       }
 
       if (deliveryType === 'CUSTOMER_PROVISIONING') {
-        return (
-          `✅ **وضعیت فعال‌سازی:** تکمیل گردید\n` +
-          `📧 اشتراک با موفقیت روی اکانت شما فعال شد.`
-        )
+        return `اشتراک با موفقیت روی اکانت شما فعال شد.`
       }
 
       if (deliveryType === 'MANUAL') {
-        return (
-          `✅ **اطلاعات تحویل پشتیبانی:**\n` +
-          `${deliveryData.manualNote || 'سفارش با موفقیت تحویل داده شد.'}`
-        )
+        return deliveryData.manualNote || 'سفارش تحویل داده شد.'
       }
 
-      return `✅ سفارش شما با موفقیت تکمیل شده است.`
+      return ''
     }
 
     if (order.status === 'PAID') {
       if (order.customerActionRequired) {
         return (
-          `⚠️ **نیاز به اقدام خریدار:** اطلاعات ورود اکانت نیازمند اصلاح است.\n` +
-          `📝 **پیام مدیر:** ${order.adminNote || 'اطلاعات ورود نیازمند بررسی و اصلاح است.'}\n` +
-          `👇 لطفاً از دکمه «✏️ ویرایش اطلاعات اکانت» در زیر همین پیام برای ثبت جیمیل، رمز عبور یا یادداشت استفاده فرمایید.`
+          `نیاز به اصلاح اطلاعات ورود:\n` +
+          `پیام مدیر: ${order.adminNote || 'اطلاعات ورود نیازمند اصلاح است.'}`
         )
       }
 
       if (order.credentialsUpdatedAt && !order.customerActionRequired) {
-        return (
-          `⏳ **وضعیت:** اطلاعات جدید شما ثبت شد و سفارش مجدداً در صف بررسی و فعال‌سازی توسط کارشناس قرار گرفت.`
-        )
+        return `اطلاعات جدید ثبت شد و در صف بررسی کارشناس قرار دارد.`
       }
 
       if (isOwnAccount || deliveryType === 'CUSTOMER_PROVISIONING') {
         const email = checkoutData.customer_gmail || checkoutData.customer_email || ''
-        return (
-          `⏳ **وضعیت:** پرداخت تایید شده — سفارش در صف فعال‌سازی روی اکانت شما${email ? ` (\`${email}\`)` : ''} توسط کارشناسان است.`
-        )
+        return `در صف فعال‌سازی روی اکانت شما${email ? ` (\`${email}\`)` : ''}.`
       }
-      return `⏳ **وضعیت:** پرداخت تایید شده — در حال آماده‌سازی و تحویل توسط سیستم.`
+      return `در حال آماده‌سازی و تحویل توسط سیستم.`
     }
 
-    if (order.status === 'PENDING_PAYMENT') {
-      return `🟡 **وضعیت:** در انتظار پرداخت بانکی.`
-    }
-
-    if (order.status === 'CANCELLED') {
-      return `🚫 **وضعیت:** سفارش لغو شده.`
-    }
-
-    if (order.status === 'FAILED') {
-      return `❌ **وضعیت:** پرداخت ناموفق.`
-    }
-
-    return `📊 **وضعیت سفارش:** ${order.status}`
+    return ''
   }
 }

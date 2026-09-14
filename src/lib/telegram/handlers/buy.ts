@@ -100,8 +100,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
       detailsText += `📋 **توضیحات:**\n${product.description.slice(0, 250)}...\n\n`
     }
 
-    detailsText += `━━━━━━━━━━━━━━━━━━━━\n`
-    detailsText += `📦 **پلن‌های قابل سفارش این محصول:**\n\n`
+    detailsText += `\n📦 **پلن‌های قابل سفارش این محصول:**\n\n`
 
     const keyboard = new InlineKeyboard()
 

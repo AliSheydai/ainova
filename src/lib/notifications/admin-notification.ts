@@ -103,16 +103,15 @@ export class AdminNotificationService {
       const shortOrderId = order.id.slice(-6).toUpperCase()
 
       const text =
-        `🛍 **ثبت سفارش جدید در سامانه!**\n\n` +
-        `📦 **سفارش:** #${shortOrderId}\n` +
-        `🏷 **محصول:** ${productTitle} ${planName}\n` +
-        `💰 **مبلغ واریزی:** ${this.formatPrice(order.amount)}\n` +
+        `🛍 **سفارش جدید — #${shortOrderId}**\n\n` +
+        `محصول: ${productTitle} ${planName}\n` +
+        `مبلغ: ${this.formatPrice(order.amount)}\n` +
         (order.discountAmount && order.discountAmount > 0
-          ? `🎟 **تخفیف اعمال‌شده:** ${this.formatPrice(order.discountAmount)}\n`
+          ? `تخفیف: ${this.formatPrice(order.discountAmount)}\n`
           : '') +
-        `👤 **خریدار:** ${customerInfo}\n` +
-        `🌐 **درگاه / پیگیری:** ${order.payment?.gatewayName || 'زرین‌پال'} (${order.payment?.refId || 'موفق'})\n` +
-        `🔗 [مشاهده در پنل مدیریت](${appUrl}/dashboard/orders)`
+        `خریدار: ${customerInfo}\n` +
+        `درگاه: ${order.payment?.gatewayName || 'زرین‌پال'}\n\n` +
+        `[مشاهده در پنل مدیریت](${appUrl}/dashboard/orders)`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -137,11 +136,10 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `🚨 **هشدار بحرانی: اتمام موجودی انبار!**\n\n` +
-        `⚠️ موجودی پلن **${productTitle} — ${planName}** به پایان رسیده است!\n` +
-        `سفارش **#${shortOrderId}** با موفقیت پرداخت شده اما در صف انتظار تامین کالا (STOCK_EXHAUSTED) قرار گرفت.\n\n` +
-        `⚡ اقدام فوری موردنیاز: لطفاً نسبت به شارژ موجودی انبار یا استرداد وجه مشتری اقدام فرمایید.\n` +
-        `🔗 [مدیریت سفارش‌ها](${appUrl}/dashboard/orders)`
+        `🚨 **اتمام موجودی انبار — #${shortOrderId}**\n\n` +
+        `موجودی پلن **${productTitle} — ${planName}** تمام شد.\n` +
+        `سفارش در صف انتظار تأمین کالا قرار گرفت.\n\n` +
+        `[مدیریت سفارش‌ها](${appUrl}/dashboard/orders)`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -169,11 +167,10 @@ export class AdminNotificationService {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
       const text =
-        `⚠️ **هشدار کمبود موجودی انبار**\n\n` +
-        `📦 **محصول:** ${productTitle} (${planName})\n` +
-        `📊 **موجودی باقی‌مانده:** فقط **${remainingStock}** عدد!\n\n` +
-        `برای جلوگیری از توقف فروش، لطفاً موجودی را شارژ نمایید.\n` +
-        `🔗 [مدیریت موجودی انبار](${appUrl}/dashboard/activation-links)`
+        `⚠️ **کمبود موجودی انبار**\n\n` +
+        `محصول: ${productTitle} (${planName})\n` +
+        `موجودی باقی‌مانده: **${remainingStock}** عدد\n\n` +
+        `[مدیریت موجودی انبار](${appUrl}/dashboard/activation-links)`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -200,11 +197,10 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `⏳ **سفارش نیازمند تحویل دستی پشتیبانی**\n\n` +
-        `سفارش **#${shortOrderId}** پرداخت شد و منتظر تحویل دستی توسط ادمین است.\n` +
-        `📦 **محصول:** ${productTitle} (${planName})\n` +
-        `👤 **خریدار:** ${customerInfo}\n\n` +
-        `🔗 [ثبت تحویل در پنل ادمین](${appUrl}/dashboard/orders)`
+        `⏳ **سفارش نیازمند تحویل دستی — #${shortOrderId}**\n\n` +
+        `محصول: ${productTitle} (${planName})\n` +
+        `خریدار: ${customerInfo}\n\n` +
+        `[ثبت تحویل در پنل ادمین](${appUrl}/dashboard/orders)`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -227,12 +223,11 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `💸 **گزارش استرداد وجه (Refund)**\n\n` +
-        `سفارش **#${shortOrderId}** با موفقیت استرداد شد.\n` +
-        `💰 **مبلغ استرداد:** ${this.formatPrice(details.refundAmount)}\n` +
-        (details.refundRefId ? `🧾 **کد پیگیری بانکی/شبا:** \`${details.refundRefId}\`\n` : '') +
-        (details.refundReason ? `📝 **علت:** ${details.refundReason}\n` : '') +
-        (details.adminUserName ? `👤 **ثبت توسط:** ${details.adminUserName}\n` : '')
+        `💸 **استرداد وجه — #${shortOrderId}**\n\n` +
+        `مبلغ استرداد: ${this.formatPrice(details.refundAmount)}\n` +
+        (details.refundRefId ? `کد پیگیری: \`${details.refundRefId}\`\n` : '') +
+        (details.refundReason ? `علت: ${details.refundReason}\n` : '') +
+        (details.adminUserName ? `ثبت توسط: ${details.adminUserName}\n` : '')
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -293,12 +288,11 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `🔄 **اطلاعات اکانت توسط خریدار اصلاح شد!**\n\n` +
-        `خریدار سفارش **#${shortOrderId}** اطلاعات ورود یا رمز عبور جدید را ثبت کرد.\n` +
-        `📦 **محصول:** ${serviceName}\n` +
-        `👤 **خریدار:** ${customerInfo}\n\n` +
-        `⚡ این سفارش اکنون آماده بررسی و فعال‌سازی مجدد توسط ادمین است.\n` +
-        `🔗 [بررسی سفارش در پنل مدیریت](${appUrl}/dashboard/orders)`
+        `🔄 **اصلاح اطلاعات اکانت — #${shortOrderId}**\n\n` +
+        `خریدار سفارش اطلاعات ورود جدید را ثبت کرد.\n` +
+        `محصول: ${serviceName}\n` +
+        `خریدار: ${customerInfo}\n\n` +
+        `[بررسی سفارش در پنل مدیریت](${appUrl}/dashboard/orders)`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {

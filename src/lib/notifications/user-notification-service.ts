@@ -119,11 +119,7 @@ export class UserNotificationService {
     const { InlineKeyboard } = await import('grammy')
 
     const icon = getNotificationTypeIcon(type)
-    const telegramText = `
-${icon} **اعلان جدید:** ${title}
-━━━━━━━━━━━━━━━━━━━━
-${message}
-`.trim()
+    const telegramText = `${icon} **${title}**\n\n${message}`
 
     const kb = new InlineKeyboard()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'

@@ -34,7 +34,7 @@ export function mainMenuKeyboard(isLinked: boolean = false, unreadCount: number 
 
 export function accountLinkKeyboard(webUrl: string) {
   const keyboard = new Keyboard()
-    .requestContact('📱 ارسال شماره موبایل (اتصال خودکار)')
+    .requestContact('📱 ارسال شماره موبایل')
     .row()
     .text('🔙 بازگشت به منوی اصلی')
     .resized()
@@ -129,18 +129,12 @@ export function deliveryPreferenceKeyboard(
   const hasInventory = warehouseCount !== null && warehouseCount !== undefined && warehouseCount > 0
 
   if (hasInventory) {
-    kb.text(
-      `⚡ اکانت آماده انبار (${warehouseCount.toLocaleString('fa-IR')} عدد - تحویل فوری)`,
-      `delivery:mode:${planId}:ready`
-    ).row()
+    kb.text('⚡ اکانت آماده — تحویل فوری', `delivery:mode:${planId}:ready`).row()
   } else {
-    kb.text(
-      '⚠️ اکانت آماده انبار (موقتاً ناموجود)',
-      `delivery:mode:${planId}:exhausted`
-    ).row()
+    kb.text('⚠️ اکانت آماده (موقتاً ناموجود)', `delivery:mode:${planId}:exhausted`).row()
   }
 
-  kb.text('👤 فعال‌سازی روی جیمیل شخصی من (۱ الی ۲۴ ساعت)', `delivery:mode:${planId}:own`).row()
+  kb.text('👤 فعال‌سازی روی جیمیل من', `delivery:mode:${planId}:own`).row()
   kb.text('🔙 بازگشت به مشخصات محصول', `product:select:${productId}`)
 
   return kb
@@ -186,12 +180,12 @@ export function ordersPaginationKeyboard(
   }
 
   if (totalPages > 1) {
-    if (page > 1) {
-      keyboard.text('➡️ صفحه قبلی', `orders:page:${page - 1}`)
-    }
-    keyboard.text(`صفحه ${page} از ${totalPages}`, 'noop')
     if (page < totalPages) {
       keyboard.text('⬅️ صفحه بعدی', `orders:page:${page + 1}`)
+    }
+    keyboard.text(`صفحه ${page.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`, 'noop')
+    if (page > 1) {
+      keyboard.text('➡️ صفحه قبلی', `orders:page:${page - 1}`)
     }
     keyboard.row()
   }
@@ -343,19 +337,19 @@ export function notificationsListKeyboard(
   const unreadItems = notifications.filter((n) => !n.isRead)
   if (unreadItems.length > 0) {
     for (let i = 0; i < unreadItems.length; i++) {
-      kb.text(`✓ خواندن #${(i + 1).toLocaleString('fa-IR')}`, `notif:read:${unreadItems[i].id}`)
+      kb.text(`خواندن اعلان ${(i + 1).toLocaleString('fa-IR')}`, `notif:read:${unreadItems[i].id}`)
     }
     kb.row()
   }
 
   // Row 3: Pagination
   if (totalPages > 1) {
-    if (page > 1) {
-      kb.text('➡️ قبلی', `notif:page:${page - 1}:${filter}`)
+    if (page < totalPages) {
+      kb.text('بعدی ⬅️', `notif:page:${page + 1}:${filter}`)
     }
     kb.text(`${page.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`, 'noop')
-    if (page < totalPages) {
-      kb.text('⬅️ بعدی', `notif:page:${page + 1}:${filter}`)
+    if (page > 1) {
+      kb.text('➡️ قبلی', `notif:page:${page - 1}:${filter}`)
     }
     kb.row()
   }

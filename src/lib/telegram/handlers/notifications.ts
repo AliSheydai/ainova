@@ -104,25 +104,20 @@ export async function handleNotifications(
       return
     }
 
-    let messageText = `🔔 **صندوق اعلان‌ها ${filter === 'unread' ? '(خوانده‌نشده‌ها)' : ''}**\n`
-    messageText += `📊 تعداد کل: ${data.totalCount.toLocaleString('fa-IR')} | 🔴 جدید: ${data.totalUnread.toLocaleString('fa-IR')}\n`
-    messageText += `━━━━━━━━━━━━━━━━━━━━\n\n`
+    let messageText = `🔔 **صندوق اعلان‌ها** (${data.totalCount.toLocaleString('fa-IR')} اعلان${data.totalUnread > 0 ? ` · ${data.totalUnread.toLocaleString('fa-IR')} جدید` : ''})\n\n`
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'
 
     for (let i = 0; i < data.notifications.length; i++) {
       const item = data.notifications[i]
-      const { label, icon } = getNotificationTypeConfig(item.type)
+      const { label } = getNotificationTypeConfig(item.type)
       const dateStr = formatPersianDate(item.createdAt)
-      const statusIcon = item.isRead ? '⚪ خوانده‌شده' : '🔴 جدید'
+      const statusText = item.isRead ? 'خوانده‌شده' : 'جدید'
       const itemNumber = (offset + i + 1).toLocaleString('fa-IR')
 
-      messageText += `📌 **#${itemNumber} — ${icon} ${item.title}**\n`
-      messageText += `🏷 **دسته:** ${label} | **وضعیت:** ${statusIcon}\n`
-      if (dateStr) {
-        messageText += `📅 **تاریخ:** ${dateStr}\n`
-      }
-      messageText += `💬 ${item.message}\n`
+      messageText += `**اعلان ${itemNumber}** — ${item.title}\n`
+      messageText += `${dateStr ? `${dateStr} · ` : ''}${label} · ${statusText}\n`
+      messageText += `${item.message}\n`
 
       if (item.link) {
         const fullUrl =
@@ -131,10 +126,10 @@ export async function handleNotifications(
             : item.link.startsWith('/')
             ? `${appUrl}${item.link}`
             : `${appUrl}/${item.link}`
-        messageText += `🔗 [مشاهده پیوند مرتبط](${fullUrl})\n`
+        messageText += `[مشاهده پیوند مرتبط](${fullUrl})\n`
       }
 
-      messageText += `\n────────────────────\n\n`
+      messageText += `\n`
     }
 
     const keyboard = notificationsListKeyboard(
