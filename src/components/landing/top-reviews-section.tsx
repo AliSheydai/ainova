@@ -116,23 +116,22 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
           </div>
         </div>
 
-        {/* 3D Spiral Showcase Container */}
-        <div className='relative w-full h-[470px] sm:h-[540px] md:h-[600px] overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-b from-card/40 via-muted/15 to-card/40 shadow-xs'>
-          {/* Subtle top & bottom depth fade masks */}
-          <div className='pointer-events-none absolute inset-x-0 top-0 h-16 sm:h-20 bg-gradient-to-b from-background via-background/70 to-transparent z-20' />
-          <div className='pointer-events-none absolute inset-x-0 bottom-0 h-16 sm:h-20 bg-gradient-to-t from-background via-background/70 to-transparent z-20' />
+        {/* Interactive 3D Comment Gallery Spiral - seamless floating on section background */}
+        <div className='relative w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 h-[460px] sm:h-[530px] md:h-[590px]'>
+          {/* Soft boundary fade overlays at top and bottom */}
+          <div className='pointer-events-none absolute inset-x-0 top-0 h-14 sm:h-20 bg-gradient-to-b from-background/90 via-background/40 to-transparent z-20' />
+          <div className='pointer-events-none absolute inset-x-0 bottom-0 h-14 sm:h-20 bg-gradient-to-t from-background/90 via-background/40 to-transparent z-20' />
 
-          {/* Interactive 3D Comment Gallery Spiral */}
           <InfiniteSpiral
             ref={spiralRef}
             items={displayReviews}
             animationMode='auto'
             enableScroll={false}
             speed={0.35}
-            radius={isMobile ? 80 : 250}
-            cardWidth={isMobile ? 268 : 330}
-            cardHeight={isMobile ? 172 : 195}
-            verticalSpacing={isMobile ? 62 : 75}
+            radius={isMobile ? 76 : 250}
+            cardWidth={isMobile ? 276 : 330}
+            cardHeight={isMobile ? 174 : 195}
+            verticalSpacing={isMobile ? 64 : 75}
             perspective={isMobile ? 850 : 1100}
             cardRadius={16}
             centerScale={isMobile ? 1.05 : 1.12}
@@ -142,7 +141,7 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
             direction='up'
             rotation={0}
             cardTilt={0}
-            edgeFade={0.28}
+            edgeFade={0.38}
             renderItem={(item: TopReviewItem) => {
               const formattedDate = formatPersianDate(item.createdAt, {
                 year: 'numeric',

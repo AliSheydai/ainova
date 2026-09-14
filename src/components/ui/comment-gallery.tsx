@@ -215,12 +215,21 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
 
       const fadeStart = clamp(1 - edgeFade, 0, 0.98);
       const turnSize = Math.max(cardsPerTurn, 1);
+      const halfHeight = height * 0.5;
+      const yFadeStart = halfHeight * 0.42;
+      const yFadeEnd = halfHeight * 0.88;
 
       cardRefs.current.forEach((card, index) => {
         if (!card) return;
         const offset = modulo(index - progressRef.current + half, count) - half;
+        const yPos = offset * verticalSpacing * (isMobile ? 0.95 : fit);
+        const yEdge = clamp((Math.abs(yPos) - yFadeStart) / Math.max(yFadeEnd - yFadeStart, 1), 0, 1);
+        const yOpacity = 1 - smoothstep(0, 1, yEdge);
+
         const edge = Math.min(Math.abs(offset) / Math.max(half, 1), 1);
-        const opacity = 1 - smoothstep(fadeStart, 1, edge);
+        const spiralOpacity = 1 - smoothstep(fadeStart, 1, edge);
+        const opacity = Math.min(yOpacity, spiralOpacity);
+
         const focus = 1 - Math.min(Math.abs(offset) / Math.max(turnSize * 0.65, 1), 1);
         const effectiveCenterScale = isMobile ? Math.min(centerScale, 1.06) : centerScale;
         const scale = (1 + (effectiveCenterScale - 1) * focus) * fit;
@@ -235,11 +244,10 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
         );
         const visualScale = scale * depthScale;
         const depth = (z / Math.max(responsiveRadius, 1) + 1) / 2;
-        const blur = edgeBlur * smoothstep(0.35, 1, edge);
+        const blurFactor = Math.max(edge, yEdge);
+        const blur = edgeBlur * smoothstep(0.25, 1, blurFactor);
 
-        card.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${
-          offset * verticalSpacing * (isMobile ? 0.95 : fit)
-        }px, 0) rotateZ(${cardTilt}deg) scale(${visualScale})`;
+        card.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${yPos}px, 0) rotateZ(${cardTilt}deg) scale(${visualScale})`;
         card.style.opacity = opacity.toFixed(3);
         card.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : 'none';
         card.style.zIndex = String(Math.round(depth * 100000) + index);
@@ -288,6 +296,8 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
     // pan-y ensures vertical page scrolling on mobile devices works naturally without being trapped!
     touchAction: dragEnabled ? 'pan-y' : 'auto',
     userSelect: dragEnabled ? 'none' : 'auto',
+    maskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
   } as CSSProperties;
 
   const stopDragging = (event: ReactPointerEvent<HTMLDivElement>) => {

@@ -10,6 +10,7 @@ import {
   Check,
   CheckCircle2,
   AlertCircle,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -270,7 +271,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
       : 'برای نمایش نام در رسید سفارش‌ها و پشتیبانی، نام خود را وارد کنید.'
 
   const renderStepper = () => (
-    <div className="border-b border-border/50 bg-muted/30 px-4 sm:px-6 py-2.5 sm:py-3 shrink-0">
+    <div className="relative border-b border-border/50 bg-muted/30 ps-4 pe-11 sm:ps-6 sm:pe-12 py-2.5 sm:py-3 shrink-0">
       <div className="flex items-center justify-between">
         {/* Step 1: Phone */}
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -360,6 +361,16 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
           </span>
         </div>
       </div>
+
+      {/* Close button inside stepper header */}
+      <button
+        type="button"
+        onClick={() => onOpenChange(false)}
+        className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 flex size-7 sm:size-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+        aria-label="بستن"
+      >
+        <X className="size-4" />
+      </button>
     </div>
   )
 
@@ -654,10 +665,11 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         <SheetContent
           side="bottom"
           dir="rtl"
+          showCloseButton={false}
           className="max-h-[85vh] max-h-[85dvh] rounded-t-3xl border-t border-border/70 p-0 flex flex-col bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden gap-0"
         >
           {/* Pull Handle Indicator */}
-          <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="flex justify-center pt-2.5 pb-1 shrink-0">
             <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
           </div>
 
@@ -665,7 +677,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
           {renderStepper()}
 
           {/* Scrollable Form Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-10 overscroll-contain touch-pan-y">
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-6 overscroll-contain touch-pan-y">
             <SheetHeader className="text-center pb-3 space-y-1 p-0">
               <SheetTitle className="text-lg font-bold text-foreground">
                 {stepTitle}
@@ -687,7 +699,9 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         dir="rtl"
-        className="max-w-md p-0 overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
+        showCloseButton={false}
+        showHandle={false}
+        className="max-w-md p-0 sm:p-0 gap-0 overflow-hidden border border-border/70 bg-card/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
       >
         {/* Top Decorative Gradient Accent */}
         <div className="h-1.5 w-full bg-gradient-to-r from-primary/30 via-primary to-primary/30" />
@@ -695,7 +709,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
         {/* Stepper Progress Bar */}
         {renderStepper()}
 
-        <div className="p-6 pt-4">
+        <div className="p-5 sm:p-6 pt-4 sm:pt-4">
           <DialogHeader className="text-center pb-3 space-y-1">
             <DialogTitle className="text-lg font-bold text-foreground">
               {stepTitle}
