@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   KeyRound,
   Check,
+  AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,9 @@ function LoginForm() {
   const [cooldown, setCooldown] = useState(0)
   const [devCode, setDevCode] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [nameError, setNameError] = useState<string | null>(null)
 
   const phoneInputRef = React.useRef<HTMLInputElement>(null)
   const nameInputRef = React.useRef<HTMLInputElement>(null)
@@ -88,9 +92,10 @@ function LoginForm() {
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!phone.trim()) {
-      toast.error('لطفاً شماره موبایل خود را وارد کنید.')
+      setPhoneError('لطفاً شماره تلفن همراه خود را وارد کنید.')
       return
     }
+    setPhoneError(null)
 
     setLoading(true)
     try {
@@ -109,12 +114,14 @@ function LoginForm() {
           setDevCode(data.devCode)
         }
       } else {
+        setPhoneError(data.message || 'خطا در ارسال کد.')
         toast.error(data.message || 'خطا در ارسال کد.')
         if (data.cooldownRemaining) {
           setCooldown(data.cooldownRemaining)
         }
       }
     } catch {
+      setPhoneError('خطای شبکه. لطفاً اتصال اینترنت خود را بررسی کنید.')
       toast.error('خطای شبکه. لطفاً اتصال اینترنت خود را بررسی کنید.')
     } finally {
       setLoading(false)
@@ -125,9 +132,10 @@ function LoginForm() {
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (otpCode.length < 5) {
-      toast.error('لطفاً کد ۵ رقمی را کامل وارد کنید.')
+      setOtpError('لطفاً کد ۵ رقمی را کامل وارد کنید.')
       return
     }
+    setOtpError(null)
 
     setLoading(true)
     try {
@@ -153,9 +161,11 @@ function LoginForm() {
           toast.success('کد تأیید شد. لطفاً نام و نام خانوادگی خود را مشخص کنید.')
         }
       } else {
+        setOtpError(data.message || 'کد تأیید نادرست است.')
         toast.error(data.message || 'کد تأیید نادرست است.')
       }
     } catch {
+      setOtpError('خطای ارتباط با سرور.')
       toast.error('خطای ارتباط با سرور.')
     } finally {
       setLoading(false)
@@ -166,9 +176,10 @@ function LoginForm() {
   const handleSaveName = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!fullName.trim()) {
-      toast.error('لطفاً نام و نام خانوادگی خود را وارد کنید.')
+      setNameError('لطفاً نام و نام خانوادگی خود را وارد کنید.')
       return
     }
+    setNameError(null)
 
     setLoading(true)
     try {
@@ -184,9 +195,11 @@ function LoginForm() {
         router.push(getDestination(userRole))
         router.refresh()
       } else {
+        setNameError(data.message || 'خطا در ثبت نام.')
         toast.error(data.message || 'خطا در ثبت نام.')
       }
     } catch {
+      setNameError('خطای ارتباط با سرور در ذخیره نام.')
       toast.error('خطای ارتباط با سرور در ذخیره نام.')
     } finally {
       setLoading(false)
@@ -358,7 +371,7 @@ function LoginForm() {
 
             {/* ================= STEP 1: PHONE ================= */}
             {step === 'phone' && (
-              <form onSubmit={handleSendOtp} className="space-y-4">
+              <form noValidate onSubmit={handleSendOtp} className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="phone" className="text-xs font-medium">
@@ -377,16 +390,28 @@ function LoginForm() {
                       placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                       dir="ltr"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        setPhone(e.target.value)
+                        if (phoneError) setPhoneError(null)
+                      }}
                       disabled={loading}
-                      aria-required="true"
-                      className="text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 transition-all placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground"
+                      aria-invalid={!!phoneError}
+                      className={cn(
+                        "text-left text-lg tracking-wider font-sans h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 transition-all placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground",
+                        phoneError && "border-destructive focus-visible:ring-destructive/30"
+                      )}
                       autoFocus
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                       <Phone className="h-4 w-4" />
                     </div>
                   </div>
+                  {phoneError && (
+                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{phoneError}</span>
+                    </p>
+                  )}
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     کد یک‌بارمصرف امن فوراً به این شماره پیامک خواهد شد.
                   </p>
@@ -415,7 +440,7 @@ function LoginForm() {
 
             {/* ================= STEP 2: OTP ================= */}
             {step === 'otp' && (
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <form noValidate onSubmit={handleVerifyOtp} className="space-y-5">
                 {/* Phone banner with edit option */}
                 <div className="flex items-center justify-between rounded-xl bg-muted/60 border border-border/60 px-3.5 py-2.5 text-xs">
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -461,7 +486,10 @@ function LoginForm() {
                       aria-label="کد ۵ رقمی تأیید پیامک‌شده"
                       maxLength={5}
                       value={otpCode}
-                      onChange={(val) => setOtpCode(val)}
+                      onChange={(val) => {
+                        setOtpCode(val)
+                        if (otpError) setOtpError(null)
+                      }}
                       disabled={loading}
                       autoFocus
                     >
@@ -489,6 +517,12 @@ function LoginForm() {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
+                  {otpError && (
+                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center justify-center gap-1.5 mt-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{otpError}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Resend Cooldown */}
@@ -537,7 +571,7 @@ function LoginForm() {
 
             {/* ================= STEP 3: NAME ONBOARDING ================= */}
             {step === 'name' && (
-              <form onSubmit={handleSaveName} className="space-y-4">
+              <form noValidate onSubmit={handleSaveName} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="text-xs font-medium">
                     نام و نام خانوادگی
@@ -549,16 +583,28 @@ function LoginForm() {
                       type="text"
                       placeholder="مثال: علی رضایی"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => {
+                        setFullName(e.target.value)
+                        if (nameError) setNameError(null)
+                      }}
                       disabled={loading}
-                      aria-required="true"
-                      className="h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 text-base transition-all font-sans placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80"
+                      aria-invalid={!!nameError}
+                      className={cn(
+                        "h-12 pr-11 pl-4 rounded-xl border-border/80 focus-visible:ring-primary/40 bg-background/50 text-base transition-all font-sans placeholder:text-xs sm:placeholder:text-sm placeholder:text-muted-foreground/80",
+                        nameError && "border-destructive focus-visible:ring-destructive/30"
+                      )}
                       autoFocus
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                       <User className="h-4 w-4" />
                     </div>
                   </div>
+                  {nameError && (
+                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{nameError}</span>
+                    </p>
+                  )}
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     این نام در بالای داشبورد و در رسید سفارش‌های شما نمایش داده می‌شود.
                   </p>

@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Check,
   Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -37,6 +38,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [name, setName] = useState('')
+  const [nameError, setNameError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -56,9 +58,10 @@ export default function ProfilePage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast.error('لطفاً نام و نام خانوادگی را وارد کنید.')
+      setNameError('لطفاً نام و نام خانوادگی را وارد کنید.')
       return
     }
+    setNameError(null)
 
     setSaving(true)
     try {
@@ -135,7 +138,7 @@ export default function ProfilePage() {
             </CardHeader>
 
             <CardContent>
-              <form onSubmit={handleUpdate} className="space-y-5">
+              <form noValidate onSubmit={handleUpdate} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-xs font-semibold">
                     نام و نام خانوادگی
@@ -144,14 +147,26 @@ export default function ProfilePage() {
                     <Input
                       id="name"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        if (nameError) setNameError(null)
+                      }}
                       placeholder="مثال: علی رضایی"
-                      className="h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans"
+                      aria-invalid={!!nameError}
+                      className={`h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans transition-colors ${
+                        nameError ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                      }`}
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                       <User className="h-4 w-4" />
                     </div>
                   </div>
+                  {nameError && (
+                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{nameError}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

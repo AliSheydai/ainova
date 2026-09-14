@@ -230,7 +230,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
               {/* Trust Bar */}
               <hr className='border-border/50' />
-              <div className='flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-[11px] sm:text-xs text-muted-foreground'>
+              <div className='flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-[11px] sm:text-xs text-muted-foreground mb-5'>
                 <span className='flex items-center gap-1.5'>
                   <ShieldCheck className='size-3.5 shrink-0 text-primary' />
                   فعال‌سازی قانونی و رسمی

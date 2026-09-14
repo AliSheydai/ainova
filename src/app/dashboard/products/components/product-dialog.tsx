@@ -440,15 +440,23 @@ export function ProductDialog({
           </div>
 
           <div>
-            <span className='text-xs font-medium text-foreground block mb-1'>
-              توضیحات تکمیلی محصول:
-            </span>
+            <div className='flex items-center justify-between mb-1'>
+              <span className='text-xs font-medium text-foreground block'>
+                توضیحات تکمیلی محصول:
+              </span>
+              {formProdDesc?.length > 0 && (
+                <span className='text-[10px] text-muted-foreground'>
+                  {toPersianDigits(formProdDesc.length)} کاراکتر
+                </span>
+              )}
+            </div>
             <Textarea
-              rows={3}
+              rows={4}
               value={formProdDesc}
               onChange={(e) => setFormProdDesc(e.target.value)}
               placeholder='توضیحات تفصیلی، مزایا و نکات مهم برای مشتری...'
-              className='text-xs rounded-xl'
+              className='text-xs rounded-xl [field-sizing:fixed] h-28 max-h-28 min-h-28 resize-none overflow-y-auto leading-relaxed'
+              style={{ fieldSizing: 'fixed' } as React.CSSProperties}
             />
           </div>
         </div>

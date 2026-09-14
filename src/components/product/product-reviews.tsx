@@ -10,6 +10,7 @@ import {
   Clock,
   User,
   ShieldCheck,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { formatRelativeTime, toPersianDigits } from '@/lib/persian-utils'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export interface ApprovedReview {
@@ -69,30 +71,38 @@ export function ProductReviews({
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submittedSuccess, setSubmittedSuccess] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [errors, setErrors] = useState<{ userName?: string; comment?: string; form?: string }>({})
 
   const activeRating = hoveredRating ?? rating
 
   const handleOpenDialog = () => {
     setSubmittedSuccess(false)
-    setErrorMsg(null)
+    setErrors({})
     setDialogOpen(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
+    setErrors({})
 
     const trimmedName = userName.trim()
     const trimmedComment = comment.trim()
+    const newErrors: { userName?: string; comment?: string; form?: string } = {}
 
-    if (!trimmedName || trimmedName.length < 2) {
-      setErrorMsg('لطفاً نام یا نام مستعار خود را وارد کنید (حداقل ۲ حرف).')
-      return
+    if (!trimmedName) {
+      newErrors.userName = 'لطفاً نام یا نام مستعار خود را وارد کنید.'
+    } else if (trimmedName.length < 2) {
+      newErrors.userName = 'نام یا نام مستعار باید حداقل ۲ حرف باشد.'
     }
 
-    if (!trimmedComment || trimmedComment.length < 5) {
-      setErrorMsg('لطفاً متن نظر خود را با حداقل ۵ کاراکتر بنویسید.')
+    if (!trimmedComment) {
+      newErrors.comment = 'لطفاً متن نظر خود را بنویسید.'
+    } else if (trimmedComment.length < 5) {
+      newErrors.comment = 'متن نظر باید حداقل ۵ کاراکتر باشد.'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
 
@@ -118,10 +128,10 @@ export function ProductReviews({
         setRating(5)
         toast.success('نظر شما ثبت شد و پس از بررسی و تایید مدیریت منتشر خواهد شد.')
       } else {
-        setErrorMsg(data.error || 'خطا در ثبت نظر. لطفاً دوباره تلاش کنید.')
+        setErrors({ form: data.error || 'خطا در ثبت نظر. لطفاً دوباره تلاش کنید.' })
       }
     } catch {
-      setErrorMsg('خطای ارتباط با سرور. اینترنت خود را بررسی کنید.')
+      setErrors({ form: 'خطای ارتباط با سرور. اینترنت خود را بررسی کنید.' })
     } finally {
       setSubmitting(false)
     }
@@ -184,10 +194,10 @@ export function ProductReviews({
           </div>
 
           {/* Verified tag */}
-          <div className='ms-auto hidden md:flex items-center gap-1.5 text-xs text-primary font-medium'>
+          {/* <div className='ms-auto hidden md:flex items-center gap-1.5 text-xs text-primary font-medium'>
             <ShieldCheck className='size-4' />
             <span>نظرات تاییدشده پس از بررسی مدیریت</span>
-          </div>
+          </div> */}
         </div>
       ) : null}
 
@@ -301,7 +311,7 @@ export function ProductReviews({
             </div>
           ) : (
             /* Review Submission Form */
-            <form onSubmit={handleSubmit} className='space-y-4 pt-1'>
+            <form noValidate onSubmit={handleSubmit} className='space-y-4 pt-1'>
               {/* Information Notice */}
               <div className='p-3 rounded-lg bg-muted/40 border border-border/50 text-[11px] sm:text-xs text-muted-foreground flex items-start gap-2 leading-relaxed'>
                 <Clock className='size-4 text-primary shrink-0 mt-0.5' />
@@ -355,11 +365,23 @@ export function ProductReviews({
                   id='review-user-name'
                   placeholder='مثال: علی رضایی'
                   value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
+                  onChange={(e) => {
+                    setUserName(e.target.value)
+                    if (errors.userName) setErrors((prev) => ({ ...prev, userName: undefined }))
+                  }}
                   maxLength={50}
-                  className='text-xs h-9'
-                  required
+                  aria-invalid={!!errors.userName}
+                  className={cn(
+                    'text-xs h-9 transition-colors',
+                    errors.userName && 'border-destructive focus-visible:ring-destructive/30'
+                  )}
                 />
+                {errors.userName && (
+                  <p className='text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3.5 shrink-0' />
+                    <span>{errors.userName}</span>
+                  </p>
+                )}
               </div>
 
               {/* Comment Textarea */}
@@ -376,17 +398,30 @@ export function ProductReviews({
                   id='review-comment'
                   placeholder='نظرتان درباره سرعت فعال‌سازی، کیفیت اکانت یا پشتیبانی را بنویسید...'
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) => {
+                    setComment(e.target.value)
+                    if (errors.comment) setErrors((prev) => ({ ...prev, comment: undefined }))
+                  }}
                   maxLength={500}
-                  className='text-xs h-24 sm:h-28 resize-none leading-relaxed'
-                  required
+                  aria-invalid={!!errors.comment}
+                  className={cn(
+                    'text-xs h-24 sm:h-28 resize-none leading-relaxed transition-colors',
+                    errors.comment && 'border-destructive focus-visible:ring-destructive/30'
+                  )}
                 />
+                {errors.comment && (
+                  <p className='text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3.5 shrink-0' />
+                    <span>{errors.comment}</span>
+                  </p>
+                )}
               </div>
 
-              {/* Error Message if any */}
-              {errorMsg && (
-                <div className='text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg'>
-                  {errorMsg}
+              {/* General Form Error Message if any */}
+              {errors.form && (
+                <div className='text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg flex items-center gap-2'>
+                  <AlertCircle className='size-4 shrink-0' />
+                  <span>{errors.form}</span>
                 </div>
               )}
 

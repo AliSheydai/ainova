@@ -188,7 +188,7 @@ export default function AdminSettingsPage() {
             <span className='text-xs'>در حال بارگذاری تنظیمات سیستم...</span>
           </div>
         ) : (
-          <form onSubmit={handleSaveSettings} className='space-y-6'>
+          <form noValidate onSubmit={handleSaveSettings} className='space-y-6'>
             {/* Support Settings Card */}
             <Card className='border-border/60 shadow-xs'>
               <CardHeader className='pb-4'>

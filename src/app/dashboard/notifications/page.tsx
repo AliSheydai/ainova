@@ -84,6 +84,7 @@ export default function AdminNotificationsPage() {
   const [message, setMessage] = useState('')
   const [type, setType] = useState<string>('SYSTEM_ANNOUNCEMENT')
   const [link, setLink] = useState('')
+  const [formErrors, setFormErrors] = useState<{ targetUserId?: string; title?: string; message?: string }>({})
 
   const fetchNotifications = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true)
@@ -109,16 +110,26 @@ export default function AdminNotificationsPage() {
 
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim() || !message.trim()) {
-      toast.error('عنوان و متن پیام الزامی هستند.')
-      return
-    }
+    const errs: { targetUserId?: string; title?: string; message?: string } = {}
 
     if (targetType === 'user' && !targetUserId.trim()) {
-      toast.error('شناسه کاربر گیرنده الزامی است.')
+      errs.targetUserId = 'شناسه کاربر گیرنده الزامی است.'
+    }
+
+    if (!title.trim()) {
+      errs.title = 'عنوان اعلان الزامی است.'
+    }
+
+    if (!message.trim()) {
+      errs.message = 'متن پیام اعلان الزامی است.'
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs)
       return
     }
 
+    setFormErrors({})
     setSending(true)
     try {
       const res = await fetch('/api/admin/notifications', {
@@ -348,7 +359,7 @@ export default function AdminNotificationsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSendNotification} className='space-y-4 pt-2'>
+          <form noValidate onSubmit={handleSendNotification} className='space-y-4 pt-2'>
             <div className='space-y-1.5 text-right'>
               <label className='text-xs font-semibold text-foreground'>نوع گیرنده</label>
               <Select
@@ -376,11 +387,22 @@ export default function AdminNotificationsPage() {
                 </label>
                 <Input
                   value={targetUserId}
-                  onChange={(e) => setTargetUserId(e.target.value)}
+                  onChange={(e) => {
+                    setTargetUserId(e.target.value)
+                    if (formErrors.targetUserId) setFormErrors((prev) => ({ ...prev, targetUserId: undefined }))
+                  }}
                   placeholder='مثلاً clu...'
-                  className='text-xs rounded-xl font-mono'
-                  required
+                  className={`text-xs rounded-xl font-mono transition-colors ${
+                    formErrors.targetUserId ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                  }`}
+                  aria-invalid={!!formErrors.targetUserId}
                 />
+                {formErrors.targetUserId && (
+                  <p className='text-[11px] text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3.5 shrink-0' />
+                    <span>{formErrors.targetUserId}</span>
+                  </p>
+                )}
               </div>
             )}
 
@@ -411,23 +433,45 @@ export default function AdminNotificationsPage() {
               <label className='text-xs font-semibold text-foreground'>عنوان اعلان</label>
               <Input
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value)
+                  if (formErrors.title) setFormErrors((prev) => ({ ...prev, title: undefined }))
+                }}
                 placeholder='مثلاً: جشنواره تخفیف بهاره، به‌روزرسانی سیستم...'
-                className='text-xs rounded-xl'
-                required
+                className={`text-xs rounded-xl transition-colors ${
+                  formErrors.title ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                }`}
+                aria-invalid={!!formErrors.title}
               />
+              {formErrors.title && (
+                <p className='text-[11px] text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                  <AlertCircle className='size-3.5 shrink-0' />
+                  <span>{formErrors.title}</span>
+                </p>
+              )}
             </div>
 
             <div className='space-y-1.5 text-right'>
               <label className='text-xs font-semibold text-foreground'>متن پیام</label>
               <Textarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => {
+                  setMessage(e.target.value)
+                  if (formErrors.message) setFormErrors((prev) => ({ ...prev, message: undefined }))
+                }}
                 placeholder='متن کامل پیامی که کاربر مشاهده خواهد کرد...'
                 rows={4}
-                className='text-xs rounded-xl resize-none leading-relaxed'
-                required
+                className={`text-xs rounded-xl resize-none leading-relaxed transition-colors ${
+                  formErrors.message ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                }`}
+                aria-invalid={!!formErrors.message}
               />
+              {formErrors.message && (
+                <p className='text-[11px] text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                  <AlertCircle className='size-3.5 shrink-0' />
+                  <span>{formErrors.message}</span>
+                </p>
+              )}
             </div>
 
             <div className='space-y-1.5 text-right'>

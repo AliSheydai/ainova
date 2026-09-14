@@ -111,6 +111,7 @@ export default function AdminCouponsPage() {
   const [newMaxUses, setNewMaxUses] = useState('')
   const [newExpiresAt, setNewExpiresAt] = useState('')
   const [newProductId, setNewProductId] = useState('ALL')
+  const [couponErrors, setCouponErrors] = useState<{ code?: string; value?: string }>({})
 
   // Delete Dialog States
   const [deleteTarget, setDeleteTarget] = useState<CouponItem | null>(null)
@@ -187,22 +188,27 @@ export default function AdminCouponsPage() {
 
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
+    const errs: { code?: string; value?: string } = {}
+
     if (!newCode.trim()) {
-      toast.error('کد تخفیف الزامی است.')
-      return
+      errs.code = 'کد تخفیف الزامی است.'
     }
 
     const val = parseInt(newDiscountValue, 10)
-    if (isNaN(val) || val <= 0) {
-      toast.error('مقدار تخفیف باید یک عدد بزرگتر از صفر باشد.')
+    if (!newDiscountValue.trim()) {
+      errs.value = 'مقدار تخفیف الزامی است.'
+    } else if (isNaN(val) || val <= 0) {
+      errs.value = 'مقدار تخفیف باید یک عدد بزرگتر از صفر باشد.'
+    } else if (newDiscountType === 'PERCENTAGE' && val > 100) {
+      errs.value = 'درصد تخفیف نمی‌تواند بیش از ۱۰۰ باشد.'
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setCouponErrors(errs)
       return
     }
 
-    if (newDiscountType === 'PERCENTAGE' && val > 100) {
-      toast.error('درصد تخفیف نمی‌تواند بیش از ۱۰۰ باشد.')
-      return
-    }
-
+    setCouponErrors({})
     setCreating(true)
     try {
       const res = await fetch('/api/admin/coupons', {
@@ -742,7 +748,7 @@ export default function AdminCouponsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateCoupon} className='space-y-3.5 py-2 text-xs'>
+          <form noValidate onSubmit={handleCreateCoupon} className='space-y-3.5 py-2 text-xs'>
             {/* Code & Random Gen */}
             <div>
               <label className='font-semibold block mb-1'>کد تخفیف: *</label>
@@ -750,10 +756,15 @@ export default function AdminCouponsPage() {
                 <Input
                   placeholder='مثلاً: NOWRUZ1404'
                   value={newCode}
-                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                  className='text-xs font-mono uppercase h-10 rounded-xl'
+                  onChange={(e) => {
+                    setNewCode(e.target.value.toUpperCase())
+                    if (couponErrors.code) setCouponErrors((prev) => ({ ...prev, code: undefined }))
+                  }}
+                  className={`text-xs font-mono uppercase h-10 rounded-xl transition-colors ${
+                    couponErrors.code ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                  }`}
                   dir='ltr'
-                  required
+                  aria-invalid={!!couponErrors.code}
                 />
                 <Button
                   type='button'
@@ -766,6 +777,12 @@ export default function AdminCouponsPage() {
                   <span>کد تصادفی</span>
                 </Button>
               </div>
+              {couponErrors.code && (
+                <p className='text-[11px] text-destructive font-medium flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-150'>
+                  <AlertCircle className='size-3.5 shrink-0' />
+                  <span>{couponErrors.code}</span>
+                </p>
+              )}
             </div>
 
             {/* Type & Value */}
@@ -797,10 +814,21 @@ export default function AdminCouponsPage() {
                   step={newDiscountType === 'PERCENTAGE' ? '1' : '5000'}
                   placeholder={newDiscountType === 'PERCENTAGE' ? 'مثلاً: ۲۰' : 'مثلاً: ۵۰,۰۰۰'}
                   value={newDiscountValue}
-                  onChange={(e) => setNewDiscountValue(e.target.value)}
-                  className='text-xs font-sans h-10 rounded-xl'
-                  required
+                  onChange={(e) => {
+                    setNewDiscountValue(e.target.value)
+                    if (couponErrors.value) setCouponErrors((prev) => ({ ...prev, value: undefined }))
+                  }}
+                  className={`text-xs font-sans h-10 rounded-xl transition-colors ${
+                    couponErrors.value ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                  }`}
+                  aria-invalid={!!couponErrors.value}
                 />
+                {couponErrors.value && (
+                  <p className='text-[11px] text-destructive font-medium flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3.5 shrink-0' />
+                    <span>{couponErrors.value}</span>
+                  </p>
+                )}
               </div>
             </div>
 

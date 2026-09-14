@@ -11,6 +11,7 @@ import {
   LogOut,
   ExternalLink,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -44,6 +45,7 @@ interface ProfileTabProps {
 
 export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
   const [name, setName] = useState(user.name || '')
+  const [nameError, setNameError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [connectingTg, setConnectingTg] = useState(false)
@@ -55,9 +57,10 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast.error('لطفاً نام و نام خانوادگی خود را وارد کنید.')
+      setNameError('لطفاً نام و نام خانوادگی خود را وارد کنید.')
       return
     }
+    setNameError(null)
 
     setSaving(true)
     try {
@@ -282,7 +285,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
           </CardHeader>
 
           <CardContent className="px-5 pb-5 pt-0">
-            <form onSubmit={handleUpdateName} className="space-y-4">
+            <form noValidate onSubmit={handleUpdateName} className="space-y-4">
               <div className='flex flex-col md:flex-row md:items-center gap-3.5'>
                 <div className="space-y-1.5 flex-1">
                   <Label htmlFor="profile-name" className="text-xs font-semibold">
@@ -292,14 +295,26 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                     <Input
                       id="profile-name"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        if (nameError) setNameError(null)
+                      }}
                       placeholder="مثال: علی رضایی"
-                      className="h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans text-xs sm:text-sm"
+                      aria-invalid={!!nameError}
+                      className={`h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans text-xs sm:text-sm transition-colors ${
+                        nameError ? 'border-destructive focus-visible:ring-destructive/30' : ''
+                      }`}
                     />
                     <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                       <User className="h-4 w-4" />
                     </div>
                   </div>
+                  {nameError && (
+                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{nameError}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5 flex-1">

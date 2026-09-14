@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  AlertCircle,
   Warehouse,
   Mail,
   KeyRound,
@@ -105,6 +106,8 @@ interface PreCreatedAccountSectionProps {
   setShowPassword: (v: boolean) => void
   mode: 'inventory' | 'own'
   setMode: (v: 'inventory' | 'own') => void
+  errors?: Record<string, string>
+  onClearError?: (field: string) => void
 }
 
 function PreCreatedAccountSection({
@@ -117,6 +120,8 @@ function PreCreatedAccountSection({
   setShowPassword,
   mode,
   setMode,
+  errors = {},
+  onClearError,
 }: PreCreatedAccountSectionProps) {
   const hasInventory = availableCount !== null && availableCount !== undefined && availableCount > 0
   const isInventoryExhausted = availableCount !== null && availableCount !== undefined && availableCount === 0
@@ -341,10 +346,24 @@ function PreCreatedAccountSection({
                   type='email'
                   placeholder='example@gmail.com'
                   value={customerGmail}
-                  onChange={(e) => setCustomerGmail(e.target.value)}
-                  className='h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background border-blue-500/30 focus:border-blue-500'
+                  onChange={(e) => {
+                    setCustomerGmail(e.target.value)
+                    if (errors?.customerGmail && onClearError) onClearError('customerGmail')
+                  }}
+                  aria-invalid={!!errors?.customerGmail}
+                  className={`h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background transition-colors ${
+                    errors?.customerGmail
+                      ? 'border-rose-500 focus-visible:ring-rose-500'
+                      : 'border-blue-500/30 focus:border-blue-500'
+                  }`}
                   dir='ltr'
                 />
+                {errors?.customerGmail && (
+                  <p className='text-[11px] sm:text-xs text-rose-500 font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3 shrink-0' />
+                    <span>{errors.customerGmail}</span>
+                  </p>
+                )}
               </div>
 
               {/* Password field */}
@@ -362,8 +381,16 @@ function PreCreatedAccountSection({
                     type={showPassword ? 'text' : 'password'}
                     placeholder='رمزعبور اکانت گوگل'
                     value={customerPassword}
-                    onChange={(e) => setCustomerPassword(e.target.value)}
-                    className='h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background border-blue-500/30 focus:border-blue-500 pe-9'
+                    onChange={(e) => {
+                      setCustomerPassword(e.target.value)
+                      if (errors?.customerPassword && onClearError) onClearError('customerPassword')
+                    }}
+                    aria-invalid={!!errors?.customerPassword}
+                    className={`h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background pe-9 transition-colors ${
+                      errors?.customerPassword
+                        ? 'border-rose-500 focus-visible:ring-rose-500'
+                        : 'border-blue-500/30 focus:border-blue-500'
+                    }`}
                     dir='rtl'
                   />
                   <button
@@ -375,6 +402,12 @@ function PreCreatedAccountSection({
                     {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
                   </button>
                 </div>
+                {errors?.customerPassword && (
+                  <p className='text-[11px] sm:text-xs text-rose-500 font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    <AlertCircle className='size-3 shrink-0' />
+                    <span>{errors.customerPassword}</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -576,20 +609,20 @@ function CheckoutContent() {
   }
 
   const validateForm = (): boolean => {
+    const errors: Record<string, string> = {}
+
     // For PRE_CREATED_ACCOUNT, if 'own' mode, validate gmail and password
     if (isPreCreatedPlan && preCreatedMode === 'own') {
       if (!customerGmail.trim()) {
-        toast.error('لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد نمایید.')
-        return false
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(customerGmail.trim())) {
-        toast.error('فرمت آدرس جیمیل وارد شده نامعتبر است.')
-        return false
+        errors.customerGmail = 'لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد نمایید.'
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(customerGmail.trim())) {
+          errors.customerGmail = 'فرمت آدرس جیمیل وارد شده نامعتبر است.'
+        }
       }
       if (!customerPassword.trim()) {
-        toast.error('لطفاً رمزعبور جیمیل خود را جهت فعال‌سازی وارد نمایید.')
-        return false
+        errors.customerPassword = 'لطفاً رمزعبور جیمیل خود را جهت فعال‌سازی وارد نمایید.'
       }
     }
 
@@ -606,19 +639,16 @@ function CheckoutContent() {
       return false
     }
 
-    if (!selectedPlan?.checkoutFields || selectedPlan.checkoutFields.length === 0) {
-      return true
-    }
-
-    const errors: Record<string, string> = {}
-    for (const field of selectedPlan.checkoutFields) {
-      const val = checkoutData[field.key]
-      if (field.required && (!val || String(val).trim() === '')) {
-        errors[field.key] = `تکمیل ${field.label} الزامی است.`
-      } else if (val && field.type === 'email') {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(String(val).trim())) {
-          errors[field.key] = 'فرمت ایمیل نامعتبر است.'
+    if (selectedPlan?.checkoutFields && selectedPlan.checkoutFields.length > 0) {
+      for (const field of selectedPlan.checkoutFields) {
+        const val = checkoutData[field.key]
+        if (field.required && (!val || String(val).trim() === '')) {
+          errors[field.key] = `تکمیل ${field.label} الزامی است.`
+        } else if (val && field.type === 'email') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (!emailRegex.test(String(val).trim())) {
+            errors[field.key] = 'فرمت ایمیل نامعتبر است.'
+          }
         }
       }
     }
@@ -874,6 +904,14 @@ function CheckoutContent() {
                   setShowPassword={setShowPassword}
                   mode={preCreatedMode}
                   setMode={setPreCreatedMode}
+                  errors={formErrors}
+                  onClearError={(key) =>
+                    setFormErrors((prev) => {
+                      const next = { ...prev }
+                      delete next[key]
+                      return next
+                    })
+                  }
                 />
               )}
 
