@@ -12,6 +12,7 @@ import { MarkdownView } from '@/components/ui/markdown-view'
 import { Badge } from '@/components/ui/badge'
 import { Check, ChevronLeft, ShieldCheck, Zap, Clock } from 'lucide-react'
 import { StickyMobileCta } from '@/components/product/sticky-mobile-cta'
+import { ProductReviews } from '@/components/product/product-reviews'
 
 export const revalidate = 60
 
@@ -92,6 +93,39 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
   const hasPreCreatedPlan = enrichedPlans.some((p) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT')
   const isAvailable = stock > 0 || hasPreCreatedPlan
+
+  // Fetch approved reviews for this product
+  const approvedReviews = await prisma.review.findMany({
+    where: {
+      productId: product.id,
+      status: 'APPROVED',
+    },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      userName: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+    },
+  })
+
+  const totalApproved = approvedReviews.length
+  const ratingSum = approvedReviews.reduce((sum, r) => sum + r.rating, 0)
+  const averageRating = totalApproved > 0 ? Number((ratingSum / totalApproved).toFixed(1)) : 5
+
+  const initialStats = {
+    averageRating,
+    totalReviews: totalApproved,
+  }
+
+  const initialReviews = approvedReviews.map((r) => ({
+    id: r.id,
+    userName: r.userName,
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.createdAt.toISOString(),
+  }))
 
   return (
     <div className='flex min-h-svh flex-col bg-background text-foreground' dir='rtl'>
@@ -213,6 +247,14 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
             </div>
           </div>
+
+          {/* Product Reviews Section */}
+          <ProductReviews
+            productId={product.id}
+            productTitle={product.title}
+            initialReviews={initialReviews}
+            initialStats={initialStats}
+          />
         </div>
       </main>
 

@@ -10,6 +10,7 @@ import {
   Tag,
   Archive,
   Bell,
+  MessageSquare,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -64,6 +65,11 @@ export const sidebarData: SidebarData = {
           title: 'محصولات و پلن‌ها',
           url: '/dashboard/products',
           icon: ShoppingBag,
+        },
+        {
+          title: 'نظرات',
+          url: '/dashboard/reviews',
+          icon: MessageSquare,
         },
         {
           title: 'کدهای تخفیف',
