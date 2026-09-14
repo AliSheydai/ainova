@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { motion, useScroll, useMotionValueEvent, useSpring } from 'framer-motion'
 import {
@@ -218,7 +219,12 @@ const navLinks = [
   { label: 'سوالات متداول', href: '/#faq' },
 ]
 
-export function LandingHeader() {
+export interface LandingHeaderProps {
+  showBottomNav?: boolean
+}
+
+export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
@@ -718,18 +724,20 @@ export function LandingHeader() {
         />
       )}
 
-      {/* Mobile Sticky/Fixed Bottom Navigation */}
-      <MobileBottomNav
-        onOpenDashboard={() => {
-          if (user) {
-            setDashboardTab('orders')
-            setDashboardModalOpen(true)
-          } else {
-            setAuthModalOpen(true)
-          }
-        }}
-        hidden={open || authModalOpen || dashboardModalOpen}
-      />
+      {/* Mobile Sticky/Fixed Bottom Navigation (Only on landing page / when enabled) */}
+      {(showBottomNav !== undefined ? showBottomNav : pathname === '/') && (
+        <MobileBottomNav
+          onOpenDashboard={() => {
+            if (user) {
+              setDashboardTab('orders')
+              setDashboardModalOpen(true)
+            } else {
+              setAuthModalOpen(true)
+            }
+          }}
+          hidden={open || authModalOpen || dashboardModalOpen}
+        />
+      )}
     </>
   )
 }

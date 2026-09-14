@@ -84,7 +84,7 @@ export default async function ProductsPage() {
 
   return (
     <div className='flex min-h-svh flex-col bg-background text-foreground' dir='rtl'>
-      <LandingHeader />
+      <LandingHeader showBottomNav={false} />
 
       <main className='flex-1 py-6 md:py-10'>
         <div className='container mx-auto px-4 sm:px-6 max-w-6xl'>
