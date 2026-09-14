@@ -62,10 +62,6 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
       className='py-14 sm:py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background border-t border-border/40'
       dir='rtl'
     >
-      {/* Decorative ambient background glows */}
-      <div className='absolute top-1/2 start-1/4 -translate-y-1/2 size-96 rounded-full bg-primary/5 blur-3xl pointer-events-none' />
-      <div className='absolute bottom-10 end-1/4 size-80 rounded-full bg-amber-500/5 blur-3xl pointer-events-none' />
-
       <div className='container mx-auto px-4 sm:px-6 relative z-10'>
         {/* Section Header */}
         <div className='flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12'>
@@ -77,17 +73,17 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
             variants={fadeUp}
           >
             {/* Pill Badge */}
-            <div className='inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-3.5 shadow-2xs'>
+            {/* <div className='inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-3.5 shadow-2xs'>
               <Sparkles className='size-3.5 text-primary animate-pulse' />
               <span>بازخورد و نظرات برتر خریداران</span>
-            </div>
+            </div> */}
 
-            <h2 className='text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground tracking-tight'>
+            <h2 className='mb-3 text-xl sm:text-2xl md:text-3xl font-bold text-foreground max-md:text-center'>
               تجربه واقعی مشتریان از سرویس‌های آریوچت
             </h2>
-            <p className='mt-3 text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed'>
+            <p className='mt-3 text-xs sm:text-sm md:text-base leading-relaxed text-muted-foreground text-muted-foreground max-md:text-center'>
               دیدگاه‌های برگزیده و مستند خریداران پیرامون سرعت فعال‌سازی، کیفیت پشتیبانی و اصالت
-              اشتراک‌های تحویل داده شده.
+              اشتراک‌های تحویل داده شده.  
             </p>
           </motion.div>
 
@@ -118,10 +114,6 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
 
         {/* Interactive 3D Comment Gallery Spiral - seamless floating on section background */}
         <div className='relative w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 h-[460px] sm:h-[530px] md:h-[590px]'>
-          {/* Soft boundary fade overlays at top and bottom */}
-          <div className='pointer-events-none absolute inset-x-0 top-0 h-14 sm:h-20 bg-gradient-to-b from-background/90 via-background/40 to-transparent z-20' />
-          <div className='pointer-events-none absolute inset-x-0 bottom-0 h-14 sm:h-20 bg-gradient-to-t from-background/90 via-background/40 to-transparent z-20' />
-
           <InfiniteSpiral
             ref={spiralRef}
             items={displayReviews}
