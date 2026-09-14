@@ -11,7 +11,7 @@ export async function handleSupport(ctx: Context) {
   const telegramUrl = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM || 'https://t.me/google_ai_pro_support'
 
   await ctx.reply(MESSAGES.support(phone, telegramUrl), {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: supportKeyboard(phone, telegramUrl),
   })
 }

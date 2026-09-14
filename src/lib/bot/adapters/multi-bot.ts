@@ -57,7 +57,6 @@ export class MultiBotController {
 
     let text = `✨ **${title}** ✨\n\n`
     if (product.shortDescription) text += `${product.shortDescription}\n\n`
-    text += `━━━━━━━━━━━━━━━━━━━━\n`
     text += `📋 **پلن‌های قابل انتخاب:**\n\n`
 
     const inlineKeyboard: Array<Array<{ text: string; callbackData?: string }>> = []

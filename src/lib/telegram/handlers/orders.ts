@@ -4,6 +4,7 @@ import { MESSAGES } from '../messages'
 import { ordersPaginationKeyboard } from '../keyboards'
 import { encryptCredential } from '@/lib/security/crypto'
 import { type Prisma } from '@prisma/client'
+import { escapeHtml } from '../formatting'
 
 const PAGE_SIZE = 3
 
@@ -48,7 +49,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
     })
 
     if (totalOrders === 0) {
-      await ctx.reply(MESSAGES.noOrders, { parse_mode: 'Markdown' })
+      await ctx.reply(MESSAGES.noOrders, { parse_mode: 'HTML' })
       return
     }
 
@@ -74,11 +75,12 @@ export async function handleOrders(ctx: Context, page: number = 1) {
 
     const { BotStoreService } = await import('@/lib/bot/bot-store-service')
 
-    let messageText = `📦 **سفارش‌های شما** (${totalOrders.toLocaleString('fa-IR')} سفارش)\n\n`
+    let messageText = `📦 <b>صندوق سفارش‌های شما</b> (${totalOrders.toLocaleString('fa-IR')} سفارش)\n\n`
 
     const actionOrders: Array<{ id: string; code: string }> = []
 
-    for (const order of orders) {
+    for (let i = 0; i < orders.length; i++) {
+      const order = orders[i]
       const orderCode = order.id.slice(-6).toUpperCase()
       const dateStr = new Intl.DateTimeFormat('fa-IR', {
         year: 'numeric',
@@ -94,32 +96,39 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         actionOrders.push({ id: order.id, code: orderCode })
       }
 
-      messageText += `**سفارش #${orderCode}** — ${productTitle}\n`
-      messageText += `${dateStr} · ${order.amount.toLocaleString('fa-IR')} تومان\n`
-      messageText += `وضعیت: ${getStatusBadge(order.status)}\n\n`
+      messageText += `🔹 <b>سفارش <code>#${orderCode}</code></b> — ${escapeHtml(productTitle)}\n`
+      messageText += `• 📅 <b>تاریخ:</b> ${dateStr}\n`
+      messageText += `• 💰 <b>مبلغ:</b> <b>${order.amount.toLocaleString('fa-IR')} تومان</b>\n`
+      messageText += `• 📊 <b>وضعیت:</b> ${getStatusBadge(order.status)}\n`
 
       const deliveryMessage = BotStoreService.formatDeliveryMessage(order)
       if (deliveryMessage) {
-        messageText += `${deliveryMessage}\n\n`
+        messageText += `<blockquote>${deliveryMessage}</blockquote>\n`
+      }
+
+      if (i < orders.length - 1) {
+        messageText += `\n`
       }
     }
+
+    messageText += `\n📄 صفحه ${validPage.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`
 
     const keyboard = ordersPaginationKeyboard(validPage, totalPages, actionOrders)
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(messageText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
       }).catch(async () => {
         await ctx.reply(messageText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
         })
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
       await ctx.reply(messageText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
       })
     }
@@ -200,21 +209,21 @@ export async function handleFixCredentialsPrompt(ctx: Context, orderId: string) 
 
     const adminMsg = order.adminNote || 'اطلاعات ورود نیازمند بررسی و اصلاح است.'
 
-    let promptText = `🛠 **ویرایش اطلاعات اکانت #${orderCode}**\n\n`
-    promptText += `محصول: ${productTitle}\n`
-    promptText += `پیام مدیر: _${adminMsg}_\n\n`
-    promptText += `**مرحله ۱ از ۳: آدرس جیمیل**\n\n`
+    let promptText = `🛠 <b>ویرایش اطلاعات ورود اکانت #${orderCode}</b>\n\n`
+    promptText += `• 🛍 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n`
+    promptText += `• 💬 <b>پیام مدیر:</b> ${escapeHtml(adminMsg)}\n\n`
+    promptText += `📌 <b>مرحله ۱ از ۳: آدرس جیمیل</b>\n\n`
     if (existingEmail) {
-      promptText += `ایمیل فعلی: \`${existingEmail}\`\n\n`
+      promptText += `ایمیل فعلی: <code>${escapeHtml(existingEmail)}</code>\n\n`
     }
     promptText += `لطفاً آدرس جیمیل صحیح خود را ارسال کنید:\n`
     if (existingEmail) {
-      promptText += `(در صورتی که جیمیل صحیح است، دکمه «تأیید همین جیمیل» را لمس کنید)`
+      promptText += `(در صورتی که جیمیل فوق صحیح است، دکمه «تأیید همین جیمیل» را لمس کنید)`
     }
 
     const { fixCredentialsEmailKeyboard } = await import('../keyboards')
     await ctx.reply(promptText, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: fixCredentialsEmailKeyboard(order.id, existingEmail),
     })
   } catch (error) {
@@ -231,16 +240,16 @@ export async function promptStepPassword(ctx: Context, telegramId: string, sessi
   const { fixCredentialsPasswordKeyboard } = await import('../keyboards')
   const hasPass = Boolean(session.fixData?.password)
 
-  let msg = `جیمیل ثبت شد: \`${session.fixData?.email}\`\n\n`
-  msg += `**مرحله ۲ از ۳: رمز عبور اکانت**\n\n`
+  let msg = `✅ جیمیل ثبت شد: <code>${escapeHtml(session.fixData?.email)}</code>\n\n`
+  msg += `📌 <b>مرحله ۲ از ۳: رمز عبور اکانت</b>\n\n`
   msg += `لطفاً رمز عبور اکانت خود را ارسال فرمایید:\n`
   if (hasPass) {
     msg += `(در صورت عدم تغییر، دکمه «رمز قبلی تغییر نکند» را لمس کنید)\n\n`
   }
-  msg += `نکته: در صورتی که تایید ۲ مرحله‌ای (2FA) فعال است، لطفاً آن را موقتاً خاموش نمایید.`
+  msg += `<blockquote>💡 <b>نکته:</b> در صورتی که تایید ۲ مرحله‌ای (2FA) فعال است، لطفاً آن را موقتاً خاموش نمایید.</blockquote>`
 
   await ctx.reply(msg, {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: fixCredentialsPasswordKeyboard(session.orderId, hasPass),
   })
 }
@@ -252,12 +261,12 @@ export async function promptStepNote(ctx: Context, telegramId: string, session: 
 
   const { fixCredentialsNoteKeyboard } = await import('../keyboards')
 
-  let msg = `رمز عبور ثبت شد.\n\n`
-  msg += `**مرحله ۳ از ۳: یادداشت برای پشتیبانی (اختیاری)**\n\n`
+  let msg = `✅ رمز عبور ثبت شد.\n\n`
+  msg += `📌 <b>مرحله ۳ از ۳: یادداشت برای پشتیبانی (اختیاری)</b>\n\n`
   msg += `اگر توضیحی برای مدیر دارید ارسال کنید (یا دکمه «بدون یادداشت» را لمس نمایید):`
 
   await ctx.reply(msg, {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: fixCredentialsNoteKeyboard(session.orderId),
   })
 }
@@ -279,15 +288,15 @@ export async function promptStepConfirm(ctx: Context, telegramId: string, sessio
 
   const { fixCredentialsConfirmKeyboard } = await import('../keyboards')
 
-  let msg = `📋 **پیش‌نمایش اطلاعات سفارش #${orderCode}**\n\n`
-  msg += `محصول: ${productTitle}\n`
-  msg += `جیمیل: \`${session.fixData?.email || 'ثبت نشده'}\`\n`
-  msg += `رمز عبور: ••••••••\n`
-  msg += `یادداشت: ${session.fixData?.note ? `_${session.fixData.note}_` : '—'}\n\n`
-  msg += `جهت ارسال اطلاعات به مدیر، دکمه زیر را لمس فرمایید:`
+  let msg = `📋 <b>پیش‌نمایش اطلاعات سفارش #${orderCode}</b>\n\n`
+  msg += `• 🛍 <b>محصول:</b> ${escapeHtml(productTitle)}\n`
+  msg += `• 📧 <b>جیمیل:</b> <code>${escapeHtml(session.fixData?.email || 'ثبت نشده')}</code>\n`
+  msg += `• 🔑 <b>رمز عبور:</b> <code>••••••••</code>\n`
+  msg += `• 📝 <b>یادداشت:</b> ${session.fixData?.note ? escapeHtml(session.fixData.note) : '—'}\n\n`
+  msg += `👇 جهت ارسال اطلاعات به مدیر، دکمه زیر را لمس فرمایید:`
 
   await ctx.reply(msg, {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: fixCredentialsConfirmKeyboard(session.orderId),
   })
 }
@@ -393,19 +402,19 @@ export async function handleSubmitCredentials(ctx: Context) {
     order.product?.title ||
     (order.plan ? `${order.plan.product.title} (${order.plan.name})` : 'اکانت')
 
-  let confirmMsg = `🎉 **اطلاعات اکانت با موفقیت ثبت شد و برای مدیر ارسال گردید!**\n\n`
-  confirmMsg += `🔢 **سفارش:** #${orderCode}\n`
-  confirmMsg += `📦 **محصول:** ${serviceName}\n`
+  let confirmMsg = `🎉 <b>اطلاعات اکانت با موفقیت ثبت و برای بررسی ارسال گردید</b>\n\n`
+  confirmMsg += `• 🔢 <b>شناسه سفارش:</b> <code>#${orderCode}</code>\n`
+  confirmMsg += `• 🛍 <b>محصول:</b> <b>${escapeHtml(serviceName)}</b>\n`
   if (fixData.email) {
-    confirmMsg += `📧 **جیمیل:** \`${fixData.email}\`\n`
+    confirmMsg += `• 📧 <b>جیمیل:</b> <code>${escapeHtml(fixData.email)}</code>\n`
   }
-  confirmMsg += `🔑 **رمز عبور:** با موفقیت ثبت گردید\n`
+  confirmMsg += `• 🔑 <b>رمز عبور:</b> <code>••••••••</code> (ثبت شد)\n`
   if (fixData.note) {
-    confirmMsg += `📝 **یادداشت برای پشتیبانی:** ${fixData.note}\n`
+    confirmMsg += `• 📝 <b>یادداشت:</b> ${escapeHtml(fixData.note)}\n`
   }
-  confirmMsg += `\nسفارش شما در صف بررسی و فعال‌سازی مجدد قرار گرفت. به محض تکمیل به شما اطلاع داده خواهد شد.`
+  confirmMsg += `\n<blockquote>⏳ <b>وضعیت:</b> سفارش شما در اولویت بررسی و فعال‌سازی مجدد قرار گرفت. به محض تکمیل از طریق همین ربات به شما اطلاع‌رسانی خواهد شد.</blockquote>`
 
-  await ctx.reply(confirmMsg, { parse_mode: 'Markdown' })
+  await ctx.reply(confirmMsg, { parse_mode: 'HTML' })
 
   // Send notification to Admin
   const { AdminNotificationService } = await import('@/lib/notifications/admin-notification')

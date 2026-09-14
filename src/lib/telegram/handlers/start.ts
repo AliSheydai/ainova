@@ -32,7 +32,7 @@ export async function handleStart(ctx: Context) {
       if (linkResult.success && linkResult.user) {
         await clearBotLoginSession(telegramId)
         await ctx.reply(MESSAGES.deeplinkLoginSuccess(verifiedPhone), {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: mainMenuKeyboard(true),
         })
         return
@@ -41,7 +41,7 @@ export async function handleStart(ctx: Context) {
 
     // Token invalid or expired
     await ctx.reply(MESSAGES.linkExpired, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: mainMenuKeyboard(false),
     })
     return
@@ -53,7 +53,7 @@ export async function handleStart(ctx: Context) {
     await clearBotLoginSession(telegramId)
     await startLoginFlow(
       ctx,
-      '👋 **به ربات رسمی آریوچت خوش آمدید!**\n\n' +
+      '👋 <b>به ربات رسمی آریوچت خوش آمدید</b>\n\n' +
         'برای دسترسی به امکانات، پیگیری و خرید اشتراک، لطفاً با شماره موبایل خود وارد شوید:'
     )
     return
@@ -103,7 +103,7 @@ export async function handleStart(ctx: Context) {
     const unreadCount = await UserNotificationService.getUnreadCount(existingUser.id).catch(() => 0)
 
     await ctx.reply(MESSAGES.welcome(name), {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: mainMenuKeyboard(true, unreadCount),
     })
     return

@@ -1,5 +1,6 @@
 import { Bot, InlineKeyboard } from 'grammy'
 import { prisma } from '@/lib/prisma'
+import { escapeHtml } from './formatting'
 
 export async function notifyTelegramPaymentSuccess(orderId: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN
@@ -38,19 +39,19 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
     const planName = order.plan?.name || ''
 
     const successMessage = `
-✅ **پرداخت با موفقیت انجام شد**
+🎉 <b>پرداخت با موفقیت تأیید شد</b>
 
-سفارش شما با موفقیت ثبت و تأیید گردید:
-🌟 **${productTitle}${planName ? ` — ${planName}` : ''}**
-🔢 **شناسه پیگیری بانکی:** \`${order.payment?.refId || '-'}\`
+سفارش شما با موفقیت در سیستم ثبت و تأیید گردید:
+• 🛍 <b>محصول:</b> <b>${escapeHtml(productTitle)}${planName ? ` — ${escapeHtml(planName)}` : ''}</b>
+• 🔢 <b>شناسه پیگیری بانکی:</b> <code>${escapeHtml(order.payment?.refId || '-')}</code>
 
-🔐 **توجه مهم:**
-برای فعال‌سازی، نیازی به ارسال ایمیل، رمز عبور یا اطلاعات ورود حساب Google خود ندارید.
+🔗 <b>لینک فعال‌سازی اختصاصی شما:</b>
+<code>${linkUrl}</code>
 
-فقط کافیست با کلیک روی دکمه یا لینک اختصاصی زیر، مراحل فعال‌سازی را با حساب Google خودتان تکمیل فرمایید:
+<blockquote>🔐 <b>توجه مهم:</b>
+برای فعال‌سازی، نیازی به ارسال رمز عبور نیست. کافیست روی دکمه یا لینک فوق کلیک کرده و مراحل را با اکانت گوگل خود تایید فرمایید.</blockquote>
 
-🔗 **لینک فعال‌سازی اختصاصی شما:**
-\`${linkUrl}\`
+📱 این لینک هم‌اکنون در بخش «سفارش‌های من» نیز ثبت و در دسترس است.
 `.trim()
 
     const keyboard = new InlineKeyboard()
@@ -59,7 +60,7 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
       .text('📖 راهنمای فعال‌سازی', 'show_activation_guide')
 
     await bot.api.sendMessage(order.telegramChatId, successMessage, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: keyboard,
     })
   } catch (error) {

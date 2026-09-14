@@ -427,7 +427,7 @@ export class BotStoreService {
   }
 
   /**
-   * Formats delivery info into markdown text for display in chat bots.
+   * Formats delivery info into HTML text for display in chat bots.
    */
   static formatDeliveryMessage(order: any): string {
     const delivery = order.delivery
@@ -442,28 +442,31 @@ export class BotStoreService {
 
     if (order.status === 'COMPLETED') {
       if (deliveryType === 'ACTIVATION_LINK' && linkUrl) {
-        return `لینک فعال‌سازی:\n${linkUrl}`
+        return `🔗 <b>لینک فعال‌سازی اختصاصی:</b>\n<code>${linkUrl}</code>`
       }
 
       if (deliveryType === 'PRE_CREATED_ACCOUNT') {
         if (isOwnAccount) {
           const email = deliveryData.email || checkoutData.customer_gmail || checkoutData.customer_email || 'اکانت شما'
-          return `اشتراک روی اکانت شخصی شما (\`${email}\`) فعال شد.`
+          return `✅ <b>اشتراک با موفقیت روی اکانت شخصی شما فعال شد:</b>\n<code>${email}</code>`
         }
 
+        const email = deliveryData.email || deliveryData.username || ''
         return (
-          `اطلاعات اکانت:\n` +
-          `ایمیل: \`${deliveryData.email || deliveryData.username}\`\n` +
-          `رمز عبور: در پنل کاربری قابل مشاهده است.`
+          `📦 <b>اطلاعات ورود به اکانت اختصاصی:</b>\n` +
+          `• 📧 <b>ایمیل:</b> <code>${email}</code>\n` +
+          `• 🔑 <b>رمز عبور:</b> در پنل کاربری سایت قابل مشاهده است.`
         )
       }
 
       if (deliveryType === 'CUSTOMER_PROVISIONING') {
-        return `اشتراک با موفقیت روی اکانت شما فعال شد.`
+        return `✅ <b>اشتراک با موفقیت روی اکانت شما فعال شد.</b>`
       }
 
       if (deliveryType === 'MANUAL') {
-        return deliveryData.manualNote || 'سفارش تحویل داده شد.'
+        return deliveryData.manualNote
+          ? `📝 <b>توضیحات تحویل سفارش:</b>\n${deliveryData.manualNote}`
+          : '✅ سفارش با موفقیت تحویل داده شد.'
       }
 
       return ''
@@ -472,20 +475,20 @@ export class BotStoreService {
     if (order.status === 'PAID') {
       if (order.customerActionRequired) {
         return (
-          `نیاز به اصلاح اطلاعات ورود:\n` +
+          `⚠️ <b>نیازمند اصلاح اطلاعات ورود:</b>\n` +
           `پیام مدیر: ${order.adminNote || 'اطلاعات ورود نیازمند اصلاح است.'}`
         )
       }
 
       if (order.credentialsUpdatedAt && !order.customerActionRequired) {
-        return `اطلاعات جدید ثبت شد و در صف بررسی کارشناس قرار دارد.`
+        return `⏳ <b>اطلاعات جدید شما ثبت شد و در صف بررسی کارشناس قرار دارد.</b>`
       }
 
       if (isOwnAccount || deliveryType === 'CUSTOMER_PROVISIONING') {
         const email = checkoutData.customer_gmail || checkoutData.customer_email || ''
-        return `در صف فعال‌سازی روی اکانت شما${email ? ` (\`${email}\`)` : ''}.`
+        return `⏳ <b>در صف فعال‌سازی روی اکانت شما:</b>${email ? `\n<code>${email}</code>` : ''}`
       }
-      return `در حال آماده‌سازی و تحویل توسط سیستم.`
+      return `⏳ <b>در حال آماده‌سازی و تحویل توسط سیستم...</b>`
     }
 
     return ''

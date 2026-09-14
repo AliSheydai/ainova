@@ -1,6 +1,7 @@
 import { type Bot } from 'grammy'
 import { BUTTONS, mainMenuKeyboard } from '../keyboards'
 import { MESSAGES } from '../messages'
+import { escapeHtml } from '../formatting'
 import { handleStart } from './start'
 import { handleShowProducts, handleSelectProduct, handleBuyProduct, handleBuyCallback } from './buy'
 import {
@@ -75,7 +76,7 @@ export function registerHandlers(bot: Bot) {
       await logoutTelegramAccount(telegramId)
     }
     await ctx.reply(MESSAGES.logoutSuccess, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: mainMenuKeyboard(false),
     })
   })
@@ -122,7 +123,7 @@ export function registerHandlers(bot: Bot) {
       await logoutTelegramAccount(telegramId)
     }
     await ctx.reply(MESSAGES.logoutSuccess, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: mainMenuKeyboard(false),
     })
   })
@@ -143,6 +144,7 @@ export function registerHandlers(bot: Bot) {
     if (isLinked) {
       const kb = await getUpdatedMainMenuKeyboard(telegramId)
       await ctx.reply(MESSAGES.mainMenuPrompt, {
+        parse_mode: 'HTML',
         reply_markup: kb,
       })
     } else {
@@ -251,7 +253,7 @@ export function registerHandlers(bot: Bot) {
       step: 'AWAITING_COUPON',
     })
 
-    await ctx.reply(MESSAGES.couponPrompt(plan.price), { parse_mode: 'Markdown' })
+    await ctx.reply(MESSAGES.couponPrompt(plan.price), { parse_mode: 'HTML' })
   })
 
   // Callback Queries: Remove coupon code
@@ -368,6 +370,7 @@ export function registerHandlers(bot: Bot) {
     if (isLinked) {
       const kb = await getUpdatedMainMenuKeyboard(telegramId)
       await ctx.reply(MESSAGES.mainMenuPrompt, {
+        parse_mode: 'HTML',
         reply_markup: kb,
       })
     } else {
@@ -442,7 +445,7 @@ export function registerHandlers(bot: Bot) {
           checkoutData,
         })
 
-        await ctx.reply(MESSAGES.passwordPrompt(email), { parse_mode: 'Markdown' })
+        await ctx.reply(MESSAGES.passwordPrompt(email), { parse_mode: 'HTML' })
         return
       }
 
@@ -480,7 +483,9 @@ export function registerHandlers(bot: Bot) {
             currentFieldLabel: nextField.label,
             checkoutData,
           })
-          await ctx.reply(`لطفاً **${nextField.label}** خود را وارد فرمایید:`)
+          await ctx.reply(`لطفاً <b>${escapeHtml(nextField.label)}</b> خود را ارسال فرمایید:`, {
+            parse_mode: 'HTML',
+          })
           return
         }
 
@@ -523,15 +528,20 @@ export function registerHandlers(bot: Bot) {
             couponDiscount: couponValidation.discountAmount,
           })
 
-          await ctx.reply(`🎉 کد تخفیف **${couponValidation.coupon.code}** با موفقیت اعمال شد!`)
+          await ctx.reply(
+            `🎉 کد تخفیف <code>${escapeHtml(couponValidation.coupon.code)}</code> با موفقیت اعمال گردید!`,
+            { parse_mode: 'HTML' }
+          )
           const { renderOrderSummary } = await import('./buy')
           await renderOrderSummary(ctx, session.planId)
           return
         }
 
         await ctx.reply(
-          `❌ ${couponValidation.error || 'کد تخفیف معتبر نمی‌باشد.'}\n\n` +
-          `لطفاً کد دیگری ارسال فرمایید یا در صورت انصراف، کلمه «انصراف» را ارسال کنید.`
+          `❌ <b>کد تخفیف نامعتبر است</b>\n\n` +
+          `${escapeHtml(couponValidation.error || 'کد وارد شده یافت نشد یا منقضی شده است.')}\n\n` +
+          `لطفاً کد دیگری ارسال فرمایید یا در صورت انصراف، کلمه «انصراف» را ارسال کنید.`,
+          { parse_mode: 'HTML' }
         )
         return
       }
@@ -555,7 +565,9 @@ export function registerHandlers(bot: Bot) {
             currentFieldLabel: nextField.label,
             checkoutData,
           })
-          await ctx.reply(`لطفاً **${nextField.label}** خود را وارد فرمایید:`)
+          await ctx.reply(`لطفاً <b>${escapeHtml(nextField.label)}</b> خود را ارسال فرمایید:`, {
+            parse_mode: 'HTML',
+          })
           return
         }
 
@@ -599,6 +611,7 @@ export function registerHandlers(bot: Bot) {
 
     const kb = await getUpdatedMainMenuKeyboard(telegramId)
     await ctx.reply(MESSAGES.mainMenuPrompt, {
+      parse_mode: 'HTML',
       reply_markup: kb,
     })
   })

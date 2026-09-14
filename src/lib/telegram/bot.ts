@@ -11,6 +11,16 @@ export function createTelegramBot(token?: string): Bot {
 
   const bot = new Bot(botToken)
 
+  // Default parse_mode to 'HTML' for all outgoing messages if not specified
+  bot.api.config.use((prev, method, payload, signal) => {
+    if (payload && typeof payload === 'object') {
+      if (!('parse_mode' in payload) && ['sendMessage', 'editMessageText'].includes(method)) {
+        ;(payload as any).parse_mode = 'HTML'
+      }
+    }
+    return prev(method, payload, signal)
+  })
+
   bot.catch((err) => {
     console.error(`Error in Telegram bot update ${err.ctx.update.update_id}:`, err.error)
   })
@@ -40,7 +50,7 @@ export async function sendTelegramNotification(
 
     const bot = getBot()
     await bot.api.sendMessage(chatId, text, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: replyMarkup,
     })
     return true

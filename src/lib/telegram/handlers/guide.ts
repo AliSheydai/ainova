@@ -11,7 +11,7 @@ async function renderGuideScreen(
     await ctx.answerCallbackQuery().catch(() => {})
     try {
       await ctx.editMessageText(text, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
         link_preview_options: { is_disabled: true },
       })
@@ -23,12 +23,12 @@ async function renderGuideScreen(
 
   try {
     await ctx.reply(text, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: keyboard,
       link_preview_options: { is_disabled: true },
     })
   } catch (err) {
-    console.error('Failed to send guide screen with Markdown:', err)
+    console.error('Failed to send guide screen with HTML:', err)
     await ctx.reply(text, {
       reply_markup: keyboard,
       link_preview_options: { is_disabled: true },

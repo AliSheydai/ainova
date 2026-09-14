@@ -181,7 +181,7 @@ export function ordersPaginationKeyboard(
 
   if (totalPages > 1) {
     if (page < totalPages) {
-      keyboard.text('⬅️ صفحه بعدی', `orders:page:${page + 1}`)
+      keyboard.text('صفحه بعدی ⬅️', `orders:page:${page + 1}`)
     }
     keyboard.text(`صفحه ${page.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`, 'noop')
     if (page > 1) {

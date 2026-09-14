@@ -118,8 +118,9 @@ export class UserNotificationService {
     const { sendTelegramNotification } = await import('@/lib/telegram/bot')
     const { InlineKeyboard } = await import('grammy')
 
+    const { escapeHtml } = await import('@/lib/telegram/formatting')
     const icon = getNotificationTypeIcon(type)
-    const telegramText = `${icon} **${title}**\n\n${message}`
+    const telegramText = `${icon} <b>${escapeHtml(title)}</b>\n\n<blockquote>${escapeHtml(message)}</blockquote>`
 
     const kb = new InlineKeyboard()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'

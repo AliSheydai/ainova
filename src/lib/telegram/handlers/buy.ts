@@ -15,6 +15,7 @@ import {
   type BotLoginSession,
 } from '../account-linking'
 import { formatPrice } from '@/lib/persian-utils'
+import { escapeHtml } from '../formatting'
 
 export function getFulfillmentLabel(type?: string): string {
   switch (type) {
@@ -41,8 +42,12 @@ export async function handleShowProducts(ctx: Context) {
     }
 
     const text =
-      `🛍 **فروشگاه اشتراک‌های رسمی هوش مصنوعی و دیجیتال**\n\n` +
-      `لطفاً محصول مورد نظر خود را جهت مشاهده مشخصات، پلن‌ها و خرید انتخاب فرمایید:`
+      `🛍 <b>فروشگاه اشتراک‌های رسمی آریوچت</b>\n\n` +
+      `مجموعه کامل سرویس‌ها و ابزارهای پریمیوم هوش مصنوعی:\n\n` +
+      `• تحویل فوری و خودکار بلافاصله پس از پرداخت\n` +
+      `• ضمانت سلامت و پایداری در طول دوره اشتراک\n` +
+      `• پشتیبانی فنی و راهنمای مرحله‌به‌مرحله فعال‌سازی\n\n` +
+      `جهت مشاهده مشخصات و پلن‌ها، محصول مورد نظر را انتخاب فرمایید:`
 
     const keyboard = new InlineKeyboard()
     for (const p of products) {
@@ -55,12 +60,12 @@ export async function handleShowProducts(ctx: Context) {
     keyboard.text('🔙 منوی اصلی', 'nav:main')
 
     if (ctx.callbackQuery) {
-      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard }).catch(async () => {
-        await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard })
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: keyboard }).catch(async () => {
+        await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard })
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
-      await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard })
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard })
     }
   } catch (error) {
     console.error('Error in handleShowProducts:', error)
@@ -80,27 +85,27 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
     const { product, plans } = data
     const title = product.title
 
-    let detailsText = `✨ **${title}** ✨\n\n`
+    let detailsText = `✨ <b>${escapeHtml(title)}</b>\n\n`
     if (product.shortDescription) {
-      detailsText += `📝 ${product.shortDescription}\n\n`
+      detailsText += `${escapeHtml(product.shortDescription)}\n\n`
     }
 
     // Highlight key features if available
     if (Array.isArray(product.features) && product.features.length > 0) {
-      detailsText += `🌟 **ویژگی‌های برجسته:**\n`
+      detailsText += `🌟 <b>امکانات و مزایای شاخص:</b>\n`
       const displayFeatures = product.features.slice(0, 4)
       for (const feat of displayFeatures) {
         const featText = typeof feat === 'string' ? feat : (feat as any)?.text || (feat as any)?.title || ''
         if (featText) {
-          detailsText += ` • ${featText}\n`
+          detailsText += `• ${escapeHtml(featText)}\n`
         }
       }
       detailsText += `\n`
     } else if (product.description) {
-      detailsText += `📋 **توضیحات:**\n${product.description.slice(0, 250)}...\n\n`
+      detailsText += `📋 <b>توضیحات محصول:</b>\n${escapeHtml(product.description.slice(0, 250))}...\n\n`
     }
 
-    detailsText += `\n📦 **پلن‌های قابل سفارش این محصول:**\n\n`
+    detailsText += `📦 <b>پلن‌های فعال و قابل سفارش:</b>\n\n`
 
     const keyboard = new InlineKeyboard()
 
@@ -110,18 +115,18 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
       const isAvailable = isPreCreated ? true : plan.stock > 0
       const fulfillmentBadge = getFulfillmentLabel(plan.fulfillmentType)
 
-      detailsText += `🔹 **پلن ${plan.name}**\n`
-      detailsText += `   💵 قیمت: **${formatPrice(plan.price)}**\n`
-      detailsText += `   🚀 روش تحویل: **${fulfillmentBadge}**\n`
+      detailsText += `🔹 <b>پلن ${escapeHtml(plan.name)}</b>\n`
+      detailsText += `• 💵 <b>قیمت:</b> <b>${formatPrice(plan.price)}</b>\n`
+      detailsText += `• 🚀 <b>شیوه تحویل:</b> <code>${escapeHtml(fulfillmentBadge)}</code>\n`
 
       if (isPreCreated) {
         if (warehouseStock > 0) {
-          detailsText += `   📦 وضعیت: ✅ موجود در انبار (${warehouseStock.toLocaleString('fa-IR')} اکانت آماده) یا فعال‌سازی روی جیمیل شما\n\n`
+          detailsText += `• 📦 <b>وضعیت:</b> ✅ موجود در انبار (${warehouseStock.toLocaleString('fa-IR')} اکانت آماده) یا فعال‌سازی روی جیمیل شما\n\n`
         } else {
-          detailsText += `   📦 وضعیت: ✅ فعال‌سازی روی جیمیل شخصی شما (انبار آماده موقتاً اتمام)\n\n`
+          detailsText += `• 📦 <b>وضعیت:</b> ✅ فعال‌سازی روی جیمیل شخصی شما (انبار آماده موقتاً اتمام)\n\n`
         }
       } else {
-        detailsText += `   📦 وضعیت: ${isAvailable ? `✅ آماده تحویل (${plan.stock.toLocaleString('fa-IR')} عدد)` : '❌ موقتاً ناموجود'}\n\n`
+        detailsText += `• 📦 <b>وضعیت:</b> ${isAvailable ? `✅ آماده تحویل (${plan.stock.toLocaleString('fa-IR')} عدد)` : '❌ موقتاً ناموجود'}\n\n`
       }
 
       if (isAvailable) {
@@ -131,23 +136,25 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
       }
     }
 
+    detailsText += `👇 جهت سفارش، پلن مورد نظر خود را از دکمه‌های زیر انتخاب فرمایید:`
+
     keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
     keyboard.text('🏠 منوی اصلی', 'nav:main')
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(detailsText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
       }).catch(async () => {
         await ctx.reply(detailsText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
         })
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
       await ctx.reply(detailsText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
       })
     }
@@ -173,7 +180,10 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
 
     if (!user || !user.phone) {
       const { startLoginFlow } = await import('./auth')
-      await startLoginFlow(ctx, '⚠️ برای خرید اشتراک و دریافت آنی، ابتدا باید با شماره موبایل خود وارد شوید:')
+      await startLoginFlow(
+        ctx,
+        `⚠️ <b>ورود به حساب کاربری</b>\n\nبرای خرید اشتراک و تحویل آنی، لطفاً با شماره موبایل خود وارد شوید:`
+      )
       return
     }
 
@@ -214,13 +224,13 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
 
       if (ctx.callbackQuery) {
         await ctx.editMessageText(message, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: kb,
         }).catch(async () => {
-          await ctx.reply(message, { parse_mode: 'Markdown', reply_markup: kb })
+          await ctx.reply(message, { parse_mode: 'HTML', reply_markup: kb })
         })
       } else {
-        await ctx.reply(message, { parse_mode: 'Markdown', reply_markup: kb })
+        await ctx.reply(message, { parse_mode: 'HTML', reply_markup: kb })
       }
       return
     }
@@ -241,8 +251,9 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
       })
 
       await ctx.reply(
-        `📝 **تکمیل اطلاعات سفارش برای پلن «${plan.name}»:**\n\n` +
-        `لطفاً **${firstField.label}** خود را در چت ارسال فرمایید:`
+        `📝 <b>تکمیل اطلاعات سفارش برای پلن «${escapeHtml(plan.name)}»:</b>\n\n` +
+        `لطفاً <b>${escapeHtml(firstField.label)}</b> خود را در چت ارسال فرمایید:`,
+        { parse_mode: 'HTML' }
       )
       return
     }
@@ -338,7 +349,7 @@ export async function handleSelectDeliveryPreference(
       step: 'AWAITING_GMAIL',
     })
 
-    await ctx.reply(MESSAGES.gmailPrompt(plan.name), { parse_mode: 'Markdown' })
+    await ctx.reply(MESSAGES.gmailPrompt(plan.name), { parse_mode: 'HTML' })
   }
 }
 
@@ -412,14 +423,14 @@ export async function renderOrderSummary(ctx: Context, planId: string) {
 
   if (ctx.callbackQuery) {
     await ctx.editMessageText(summaryText, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: kb,
     }).catch(async () => {
-      await ctx.reply(summaryText, { parse_mode: 'Markdown', reply_markup: kb })
+      await ctx.reply(summaryText, { parse_mode: 'HTML', reply_markup: kb })
     })
   } else {
     await ctx.reply(summaryText, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: kb,
     })
   }
@@ -454,13 +465,13 @@ export async function executeBotOrderCreation(
       result.paymentUrl.includes('localhost') || result.paymentUrl.includes('127.0.0.1')
 
     if (isLocalhost) {
-      messageText += `\n\n💳 **لینک مستقیم درگاه پرداخت (توسعه):**\n\`${result.paymentUrl}\``
+      messageText += `\n\n💳 <b>لینک درگاه پرداخت آزمایشی (محیط تست):</b>\n<code>${result.paymentUrl}</code>`
     }
 
     const keyboard = orderPaymentKeyboard(result.paymentUrl)
 
     await ctx.reply(messageText, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: keyboard,
     })
   } catch (error: unknown) {

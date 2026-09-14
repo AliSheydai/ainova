@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
+import { escapeHtml } from '@/lib/telegram/formatting'
 
 export interface RefundNotificationDetails {
   refundAmount: number
@@ -103,15 +104,15 @@ export class AdminNotificationService {
       const shortOrderId = order.id.slice(-6).toUpperCase()
 
       const text =
-        `🛍 **سفارش جدید — #${shortOrderId}**\n\n` +
-        `محصول: ${productTitle} ${planName}\n` +
-        `مبلغ: ${this.formatPrice(order.amount)}\n` +
+        `🛍 <b>سفارش جدید ثبت شد — #${shortOrderId}</b>\n\n` +
+        `• 📦 <b>محصول:</b> <b>${escapeHtml(productTitle)} ${escapeHtml(planName)}</b>\n` +
+        `• 💰 <b>مبلغ پرداختی:</b> <b>${this.formatPrice(order.amount)}</b>\n` +
         (order.discountAmount && order.discountAmount > 0
-          ? `تخفیف: ${this.formatPrice(order.discountAmount)}\n`
+          ? `• 🎁 <b>تخفیف:</b> ${this.formatPrice(order.discountAmount)}\n`
           : '') +
-        `خریدار: ${customerInfo}\n` +
-        `درگاه: ${order.payment?.gatewayName || 'زرین‌پال'}\n\n` +
-        `[مشاهده در پنل مدیریت](${appUrl}/dashboard/orders)`
+        `• 👤 <b>خریدار:</b> <code>${escapeHtml(customerInfo)}</code>\n` +
+        `• 💳 <b>درگاه:</b> ${escapeHtml(order.payment?.gatewayName || 'زرین‌پال')}\n\n` +
+        `🔗 <a href="${appUrl}/dashboard/orders">مشاهده و بررسی در پنل مدیریت</a>`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -136,10 +137,10 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `🚨 **اتمام موجودی انبار — #${shortOrderId}**\n\n` +
-        `موجودی پلن **${productTitle} — ${planName}** تمام شد.\n` +
+        `🚨 <b>هشدار اتمام موجودی انبار — #${shortOrderId}</b>\n\n` +
+        `موجودی پلن <b>${escapeHtml(productTitle)} — ${escapeHtml(planName)}</b> تمام شد.\n` +
         `سفارش در صف انتظار تأمین کالا قرار گرفت.\n\n` +
-        `[مدیریت سفارش‌ها](${appUrl}/dashboard/orders)`
+        `🔗 <a href="${appUrl}/dashboard/orders">مدیریت سفارش‌ها</a>`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -167,10 +168,10 @@ export class AdminNotificationService {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
       const text =
-        `⚠️ **کمبود موجودی انبار**\n\n` +
-        `محصول: ${productTitle} (${planName})\n` +
-        `موجودی باقی‌مانده: **${remainingStock}** عدد\n\n` +
-        `[مدیریت موجودی انبار](${appUrl}/dashboard/activation-links)`
+        `⚠️ <b>هشدار کمبود موجودی انبار</b>\n\n` +
+        `• 📦 <b>محصول:</b> ${escapeHtml(productTitle)} (${escapeHtml(planName)})\n` +
+        `• 📊 <b>موجودی باقی‌مانده:</b> <b>${remainingStock} عدد</b>\n\n` +
+        `🔗 <a href="${appUrl}/dashboard/activation-links">مدیریت موجودی انبار</a>`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -197,10 +198,10 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `⏳ **سفارش نیازمند تحویل دستی — #${shortOrderId}**\n\n` +
-        `محصول: ${productTitle} (${planName})\n` +
-        `خریدار: ${customerInfo}\n\n` +
-        `[ثبت تحویل در پنل ادمین](${appUrl}/dashboard/orders)`
+        `⏳ <b>سفارش نیازمند تحویل دستی — #${shortOrderId}</b>\n\n` +
+        `• 📦 <b>محصول:</b> ${escapeHtml(productTitle)} (${escapeHtml(planName)})\n` +
+        `• 👤 <b>خریدار:</b> <code>${escapeHtml(customerInfo)}</code>\n\n` +
+        `🔗 <a href="${appUrl}/dashboard/orders">ثبت تحویل در پنل مدیریت</a>`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -223,11 +224,11 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `💸 **استرداد وجه — #${shortOrderId}**\n\n` +
-        `مبلغ استرداد: ${this.formatPrice(details.refundAmount)}\n` +
-        (details.refundRefId ? `کد پیگیری: \`${details.refundRefId}\`\n` : '') +
-        (details.refundReason ? `علت: ${details.refundReason}\n` : '') +
-        (details.adminUserName ? `ثبت توسط: ${details.adminUserName}\n` : '')
+        `💸 <b>ثبت استرداد وجه — #${shortOrderId}</b>\n\n` +
+        `• 💰 <b>مبلغ استرداد:</b> <b>${this.formatPrice(details.refundAmount)}</b>\n` +
+        (details.refundRefId ? `• 🔢 <b>کد پیگیری:</b> <code>${escapeHtml(details.refundRefId)}</code>\n` : '') +
+        (details.refundReason ? `• 📝 <b>علت:</b> ${escapeHtml(details.refundReason)}\n` : '') +
+        (details.adminUserName ? `• 👤 <b>ثبت توسط:</b> ${escapeHtml(details.adminUserName)}\n` : '')
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {
@@ -250,9 +251,9 @@ export class AdminNotificationService {
       }
 
       const text =
-        `🔔 **پیام آزمایشی سیستم اعلان ادمین آریوچت **\n\n` +
+        `🔔 <b>پیام آزمایشی سامانه اعلان ادمین آریوچت</b>\n\n` +
         `اتصال ربات تلگرام با سامانه با موفقیت برقرار است.\n` +
-        `از این پس تمامی اعلان‌های ثبت سفارش، هشدار کمبود موجودی و استرداد وجه در این چت ارسال خواهد شد.`
+        `از این پس تمامی اعلان‌های سفارش‌های جدید، هشدارهای موجودی و استردادها در این چت ارسال خواهد شد.`
 
       const sent = await sendTelegramNotification(chatId, text)
       if (!sent) {
@@ -288,11 +289,11 @@ export class AdminNotificationService {
       const shortOrderId = orderId.slice(-6).toUpperCase()
 
       const text =
-        `🔄 **اصلاح اطلاعات اکانت — #${shortOrderId}**\n\n` +
-        `خریدار سفارش اطلاعات ورود جدید را ثبت کرد.\n` +
-        `محصول: ${serviceName}\n` +
-        `خریدار: ${customerInfo}\n\n` +
-        `[بررسی سفارش در پنل مدیریت](${appUrl}/dashboard/orders)`
+        `🔄 <b>اصلاح اطلاعات اکانت توسط کاربر — #${shortOrderId}</b>\n\n` +
+        `خریدار سفارش اطلاعات ورود جدید را ثبت کرد و در انتظار بررسی است:\n` +
+        `• 📦 <b>محصول:</b> ${escapeHtml(serviceName)}\n` +
+        `• 👤 <b>خریدار:</b> <code>${escapeHtml(customerInfo)}</code>\n\n` +
+        `🔗 <a href="${appUrl}/dashboard/orders">بررسی سفارش در پنل مدیریت</a>`
 
       return await sendTelegramNotification(chatId, text)
     } catch (err) {

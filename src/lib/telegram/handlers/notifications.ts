@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { UserNotificationService, type UserNotificationItem } from '@/lib/notifications/user-notification-service'
 import { notificationsListKeyboard, notificationDetailKeyboard } from '../keyboards'
 import { NotificationType } from '@prisma/client'
+import { escapeHtml } from '../formatting'
 
 const PAGE_SIZE = 3
 
@@ -79,45 +80,45 @@ export async function handleNotifications(
     if (data.totalCount === 0) {
       const emptyText =
         filter === 'unread'
-          ? `🎉 **هیچ اعلان خوانده‌نشده‌ای ندارید!**\n\nهمه اعلان‌ها و پیام‌های شما قبلاً مطالعه شده‌اند.`
-          : `📭 **صندوق اعلان‌های شما خالی است.**\n\nهنوز هیچ اعلان یا پیامی برای شما ثبت نشده است.`
+          ? `🎉 <b>هیچ اعلان جدیدی ندارید!</b>\n\nتمامی پیام‌ها و اعلانات قبلاً توسط شما مطالعه شده‌اند.`
+          : `📭 <b>صندوق اعلان‌های شما خالی است</b>\n\nدر حال حاضر هیچ اعلان یا پیامی برای شما ثبت نشده است.`
 
       const keyboard = notificationsListKeyboard([], 1, 1, filter, data.totalUnread)
 
       if (ctx.callbackQuery) {
         await ctx.editMessageText(emptyText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
         }).catch(async () => {
           await ctx.reply(emptyText, {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             reply_markup: keyboard,
           })
         })
         await ctx.answerCallbackQuery().catch(() => {})
       } else {
         await ctx.reply(emptyText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
         })
       }
       return
     }
 
-    let messageText = `🔔 **صندوق اعلان‌ها** (${data.totalCount.toLocaleString('fa-IR')} اعلان${data.totalUnread > 0 ? ` · ${data.totalUnread.toLocaleString('fa-IR')} جدید` : ''})\n\n`
+    let messageText = `🔔 <b>صندوق اعلانات و پیام‌ها</b> (${data.totalCount.toLocaleString('fa-IR')} اعلان${data.totalUnread > 0 ? ` · ${data.totalUnread.toLocaleString('fa-IR')} جدید` : ''})\n\n`
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ariachat.org'
 
     for (let i = 0; i < data.notifications.length; i++) {
       const item = data.notifications[i]
-      const { label } = getNotificationTypeConfig(item.type)
+      const { label, icon } = getNotificationTypeConfig(item.type)
       const dateStr = formatPersianDate(item.createdAt)
-      const statusText = item.isRead ? 'خوانده‌شده' : 'جدید'
+      const statusText = item.isRead ? 'خوانده‌شده' : '✨ جدید'
       const itemNumber = (offset + i + 1).toLocaleString('fa-IR')
 
-      messageText += `**اعلان ${itemNumber}** — ${item.title}\n`
-      messageText += `${dateStr ? `${dateStr} · ` : ''}${label} · ${statusText}\n`
-      messageText += `${item.message}\n`
+      messageText += `${icon} <b>اعلان شماره ${itemNumber}</b> — ${escapeHtml(item.title)}\n`
+      messageText += `• 📅 ${dateStr} · <b>${escapeHtml(label)}</b> · <code>${statusText}</code>\n`
+      messageText += `<blockquote>${escapeHtml(item.message)}</blockquote>\n`
 
       if (item.link) {
         const fullUrl =
@@ -126,11 +127,15 @@ export async function handleNotifications(
             : item.link.startsWith('/')
             ? `${appUrl}${item.link}`
             : `${appUrl}/${item.link}`
-        messageText += `[مشاهده پیوند مرتبط](${fullUrl})\n`
+        messageText += `🔗 <a href="${fullUrl}">مشاهده پیوند مرتبط</a>\n`
       }
 
-      messageText += `\n`
+      if (i < data.notifications.length - 1) {
+        messageText += `\n`
+      }
     }
+
+    messageText += `\n📄 صفحه ${validPage.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`
 
     const keyboard = notificationsListKeyboard(
       data.notifications,
@@ -142,12 +147,12 @@ export async function handleNotifications(
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(messageText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
         link_preview_options: { is_disabled: true },
       }).catch(async () => {
         await ctx.reply(messageText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
           link_preview_options: { is_disabled: true },
         })
@@ -155,7 +160,7 @@ export async function handleNotifications(
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
       await ctx.reply(messageText, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: keyboard,
         link_preview_options: { is_disabled: true },
       })

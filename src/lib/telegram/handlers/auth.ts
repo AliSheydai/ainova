@@ -25,7 +25,7 @@ export async function startLoginFlow(ctx: Context, customPrompt?: string) {
 
   const text = customPrompt || MESSAGES.loginPrompt
   await ctx.reply(text, {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: phoneRequestKeyboard(),
   })
 }
@@ -41,7 +41,7 @@ export async function processPhoneInput(ctx: Context, rawPhone: string) {
   const phone = normalizePhone(rawPhone)
   if (!isValidIranianPhone(phone)) {
     await ctx.reply(MESSAGES.phoneInvalid, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: phoneRequestKeyboard(),
     })
     return
@@ -66,7 +66,7 @@ export async function processPhoneInput(ctx: Context, rawPhone: string) {
 
   const expireMinutes = parseInt(process.env.OTP_EXPIRE_MINUTES || '5', 10)
   await ctx.reply(MESSAGES.otpSent(phone, expireMinutes, otpRes.devCode), {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: otpInlineKeyboard(),
   })
 }
@@ -88,7 +88,7 @@ export async function processOtpInput(ctx: Context, rawCode: string) {
   const code = normalizePhone(rawCode).trim()
   if (!/^\d{4,6}$/.test(code)) {
     await ctx.reply(MESSAGES.otpInvalid, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: otpInlineKeyboard(),
     })
     return true
@@ -98,7 +98,7 @@ export async function processOtpInput(ctx: Context, rawCode: string) {
 
   if (!verifyRes.success) {
     await ctx.reply(`❌ ${verifyRes.message}`, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: otpInlineKeyboard(),
     })
     return true
@@ -119,7 +119,7 @@ export async function processOtpInput(ctx: Context, rawCode: string) {
       ? await UserNotificationService.getUnreadCount(linkResult.user.id).catch(() => 0)
       : 0
     await ctx.reply(MESSAGES.loginSuccess(session.phone), {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: mainMenuKeyboard(true, unreadCount),
     })
   } else {
@@ -171,7 +171,7 @@ export async function handleAuthResend(ctx: Context) {
 
   const expireMinutes = parseInt(process.env.OTP_EXPIRE_MINUTES || '5', 10)
   await ctx.reply(MESSAGES.otpSent(session.phone, expireMinutes, otpRes.devCode), {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: otpInlineKeyboard(),
   })
 }
@@ -186,5 +186,8 @@ export async function handleAuthChangePhone(ctx: Context) {
 
   await ctx.answerCallbackQuery().catch(() => {})
   await clearBotLoginSession(telegramId)
-  await startLoginFlow(ctx, '📱 لطفاً شماره موبایل جدید خود را وارد نمایید:')
+  await startLoginFlow(
+    ctx,
+    '📱 <b>ویرایش شماره موبایل</b>\n\nلطفاً شماره موبایل جدید خود را ارسال فرمایید:'
+  )
 }
