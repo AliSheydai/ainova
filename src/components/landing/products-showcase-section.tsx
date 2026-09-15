@@ -55,7 +55,7 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
           viewport={viewportOnce}
           variants={staggerContainer(0.08)}
         >
-          {products.map((prod) => {
+          {products.slice(0, 3).map((prod) => {
             const isAvailable = prod.stock > 0
             const displayPrice = prod.minPrice ?? prod.price
             return (

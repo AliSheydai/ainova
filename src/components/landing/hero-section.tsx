@@ -116,7 +116,7 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
       {/* Animated Icon Network — precisely aligned with header content width */}
       <div className='w-full container mx-auto px-3 sm:px-4 md:px-6 shrink-0'>
         <div className='w-full px-0 sm:px-2'>
-          <AnimatedIconNetwork className='h-[260px] sm:h-[300px] md:h-[340px] lg:h-[370px] -mt-5 sm:-mt-8 lg:-mt-12' />
+          <AnimatedIconNetwork className='h-[280px] sm:h-[320px] md:h-[360px] lg:h-[400px] -mt-4 sm:-mt-6 lg:-mt-10' />
         </div>
       </div>
     </section>

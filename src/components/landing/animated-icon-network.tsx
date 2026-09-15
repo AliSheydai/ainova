@@ -134,36 +134,35 @@ export interface WirePathDef {
 }
 
 /**
- * Generates exactly 9 curved paths across a 1440×320 viewBox.
- * Geometry: Bow-Tie / Hourglass (پاپیون)
- * - Large vertical spread at the outer edges (18px to 302px, ~284px span)
- * - Subtle, physics-based cubic Bezier curves simulating a tight bundle of 9 wires held firmly at the center
- * - Concentrated compression at the center convergence zone (126px to 194px, ~68px span, ~8.5px lane spacing)
- * - Tangent at convergence zone is strictly horizontal (dy/dx = 0)
+ * Generates exactly 9 curved paths across a 1440×360 viewBox.
+ * Geometry: Graceful Funnel / Hourglass (پاپیون روان)
+ * - Extra-wide vertical spacing at the outer edges (8px to 352px: 344px span, ~43px lane spacing)
+ * - Smooth, continuous inward convergence throughout the journey
+ * - Maximum compression at the central waist (172px to 188px: 16px span, ~2px lane spacing)
+ * - Strict horizontal tangent at center (dy/dx = 0) with seamless C1 continuity
  */
 export function generateWirePaths(): WirePathDef[] {
   const TOTAL_PATHS = 9
   const cx = 720
-  const cy = 160
+  const cy = 180
   const paths: WirePathDef[] = []
 
   for (let i = 0; i < TOTAL_PATHS; i++) {
     const t = i / (TOTAL_PATHS - 1) // 0 to 1
-    // Wide vertical spread at outer edges (12px to 308px: ~296px span)
-    const sy = 12 + t * 296
-    // Intense physical compression at center clamp (136px to 184px: ~48px span, ~6px spacing)
-    // Directly aligns with and visually pulls into the central Brand Icon
-    const ey = 136 + t * 48
+    // Extra-wide vertical separation at outer edges (8px to 352px: 344px span, ~43px between adjacent wires)
+    const sy = 8 + t * 344
+    // Maximum compression at central waist (172px to 188px: 16px total span, ~2px between adjacent wires)
+    const ey = (cy - 8) + t * 16
 
     // Normalized distance from center line (0 at middle, 1 at extreme outer lines)
     const distFromCenter = Math.abs(t - 0.5) * 2
 
-    // Control point 1 (near edge): preserves flared opening before turning inward
-    const cp1x = 260 + distFromCenter * 35
-    const cp1y = sy + (ey - sy) * (0.04 + distFromCenter * 0.02)
+    // Control point 1: gentle progressive inward curve from outer edge
+    const cp1x = cx * 0.38
+    const cp1y = sy + (ey - sy) * 0.10
 
-    // Control point 2 (near center): horizontal clamping into the central icon
-    const cp2x = cx - 195 - (1 - distFromCenter) * 25
+    // Control point 2: smooth horizontal convergence approaching central waist
+    const cp2x = cx * 0.64
     const cp2y = ey
 
     // Right-side symmetric control points
@@ -360,7 +359,7 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
       {/* Full-width SVG path layer */}
       <svg
         ref={svgRef}
-        viewBox='0 0 1440 320'
+        viewBox='0 0 1440 360'
         preserveAspectRatio='none'
         className='absolute inset-0 w-full h-full'
         xmlns='http://www.w3.org/2000/svg'
@@ -383,7 +382,7 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
           </linearGradient>
 
           <mask id='ain-edge-fade-mask'>
-            <rect x='0' y='0' width='1440' height='320' fill='url(#ain-edge-fade-gradient)' />
+            <rect x='0' y='0' width='1440' height='360' fill='url(#ain-edge-fade-gradient)' />
           </mask>
 
           {/* GSAP Motion Paths (9 Left + 9 Right routes converging into center) */}
@@ -396,7 +395,7 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
         </defs>
 
         {/* Central convergence glow */}
-        <ellipse cx='720' cy='160' rx='220' ry='80' fill='url(#ain-center-glow)' />
+        <ellipse cx='720' cy='180' rx='240' ry='75' fill='url(#ain-center-glow)' />
 
         {/* Exactly 9 Curved Paths — Bow-Tie silhouette with smooth edge fade */}
         <g mask='url(#ain-edge-fade-mask)'>
