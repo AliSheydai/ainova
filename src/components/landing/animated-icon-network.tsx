@@ -40,9 +40,9 @@ interface NetworkConfig {
 }
 
 const NETWORK_CONFIG: Record<'mobile' | 'tablet' | 'desktop', NetworkConfig> = {
-  mobile: { pathCount: 9, particleCount: 4, boxSize: 22, imgSize: 14, duration: 9.0 },
-  tablet: { pathCount: 9, particleCount: 5, boxSize: 25, imgSize: 16, duration: 10.0 },
-  desktop: { pathCount: 9, particleCount: 6, boxSize: 28, imgSize: 18, duration: 11.0 },
+  mobile: { pathCount: 9, particleCount: 4, boxSize: 28, imgSize: 18, duration: 9.0 },
+  tablet: { pathCount: 9, particleCount: 5, boxSize: 34, imgSize: 22, duration: 10.0 },
+  desktop: { pathCount: 9, particleCount: 6, boxSize: 40, imgSize: 26, duration: 11.0 },
 }
 
 // ─── Path Generation ───────────────────────────────────────────────────────────
@@ -209,9 +209,9 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             // Smooth entry fade right at the edge
             const f = p / 0.08
             gsap.set(el, { autoAlpha: f * 0.9, scale: 0.8 + 0.2 * f })
-          } else if (p > 0.82) {
+          } else if (p > 0.78) {
             // Smooth exit fade as particle gently disappears into the central icon
-            const f = (p - 0.82) / 0.18
+            const f = (p - 0.78) / 0.22
             gsap.set(el, { autoAlpha: Math.max(0, 0.9 * (1 - f)), scale: 1 - 0.25 * f })
           } else {
             gsap.set(el, { autoAlpha: 0.9, scale: 1 })
@@ -342,10 +342,6 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
         </g>
       </svg>
 
-      {/* Edge Vignette Overlays for smooth gradual dissolve at viewport edges */}
-      <div className='pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 md:w-24 bg-gradient-to-r from-background via-background/40 to-transparent z-[5]' />
-      <div className='pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 md:w-24 bg-gradient-to-l from-background via-background/40 to-transparent z-[5]' />
-
       {/* Particle product image cards — only rendered client-side */}
       {isMounted &&
         particles.map((p, i) => (
@@ -354,10 +350,10 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             ref={(el) => { particleRefs.current[i] = el }}
             className='
               absolute top-0 left-0 flex items-center justify-center
-              rounded-lg sm:rounded-xl
+              rounded-xl sm:rounded-2xl
               border border-border/80 dark:border-border/70
               bg-background/90 dark:bg-background/90
-              shadow-[0_2px_8px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.35)]
+              shadow-[0_3px_10px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_14px_rgba(0,0,0,0.35)]
               backdrop-blur-sm
               transition-[border-color,box-shadow]
             '
@@ -374,7 +370,7 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
               alt={p.item.label}
               width={config.imgSize}
               height={config.imgSize}
-              className='w-auto h-auto object-contain pointer-events-none select-none rounded-[4px]'
+              className='w-auto h-auto object-contain pointer-events-none select-none rounded-[5px]'
               style={{
                 maxWidth: config.imgSize,
                 maxHeight: config.imgSize,
@@ -389,15 +385,15 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
       <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10'>
         <div
           className='
-            flex items-center justify-center rounded-2xl sm:rounded-3xl
-            w-[72px] h-[72px] sm:w-[84px] sm:h-[84px]
-            border border-border/80 bg-background/95 backdrop-blur-md
-            shadow-[0_8px_24px_rgba(0,0,0,0.25)]
+            relative flex items-center justify-center rounded-2xl sm:rounded-3xl
+            w-[90px] h-[90px] sm:w-[104px] sm:h-[104px] md:w-[116px] md:h-[116px]
+            border border-border/70 bg-background/95 backdrop-blur-md
+            shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_28px_rgba(0,0,0,0.35)]
             transition-transform duration-300
           '
         >
           <Logo
-            className='text-primary w-10 h-10 sm:w-[46px] sm:h-[46px]'
+            className='text-primary w-12 h-12 sm:w-[54px] sm:h-[54px] md:w-16 md:h-16'
           />
         </div>
       </div>
