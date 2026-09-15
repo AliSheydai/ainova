@@ -53,9 +53,20 @@ export function FeaturesSection() {
   }
 
   return (
-    <section id='features' className='relative py-20 md:py-28 overflow-hidden'>
-      {/* Background ambient lighting in primary blue */}
-      <div className='pointer-events-none absolute top-1/3 right-1/2 -translate-y-1/2 translate-x-1/2 size-[600px] rounded-full bg-primary/10 blur-[160px] -z-10' />
+    <section id='features' className='relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-card/50 via-background to-card/30 dark:from-card/30 dark:via-background dark:to-card/20 transition-colors duration-300'>
+      {/* Ambient multi-layer lighting matching card & stage theme */}
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] md:w-[1100px] h-[550px] rounded-full bg-primary/12 blur-[150px] -z-10'
+      />
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute top-1/4 right-1/4 size-[400px] rounded-full bg-sky-500/10 blur-[130px] -z-10'
+      />
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute bottom-1/4 left-1/4 size-[350px] rounded-full bg-indigo-500/10 blur-[140px] -z-10'
+      />
 
       <div className='container mx-auto px-4 sm:px-6'>
         {/* Header */}
@@ -88,9 +99,8 @@ export function FeaturesSection() {
           viewport={viewportOnce}
           variants={fadeUp}
         >
-          {/* Main 3D Container */}
-          <div className='relative w-full h-[570px] sm:h-[620px] md:h-[680px] overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-b from-card/70 via-card/30 to-background/90 shadow-2xl backdrop-blur-2xl transition-all duration-300'>
-
+          {/* Main 3D Floating Stage - zero borders or bounding box, cards float freely in section background */}
+          <div className='relative w-full h-[570px] sm:h-[620px] md:h-[680px] overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]'>
             {/* Circular Gallery WebGL canvas */}
             {galleryItems.length > 0 && (
               <CircularGallery
@@ -106,37 +116,34 @@ export function FeaturesSection() {
                 onActiveChange={setActiveIndex}
               />
             )}
-
-            {/* Side Navigation Arrow Buttons */}
-            <div className='absolute inset-y-0 right-3 sm:right-6 flex items-center z-20 pointer-events-none'>
-              <Button
-                type='button'
-                variant='secondary'
-                size='icon'
-                onClick={handlePrev}
-                aria-label='امکان قبلی'
-                className='pointer-events-auto size-10 sm:size-12 rounded-full border border-border/80 bg-background/85 hover:bg-background shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95 text-foreground hover:text-primary hover:border-primary/40'
-              >
-                <ChevronRight className='size-5 sm:size-6' />
-              </Button>
-            </div>
-
-            <div className='absolute inset-y-0 left-3 sm:left-6 flex items-center z-20 pointer-events-none'>
-              <Button
-                type='button'
-                variant='secondary'
-                size='icon'
-                onClick={handleNext}
-                aria-label='امکان بعدی'
-                className='pointer-events-auto size-10 sm:size-12 rounded-full border border-border/80 bg-background/85 hover:bg-background shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95 text-foreground hover:text-primary hover:border-primary/40'
-              >
-                <ChevronLeft className='size-5 sm:size-6' />
-              </Button>
-            </div>
-
-            {/* Bottom Gradient Fade */}
-            <div className='pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/80 to-transparent' />
           </div>
+
+          {/* Side Navigation Arrow Buttons (Positioned outside mask for crystal-clear visibility and interaction) */}
+          {/* <div className='absolute inset-y-0 right-2 sm:right-4 md:right-6 flex items-center z-20 pointer-events-none'>
+            <Button
+              type='button'
+              variant='secondary'
+              size='icon'
+              onClick={handlePrev}
+              aria-label='امکان قبلی'
+              className='pointer-events-auto size-10 sm:size-12 rounded-full border border-border/70 bg-card/75 hover:bg-card shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 text-foreground hover:text-primary hover:border-primary/40'
+            >
+              <ChevronRight className='size-5 sm:size-6' />
+            </Button>
+          </div> */}
+
+          {/* <div className='absolute inset-y-0 left-2 sm:left-4 md:left-6 flex items-center z-20 pointer-events-none'>
+            <Button
+              type='button'
+              variant='secondary'
+              size='icon'
+              onClick={handleNext}
+              aria-label='امکان بعدی'
+              className='pointer-events-auto size-10 sm:size-12 rounded-full border border-border/70 bg-card/75 hover:bg-card shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 text-foreground hover:text-primary hover:border-primary/40'
+            >
+              <ChevronLeft className='size-5 sm:size-6' />
+            </Button>
+          </div> */}
 
           {/* Dots Indicator & Quick Navigation */}
           <div className='mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-2'>
