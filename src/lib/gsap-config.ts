@@ -2,14 +2,15 @@
 
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 import { useGSAP } from '@gsap/react'
 
 // Register all plugins once — safe for SSR (guarded by typeof window)
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(useGSAP, ScrollTrigger)
+  gsap.registerPlugin(useGSAP, ScrollTrigger, MotionPathPlugin)
 }
 
-export { gsap, ScrollTrigger, useGSAP }
+export { gsap, ScrollTrigger, MotionPathPlugin, useGSAP }
 
 // ─── Shared Eases ────────────────────────────────────────────────────────────
 export const EASE_SMOOTH = 'power3.out'
