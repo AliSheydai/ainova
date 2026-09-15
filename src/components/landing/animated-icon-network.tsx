@@ -4,122 +4,45 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { gsap, MotionPathPlugin, useGSAP } from '@/lib/gsap-config'
 import { Logo } from '@/assets/logo'
 
-// ─── Product Icon Components ───────────────────────────────────────────────────
-// Inline SVG icons for products sold in the store
+// ─── Product Image Items ───────────────────────────────────────────────────────
+// Real brand logos from public/images/product for subscriptions offered in store
 
-function IconChatGPT({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>ChatGPT</title>
-      <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='1.5' />
-      <path d='M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
-      <path d='M12 8v1m0 6v1m-4-4h1m6 0h1' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
-    </svg>
-  )
+export interface ProductImageItem {
+  id: string
+  label: string
+  src: string
+  glowColor: string
 }
 
-function IconGemini({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Gemini</title>
-      <path d='M12 2C12 2 7 7.5 7 12C7 16.5 12 22 12 22C12 22 17 16.5 17 12C17 7.5 12 2Z' stroke='currentColor' strokeWidth='1.5' strokeLinejoin='round' />
-      <path d='M2 12C2 12 7.5 7 12 7C16.5 7 22 12 22 12C22 12 16.5 17 12 17C7.5 17 2 12 2 12Z' stroke='currentColor' strokeWidth='1.5' strokeLinejoin='round' />
-    </svg>
-  )
-}
-
-function IconNetflix({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Netflix</title>
-      <path d='M6 4v16' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' />
-      <path d='M18 4v16' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' />
-      <path d='M6 4l12 16' stroke='currentColor' strokeWidth='2' strokeLinecap='round' />
-    </svg>
-  )
-}
-
-function IconLovable({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Lovable</title>
-      <path d='M12 20.5C12 20.5 3.5 15 3.5 9.5C3.5 7 5.5 5 8 5C9.5 5 10.8 5.8 12 7C13.2 5.8 14.5 5 16 5C18.5 5 20.5 7 20.5 9.5C20.5 15 12 20.5 12 20.5Z' stroke='currentColor' strokeWidth='1.5' strokeLinejoin='round' />
-    </svg>
-  )
-}
-
-function IconYouTube({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>YouTube</title>
-      <rect x='2' y='5' width='20' height='14' rx='4' stroke='currentColor' strokeWidth='1.5' />
-      <path d='M10 9l5 3-5 3V9Z' stroke='currentColor' strokeWidth='1.5' strokeLinejoin='round' />
-    </svg>
-  )
-}
-
-function IconSpotify({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Spotify</title>
-      <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='1.5' />
-      <path d='M7 10c2.5-1 7.5-1 10 0' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
-      <path d='M7.5 13c2-0.8 6-0.8 9 0' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
-      <path d='M8.5 16c1.5-0.6 4.5-0.6 7 0' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
-    </svg>
-  )
-}
-
-function IconMidjourney({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Midjourney</title>
-      <path d='M3 17L7.5 7L12 14L14.5 10L21 17' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-      <circle cx='19' cy='8' r='2' stroke='currentColor' strokeWidth='1.5' />
-    </svg>
-  )
-}
-
-function IconGoogleOne({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' className={className} style={style}>
-      <title>Google One</title>
-      <circle cx='12' cy='12' r='9.5' stroke='currentColor' strokeWidth='1.5' />
-      <path d='M12 7.5V12H16.5' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-    </svg>
-  )
-}
-
-// ─── Icon Pool ─────────────────────────────────────────────────────────────────
-
-type IconComponent = (props: { className?: string; style?: React.CSSProperties }) => React.ReactElement
-
-const PRODUCT_ICONS: { id: string; label: string; component: IconComponent }[] = [
-  { id: 'chatgpt', label: 'ChatGPT', component: IconChatGPT },
-  { id: 'gemini', label: 'Gemini', component: IconGemini },
-  { id: 'netflix', label: 'Netflix', component: IconNetflix },
-  { id: 'lovable', label: 'Lovable', component: IconLovable },
-  { id: 'youtube', label: 'YouTube', component: IconYouTube },
-  { id: 'spotify', label: 'Spotify', component: IconSpotify },
-  { id: 'midjourney', label: 'Midjourney', component: IconMidjourney },
-  { id: 'googleone', label: 'Google One', component: IconGoogleOne },
+export const PRODUCT_IMAGE_ITEMS: ProductImageItem[] = [
+  { id: 'chatgpt', label: 'ChatGPT', src: '/images/product/chatgpt.png', glowColor: 'rgba(16, 163, 127, 0.45)' },
+  { id: 'claude', label: 'Claude', src: '/images/product/claude.png', glowColor: 'rgba(217, 119, 6, 0.45)' },
+  { id: 'gemini', label: 'Gemini', src: '/images/product/gemini.png', glowColor: 'rgba(59, 130, 246, 0.45)' },
+  { id: 'cursor', label: 'Cursor', src: '/images/product/cursor.png', glowColor: 'rgba(147, 51, 234, 0.45)' },
+  { id: 'canva', label: 'Canva', src: '/images/product/canva.png', glowColor: 'rgba(6, 182, 212, 0.45)' },
+  { id: 'lovable', label: 'Lovable', src: '/images/product/lovable.png', glowColor: 'rgba(236, 72, 153, 0.45)' },
+  { id: 'perplexiti', label: 'Perplexity', src: '/images/product/perplexiti.png', glowColor: 'rgba(20, 184, 166, 0.45)' },
+  { id: 'capcut', label: 'CapCut', src: '/images/product/capcut.png', glowColor: 'rgba(244, 63, 94, 0.45)' },
+  { id: 'netflix', label: 'Netflix', src: '/images/product/netflix.png', glowColor: 'rgba(229, 9, 20, 0.45)' },
+  { id: 'spotify', label: 'Spotify', src: '/images/product/spotify.png', glowColor: 'rgba(29, 185, 84, 0.45)' },
+  { id: 'youtube', label: 'YouTube', src: '/images/product/youtube.png', glowColor: 'rgba(255, 0, 0, 0.45)' },
+  { id: 'notion', label: 'Notion', src: '/images/product/notion.png', glowColor: 'rgba(100, 116, 139, 0.45)' },
 ]
-
-// ─── Configuration ─────────────────────────────────────────────────────────────
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
 interface NetworkConfig {
   pathCount: 9 // Strictly 9 curved paths across mobile, tablet, desktop
   particleCount: number
-  iconSize: number
+  boxSize: number
+  imgSize: number
   duration: number
 }
 
 const NETWORK_CONFIG: Record<'mobile' | 'tablet' | 'desktop', NetworkConfig> = {
-  mobile: { pathCount: 9, particleCount: 4, iconSize: 15, duration: 5.5 },
-  tablet: { pathCount: 9, particleCount: 6, iconSize: 18, duration: 6.5 },
-  desktop: { pathCount: 9, particleCount: 8, iconSize: 20, duration: 7.0 },
+  mobile: { pathCount: 9, particleCount: 4, boxSize: 22, imgSize: 14, duration: 9.0 },
+  tablet: { pathCount: 9, particleCount: 5, boxSize: 25, imgSize: 16, duration: 10.0 },
+  desktop: { pathCount: 9, particleCount: 6, boxSize: 28, imgSize: 18, duration: 11.0 },
 }
 
 // ─── Path Generation ───────────────────────────────────────────────────────────
@@ -229,32 +152,28 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
   // Exactly 9 wire paths across all viewports
   const paths = useMemo(() => generateWirePaths(), [])
 
-  // Motion route pool: 9 Left routes (L0-L8) and 9 Right routes (R0-R8)
-  const allMotionRoutes = useMemo(() => {
-    const routes: string[] = []
-    for (let i = 0; i < 9; i++) {
-      routes.push(`L${i}`)
-      routes.push(`R${i}`)
-    }
-    return routes
-  }, [])
+  // Dispersed lane order to keep simultaneous particles well separated vertically
+  const DISPERSED_LANES = useMemo(() => [1, 5, 2, 7, 0, 4, 8, 3, 6], [])
 
-  const particles = useMemo(
-    () =>
-      Array.from({ length: config.particleCount }, (_, i) => {
-        // Distribute alternating from Left and Right sides
-        const side = i % 2 === 0 ? 'L' : 'R'
-        const lane = (i * 2 + 1) % 9
-        const pathId = `${side}${lane}`
-        return {
-          id: `p${i}`,
-          icon: PRODUCT_ICONS[i % PRODUCT_ICONS.length]!,
-          pathId,
-          initialDelay: i * 0.75, // Staggered entry for a continuous, steady stream
-        }
-      }),
-    [config.particleCount]
-  )
+  const particles = useMemo(() => {
+    const count = config.particleCount
+    const interval = config.duration / count // Exactly equal time interval between each particle arrival
+    return Array.from({ length: count }, (_, i) => {
+      // Alternate entrance side: L, R, L, R...
+      const side = i % 2 === 0 ? 'L' : 'R'
+      const lane = DISPERSED_LANES[i % DISPERSED_LANES.length] ?? (i * 2) % 9
+      const pathId = `${side}${lane}`
+      return {
+        id: `p${i}`,
+        item: PRODUCT_IMAGE_ITEMS[i % PRODUCT_IMAGE_ITEMS.length]!,
+        pathId,
+        initialDelay: i * interval, // Perfectly synchronized pipeline
+      }
+    })
+  }, [config.particleCount, config.duration, DISPERSED_LANES])
+
+  // Track cycle count per particle to cycle through lanes and product images deterministically
+  const cycleCountRef = useRef<number[]>([])
 
   // ── Core animation per particle (strictly constant velocity, ease: 'none') ─
   const animateParticle = useCallback(
@@ -268,10 +187,9 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
 
       tweenRefs.current[index]?.kill()
 
-      // Constant duration ensures uniform physical velocity across all particles
       const duration = config.duration
 
-      gsap.set(el, { autoAlpha: 0 })
+      gsap.set(el, { autoAlpha: 0, scale: 0.8 })
 
       const tween = gsap.to(el, {
         motionPath: {
@@ -284,33 +202,53 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
         },
         duration,
         delay,
-        ease: 'none', // Strictly constant speed throughout the entire trip
+        ease: 'none', // Strictly linear constant speed throughout the trip
         onUpdate() {
           const p = tween.progress()
           if (p < 0.08) {
-            // Smooth entry fade right at the edge without affecting linear velocity
-            gsap.set(el, { autoAlpha: (p / 0.08) * 0.85 })
+            // Smooth entry fade right at the edge
+            const f = p / 0.08
+            gsap.set(el, { autoAlpha: f * 0.9, scale: 0.8 + 0.2 * f })
           } else if (p > 0.82) {
-            // Smooth exit fade as particle reaches the central icon
+            // Smooth exit fade as particle gently disappears into the central icon
             const f = (p - 0.82) / 0.18
-            gsap.set(el, { autoAlpha: 0.85 * (1 - f) })
+            gsap.set(el, { autoAlpha: Math.max(0, 0.9 * (1 - f)), scale: 1 - 0.25 * f })
           } else {
-            gsap.set(el, { autoAlpha: 0.85 })
+            gsap.set(el, { autoAlpha: 0.9, scale: 1 })
           }
         },
         onComplete() {
-          gsap.set(el, { autoAlpha: 0 })
-          // Re-pick next path randomly from the 18 left/right routes
-          const nextIdx = Math.floor(Math.random() * allMotionRoutes.length)
-          const nextPathId = allMotionRoutes[nextIdx] ?? pathId
-          const nextDelay = 0.3 + Math.random() * 0.7
-          animateParticle(index, nextPathId, nextDelay)
+          gsap.set(el, { autoAlpha: 0, scale: 0.8 })
+
+          // Increment cycle counter for this particle slot
+          const currentCycle = (cycleCountRef.current[index] ?? 0) + 1
+          cycleCountRef.current[index] = currentCycle
+
+          // Pick the next product image deterministically for high variety
+          const imgEl = el.querySelector('img')
+          if (imgEl) {
+            const nextProdIdx = (index + currentCycle * config.particleCount) % PRODUCT_IMAGE_ITEMS.length
+            const nextProduct = PRODUCT_IMAGE_ITEMS[nextProdIdx]
+            if (nextProduct) {
+              imgEl.src = nextProduct.src
+              imgEl.alt = nextProduct.label
+            }
+          }
+
+          // Pick next lane with alternating sides and dispersed spacing
+          const nextSide = (index + currentCycle) % 2 === 0 ? 'L' : 'R'
+          const laneIdx = (index + currentCycle * 3) % DISPERSED_LANES.length
+          const nextLane = DISPERSED_LANES[laneIdx] ?? (index % 9)
+          const nextPathId = `${nextSide}${nextLane}`
+
+          // Immediately restart without random delays to maintain the locked cadence
+          animateParticle(index, nextPathId, 0)
         },
       })
 
       tweenRefs.current[index] = tween
     },
-    [config.duration, allMotionRoutes, reducedMotion]
+    [config.duration, config.particleCount, DISPERSED_LANES, reducedMotion]
   )
 
   // ── GSAP bootstrap ─────────────────────────────────────────────────────────
@@ -366,13 +304,6 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
         aria-hidden='true'
       >
         <defs>
-          <radialGradient id='ain-center-glow' cx='50%' cy='50%' r='50%'>
-            <stop offset='0%' stopColor='var(--color-primary)' stopOpacity='0.30' />
-            <stop offset='45%' stopColor='var(--color-primary)' stopOpacity='0.12' />
-            <stop offset='75%' stopColor='var(--color-primary)' stopOpacity='0.03' />
-            <stop offset='100%' stopColor='var(--color-primary)' stopOpacity='0' />
-          </radialGradient>
-
           {/* Smooth edge fade gradient mask to dissolve the left and right ends */}
           <linearGradient id='ain-edge-fade-gradient' x1='0%' y1='0%' x2='100%' y2='0%'>
             <stop offset='0%' stopColor='#ffffff' stopOpacity='0' />
@@ -393,9 +324,6 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             </g>
           ))}
         </defs>
-
-        {/* Central convergence glow */}
-        <ellipse cx='720' cy='180' rx='240' ry='75' fill='url(#ain-center-glow)' />
 
         {/* Exactly 9 Curved Paths — Bow-Tie silhouette with smooth edge fade */}
         <g mask='url(#ain-edge-fade-mask)'>
@@ -418,30 +346,44 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
       <div className='pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 md:w-24 bg-gradient-to-r from-background via-background/40 to-transparent z-[5]' />
       <div className='pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 md:w-24 bg-gradient-to-l from-background via-background/40 to-transparent z-[5]' />
 
-      {/* Particle icons (smaller, subtle) — only rendered client-side */}
+      {/* Particle product image cards — only rendered client-side */}
       {isMounted &&
-        particles.map((p, i) => {
-          const Icon = p.icon.component
-          return (
-            <div
-              key={p.id}
-              ref={(el) => { particleRefs.current[i] = el }}
-              className='absolute top-0 left-0 flex items-center justify-center rounded-lg border border-primary/25 bg-background/85 shadow-sm backdrop-blur-sm'
+        particles.map((p, i) => (
+          <div
+            key={p.id}
+            ref={(el) => { particleRefs.current[i] = el }}
+            className='
+              absolute top-0 left-0 flex items-center justify-center
+              rounded-lg sm:rounded-xl
+              border border-border/80 dark:border-border/70
+              bg-background/90 dark:bg-background/90
+              shadow-[0_2px_8px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.35)]
+              backdrop-blur-sm
+              transition-[border-color,box-shadow]
+            '
+            style={{
+              width: config.boxSize,
+              height: config.boxSize,
+              opacity: 0,
+              visibility: 'hidden',
+              willChange: 'transform, opacity',
+            }}
+          >
+            <img
+              src={p.item.src}
+              alt={p.item.label}
+              width={config.imgSize}
+              height={config.imgSize}
+              className='w-auto h-auto object-contain pointer-events-none select-none rounded-[4px]'
               style={{
-                width: config.iconSize + 8,
-                height: config.iconSize + 8,
-                opacity: 0,
-                visibility: 'hidden',
-                willChange: 'transform, opacity',
+                maxWidth: config.imgSize,
+                maxHeight: config.imgSize,
               }}
-            >
-              <Icon
-                className='text-primary/80'
-                style={{ width: config.iconSize, height: config.iconSize }}
-              />
-            </div>
-          )
-        })}
+              loading='eager'
+              draggable={false}
+            />
+          </div>
+        ))}
 
       {/* Central brand icon — anchored directly in the central convergence zone */}
       <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10'>
@@ -449,9 +391,8 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
           className='
             flex items-center justify-center rounded-2xl sm:rounded-3xl
             w-[72px] h-[72px] sm:w-[84px] sm:h-[84px]
-            border border-primary/35 bg-background/95 backdrop-blur-md
-            shadow-[0_0_55px_rgba(66,133,244,0.32),0_8px_24px_rgba(0,0,0,0.25)]
-            ring-1 ring-primary/25
+            border border-border/80 bg-background/95 backdrop-blur-md
+            shadow-[0_8px_24px_rgba(0,0,0,0.25)]
             transition-transform duration-300
           '
         >
