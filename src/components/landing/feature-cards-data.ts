@@ -397,45 +397,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   ctx.lineWidth = 3
   ctx.stroke()
 
-  // 4. Header Bar (Tag on Right, Index on Left)
-  const tagY = 56
-  const tagH = 44
-
-  // 4.1 Tag Pill on Right (ltr text, right aligned)
-  ctx.font = '700 20px Vazirmatn, sans-serif'
-  const tagText = item.tag
-  const tagW = ctx.measureText(tagText).width + 44
-  const tagX = width - 52 - tagW
-
-  roundRect(ctx, tagX, tagY, tagW, tagH, 22)
-  ctx.fillStyle = 'rgba(59, 130, 246, 0.16)'
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(96, 165, 250, 0.50)'
-  ctx.lineWidth = 1.6
-  ctx.stroke()
-
-  ctx.fillStyle = '#60a5fa'
-  ctx.textBaseline = 'middle'
-  ctx.textAlign = 'center'
-  ctx.fillText(tagText, tagX + tagW / 2, tagY + tagH / 2)
-
-  // 4.2 Index Badge on Left
-  const indexText = `۰${item.id} / ۰۹`
-  const indexW = 96
-  roundRect(ctx, 52, tagY, indexW, tagH, 22)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)'
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)'
-  ctx.lineWidth = 1.4
-  ctx.stroke()
-
-  ctx.fillStyle = '#cbd5e1'
-  ctx.font = '700 19px Vazirmatn, sans-serif'
-  ctx.fillText(indexText, 52 + indexW / 2, tagY + tagH / 2)
-
-  // 5. Feature Identity Row (Icon Box + Subtitle Pill)
-  const iconRowY = 118
-  const iconBoxSize = 56
+  // 4. Feature Identity Row (Icon Box + Subtitle Pill)
+  const iconRowY = 64
+  const iconBoxSize = 58
   const iconBoxX = width - 52 - iconBoxSize
 
   // Glass Icon Box
@@ -461,32 +425,41 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   ctx.lineWidth = 1.4
   ctx.stroke()
 
-  // Glowing indicator dot
+  // Glowing indicator dot & Subtitle text (items-center aligned)
+  const subCenterY = iconRowY + subH / 2
+
   ctx.beginPath()
-  ctx.arc(subX + 24, iconRowY + subH / 2, 6, 0, Math.PI * 2)
+  ctx.arc(subX + 24, subCenterY, 6, 0, Math.PI * 2)
   ctx.fillStyle = '#38bdf8'
+  ctx.fill()
+
+  // Subtle outer aura for the blue dot
+  ctx.beginPath()
+  ctx.arc(subX + 24, subCenterY, 10, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'
   ctx.fill()
 
   ctx.direction = 'ltr'
   ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
   ctx.font = '700 22px Vazirmatn, system-ui, sans-serif'
   ctx.fillStyle = '#93c5fd'
-  ctx.fillText(item.subtitle, subX + 40, iconRowY + subH / 2 + 1)
+  ctx.fillText(item.subtitle, subX + 44, subCenterY)
 
-  // 6. Title (Persian RTL, Bold, Large and High Contrast)
+  // 5. Title (Persian RTL, Bold, Large and High Contrast)
   ctx.direction = 'rtl'
   ctx.textAlign = 'right'
   ctx.font = '900 44px Vazirmatn, system-ui, sans-serif'
   ctx.fillStyle = '#ffffff'
 
   const titleLines = wrapText(ctx, item.title, width - 104)
-  let currentY = 232
+  let currentY = 178
   for (const line of titleLines) {
     ctx.fillText(line, width - 52, currentY)
     currentY += 56
   }
 
-  // 7. Radiant Accent Divider Line
+  // 6. Radiant Accent Divider Line
   currentY += 10
   const lineGrad = ctx.createLinearGradient(52, currentY, width - 52, currentY)
   lineGrad.addColorStop(0, 'rgba(59, 130, 246, 0)')
@@ -507,7 +480,7 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   ctx.fillStyle = '#60a5fa'
   ctx.fill()
 
-  // 8. Description Paragraph (Persian RTL, Font 29px, High Contrast)
+  // 7. Description Paragraph (Persian RTL, Font 29px, High Contrast)
   currentY += 46
   ctx.font = '500 29px Vazirmatn, system-ui, sans-serif'
   ctx.fillStyle = '#f1f5f9' // ultra-clear readable bright slate
@@ -517,9 +490,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
     currentY += 46
   }
 
-  // 9. 3 Key Highlights Cards
+  // 8. 3 Key Highlights Cards
   const boxHeight = 84
-  const startBoxY = Math.max(currentY + 28, 540)
+  const startBoxY = Math.max(currentY + 32, 484)
 
   item.highlights.forEach((highlight, idx) => {
     const boxY = startBoxY + idx * (boxHeight + 16)
@@ -582,9 +555,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   // Shield / check tick inside footer
   ctx.direction = 'rtl'
   ctx.textAlign = 'center'
-  ctx.font = '700 20px Vazirmatn, system-ui, sans-serif'
+  ctx.font = '700 24px Vazirmatn, system-ui, sans-serif'
   ctx.fillStyle = '#93c5fd'
-  ctx.fillText('⚡ تحویل آنی و فعال‌سازی قانونی روی حساب شخصی شما', width / 2, footerY + footerH / 2 + 1)
+  ctx.fillText('تحویل آنی و فعال‌سازی قانونی روی حساب شخصی شما', width / 2, footerY + footerH / 2 + 1)
 
   return canvas.toDataURL('image/png')
 }
