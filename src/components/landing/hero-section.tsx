@@ -34,8 +34,10 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
         <div className='absolute bottom-0 right-1/4 h-[300px] w-[400px] rounded-full bg-primary/5 blur-3xl' />
       </div>
 
-      {/* Main Hero Content — positioned elegantly in upper area */}
-      <div className='flex-1 flex items-center justify-center px-4 sm:px-6 pt-1 sm:pt-2 pb-0'>
+      {/* Hero Content Wrapper — shifted upwards closer to header while maintaining full-screen height */}
+      <div className='relative z-10 flex flex-col justify-between flex-1 -translate-y-6 sm:-translate-y-9 lg:-translate-y-12'>
+        {/* Main Hero Content — positioned elegantly in upper area */}
+        <div className='flex-1 flex items-center justify-center px-4 sm:px-6 pt-1 sm:pt-2 pb-0'>
         <motion.div
           className='mx-auto max-w-3xl w-full text-center'
           variants={staggerContainer(0.08, 0.05)}
@@ -118,6 +120,7 @@ export function HeroSection({ productCount = 3, price }: HeroSectionProps) {
         <div className='w-full px-0 sm:px-2'>
           <AnimatedIconNetwork className='h-[280px] sm:h-[320px] md:h-[360px] lg:h-[400px] -mt-4 sm:-mt-6 lg:-mt-10' />
         </div>
+      </div>
       </div>
     </section>
   )
