@@ -374,6 +374,18 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             <stop offset='100%' stopColor='var(--color-primary)' stopOpacity='0' />
           </radialGradient>
 
+          {/* Smooth edge fade gradient mask to dissolve the left and right ends */}
+          <linearGradient id='ain-edge-fade-gradient' x1='0%' y1='0%' x2='100%' y2='0%'>
+            <stop offset='0%' stopColor='#ffffff' stopOpacity='0' />
+            <stop offset='7%' stopColor='#ffffff' stopOpacity='1' />
+            <stop offset='93%' stopColor='#ffffff' stopOpacity='1' />
+            <stop offset='100%' stopColor='#ffffff' stopOpacity='0' />
+          </linearGradient>
+
+          <mask id='ain-edge-fade-mask'>
+            <rect x='0' y='0' width='1440' height='320' fill='url(#ain-edge-fade-gradient)' />
+          </mask>
+
           {/* GSAP Motion Paths (9 Left + 9 Right routes converging into center) */}
           {paths.map((p) => (
             <g key={`motion-defs-${p.id}`}>
@@ -386,20 +398,26 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
         {/* Central convergence glow */}
         <ellipse cx='720' cy='160' rx='220' ry='80' fill='url(#ain-center-glow)' />
 
-        {/* Exactly 9 Curved Paths — Bow-Tie / Hourglass silhouette */}
-        {paths.map((p) => (
-          <path
-            key={p.id}
-            id={`wire-path-${p.id}`}
-            d={p.fullD}
-            fill='none'
-            stroke='var(--color-primary)'
-            strokeWidth='1.2'
-            strokeOpacity={p.strokeOpacity}
-            strokeLinecap='round'
-          />
-        ))}
+        {/* Exactly 9 Curved Paths — Bow-Tie silhouette with smooth edge fade */}
+        <g mask='url(#ain-edge-fade-mask)'>
+          {paths.map((p) => (
+            <path
+              key={p.id}
+              id={`wire-path-${p.id}`}
+              d={p.fullD}
+              fill='none'
+              stroke='var(--color-primary)'
+              strokeWidth='1.25'
+              strokeOpacity={p.strokeOpacity}
+              strokeLinecap='round'
+            />
+          ))}
+        </g>
       </svg>
+
+      {/* Edge Vignette Overlays for smooth gradual dissolve at viewport edges */}
+      <div className='pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 md:w-24 bg-gradient-to-r from-background via-background/40 to-transparent z-[5]' />
+      <div className='pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 md:w-24 bg-gradient-to-l from-background via-background/40 to-transparent z-[5]' />
 
       {/* Particle icons (smaller, subtle) — only rendered client-side */}
       {isMounted &&
