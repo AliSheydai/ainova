@@ -174,10 +174,17 @@ function wrapText(
 }
 
 // Draw a themed vector icon for each feature to give the card identity
-function drawFeatureIcon(ctx: CanvasRenderingContext2D, id: number, cx: number, cy: number) {
+function drawFeatureIcon(
+  ctx: CanvasRenderingContext2D,
+  id: number,
+  cx: number,
+  cy: number,
+  isDark: boolean = true
+) {
   ctx.save()
-  ctx.strokeStyle = '#60a5fa'
-  ctx.fillStyle = '#60a5fa'
+  const iconColor = isDark ? '#60a5fa' : '#2563eb'
+  ctx.strokeStyle = iconColor
+  ctx.fillStyle = iconColor
   ctx.lineWidth = 2.4
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
@@ -347,10 +354,15 @@ function drawFeatureIcon(ctx: CanvasRenderingContext2D, id: number, cx: number, 
   ctx.restore()
 }
 
-export function createFeatureCardDataUrl(item: FeatureItem): string {
+export function createFeatureCardDataUrl(
+  item: FeatureItem,
+  theme: 'dark' | 'light' = 'dark'
+): string {
   if (typeof document === 'undefined') {
     return ''
   }
+
+  const isDark = theme === 'dark'
 
   // High-resolution canvas for crystal-sharp 3D card display (aspect 3:4)
   const width = 840
@@ -361,40 +373,59 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   const ctx = canvas.getContext('2d')
   if (!ctx) return ''
 
-  // 1. Base card background (Sophisticated obsidian dark gradient)
-  const bgGrad = ctx.createLinearGradient(0, 0, width, height)
-  bgGrad.addColorStop(0, '#0f172a') // deep slate 900
-  bgGrad.addColorStop(0.35, '#090d16') // obsidian
-  bgGrad.addColorStop(1, '#05070d')
+  // 1. Base card background
+  if (isDark) {
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height)
+    bgGrad.addColorStop(0, '#0f172a') // deep slate 900
+    bgGrad.addColorStop(0.35, '#090d16') // obsidian
+    bgGrad.addColorStop(1, '#05070d')
 
-  roundRect(ctx, 16, 16, width - 32, height - 32, 44)
-  ctx.fillStyle = bgGrad
-  ctx.fill()
+    roundRect(ctx, 16, 16, width - 32, height - 32, 44)
+    ctx.fillStyle = bgGrad
+    ctx.fill()
+  } else {
+    // Ultra-clean modern light gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height)
+    bgGrad.addColorStop(0, '#ffffff')
+    bgGrad.addColorStop(0.45, '#f8fafc') // subtle cool slate 50
+    bgGrad.addColorStop(1, '#f1f5f9') // slate 100
 
-  // 2. Ambient glow layers (Primary Blue & Cyan aura)
+    roundRect(ctx, 16, 16, width - 32, height - 32, 44)
+    ctx.fillStyle = bgGrad
+    ctx.fill()
+  }
+
+  // 2. Ambient glow layers
   const glowTop = ctx.createRadialGradient(width - 120, 120, 10, width - 120, 120, 420)
-  glowTop.addColorStop(0, 'rgba(59, 130, 246, 0.22)')
-  glowTop.addColorStop(0.6, 'rgba(59, 130, 246, 0.05)')
+  glowTop.addColorStop(0, isDark ? 'rgba(59, 130, 246, 0.22)' : 'rgba(59, 130, 246, 0.10)')
+  glowTop.addColorStop(0.6, isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(59, 130, 246, 0.02)')
   glowTop.addColorStop(1, 'rgba(59, 130, 246, 0)')
   ctx.fillStyle = glowTop
   ctx.fill()
 
   const glowBottom = ctx.createRadialGradient(100, height - 140, 10, 100, height - 140, 360)
-  glowBottom.addColorStop(0, 'rgba(14, 165, 233, 0.12)')
+  glowBottom.addColorStop(0, isDark ? 'rgba(14, 165, 233, 0.12)' : 'rgba(14, 165, 233, 0.08)')
   glowBottom.addColorStop(1, 'rgba(14, 165, 233, 0)')
   ctx.fillStyle = glowBottom
   ctx.fill()
 
-  // 3. Card Border (Subtle 2-layer glass border with bright corner specular highlights)
+  // 3. Card Border (Subtle 2-layer glass border with specular highlights)
   const borderGrad = ctx.createLinearGradient(0, 0, width, height)
-  borderGrad.addColorStop(0, 'rgba(96, 165, 250, 0.65)') // vivid blue at top
-  borderGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)')
-  borderGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.25)')
-  borderGrad.addColorStop(1, 'rgba(14, 165, 233, 0.45)')
+  if (isDark) {
+    borderGrad.addColorStop(0, 'rgba(96, 165, 250, 0.65)') // vivid blue at top
+    borderGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)')
+    borderGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.25)')
+    borderGrad.addColorStop(1, 'rgba(14, 165, 233, 0.45)')
+  } else {
+    borderGrad.addColorStop(0, 'rgba(59, 130, 246, 0.55)') // blue corner at top
+    borderGrad.addColorStop(0.35, 'rgba(203, 213, 225, 0.85)') // soft slate-300
+    borderGrad.addColorStop(0.7, 'rgba(226, 232, 240, 0.90)') // slate-200
+    borderGrad.addColorStop(1, 'rgba(14, 165, 233, 0.45)') // sky corner at bottom
+  }
 
   roundRect(ctx, 16, 16, width - 32, height - 32, 44)
   ctx.strokeStyle = borderGrad
-  ctx.lineWidth = 3
+  ctx.lineWidth = isDark ? 3 : 2.5
   ctx.stroke()
 
   // 4. Feature Identity Row (Icon Box + Subtitle Pill)
@@ -404,14 +435,14 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
 
   // Glass Icon Box
   roundRect(ctx, iconBoxX, iconRowY, iconBoxSize, iconBoxSize, 18)
-  ctx.fillStyle = 'rgba(59, 130, 246, 0.18)'
+  ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(59, 130, 246, 0.10)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(96, 165, 250, 0.55)'
+  ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.55)' : 'rgba(37, 99, 235, 0.35)'
   ctx.lineWidth = 1.8
   ctx.stroke()
 
   // Draw custom vector icon
-  drawFeatureIcon(ctx, item.id, iconBoxX + iconBoxSize / 2, iconRowY + iconBoxSize / 2)
+  drawFeatureIcon(ctx, item.id, iconBoxX + iconBoxSize / 2, iconRowY + iconBoxSize / 2, isDark)
 
   // Subtitle / Models Pill (placed next to icon box)
   const subH = iconBoxSize
@@ -419,9 +450,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   const subX = 52
 
   roundRect(ctx, subX, iconRowY, subW, subH, 18)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)'
+  ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(241, 245, 249, 0.90)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(59, 130, 246, 0.25)'
+  ctx.strokeStyle = isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.22)'
   ctx.lineWidth = 1.4
   ctx.stroke()
 
@@ -430,27 +461,27 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
 
   ctx.beginPath()
   ctx.arc(subX + 24, subCenterY, 6, 0, Math.PI * 2)
-  ctx.fillStyle = '#38bdf8'
+  ctx.fillStyle = isDark ? '#38bdf8' : '#0284c7'
   ctx.fill()
 
   // Subtle outer aura for the blue dot
   ctx.beginPath()
   ctx.arc(subX + 24, subCenterY, 10, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'
+  ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.25)' : 'rgba(2, 132, 199, 0.20)'
   ctx.fill()
 
   ctx.direction = 'ltr'
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   ctx.font = '700 22px Vazirmatn, system-ui, sans-serif'
-  ctx.fillStyle = '#93c5fd'
+  ctx.fillStyle = isDark ? '#93c5fd' : '#1d4ed8'
   ctx.fillText(item.subtitle, subX + 44, subCenterY)
 
   // 5. Title (Persian RTL, Bold, Large and High Contrast)
   ctx.direction = 'rtl'
   ctx.textAlign = 'right'
   ctx.font = '900 44px Vazirmatn, system-ui, sans-serif'
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = isDark ? '#ffffff' : '#0f172a'
 
   const titleLines = wrapText(ctx, item.title, width - 104)
   let currentY = 178
@@ -462,10 +493,17 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   // 6. Radiant Accent Divider Line
   currentY += 10
   const lineGrad = ctx.createLinearGradient(52, currentY, width - 52, currentY)
-  lineGrad.addColorStop(0, 'rgba(59, 130, 246, 0)')
-  lineGrad.addColorStop(0.3, 'rgba(96, 165, 250, 0.75)')
-  lineGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.75)')
-  lineGrad.addColorStop(1, 'rgba(59, 130, 246, 0)')
+  if (isDark) {
+    lineGrad.addColorStop(0, 'rgba(59, 130, 246, 0)')
+    lineGrad.addColorStop(0.3, 'rgba(96, 165, 250, 0.75)')
+    lineGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.75)')
+    lineGrad.addColorStop(1, 'rgba(59, 130, 246, 0)')
+  } else {
+    lineGrad.addColorStop(0, 'rgba(59, 130, 246, 0)')
+    lineGrad.addColorStop(0.3, 'rgba(37, 99, 235, 0.65)')
+    lineGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.65)')
+    lineGrad.addColorStop(1, 'rgba(59, 130, 246, 0)')
+  }
 
   ctx.beginPath()
   ctx.moveTo(52, currentY)
@@ -477,13 +515,13 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   // Center accent dot on divider
   ctx.beginPath()
   ctx.arc(width / 2, currentY, 4.5, 0, Math.PI * 2)
-  ctx.fillStyle = '#60a5fa'
+  ctx.fillStyle = isDark ? '#60a5fa' : '#2563eb'
   ctx.fill()
 
   // 7. Description Paragraph (Persian RTL, Font 29px, High Contrast)
   currentY += 46
   ctx.font = '500 29px Vazirmatn, system-ui, sans-serif'
-  ctx.fillStyle = '#f1f5f9' // ultra-clear readable bright slate
+  ctx.fillStyle = isDark ? '#f1f5f9' : '#334155'
   const descLines = wrapText(ctx, item.description, width - 104)
   for (const line of descLines) {
     ctx.fillText(line, width - 52, currentY)
@@ -497,9 +535,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   item.highlights.forEach((highlight, idx) => {
     const boxY = startBoxY + idx * (boxHeight + 16)
     roundRect(ctx, 52, boxY, width - 104, boxHeight, 22)
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'
+    ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.75)' : '#ffffff'
     ctx.fill()
-    ctx.strokeStyle = 'rgba(59, 130, 246, 0.28)'
+    ctx.strokeStyle = isDark ? 'rgba(59, 130, 246, 0.28)' : 'rgba(203, 213, 225, 0.85)'
     ctx.lineWidth = 1.4
     ctx.stroke()
 
@@ -507,7 +545,7 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
     ctx.beginPath()
     ctx.moveTo(width - 52, boxY + 18)
     ctx.lineTo(width - 52, boxY + boxHeight - 18)
-    ctx.strokeStyle = '#3b82f6'
+    ctx.strokeStyle = isDark ? '#3b82f6' : '#2563eb'
     ctx.lineWidth = 3.5
     ctx.lineCap = 'round'
     ctx.stroke()
@@ -517,9 +555,9 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
     const checkCircleY = boxY + boxHeight / 2
     ctx.beginPath()
     ctx.arc(checkCircleX, checkCircleY, 18, 0, Math.PI * 2)
-    ctx.fillStyle = 'rgba(59, 130, 246, 0.25)'
+    ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(37, 99, 235, 0.12)'
     ctx.fill()
-    ctx.strokeStyle = '#60a5fa'
+    ctx.strokeStyle = isDark ? '#60a5fa' : 'rgba(37, 99, 235, 0.35)'
     ctx.lineWidth = 1.8
     ctx.stroke()
 
@@ -528,7 +566,7 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
     ctx.moveTo(checkCircleX + 6, checkCircleY - 1)
     ctx.lineTo(checkCircleX + 1, checkCircleY + 5)
     ctx.lineTo(checkCircleX - 6, checkCircleY - 3)
-    ctx.strokeStyle = '#ffffff'
+    ctx.strokeStyle = isDark ? '#ffffff' : '#2563eb'
     ctx.lineWidth = 3.0
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -538,17 +576,17 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
     ctx.direction = 'rtl'
     ctx.textAlign = 'right'
     ctx.font = '700 26px Vazirmatn, system-ui, sans-serif'
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = isDark ? '#ffffff' : '#0f172a'
     ctx.fillText(highlight, checkCircleX - 32, checkCircleY + 2)
   })
 
-  // 10. Bottom Footer Status Bar (Guarantee Badge)
+  // 9. Bottom Footer Status Bar (Guarantee Badge)
   const footerY = height - 90
   const footerH = 50
   roundRect(ctx, 52, footerY, width - 104, footerH, 25)
-  ctx.fillStyle = 'rgba(59, 130, 246, 0.12)'
+  ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(239, 246, 255, 0.95)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(96, 165, 250, 0.35)'
+  ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(59, 130, 246, 0.28)'
   ctx.lineWidth = 1.5
   ctx.stroke()
 
@@ -556,15 +594,15 @@ export function createFeatureCardDataUrl(item: FeatureItem): string {
   ctx.direction = 'rtl'
   ctx.textAlign = 'center'
   ctx.font = '700 24px Vazirmatn, system-ui, sans-serif'
-  ctx.fillStyle = '#93c5fd'
+  ctx.fillStyle = isDark ? '#93c5fd' : '#1d4ed8'
   ctx.fillText('تحویل آنی و فعال‌سازی قانونی روی حساب شخصی شما', width / 2, footerY + footerH / 2 + 1)
 
   return canvas.toDataURL('image/png')
 }
 
-export function getFeatureGalleryItems() {
+export function getFeatureGalleryItems(theme: 'dark' | 'light' = 'dark') {
   return featureItemsData.map((item) => ({
-    image: createFeatureCardDataUrl(item),
+    image: createFeatureCardDataUrl(item, theme),
     text: '', // Empty text so no duplicate WebGL mesh below card
     tag: item.tag,
     title: item.title,

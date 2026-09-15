@@ -390,6 +390,23 @@ class Media {
     };
   }
 
+  updateImage(newImage: string) {
+    this.image = newImage;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = newImage;
+    img.onload = () => {
+      const texture = this.program.uniforms.tMap.value;
+      if (texture) {
+        texture.image = img;
+      }
+      this.program.uniforms.uImageSizes.value = [
+        img.naturalWidth || img.width || 840,
+        img.naturalHeight || img.height || 1120,
+      ];
+    };
+  }
+
   createMesh() {
     this.plane = new Mesh(this.gl, {
       geometry: this.geometry,
@@ -764,6 +781,18 @@ class App {
     this.onCheckDebounce();
   }
 
+  updateItems(items: CircularGalleryItem[]) {
+    const galleryItems = items && items.length ? items : [];
+    this.itemsCount = galleryItems.length;
+    this.mediasImages = galleryItems.concat(galleryItems);
+    this.medias.forEach((media, idx) => {
+      const itemData = this.mediasImages[idx];
+      if (itemData && itemData.image) {
+        media.updateImage(itemData.image);
+      }
+    });
+  }
+
   update() {
     if (!this.isVisible) {
       this.raf = window.requestAnimationFrame(this.update.bind(this));
@@ -873,6 +902,7 @@ export interface CircularGalleryRef {
   goTo: (index: number) => void;
   pause: () => void;
   play: () => void;
+  updateItems: (items: CircularGalleryItem[]) => void;
 }
 
 export interface CircularGalleryProps {
@@ -910,6 +940,8 @@ export const CircularGallery = forwardRef<CircularGalleryRef, CircularGalleryPro
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
     const appRef = useRef<App | null>(null);
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
 
     useImperativeHandle(ref, () => ({
       next: () => appRef.current?.next(),
@@ -921,7 +953,17 @@ export const CircularGallery = forwardRef<CircularGalleryRef, CircularGalleryPro
       play: () => {
         if (appRef.current) appRef.current.autoRotate = true;
       },
+      updateItems: (newItems: CircularGalleryItem[]) => {
+        appRef.current?.updateItems(newItems);
+      },
     }));
+
+    // Dynamically update card textures on theme change without tearing down the WebGL scene
+    useEffect(() => {
+      if (appRef.current && items && items.length > 0) {
+        appRef.current.updateItems(items);
+      }
+    }, [items]);
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -931,7 +973,7 @@ export const CircularGallery = forwardRef<CircularGalleryRef, CircularGalleryPro
       resolveFont(font, fontUrl).then((resolvedFont) => {
         if (!isMounted || !containerRef.current) return;
         app = new App(containerRef.current, {
-          items,
+          items: itemsRef.current,
           bend,
           textColor,
           borderRadius,
@@ -953,7 +995,6 @@ export const CircularGallery = forwardRef<CircularGalleryRef, CircularGalleryPro
         }
       };
     }, [
-      items,
       bend,
       textColor,
       borderRadius,

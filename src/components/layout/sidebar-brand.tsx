@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { PanelLeft, Sparkles } from 'lucide-react'
+import { PanelLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
@@ -23,8 +23,13 @@ export function SidebarBrand() {
         className='group/brand flex items-center gap-2.5 overflow-hidden rounded-lg p-1 -m-1 transition-colors hover:bg-sidebar-accent/70 group-data-[collapsible=icon]:hidden'
         title='مشاهده صفحه اصلی'
       >
-        <div className='flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md transition-transform duration-200 group-hover/brand:scale-105'>
-          <Sparkles className='size-4' />
+        <div className='flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-md transition-transform duration-200 group-hover/brand:scale-105'>
+          <img
+            src='/images/ario-chat.png'
+            alt='آریوچت'
+            className='size-full object-contain select-none pointer-events-none'
+            draggable={false}
+          />
         </div>
         <div className='flex flex-col overflow-hidden text-start leading-none'>
           <span className='truncate text-sm font-bold text-foreground transition-colors group-hover/brand:text-primary'>
@@ -69,8 +74,13 @@ export function SidebarBrand() {
               aria-label='باز کردن سایدبار'
             >
               {/* لوگو در حالت عادی */}
-              <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md transition-all duration-200 group-hover/toggle-btn:hidden'>
-                <Sparkles className='size-4' />
+              <div className='flex size-8 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-md transition-all duration-200 group-hover/toggle-btn:hidden'>
+                <img
+                  src='/images/ario-chat.png'
+                  alt='آریوچت'
+                  className='size-full object-contain select-none pointer-events-none'
+                  draggable={false}
+                />
               </div>
               {/* آیکون expand هنگام hover */}
               <div className='hidden size-8 items-center justify-center rounded-xl bg-sidebar-accent text-sidebar-accent-foreground group-hover/toggle-btn:flex'>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ExternalLink, Sparkles } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 const footerLinks = [
@@ -21,8 +21,13 @@ export function LandingFooter() {
           {/* Brand */}
           <div>
             <Link href='/' className='mb-3 flex items-center gap-2.5'>
-              <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-                <Sparkles className='size-4' />
+              <div className='flex size-8.5 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-xs'>
+                <img
+                  src='/images/ario-chat.png'
+                  alt='آریوچت'
+                  className='size-full object-contain select-none pointer-events-none'
+                  draggable={false}
+                />
               </div>
               <div className='flex flex-col text-start'>
                 <span className='text-sm font-bold text-foreground leading-tight'>آریوچت</span>

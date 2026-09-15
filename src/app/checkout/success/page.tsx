@@ -567,10 +567,15 @@ export default function CheckoutSuccessPage() {
       <header className='border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50'>
         <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
           <Link href='/' className='flex items-center gap-2.5 select-none'>
-            <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-              <Sparkles className='size-4' />
+            <div className='flex size-8.5 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-xs'>
+              <img
+                src='/images/ario-chat.png'
+                alt='آریوچت'
+                className='size-full object-contain select-none pointer-events-none'
+                draggable={false}
+              />
             </div>
-            <span className='text-base sm:text-lg font-bold text-foreground'>فروشگاه اشتراک‌های دیجیتال</span>
+            <span className='text-base sm:text-lg font-bold text-foreground leading-tight'>آریوچت</span>
           </Link>
 
           <div className='flex items-center gap-3'>

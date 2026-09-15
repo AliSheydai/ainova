@@ -393,7 +393,7 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
           '
         >
           <Logo
-            className='text-primary w-12 h-12 sm:w-[54px] sm:h-[54px] md:w-16 md:h-16'
+            className='w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 drop-shadow-sm select-none pointer-events-none'
           />
         </div>
       </div>

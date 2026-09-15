@@ -20,22 +20,33 @@ import {
   featureItemsData,
   getFeatureGalleryItems,
 } from '@/components/landing/feature-cards-data'
+import { useTheme } from '@/context/theme-provider'
 
 export function FeaturesSection() {
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [galleryItems, setGalleryItems] = useState<CircularGalleryItem[]>([])
   const galleryRef = useRef<CircularGalleryRef>(null)
 
-  // Generate crystal-clear Persian card textures once page fonts (Vazirmatn) are ready
   useEffect(() => {
-    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => {
-        setGalleryItems(getFeatureGalleryItems())
-      })
-    } else {
-      setGalleryItems(getFeatureGalleryItems())
-    }
+    setMounted(true)
   }, [])
+
+  const currentTheme = mounted ? (resolvedTheme === 'dark' ? 'dark' : 'light') : 'dark'
+
+  // Generate crystal-clear Persian card textures once page fonts (Vazirmatn) are ready and on theme change
+  useEffect(() => {
+    const updateGallery = () => {
+      setGalleryItems(getFeatureGalleryItems(currentTheme))
+    }
+
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateGallery)
+    } else {
+      updateGallery()
+    }
+  }, [currentTheme])
 
   const currentFeature = featureItemsData[activeIndex] || featureItemsData[0]
 
@@ -107,7 +118,7 @@ export function FeaturesSection() {
                 ref={galleryRef}
                 items={galleryItems}
                 bend={0.35}
-                textColor='#ffffff'
+                textColor={currentTheme === 'dark' ? '#ffffff' : '#0f172a'}
                 borderRadius={0.05}
                 scrollEase={0.05}
                 scrollSpeed={2}

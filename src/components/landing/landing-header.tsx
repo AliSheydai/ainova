@@ -7,7 +7,6 @@ import { motion, useScroll, useMotionValueEvent, useSpring } from 'framer-motion
 import {
   LogIn,
   Menu,
-  Sparkles,
   User,
   Loader2,
   Shield,
@@ -410,15 +409,15 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
             >
               <div
                 className={cn(
-                  'flex items-center justify-center bg-primary text-primary-foreground shadow-sm transition-all duration-300',
-                  isScrolled ? 'size-7.5 rounded-lg' : 'size-8 rounded-xl'
+                  'flex items-center justify-center overflow-hidden bg-primary/10 border border-primary/20 shadow-xs transition-all duration-300',
+                  isScrolled ? 'size-7.5 rounded-lg p-1' : 'size-8.5 rounded-xl p-1'
                 )}
               >
-                <Sparkles
-                  className={cn(
-                    'transition-all duration-300',
-                    isScrolled ? 'size-3.5' : 'size-4'
-                  )}
+                <img
+                  src='/images/ario-chat.png'
+                  alt='آریوچت'
+                  className='size-full object-contain select-none pointer-events-none'
+                  draggable={false}
                 />
               </div>
               <span
@@ -569,8 +568,13 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
                   <div>
                     <SheetHeader className='border-b border-border/50 p-0 pb-4 text-start'>
                       <div className='flex items-center gap-2.5 select-none'>
-                        <div className='flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-                          <Sparkles className='size-4' />
+                        <div className='flex size-8.5 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-xs'>
+                          <img
+                            src='/images/ario-chat.png'
+                            alt='آریوچت'
+                            className='size-full object-contain select-none pointer-events-none'
+                            draggable={false}
+                          />
                         </div>
                         <div className='flex flex-col text-start'>
                           <SheetTitle className='text-base font-bold text-foreground leading-tight'>

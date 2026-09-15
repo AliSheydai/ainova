@@ -227,8 +227,13 @@ function LoginForm() {
             href="/"
             className="group inline-flex items-center gap-3 transition-transform duration-300 hover:scale-[1.02]"
           >
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-primary/20">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 border border-primary/20 p-1.5 shadow-lg shadow-primary/20">
+              <img
+                src="/images/ario-chat.png"
+                alt="آریوچت"
+                className="size-full object-contain select-none pointer-events-none"
+                draggable={false}
+              />
             </div>
             <div className="text-right">
               <div className="flex items-baseline gap-2">
