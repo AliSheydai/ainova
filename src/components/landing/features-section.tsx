@@ -100,7 +100,7 @@ export function FeaturesSection() {
           variants={fadeUp}
         >
           {/* Main 3D Floating Stage - zero borders or bounding box, cards float freely in section background */}
-          <div className='relative w-full h-[570px] sm:h-[620px] md:h-[680px] overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]'>
+          <div className='relative w-full h-[570px] sm:h-[620px] md:h-[680px] overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]'>
             {/* Circular Gallery WebGL canvas */}
             {galleryItems.length > 0 && (
               <CircularGallery

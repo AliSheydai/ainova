@@ -250,7 +250,6 @@ interface MediaProps {
 }
 
 class Media {
-  extra: number = 0;
   geometry: Plane;
   gl: GL;
   image: string;
@@ -274,8 +273,6 @@ class Media {
   widthTotal!: number;
   x!: number;
   speed: number = 0;
-  isBefore: boolean = false;
-  isAfter: boolean = false;
 
   constructor({
     geometry,
@@ -412,8 +409,14 @@ class Media {
     });
   }
 
-  update(scroll: { current: number; last: number }, direction: 'right' | 'left') {
-    this.plane.position.x = this.x - scroll.current - this.extra;
+  update(scroll: { current: number; last: number }, _direction?: 'right' | 'left') {
+    // True circular modular wrap: positions cards symmetrically around 0 in [-halfTotal, halfTotal].
+    // From frame 0, Card 0 is at 0 (center), Card 1 is at +width (right), and the previous card (Card length-1)
+    // is immediately placed at -width (left), so all 3 cards are visible without needing any initial scroll.
+    const halfTotal = this.widthTotal / 2;
+    const rawX = this.x - scroll.current;
+    this.plane.position.x =
+      ((((rawX + halfTotal) % this.widthTotal) + this.widthTotal) % this.widthTotal) - halfTotal;
 
     const x = this.plane.position.x;
     const H = this.viewport.width / 2;
@@ -443,16 +446,8 @@ class Media {
 
     const planeOffset = this.plane.scale.x / 2;
     const viewportOffset = this.viewport.width / 2;
-    this.isBefore = this.plane.position.x + planeOffset < -viewportOffset;
-    this.isAfter = this.plane.position.x - planeOffset > viewportOffset;
-    if (direction === 'right' && this.isBefore) {
-      this.extra -= this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
-    if (direction === 'left' && this.isAfter) {
-      this.extra += this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
+    // Hide plane when far outside visible viewport to conserve GPU cycles
+    this.plane.visible = Math.abs(this.plane.position.x) - planeOffset < viewportOffset + this.width;
   }
 
   onResize({ screen, viewport }: { screen?: ScreenSize; viewport?: Viewport } = {}) {
