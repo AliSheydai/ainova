@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { AuthModal, type AuthUserData } from '@/components/auth/auth-modal'
 import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
 
 interface PlanItem {
@@ -44,7 +45,24 @@ export function ProductBuyCard({
     plans.length > 0 ? plans[0].id : null
   )
   const [buying, setBuying] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<AuthUserData | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    let isMounted = true
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.authenticated && data?.user) {
+          setCurrentUser(data.user)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) || plans[0]
   const effectivePrice = selectedPlan ? selectedPlan.price : price
@@ -53,15 +71,27 @@ export function ProductBuyCard({
   // PRE_CREATED_ACCOUNT plans can always be ordered (if warehouse is empty, customer can order for personal account activation)
   const isAvailable = isPreCreated ? true : planStock > 0
 
+  const navigateToCheckout = () => {
+    setBuying(true)
+    const checkoutUrl = selectedPlanId
+      ? `/checkout?slug=${slug}&planId=${selectedPlanId}`
+      : `/checkout?slug=${slug}`
+    router.push(checkoutUrl)
+  }
+
   const handleBuy = async () => {
     if (!isAvailable) {
       toast.error('موجودی این پلن در حال حاضر به پایان رسیده است.')
       return
     }
-    const checkoutUrl = selectedPlanId
-      ? `/checkout?slug=${slug}&planId=${selectedPlanId}`
-      : `/checkout?slug=${slug}`
-    router.push(checkoutUrl)
+
+    // Deferred Authentication: If user is not logged in, prompt AuthModal at purchase moment
+    if (!currentUser) {
+      setAuthModalOpen(true)
+      return
+    }
+
+    navigateToCheckout()
   }
 
   return (
@@ -156,6 +186,7 @@ export function ProductBuyCard({
       {/* CTA Button */}
       <div id='buy-button-anchor' className='space-y-2'>
         <Button
+          id='main-buy-button'
           onClick={handleBuy}
           disabled={buying || !isAvailable}
           aria-busy={buying}
@@ -182,6 +213,17 @@ export function ProductBuyCard({
           پرداخت امن — تحویل بلافاصله پس از پرداخت
         </p>
       </div>
+
+      {/* Auth Modal for deferred login */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        onSuccess={(user) => {
+          setCurrentUser(user)
+          setAuthModalOpen(false)
+          navigateToCheckout()
+        }}
+      />
     </div>
   )
 }

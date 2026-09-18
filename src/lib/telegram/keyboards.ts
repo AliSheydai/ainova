@@ -104,20 +104,54 @@ export function productBuyKeyboard(planId: string, planName: string, price: numb
     .text('🔙 بازگشت به منوی اصلی', 'nav:main')
 }
 
+export function normalizeTelegramUrl(url?: string | null): string | null {
+  if (!url) return null
+  let normalized = url.trim()
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    return null
+  }
+  // Telegram Bot API strictly rejects "localhost" in inline keyboard URLs with "400 Bad Request: Wrong HTTP URL".
+  // Replacing localhost with 127.0.0.1 passes Telegram's validator and opens the local dev server.
+  if (normalized.includes('localhost')) {
+    normalized = normalized.replaceAll('localhost', '127.0.0.1')
+  }
+  return normalized
+}
+
 export function orderPaymentKeyboard(paymentUrl: string) {
   const keyboard = new InlineKeyboard()
-  const isInvalidUrl =
-    !paymentUrl ||
-    paymentUrl.startsWith('/') ||
-    paymentUrl.includes('localhost') ||
-    paymentUrl.includes('127.0.0.1')
-
-  if (!isInvalidUrl && (paymentUrl.startsWith('http://') || paymentUrl.startsWith('https://'))) {
-    keyboard.url('💳 پرداخت آنلاین', paymentUrl).row()
+  const validUrl = normalizeTelegramUrl(paymentUrl)
+  if (validUrl) {
+    keyboard.url('💳 تأیید و پرداخت آنلاین', validUrl).row()
   }
 
   keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
   return keyboard
+}
+
+export function orderCreatedKeyboard(
+  orderId: string,
+  paymentUrl: string,
+  hasCoupon: boolean
+) {
+  const kb = new InlineKeyboard()
+
+  const validUrl = normalizeTelegramUrl(paymentUrl)
+  if (validUrl) {
+    kb.url('💳 تأیید و پرداخت آنلاین', validUrl).row()
+  }
+
+  if (hasCoupon) {
+    kb.text('❌ حذف کد تخفیف', `order:coupon:remove:${orderId}`)
+  } else {
+    kb.text('🏷 ثبت کد تخفیف', `order:coupon:prompt:${orderId}`)
+  }
+  kb.row()
+
+  kb.text('❌ لغو سفارش', `order:cancel:${orderId}`).row()
+  kb.text('🏠 منوی اصلی', 'nav:main')
+
+  return kb
 }
 
 export function deliveryPreferenceKeyboard(
@@ -333,16 +367,7 @@ export function notificationsListKeyboard(
   }
   kb.row()
 
-  // Row 2: Quick mark-as-read buttons for unread items on current page
-  const unreadItems = notifications.filter((n) => !n.isRead)
-  if (unreadItems.length > 0) {
-    for (let i = 0; i < unreadItems.length; i++) {
-      kb.text(`خواندن اعلان ${(i + 1).toLocaleString('fa-IR')}`, `notif:read:${unreadItems[i].id}`)
-    }
-    kb.row()
-  }
-
-  // Row 3: Pagination
+  // Row 2: Pagination
   if (totalPages > 1) {
     if (page < totalPages) {
       kb.text('بعدی ⬅️', `notif:page:${page + 1}:${filter}`)
@@ -354,7 +379,7 @@ export function notificationsListKeyboard(
     kb.row()
   }
 
-  // Row 4: Refresh & Main Menu
+  // Row 3: Refresh & Main Menu
   kb.text('🔄 به‌روزرسانی', `notif:refresh:${page}:${filter}`)
   kb.text('🔙 منوی اصلی', 'nav:main')
 

@@ -35,8 +35,13 @@ export function StickyMobileCta({ price, isAvailable, slug, planId }: StickyMobi
 
   const handleBuy = () => {
     if (!isAvailable) return
-    const url = planId ? `/checkout?slug=${slug}&planId=${planId}` : `/checkout?slug=${slug}`
-    router.push(url)
+    const mainBtn = document.getElementById('main-buy-button') as HTMLButtonElement | null
+    if (mainBtn) {
+      mainBtn.click()
+    } else {
+      const url = planId ? `/checkout?slug=${slug}&planId=${planId}` : `/checkout?slug=${slug}`
+      router.push(url)
+    }
   }
 
   if (!visible) return null

@@ -24,17 +24,26 @@ async function run() {
     try {
       const bot = createTelegramBot(token)
       await bot.init()
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       console.log(`🚀 ربات تلگرام با موفقیت متصل شد! (@${bot.botInfo.username})`)
-      console.log('در حال دریافت و پاسخگویی به پیام‌های تلگرام (Long Polling)...')
+      console.log(`📡 در حال دریافت و پاسخگویی به پیام‌های تلگرام (Long Polling)...`)
+      console.log(`💡 برای تست، در تلگرام به @${bot.botInfo.username} پیام دهید یا /start بزنید.`)
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
       await bot.start({
         drop_pending_updates: false,
         onStart(botInfo) {
-          console.log(`Bot @${botInfo.username} polling started successfully.`)
+          console.log(`✅ ربات @${botInfo.username} با موفقیت آماده به کار شد.`)
         },
       })
-    } catch (error) {
-      console.error('❌ قطع اتصال موقت ربات (تلاش برای اتصال مجدد در ۵ ثانیه):', error)
+    } catch (error: any) {
+      if (error?.error_code === 409) {
+        console.error('\n⚠️ [خطای تداخل ۴۰۹]: یک نسخه دیگر از این ربات در ترمینال یا فرآیند دیگری در حال اجراست.')
+        console.error('تلگرام اجازه نمی‌دهد دو فرآیند همزمان با یک توکن پیام دریافت کنند.')
+        console.error('لطفاً سایر ترمینال‌ها را ببندید تا این ربات بتواند متصل شود.\n')
+      } else {
+        console.error('❌ قطع اتصال موقت ربات (تلاش برای اتصال مجدد در ۵ ثانیه):', error)
+      }
       await new Promise((resolve) => setTimeout(resolve, 5000))
     }
   }

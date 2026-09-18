@@ -657,13 +657,20 @@ function CheckoutContent() {
     return Object.keys(errors).length === 0
   }
 
-  const handleBuy = async () => {
+  const handleBuy = async (overrideUser?: any) => {
     if (!product) return
 
     if (!validateForm()) {
       if (!isPreCreatedPlan || preCreatedMode !== 'own') {
         toast.error('لطفاً اطلاعات موردنیاز فرم خرید را به درستی تکمیل فرمایید.')
       }
+      return
+    }
+
+    // Check auth before sending request to avoid unnecessary 401 error
+    const activeUser = overrideUser || currentUser
+    if (!activeUser) {
+      setAuthModalOpen(true)
       return
     }
 
@@ -703,6 +710,7 @@ function CheckoutContent() {
       const data = await res.json()
 
       if (res.status === 401) {
+        setCurrentUser(null)
         setAuthModalOpen(true)
         return
       }
@@ -1057,9 +1065,10 @@ function CheckoutContent() {
       <AuthModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
-        onSuccess={() => {
+        onSuccess={(newUser) => {
+          setCurrentUser(newUser)
           setAuthModalOpen(false)
-          handleBuy()
+          handleBuy(newUser)
         }}
       />
     </div>

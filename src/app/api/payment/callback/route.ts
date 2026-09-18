@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get('Status') || searchParams.get('status')
   const querySource = searchParams.get('source')
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
+  const proto = req.headers.get('x-forwarded-proto') || 'http'
+  const headerOrigin = host ? `${proto}://${host}` : null
+  const reqOrigin = headerOrigin || req.nextUrl?.origin
+  const appUrl =
+    reqOrigin && !reqOrigin.includes('null')
+      ? reqOrigin
+      : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
 
   if (!authority) {
     return NextResponse.redirect(`${appUrl}/?payment=invalid_request`)

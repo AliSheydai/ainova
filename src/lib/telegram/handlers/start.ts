@@ -48,13 +48,28 @@ export async function handleStart(ctx: Context) {
   }
 
   // Case 2: Guest Deeplink (User clicked Telegram button on website while NOT logged in)
-  const isGuestDeeplink = ['guest', 'web_header', 'guest_login', 'login', 'auth'].includes(payload)
+  const isGuestDeeplink = ['guest', 'web_header', 'guest_login'].includes(payload)
   if (isGuestDeeplink) {
     await clearBotLoginSession(telegramId)
-    await startLoginFlow(
-      ctx,
-      '👋 <b>به ربات رسمی آریوچت خوش آمدید</b>\n\n' +
-        'برای دسترسی به امکانات، پیگیری و خرید اشتراک، لطفاً با شماره موبایل خود وارد شوید:'
+    // Check if user is already linked
+    const existing = await prisma.user.findUnique({ where: { telegramId } })
+    if (existing?.phone) {
+      await ctx.reply(MESSAGES.welcome(name), {
+        parse_mode: 'HTML',
+        reply_markup: mainMenuKeyboard(true),
+      })
+      return
+    }
+
+    // Unauthenticated guest: provide welcome & store menu without blocking
+    await ctx.reply(
+      `👋 <b>به فروشگاه رسمی آریوچت خوش آمدید</b>\n\n` +
+        `برای مشاهده لیست محصولات و اشتراک‌های هوش مصنوعی، گزینه «🛒 خرید اشتراک» را انتخاب نمایید.\n` +
+        `احراز هویت تنها در مرحله نهایی ثبت سفارش انجام خواهد شد.`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: mainMenuKeyboard(false, 0),
+      }
     )
     return
   }
@@ -109,6 +124,9 @@ export async function handleStart(ctx: Context) {
     return
   }
 
-  // Case 4: User started the bot from inside Telegram without deeplink login -> initiate OTP login flow
-  await startLoginFlow(ctx)
+  // Case 4: User started the bot without prior phone link -> show welcome message with guest menu
+  await ctx.reply(MESSAGES.welcome(name), {
+    parse_mode: 'HTML',
+    reply_markup: mainMenuKeyboard(false, 0),
+  })
 }

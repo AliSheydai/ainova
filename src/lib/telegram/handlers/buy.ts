@@ -7,6 +7,7 @@ import {
   deliveryPreferenceKeyboard,
   orderSummaryKeyboard,
   orderPaymentKeyboard,
+  orderCreatedKeyboard,
 } from '../keyboards'
 import {
   setBotLoginSession,
@@ -258,8 +259,8 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
       return
     }
 
-    // 5. No extra fields required -> render Order Summary Card
-    await renderOrderSummary(ctx, plan.id)
+    // 5. No extra fields required -> proceed directly to Order Creation
+    await proceedToOrderCreation(ctx, plan.id)
   } catch (error: unknown) {
     console.error('Error in handleBuyPlan:', error)
     await ctx.reply(`متأسفانه در پردازش سفارش خطایی رخ داد: ${error instanceof Error ? error.message : 'لطفاً دوباره تلاش کنید.'}`)
@@ -330,8 +331,8 @@ export async function handleSelectDeliveryPreference(
       step: 'AWAITING_CHECKOUT_FIELD',
     })
 
-    // Advance directly to Order Summary Card
-    await renderOrderSummary(ctx, plan.id)
+    // Advance directly to Order Creation
+    await proceedToOrderCreation(ctx, plan.id)
     return
   }
 
@@ -354,86 +355,67 @@ export async function handleSelectDeliveryPreference(
 }
 
 export async function renderOrderSummary(ctx: Context, planId: string) {
+  return proceedToOrderCreation(ctx, planId)
+}
+
+export async function proceedToOrderCreation(ctx: Context, planId: string) {
   const from = ctx.from
-  if (!from) return
+  if (!from || !ctx.chat) return
+
   const telegramId = String(from.id)
 
-  const plan = await prisma.plan.findUnique({
-    where: { id: planId },
-    include: { product: true },
+  const user = await prisma.user.findUnique({
+    where: { telegramId },
   })
 
-  if (!plan || !plan.active) {
-    await ctx.reply('پلن انتخابی یافت نشد یا غیرفعال است.')
+  if (!user || !user.phone) {
+    const { startLoginFlow } = await import('./auth')
+    await startLoginFlow(ctx)
     return
   }
 
   const session = (await getBotLoginSession(telegramId)) || {
     step: 'AWAITING_CHECKOUT_FIELD',
-    planId: plan.id,
-    productId: plan.productId,
+    planId,
     checkoutData: {},
   }
 
-  const checkoutData = session.checkoutData || {}
-  const isOwnAccount =
-    session.deliveryPreference === 'own_account' ||
-    checkoutData.delivery_preference === 'own_account'
-
-  let deliveryLabel = getFulfillmentLabel(plan.fulfillmentType)
-  if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
-    deliveryLabel = isOwnAccount
-      ? 'فعال‌سازی روی جیمیل شخصی شما (۱ الی ۲۴ ساعت)'
-      : 'اکانت آماده از انبار (تحویل فوری ۰ ثانیه)'
-  }
-
-  const baseAmount = plan.price
-  let finalAmount = baseAmount
-  let discountAmount = 0
-
-  if (session.couponCode) {
-    const couponValidation = await CouponService.validateAndCalculate(
-      session.couponCode,
-      baseAmount,
-      plan.productId
-    )
-    if (couponValidation.valid && couponValidation.discountAmount !== undefined) {
-      discountAmount = couponValidation.discountAmount
-      finalAmount = couponValidation.finalAmount ?? (baseAmount - discountAmount)
-    } else {
-      // Coupon became invalid
-      session.couponCode = undefined
-      session.couponDiscount = undefined
-      await setBotLoginSession(telegramId, session)
+  // Clean up any previous pending telegram order of this user to free reserved inventory and avoid pending count limit
+  try {
+    const existingPendingOrders = await prisma.order.findMany({
+      where: {
+        userId: user.id,
+        source: 'telegram',
+        status: 'PENDING_PAYMENT',
+      },
+    })
+    for (const prevOrder of existingPendingOrders) {
+      await prisma.$transaction(async (tx) => {
+        await tx.order.update({
+          where: { id: prevOrder.id },
+          data: { status: 'CANCELLED' },
+        })
+        await tx.inventoryItem.updateMany({
+          where: { orderId: prevOrder.id, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+        if (prevOrder.couponId) {
+          await CouponService.decrementCouponUsage(prevOrder.couponId, tx)
+        }
+      })
     }
+  } catch (err) {
+    console.warn('Could not clean up previous pending orders:', err)
   }
 
-  const summaryText = MESSAGES.orderSummaryCard({
-    productTitle: plan.product.title,
-    planName: plan.name,
-    deliveryLabel,
-    amount: finalAmount,
-    originalAmount: baseAmount,
-    discountAmount,
-    couponCode: session.couponCode,
-    customerGmail: checkoutData.customer_gmail || checkoutData.customer_email,
-  })
-
-  const kb = orderSummaryKeyboard(plan.id, Boolean(session.couponCode))
-
-  if (ctx.callbackQuery) {
-    await ctx.editMessageText(summaryText, {
-      parse_mode: 'HTML',
-      reply_markup: kb,
-    }).catch(async () => {
-      await ctx.reply(summaryText, { parse_mode: 'HTML', reply_markup: kb })
-    })
-  } else {
-    await ctx.reply(summaryText, {
-      parse_mode: 'HTML',
-      reply_markup: kb,
-    })
-  }
+  await executeBotOrderCreation(
+    ctx,
+    user,
+    planId,
+    session.checkoutData || {},
+    String(ctx.chat.id),
+    session.couponCode
+  )
 }
 
 export async function executeBotOrderCreation(
@@ -455,28 +437,67 @@ export async function executeBotOrderCreation(
       mobile: user.phone,
     })
 
-    let messageText = MESSAGES.orderCreated(
-      result.order.id,
-      `${result.productTitle} (${result.planName})`,
-      result.amount
-    )
-
-    const isLocalhost =
-      result.paymentUrl.includes('localhost') || result.paymentUrl.includes('127.0.0.1')
-
-    if (isLocalhost) {
-      messageText += `\n\n💳 <b>لینک درگاه پرداخت آزمایشی (محیط تست):</b>\n<code>${result.paymentUrl}</code>`
+    const from = ctx.from
+    if (from) {
+      const telegramId = String(from.id)
+      const session = await getBotLoginSession(telegramId)
+      await setBotLoginSession(telegramId, {
+        ...(session || { step: 'AWAITING_CHECKOUT_FIELD' }),
+        step: 'AWAITING_CHECKOUT_FIELD',
+        orderId: result.order.id,
+        planId,
+        productId: result.order.productId,
+        couponCode: couponCode || undefined,
+        couponDiscount: result.order.discountAmount || undefined,
+        checkoutData,
+      })
     }
 
-    const keyboard = orderPaymentKeyboard(result.paymentUrl)
+    const messageText = MESSAGES.orderCreated(
+      result.order.id,
+      `${result.productTitle} (${result.planName})`,
+      result.amount,
+      {
+        originalAmount: result.amount + (result.order.discountAmount || 0),
+        discountAmount: result.order.discountAmount || 0,
+        couponCode,
+      }
+    )
 
-    await ctx.reply(messageText, {
-      parse_mode: 'HTML',
-      reply_markup: keyboard,
-    })
+    const keyboard = orderCreatedKeyboard(
+      result.order.id,
+      result.paymentUrl,
+      Boolean(result.order.couponId || couponCode)
+    )
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(messageText, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      }).catch(async () => {
+        await ctx.reply(messageText, {
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+        })
+      })
+      await ctx.answerCallbackQuery().catch(() => {})
+    } else {
+      await ctx.reply(messageText, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      })
+    }
   } catch (error: unknown) {
     console.error('Error in executeBotOrderCreation:', error)
-    await ctx.reply(`❌ خطا در ثبت سفارش: ${error instanceof Error ? error.message : 'لطفاً مجدداً تلاش نمایید.'}`)
+    const errText = `❌ خطا در ثبت سفارش: ${error instanceof Error ? error.message : 'لطفاً مجدداً تلاش نمایید.'}`
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(errText).catch(async () => {
+        await ctx.reply(errText)
+      })
+      await ctx.answerCallbackQuery().catch(() => {})
+    } else {
+      await ctx.reply(errText)
+    }
   }
 }
 

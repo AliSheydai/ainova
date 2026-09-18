@@ -32,30 +32,75 @@ function MockBankContent() {
 
   const [loading, setLoading] = useState(false)
 
-  const buildCallbackUrl = (status: 'OK' | 'NOK') => {
+  const { formAction, hiddenFields } = React.useMemo(() => {
+    let action = '/api/payment/callback'
+    const fields: Array<{ name: string; value: string }> = [
+      { name: 'Authority', value: authority },
+    ]
+
     if (rawCallbackUrl) {
       try {
-        const url = new URL(rawCallbackUrl, window.location.origin)
-        url.searchParams.set('Authority', authority)
-        url.searchParams.set('Status', status)
-        return url.pathname + url.search
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+        const parsed = new URL(rawCallbackUrl, origin)
+        action = parsed.pathname
+        parsed.searchParams.forEach((val, key) => {
+          if (
+            key.toLowerCase() !== 'authority' &&
+            key.toLowerCase() !== 'status'
+          ) {
+            fields.push({ name: key, value: val })
+          }
+        })
       } catch {
-        // fallback to standard callback
+        // keep defaults
       }
     }
-    return `/api/payment/callback?Authority=${encodeURIComponent(authority)}&Status=${status}`
+
+    return { formAction: action, hiddenFields: fields }
+  }, [rawCallbackUrl, authority])
+
+  const buildCallbackUrl = (status: 'OK' | 'NOK') => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    if (rawCallbackUrl) {
+      try {
+        const url = new URL(rawCallbackUrl, origin || 'http://localhost:3000')
+        url.searchParams.set('Authority', authority)
+        url.searchParams.set('Status', status)
+        // Return full absolute URL using current window origin to preserve host (127.0.0.1 or localhost)
+        return `${origin}${url.pathname}${url.search}`
+      } catch {
+        // fallback to standard callback below
+      }
+    }
+    return `${origin}/api/payment/callback?Authority=${encodeURIComponent(authority)}&Status=${status}`
   }
 
-  const handlePaySuccess = () => {
+  const handlePaySuccess = (e?: React.MouseEvent) => {
+    if (loading) return
     setLoading(true)
-    const target = buildCallbackUrl('OK')
-    window.location.href = target
+    try {
+      const target = buildCallbackUrl('OK')
+      if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    } catch (err) {
+      console.error('Redirection error:', err)
+      setLoading(false)
+    }
   }
 
-  const handlePayCancel = () => {
+  const handlePayCancel = (e?: React.MouseEvent) => {
+    if (loading) return
     setLoading(true)
-    const target = buildCallbackUrl('NOK')
-    window.location.href = target
+    try {
+      const target = buildCallbackUrl('NOK')
+      if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    } catch (err) {
+      console.error('Redirection error:', err)
+      setLoading(false)
+    }
   }
 
   return (
@@ -160,29 +205,51 @@ function MockBankContent() {
               </div>
             </CardContent>
 
-            <CardFooter className='flex flex-col gap-3 pt-2 pb-6 px-6'>
-              <Button
-                onClick={handlePaySuccess}
-                disabled={loading}
-                className='w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 h-11 text-xs sm:text-sm font-bold cursor-pointer rounded-xl transition-all duration-200 active:scale-[0.99]'
+            <CardFooter className='pt-2 pb-6 px-6'>
+              <form
+                method='GET'
+                action={formAction}
+                onSubmit={() => setLoading(true)}
+                className='w-full flex flex-col gap-3'
               >
-                {loading ? (
-                  <Loader2 className='ml-2 h-4 w-4 animate-spin' />
-                ) : (
-                  <CheckCircle2 className='ml-2 h-4 w-4' />
-                )}
-                تأیید پرداخت موفق (شبیه‌سازی کارت معتبر)
-              </Button>
+                {hiddenFields.map((field) => (
+                  <input
+                    key={field.name}
+                    type='hidden'
+                    name={field.name}
+                    value={field.value}
+                  />
+                ))}
 
-              <Button
-                onClick={handlePayCancel}
-                disabled={loading}
-                variant='outline'
-                className='w-full border-border/80 bg-background/60 hover:bg-muted/80 text-muted-foreground hover:text-foreground h-11 text-xs sm:text-sm cursor-pointer rounded-xl transition-all duration-200'
-              >
-                <XCircle className='ml-2 h-4 w-4 text-muted-foreground' />
-                انصراف از پرداخت و بازگشت
-              </Button>
+                <Button
+                  type='submit'
+                  name='Status'
+                  value='OK'
+                  disabled={loading}
+                  onClick={handlePaySuccess}
+                  className='w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 h-11 text-xs sm:text-sm font-bold cursor-pointer rounded-xl transition-all duration-200 active:scale-[0.99]'
+                >
+                  {loading ? (
+                    <Loader2 className='ml-2 h-4 w-4 animate-spin' />
+                  ) : (
+                    <CheckCircle2 className='ml-2 h-4 w-4' />
+                  )}
+                  تأیید پرداخت موفق (شبیه‌سازی کارت معتبر)
+                </Button>
+
+                <Button
+                  type='submit'
+                  name='Status'
+                  value='NOK'
+                  disabled={loading}
+                  onClick={handlePayCancel}
+                  variant='outline'
+                  className='w-full border-border/80 bg-background/60 hover:bg-muted/80 text-muted-foreground hover:text-foreground h-11 text-xs sm:text-sm cursor-pointer rounded-xl transition-all duration-200'
+                >
+                  <XCircle className='ml-2 h-4 w-4 text-muted-foreground' />
+                  انصراف از پرداخت و بازگشت
+                </Button>
+              </form>
             </CardFooter>
           </Card>
         </div>

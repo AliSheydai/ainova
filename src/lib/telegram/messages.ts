@@ -86,12 +86,34 @@ export const MESSAGES = {
     `موجودی این پلن در حال حاضر تمام شده است.\n` +
     `ظرفیت‌های جدید به زودی شارژ خواهند شد. برای اطلاع سریع‌تر با پشتیبانی در ارتباط باشید.`,
 
-  orderCreated: (orderId: string, planName: string, amount: number) =>
-    `🧾 <b>سفارش شما ایجاد شد</b>\n\n` +
-    `• 🔢 <b>شناسه سفارش:</b> <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code>\n` +
-    `• 🛍 <b>محصول:</b> <b>${escapeHtml(planName)}</b>\n` +
-    `• 💰 <b>مبلغ قابل پرداخت:</b> <b>${formatPrice(amount)}</b>\n\n` +
-    `برای تکمیل خرید و دریافت سفارش، روی دکمه «💳 پرداخت آنلاین» در زیر کلیک کنید.`,
+  orderCreated: (
+    orderId: string,
+    planName: string,
+    amount: number,
+    options?: {
+      originalAmount?: number
+      discountAmount?: number
+      couponCode?: string
+    }
+  ) => {
+    let text = `🧾 <b>سفارش شما ایجاد شد</b>\n\n`
+    text += `• 🔢 <b>شناسه سفارش:</b> <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code>\n`
+    text += `• 🛍 <b>محصول:</b> <b>${escapeHtml(planName)}</b>\n`
+
+    if (
+      options?.couponCode &&
+      options?.discountAmount &&
+      options.discountAmount > 0 &&
+      options.originalAmount
+    ) {
+      text += `• 🏷 <b>قیمت پایه:</b> <s>${formatPrice(options.originalAmount)}</s>\n`
+      text += `• 🎁 <b>کد تخفیف:</b> <code>${escapeHtml(options.couponCode)}</code> (${formatPrice(options.discountAmount)} تخفیف)\n`
+    }
+
+    text += `• 💰 <b>مبلغ قابل پرداخت:</b> <b>${formatPrice(amount)}</b>\n\n`
+    text += `برای تکمیل خرید و دریافت سفارش، روی دکمه «💳 تأیید و پرداخت آنلاین» در زیر کلیک کنید.`
+    return text
+  },
 
   paymentSuccess: (orderId: string, planName: string, activationUrl: string) =>
     `🎉 <b>پرداخت با موفقیت تأیید شد</b>\n\n` +
