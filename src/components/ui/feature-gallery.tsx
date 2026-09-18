@@ -417,6 +417,15 @@ class Media {
     }
   }
 
+  updateMetadata(index: number, length: number) {
+    this.index = index;
+    this.length = length;
+    if (this.width) {
+      this.widthTotal = this.width * this.length;
+      this.x = this.width * this.index;
+    }
+  }
+
   createMesh() {
     this.plane = new Mesh(this.gl, {
       geometry: this.geometry,
@@ -635,8 +644,8 @@ class App {
 
   createGeometry() {
     this.planeGeometry = new Plane(this.gl, {
-      heightSegments: 40,
-      widthSegments: 70,
+      heightSegments: 20,
+      widthSegments: 30,
     });
   }
 
@@ -803,36 +812,56 @@ class App {
     const galleryItems = items && items.length ? items : [];
     this.itemsCount = galleryItems.length;
     this.mediasImages = galleryItems.concat(galleryItems);
+    const targetLength = this.mediasImages.length;
 
-    // Clean up old media meshes from the scene without destroying WebGL context
-    if (this.medias) {
-      this.medias.forEach((media) => {
-        if (media.plane) {
-          media.plane.setParent(null);
-        }
-      });
+    if (!this.medias) {
       this.medias = [];
     }
 
-    // Recreate medias with new items
-    this.medias = this.mediasImages.map((data, index) => {
-      return new Media({
-        geometry: this.planeGeometry,
-        gl: this.gl,
-        image: data.image,
-        index,
-        length: this.mediasImages.length,
-        renderer: this.renderer,
-        scene: this.scene,
-        screen: this.screen,
-        text: data.text || '',
-        viewport: this.viewport,
-        bend: this.bend,
-        textColor: this.textColor,
-        borderRadius: this.borderRadius,
-        font: this.font,
-      });
-    });
+    const existingCount = this.medias.length;
+    const reuseCount = Math.min(existingCount, targetLength);
+
+    // 1. Reuse existing Media instances by updating metadata and texture
+    for (let i = 0; i < reuseCount; i++) {
+      const media = this.medias[i];
+      media.updateMetadata(i, targetLength);
+      media.updateImage(this.mediasImages[i].image);
+    }
+
+    // 2. Remove excess Media instances if new list is shorter
+    if (existingCount > targetLength) {
+      for (let i = targetLength; i < existingCount; i++) {
+        const media = this.medias[i];
+        if (media.plane) {
+          media.plane.setParent(null);
+        }
+      }
+      this.medias.length = targetLength;
+    }
+
+    // 3. Create new Media instances only if new list is longer
+    if (targetLength > existingCount) {
+      for (let i = existingCount; i < targetLength; i++) {
+        const data = this.mediasImages[i];
+        const newMedia = new Media({
+          geometry: this.planeGeometry,
+          gl: this.gl,
+          image: data.image,
+          index: i,
+          length: targetLength,
+          renderer: this.renderer,
+          scene: this.scene,
+          screen: this.screen,
+          text: data.text || '',
+          viewport: this.viewport,
+          bend: this.bend,
+          textColor: this.textColor,
+          borderRadius: this.borderRadius,
+          font: this.font,
+        });
+        this.medias.push(newMedia);
+      }
+    }
 
     // Reset scroll smoothly to the beginning
     this.scroll.target = 0;

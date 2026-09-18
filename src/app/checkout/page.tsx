@@ -1,50 +1,34 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
-  Check,
-  Loader2,
-  ShoppingCart,
   Sparkles,
   ChevronLeft,
   ShieldCheck,
-  Lock,
   Zap,
-  Package,
-  User as UserIcon,
-  Tag,
-  X,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  AlertCircle,
-  Warehouse,
-  Mail,
-  KeyRound,
-  ChevronDown,
-  ChevronUp,
+  Lock,
+  Loader2,
+  FileText,
   Clock,
+  PencilLine,
+  HelpCircle,
+  Headphones,
 } from 'lucide-react'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { LoadingState } from '@/components/ui/loading-state'
 import { toast } from 'sonner'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { LandingHeader } from '@/components/landing/landing-header'
+import { LandingFooter } from '@/components/landing/landing-footer'
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
+import { CheckoutDeliverySection } from '@/components/checkout/checkout-delivery-section'
+import { CheckoutOrderSummary } from '@/components/checkout/checkout-order-summary'
+import { CheckoutMobileBar } from '@/components/checkout/checkout-mobile-bar'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
-import { formatPrice } from '@/lib/persian-utils'
 
 interface PlanData {
   id: string
@@ -64,22 +48,13 @@ interface ProductData {
   slug: string
   shortDescription: string | null
   description: string | null
+  image?: string | null
   price: number
   stock: number
   fulfillmentType: string
   features?: string[] | any
   plans?: PlanData[]
 }
-
-const defaultFeatures = [
-  'فعال‌سازی رسمی و قانونی بدون ریسک قطعی',
-  'تحویل فوری و خودکار بلافاصله پس از پرداخت',
-  'دسترسی کامل به قابلیت‌های هوش مصنوعی',
-  'پشتیبانی تخصصی در تمامی مراحل فعال‌سازی',
-  'بدون نیاز به ارسال رمز عبور یا اطلاعات حساس',
-]
-
-
 
 function getFulfillmentLabel(type?: string) {
   switch (type) {
@@ -96,346 +71,6 @@ function getFulfillmentLabel(type?: string) {
   }
 }
 
-// ─── Pre-Created Account Section ──────────────────────────────────────────────
-interface PreCreatedAccountSectionProps {
-  availableCount: number | null | undefined
-  customerGmail: string
-  setCustomerGmail: (v: string) => void
-  customerPassword: string
-  setCustomerPassword: (v: string) => void
-  showPassword: boolean
-  setShowPassword: (v: boolean) => void
-  mode: 'inventory' | 'own'
-  setMode: (v: 'inventory' | 'own') => void
-  errors?: Record<string, string>
-  onClearError?: (field: string) => void
-}
-
-function PreCreatedAccountSection({
-  availableCount,
-  customerGmail,
-  setCustomerGmail,
-  customerPassword,
-  setCustomerPassword,
-  showPassword,
-  setShowPassword,
-  mode,
-  setMode,
-  errors = {},
-  onClearError,
-}: PreCreatedAccountSectionProps) {
-  const hasInventory = availableCount !== null && availableCount !== undefined && availableCount > 0
-  const isInventoryExhausted = availableCount !== null && availableCount !== undefined && availableCount === 0
-  const inventoryUnknown = availableCount === null || availableCount === undefined
-
-  return (
-    <div className='rounded-2xl border border-border/80 bg-card/70 overflow-hidden shadow-sm transition-all'>
-      {/* Header Banner */}
-      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-border/60 bg-muted/30'>
-        <div className='flex items-center gap-2.5 min-w-0'>
-          <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs'>
-            <Package className='size-4' />
-          </div>
-          <div className='min-w-0'>
-            <p className='text-xs sm:text-sm font-bold text-foreground'>
-              پلن اکانت اختصاصی — شیوه تحویل اشتراک
-            </p>
-            <p className='text-[11px] sm:text-xs text-muted-foreground'>
-              می‌توانید اکانت آماده تحویل بگیرید یا جیمیل خودتان را وارد کنید
-            </p>
-          </div>
-        </div>
-
-        {/* Live Warehouse Badge */}
-        <div className='shrink-0 self-start sm:self-auto'>
-          {!inventoryUnknown ? (
-            hasInventory ? (
-              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs font-semibold bg-primary/10 text-primary border border-primary/25 shadow-2xs'>
-                <span className='size-2 rounded-full bg-primary animate-pulse' />
-                <Warehouse className='size-3.5 shrink-0' />
-                <span>انبار: {availableCount} اکانت آماده تحویل فوری</span>
-              </div>
-            ) : (
-              <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs font-semibold bg-primary/10 text-primary border border-primary/25 shadow-2xs'>
-                <Clock className='size-3.5 shrink-0' />
-                <span>ارسال طی یک روز کاری</span>
-              </div>
-            )
-          ) : (
-            <div className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs text-muted-foreground bg-muted/40 border border-border/60'>
-              <Warehouse className='size-3.5 shrink-0' />
-              <span>وضعیت انبار: در حال استعلام...</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className='p-3.5 sm:p-5 space-y-4'>
-        {/* Notice if warehouse is exhausted */}
-        {isInventoryExhausted && (
-          <div className='flex items-start gap-2.5 p-3 rounded-xl bg-primary/5 border border-primary/20 text-foreground text-xs sm:text-sm leading-relaxed animate-in fade-in duration-300'>
-            <Clock className='size-4 text-primary shrink-0 mt-0.5' />
-            <div>
-              <span className='font-bold'>ارسال طی یک روز کاری</span>
-              <p className='text-[11px] sm:text-xs text-muted-foreground mt-0.5'>
-                موجودی تحویل فوری این محصول موقتاً تمام شده است؛ می‌توانید سفارش خود را ثبت نمایید تا اکانت اختصاصی ظرف حداکثر ۱ روز کاری برای شما صادر و ارسال گردد (یا با انتخاب گزینه دوم، روی جیمیل شخصی‌تان فعال شود).
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* 2 Choice Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
-          {/* Option A: Pre-created account from warehouse */}
-          <div
-            role='button'
-            tabIndex={0}
-            onClick={() => setMode('inventory')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setMode('inventory')
-              }
-            }}
-            className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 transition-all cursor-pointer select-none ${
-              mode === 'inventory'
-                ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
-                : 'border-border/70 bg-card hover:border-border hover:bg-muted/30'
-            }`}
-          >
-            <div>
-              <div className='flex items-start justify-between gap-2 mb-2'>
-                <div className='flex items-center gap-2'>
-                  <div
-                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                      mode === 'inventory'
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border'
-                    }`}
-                  >
-                    {mode === 'inventory' && (
-                      <div className='size-2 rounded-full bg-white' />
-                    )}
-                  </div>
-                  <span className='text-xs sm:text-sm font-bold text-foreground'>
-                    دریافت اکانت اختصاصی آماده
-                  </span>
-                </div>
-                <Badge
-                  variant='outline'
-                  className='text-[10px] sm:text-[11px] font-semibold bg-primary/10 text-primary border-primary/20'
-                >
-                  {hasInventory ? (
-                    <>
-                      <Zap className='size-2.5 me-1' />
-                      تحویل فوری (۰ ثانیه)
-                    </>
-                  ) : (
-                    <>
-                      <Clock className='size-2.5 me-1' />
-                      ارسال طی یک روز کاری
-                    </>
-                  )}
-                </Badge>
-              </div>
-
-              <p className='text-xs sm:text-sm text-muted-foreground leading-relaxed'>
-                {hasInventory
-                  ? 'بلافاصله پس از پرداخت، مشخصات ورود (ایمیل و رمز عبور یک اکانت آماده و اختصاصی) به شما تحویل داده می‌شود.'
-                  : 'مشخصات ورود (ایمیل و رمز عبور یک اکانت اختصاصی و جدید) ظرف حداکثر ۱ روز کاری به شما تحویل داده می‌شود.'}
-              </p>
-            </div>
-
-            <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[11px] sm:text-xs text-muted-foreground'>
-              <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-primary shrink-0' />
-                <span>
-                  {hasInventory
-                    ? 'تحویل ۱۰۰٪ خودکار بلافاصله پس از پرداخت'
-                    : 'ارسال طی یک روز کاری به بخش سفارش‌های شما'}
-                </span>
-              </div>
-              <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-primary shrink-0' />
-                <span>اکانت کاملاً جدید و اختصاصی شما</span>
-              </div>
-              <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-primary shrink-0' />
-                <span>امکان تغییر رمز عبور و افزودن بازیابی</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Option B: Customer's own account */}
-          <div
-            role='button'
-            tabIndex={0}
-            onClick={() => setMode('own')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') setMode('own')
-            }}
-            className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 transition-all cursor-pointer select-none ${
-              mode === 'own'
-                ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
-                : 'border-border/70 bg-card hover:border-border hover:bg-muted/30'
-            }`}
-          >
-            <div>
-              <div className='flex items-start justify-between gap-2 mb-2'>
-                <div className='flex items-center gap-2'>
-                  <div
-                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                      mode === 'own' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                    }`}
-                  >
-                    {mode === 'own' && <div className='size-2 rounded-full bg-white' />}
-                  </div>
-                  <span className='text-xs sm:text-sm font-bold text-foreground'>
-                    فعال‌سازی روی جیمیل شخصی من
-                  </span>
-                </div>
-                <Badge
-                  variant='outline'
-                  className='text-[10px] sm:text-[11px] bg-primary/10 text-primary border-primary/20 font-semibold'
-                >
-                  <UserIcon className='size-2.5 me-1' />
-                  اکانت شخصی
-                </Badge>
-              </div>
-
-              <p className='text-xs sm:text-sm text-muted-foreground leading-relaxed'>
-                جیمیل شخصی خودتان را وارد می‌کنید تا اشتراک مستقیماً روی حساب گوگل فعلی شما فعال شود.
-              </p>
-            </div>
-
-            <div className='mt-3 pt-3 border-t border-border/40 space-y-1.5 text-[11px] sm:text-xs text-muted-foreground'>
-              <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-primary shrink-0' />
-                <span>حفظ کامل اطلاعات و تاریخچه قبلی شما</span>
-              </div>
-              <div className='flex items-center gap-1.5'>
-                <Check className='size-3.5 text-primary shrink-0' />
-                <span>بدون نیاز به تعویض حساب کاربری</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-muted-foreground font-medium'>
-                <span className='size-1.5 rounded-full bg-primary shrink-0' />
-                <span>زمان فعال‌سازی: ۱ الی ۲۴ ساعت کاری توسط ادمین</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Input fields for Option B (Customer's own account) */}
-        {mode === 'own' && (
-          <div className='rounded-xl border border-primary/25 bg-primary/5 p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200'>
-            <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>
-              <Mail className='size-4 shrink-0' />
-              <span>مشخصات حساب شخصی شما جهت فعال‌سازی</span>
-            </div>
-
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3.5'>
-              {/* Gmail field */}
-              <div className='space-y-1.5'>
-                <label className='text-xs sm:text-sm font-semibold text-foreground flex items-center justify-between'>
-                  <span className='flex items-center gap-1.5'>
-                    <Mail className='size-3.5 text-blue-500 shrink-0' />
-                    <span>آدرس جیمیل شما</span>
-                    <span className='text-rose-500 font-bold'>*</span>
-                  </span>
-                  <span className='text-[10px] sm:text-xs text-muted-foreground font-normal'>الزامی</span>
-                </label>
-                <Input
-                  type='email'
-                  placeholder='example@gmail.com'
-                  value={customerGmail}
-                  onChange={(e) => {
-                    setCustomerGmail(e.target.value)
-                    if (errors?.customerGmail && onClearError) onClearError('customerGmail')
-                  }}
-                  aria-invalid={!!errors?.customerGmail}
-                  className={`h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background transition-colors ${
-                    errors?.customerGmail
-                      ? 'border-rose-500 focus-visible:ring-rose-500'
-                      : 'border-blue-500/30 focus:border-blue-500'
-                  }`}
-                  dir='ltr'
-                />
-                {errors?.customerGmail && (
-                  <p className='text-[11px] sm:text-xs text-rose-500 font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
-                    <AlertCircle className='size-3 shrink-0' />
-                    <span>{errors.customerGmail}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Password field */}
-              <div className='space-y-1.5'>
-                <label className='text-xs sm:text-sm font-semibold text-foreground flex items-center justify-between'>
-                  <span className='flex items-center gap-1.5'>
-                    <KeyRound className='size-3.5 text-blue-500 shrink-0' />
-                    <span>رمزعبور جیمیل</span>
-                    <span className='text-rose-500 font-bold'>*</span>
-                  </span>
-                  <span className='text-[10px] sm:text-xs text-muted-foreground font-normal'>الزامی</span>
-                </label>
-                <div className='relative'>
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder='رمزعبور اکانت گوگل'
-                    value={customerPassword}
-                    onChange={(e) => {
-                      setCustomerPassword(e.target.value)
-                      if (errors?.customerPassword && onClearError) onClearError('customerPassword')
-                    }}
-                    aria-invalid={!!errors?.customerPassword}
-                    className={`h-10 text-xs sm:text-sm font-mono placeholder:text-xs sm:placeholder:text-sm bg-background pe-9 transition-colors ${
-                      errors?.customerPassword
-                        ? 'border-rose-500 focus-visible:ring-rose-500'
-                        : 'border-blue-500/30 focus:border-blue-500'
-                    }`}
-                    dir='rtl'
-                  />
-                  <button
-                    type='button'
-                    onClick={() => setShowPassword(!showPassword)}
-                    className='absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-                    aria-label={showPassword ? 'مخفی کردن رمزعبور' : 'نمایش رمزعبور'}
-                  >
-                    {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
-                  </button>
-                </div>
-                {errors?.customerPassword && (
-                  <p className='text-[11px] sm:text-xs text-rose-500 font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
-                    <AlertCircle className='size-3 shrink-0' />
-                    <span>{errors.customerPassword}</span>
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Comparison Summary Table */}
-        {/* <div className='rounded-xl border border-border/50 bg-muted/20 p-3 text-[11px] space-y-1.5'>
-          <p className='font-bold text-foreground flex items-center gap-1.5 text-[11.5px]'>
-            <span>💡 راهنمای سریع تفاوت دو شیوه تحویل:</span>
-          </p>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-muted-foreground'>
-            <div className='p-2 rounded-lg bg-background/60 border border-border/40'>
-              <span className='font-bold text-foreground block mb-0.5'>⚡ اکانت آماده انبار:</span>
-              <span>تحویل ۰ ثانیه‌ای بلافاصله پس از پرداخت | ایمیل جدید گوگل بدون نیاز به وارد کردن مشخصات.</span>
-            </div>
-            <div className='p-2 rounded-lg bg-background/60 border border-border/40'>
-              <span className='font-bold text-foreground block mb-0.5'>👤 اکانت شخصی شما:</span>
-              <span>تحویل طی چند ساعت توسط ادمین | حفظ تمامی چت‌ها، فایل‌ها و اکانت اصلی فعلی خودتان.</span>
-            </div>
-          </div>
-        </div> */}
-      </div>
-    </div>
-  )
-}
-
-// ─── Main Checkout Content ─────────────────────────────────────────────────────
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const slugParam = searchParams.get('slug') || searchParams.get('product')
@@ -457,7 +92,7 @@ function CheckoutContent() {
   const [customerPassword, setCustomerPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  // Coupon states (Section 4.3)
+  // Coupon state
   const [couponInput, setCouponInput] = useState('')
   const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [appliedCoupon, setAppliedCoupon] = useState<{
@@ -468,9 +103,9 @@ function CheckoutContent() {
 
   useEffect(() => {
     fetch('/api/auth/me')
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data.user) setCurrentUser(data.user)
+        if (data?.user) setCurrentUser(data.user)
       })
       .catch(() => {})
   }, [])
@@ -483,25 +118,28 @@ function CheckoutContent() {
 
         if (slugParam) {
           const res = await fetch(`/api/products/${slugParam}`)
-          const data = await res.json()
-          if (data.product) loadedProduct = data.product
+          if (res.ok) {
+            const data = await res.json()
+            if (data.product) loadedProduct = data.product
+          }
         }
 
         if (!loadedProduct) {
           const res = await fetch('/api/products')
-          const data = await res.json()
-          if (data.products && data.products.length > 0) {
-            if (productIdParam) {
-              const found = data.products.find((p: any) => p.id === productIdParam)
-              if (found) loadedProduct = found
+          if (res.ok) {
+            const data = await res.json()
+            if (data.products && data.products.length > 0) {
+              if (productIdParam) {
+                const found = data.products.find((p: any) => p.id === productIdParam)
+                if (found) loadedProduct = found
+              }
+              if (!loadedProduct) loadedProduct = data.products[0]
             }
-            if (!loadedProduct) loadedProduct = data.products[0]
           }
         }
 
         if (loadedProduct) {
           setProduct(loadedProduct)
-          // Determine active plan
           const activePlans = loadedProduct.plans?.filter((p) => p.active) || []
           if (planIdParam && activePlans.some((p) => p.id === planIdParam)) {
             setSelectedPlanId(planIdParam)
@@ -524,13 +162,6 @@ function CheckoutContent() {
   const effectivePrice = selectedPlan ? selectedPlan.price : product?.price || 0
   const productTitle = product?.title || product?.name || 'اشتراک ویژه'
   const isPreCreatedPlan = selectedPlan?.fulfillmentType === 'PRE_CREATED_ACCOUNT'
-
-  // Reset or initialize pre-created mode when plan changes
-  useEffect(() => {
-    setPreCreatedMode('inventory')
-    setCustomerGmail('')
-    setCustomerPassword('')
-  }, [selectedPlanId, selectedPlan?.fulfillmentType])
 
   const payablePrice = appliedCoupon
     ? Math.max(1000, effectivePrice - appliedCoupon.discountAmount)
@@ -604,7 +235,7 @@ function CheckoutContent() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    // For PRE_CREATED_ACCOUNT, if 'own' mode, validate gmail and password
+    // PRE_CREATED_ACCOUNT own mode validation
     if (isPreCreatedPlan && preCreatedMode === 'own') {
       if (!customerGmail.trim()) {
         errors.customerGmail = 'لطفاً آدرس جیمیل خود را جهت فعال‌سازی وارد نمایید.'
@@ -641,20 +272,16 @@ function CheckoutContent() {
     if (!product) return
 
     if (!validateForm()) {
-      if (!isPreCreatedPlan || preCreatedMode !== 'own') {
-        toast.error('لطفاً اطلاعات موردنیاز فرم خرید را به درستی تکمیل فرمایید.')
-      }
+      toast.error('لطفاً اطلاعات موردنیاز فرم را به درستی تکمیل فرمایید.')
       return
     }
 
-    // Check auth before sending request to avoid unnecessary 401 error
     const activeUser = overrideUser || currentUser
     if (!activeUser) {
       setAuthModalOpen(true)
       return
     }
 
-    // Build final checkoutData including pre-created account fields
     let finalCheckoutData = { ...checkoutData }
     if (isPreCreatedPlan) {
       if (preCreatedMode === 'own' && customerGmail.trim() && customerPassword.trim()) {
@@ -707,51 +334,26 @@ function CheckoutContent() {
     }
   }
 
+  const deliveryPreferenceLabel = isPreCreatedPlan
+    ? preCreatedMode === 'inventory'
+      ? 'اکانت اختصاصی آماده (تحویل آنی)'
+      : 'شارژ روی جیمیل شخصی شما'
+    : getFulfillmentLabel(selectedPlan?.fulfillmentType)
+
   return (
     <div className='relative min-h-screen bg-background text-foreground flex flex-col font-sans' dir='rtl'>
       {/* Background Ambient Glow */}
       <div aria-hidden className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
-        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/6 blur-3xl' />
+        <div className='absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/5 blur-3xl' />
       </div>
 
-      {/* Header */}
-      <header className='border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50'>
-        <div className='container mx-auto flex h-16 items-center justify-between px-4 sm:px-6'>
-          <Link href='/' className='flex items-center gap-2.5 select-none'>
-            <div className='flex size-8.5 items-center justify-center overflow-hidden rounded-xl bg-primary/10 border border-primary/20 p-1 shadow-xs'>
-              <img
-                src='/images/ario-chat.png'
-                alt='آریوچت'
-                className='size-full object-contain select-none pointer-events-none'
-                draggable={false}
-              />
-            </div>
-            <span className='text-base sm:text-lg font-bold text-foreground leading-tight'>آریوچت</span>
-          </Link>
-
-          <div className='flex items-center gap-2.5'>
-            {currentUser && (
-              <Link href='/orders'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='h-8 sm:h-8.5 gap-1.5 text-xs sm:text-sm rounded-xl border-primary/25 bg-primary/5 hover:bg-primary/10 text-foreground font-medium'
-                >
-                  <Package className='size-3.5 text-primary' />
-                  <span className='hidden sm:inline'>سفارش‌های من</span>
-                  <span className='sm:hidden'>سفارش‌ها</span>
-                </Button>
-              </Link>
-            )}
-            <ThemeSwitch />
-          </div>
-        </div>
-      </header>
+      {/* Global Site Header for seamless consistency */}
+      <LandingHeader showBottomNav={false} />
 
       {/* Main Checkout Section */}
       <main className='flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 max-w-6xl'>
-        {/* Breadcrumb */}
-        <nav aria-label='مسیر جاری' className='mb-4 sm:mb-6 flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground flex-wrap font-sans'>
+        {/* Breadcrumb Navigation */}
+        <nav aria-label='مسیر جاری' className='mb-4 sm:mb-6 flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap font-sans'>
           <Link href='/' className='hover:text-foreground transition-colors shrink-0'>
             خانه
           </Link>
@@ -762,18 +364,12 @@ function CheckoutContent() {
           {product && (
             <>
               <ChevronLeft className='size-3 shrink-0' />
-              {product.slug ? (
-                <Link
-                  href={`/products/${product.slug}`}
-                  className='hover:text-foreground transition-colors truncate max-w-[120px] sm:max-w-[200px]'
-                >
-                  {productTitle}
-                </Link>
-              ) : (
-                <span className='truncate max-w-[120px] sm:max-w-[200px]'>
-                  {productTitle}
-                </span>
-              )}
+              <Link
+                href={`/products/${product.slug}`}
+                className='hover:text-foreground transition-colors truncate max-w-[140px] sm:max-w-[220px]'
+              >
+                {productTitle}
+              </Link>
             </>
           )}
           <ChevronLeft className='size-3 shrink-0' />
@@ -782,140 +378,99 @@ function CheckoutContent() {
           </span>
         </nav>
 
-        {/* Page Header (Horizontal Bar) */}
-        <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border/50'>
+        {/* Page Top Header Bar */}
+        <div className='mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border/50'>
           <div>
-            <div className='flex items-center gap-2 mb-1.5'>
-              <Badge className='bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Badge className='bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold'>
                 <Sparkles className='size-3 me-1' />
-                تکمیل سفارش و پرداخت آنلاین
+                تکمیل نهایی خرید
               </Badge>
             </div>
-            <h1 className='text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight'>
-              خرید {productTitle}
+            <h1 className='text-lg sm:text-2xl font-extrabold text-foreground tracking-tight'>
+              خرید و فعال‌سازی {productTitle}
             </h1>
           </div>
 
           {selectedPlan && (
-            <div className='flex items-center gap-2 text-xs sm:text-sm bg-muted/40 border border-border/60 rounded-xl px-3.5 py-2 shrink-0 self-start sm:self-auto'>
+            <div className='flex items-center gap-2 bg-muted/40 border border-border/60 rounded-xl px-3.5 py-2 text-xs self-start sm:self-auto'>
               <span className='text-muted-foreground'>پلن انتخابی:</span>
               <span className='font-bold text-foreground'>{selectedPlan.name}</span>
-              <Badge variant='outline' className='text-[10.5px] bg-background/80 text-primary border-primary/30'>
-                {getFulfillmentLabel(selectedPlan.fulfillmentType)}
-              </Badge>
+              {product?.slug && (
+                <Link
+                  href={`/products/${product.slug}`}
+                  className='text-[11px] text-primary hover:underline flex items-center gap-1 font-medium ms-1.5'
+                  title='تغییر پلن یا انتخاب گزینه دیگر'
+                >
+                  <PencilLine className='size-3' />
+                  <span>تغییر پلن</span>
+                </Link>
+              )}
             </div>
           )}
         </div>
 
         {loading ? (
-          <div className='max-w-md mx-auto py-12'>
-            <LoadingState message='در حال آماده‌سازی اطلاعات سفارش...' />
+          <div className='max-w-md mx-auto py-16'>
+            <LoadingState message='در حال آماده‌سازی اطلاعات پیش‌فاکتور...' />
           </div>
         ) : !product ? (
           <Card className='max-w-md mx-auto p-6 sm:p-8 text-center border-border/70'>
-            <p className='text-muted-foreground mb-4 text-xs sm:text-sm'>محصولی برای خرید در دسترس نیست.</p>
-            <Link href='/'>
-              <Button variant='outline' size='sm' className='text-xs sm:text-sm'>بازگشت به صفحه اصلی</Button>
+            <p className='text-muted-foreground mb-4 text-xs sm:text-sm'>
+              محصول مورد نظر جهت پرداخت یافت نشد.
+            </p>
+            <Link href='/products'>
+              <Button variant='outline' size='sm' className='text-xs'>
+                مشاهده کاتالوگ محصولات
+              </Button>
             </Link>
           </Card>
         ) : (
-          /* 2-Column Horizontal Responsive Grid */
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start'>
-            {/* RIGHT COLUMN (lg:col-span-7) — User Configurations & Delivery Info */}
-            <div className='lg:col-span-7 space-y-5 sm:space-y-6'>
-              {/* Step 1: Multiple Plans Selector (if product has multiple plans) */}
-              {activePlans.length > 1 && (
-                <div className='rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3.5'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2.5'>
-                      <div className='size-7 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 font-bold text-xs'>
-                        ۱
-                      </div>
-                      <h2 className='text-sm sm:text-base font-bold text-foreground'>
-                        انتخاب مدت و پلن اشتراک
-                      </h2>
-                    </div>
-                    <span className='text-[11px] sm:text-xs text-muted-foreground'>
-                      {activePlans.length} گزینه در دسترس
-                    </span>
-                  </div>
-
-                  <div
-                    className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1'
-                    role='radiogroup'
-                    aria-label='انتخاب مدت و پلن اشتراک'
-                  >
-                    {activePlans.map((p) => {
-                      const isSelected = selectedPlan?.id === p.id
-                      return (
-                        <button
-                          key={p.id}
-                          type='button'
-                          role='radio'
-                          aria-checked={isSelected}
-                          tabIndex={isSelected ? 0 : -1}
-                          onClick={() => setSelectedPlanId(p.id)}
-                          className={`p-3.5 rounded-xl text-start border transition-all duration-150 cursor-pointer flex flex-col justify-between gap-2 select-none ${
-                            isSelected
-                              ? 'bg-primary/10 text-primary border-primary ring-2 ring-primary/20 shadow-xs'
-                              : 'bg-muted/30 hover:bg-muted/60 text-foreground border-border/60'
-                          }`}
-                        >
-                          <div className='flex items-center justify-between gap-1'>
-                            <span className='font-bold text-xs sm:text-sm text-foreground'>{p.name}</span>
-                            {isSelected && <Check className='size-3.5 text-primary shrink-0' />}
-                          </div>
-                          <div className='flex items-baseline justify-between gap-1 pt-1'>
-                            <span className='text-xs font-bold text-primary font-sans'>
-                              {formatPrice(p.price)}
-                            </span>
-                            <span className='text-[10px] text-muted-foreground'>
-                              {getFulfillmentLabel(p.fulfillmentType)}
-                            </span>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Pre-Created Account Section (Delivery preference & inputs) */}
+          /* Balanced 2-Column Responsive Layout */
+          <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-16 lg:pb-0'>
+            {/* RIGHT COLUMN (lg:col-span-7) — Delivery details & custom fields */}
+            <div className='lg:col-span-7 space-y-4 sm:space-y-5'>
+              {/* Delivery Section (if PRE_CREATED_ACCOUNT) */}
               {isPreCreatedPlan && (
-                <div className='space-y-3.5'>
-                  <PreCreatedAccountSection
-                    availableCount={selectedPlan?.availableInventoryCount}
-                    customerGmail={customerGmail}
-                    setCustomerGmail={setCustomerGmail}
-                    customerPassword={customerPassword}
-                    setCustomerPassword={setCustomerPassword}
-                    showPassword={showPassword}
-                    setShowPassword={setShowPassword}
-                    mode={preCreatedMode}
-                    setMode={setPreCreatedMode}
-                    errors={formErrors}
-                    onClearError={(key) =>
-                      setFormErrors((prev) => {
-                        const next = { ...prev }
-                        delete next[key]
-                        return next
-                      })
-                    }
-                  />
-                </div>
+                <CheckoutDeliverySection
+                  availableCount={selectedPlan?.availableInventoryCount}
+                  mode={preCreatedMode}
+                  setMode={setPreCreatedMode}
+                  customerGmail={customerGmail}
+                  setCustomerGmail={setCustomerGmail}
+                  customerPassword={customerPassword}
+                  setCustomerPassword={setCustomerPassword}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  errors={formErrors}
+                  onClearError={(key) =>
+                    setFormErrors((prev) => {
+                      const next = { ...prev }
+                      delete next[key]
+                      return next
+                    })
+                  }
+                  disabled={buying}
+                />
               )}
 
-              {/* Step 3: Dynamic Checkout Form for Custom Fields (if configured on plan) */}
+              {/* Dynamic Checkout Form (custom fields configured on plan) */}
               {selectedPlan?.checkoutFields && selectedPlan.checkoutFields.length > 0 && (
-                <div className='rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3.5'>
-                  <div className='flex items-center gap-2.5 mb-1'>
-                    <div className='size-7 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 font-bold text-xs'>
-                      {activePlans.length > 1 ? (isPreCreatedPlan ? '۳' : '۲') : (isPreCreatedPlan ? '۲' : '۱')}
+                <div className='rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3.5'>
+                  <div className='flex items-center gap-2 pb-2.5 border-b border-border/60'>
+                    <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0'>
+                      <FileText className='size-4' />
                     </div>
-                    <h2 className='text-sm sm:text-base font-bold text-foreground'>
-                      اطلاعات موردنیاز فعال‌سازی
-                    </h2>
+                    <div>
+                      <h2 className='text-sm sm:text-base font-bold text-foreground'>
+                        اطلاعات موردنیاز فعال‌سازی
+                      </h2>
+                      <p className='text-[11px] text-muted-foreground'>
+                        جهت تکمیل اشتراک، فیلدهای ستاره‌دار را تکمیل نمایید.
+                      </p>
+                    </div>
                   </div>
+
                   <DynamicCheckoutForm
                     fields={selectedPlan.checkoutFields}
                     values={checkoutData}
@@ -925,212 +480,106 @@ function CheckoutContent() {
                   />
                 </div>
               )}
-            </div>
 
-            {/* LEFT COLUMN (lg:col-span-5) — Order Summary, Coupon & Sticky Payment */}
-            <div className='lg:col-span-5 space-y-4 lg:sticky lg:top-24'>
-              <div className='relative overflow-hidden rounded-2xl border border-primary/30 shadow-xl shadow-primary/5 bg-card/95 backdrop-blur-xl'>
-                <div className='h-1.5 bg-gradient-to-r from-primary/30 via-primary to-primary/30' />
-
-                <div className='p-4 sm:p-5 space-y-4.5'>
-                  {/* Summary Header */}
-                  <div>
-                    <div className='flex items-center justify-between gap-2 mb-1'>
-                      <span className='text-[11px] sm:text-xs font-bold text-primary'>
-                        خلاصه سفارش و فاکتور
-                      </span>
-                      <Badge variant='outline' className='text-[10px] sm:text-[10.5px] bg-primary/5 text-primary border-primary/25 font-semibold'>
-                        {getFulfillmentLabel(selectedPlan?.fulfillmentType)}
-                      </Badge>
+              {/* Reassurance & How it Works Card (for instant link or other fulfillment) */}
+              {!isPreCreatedPlan && (!selectedPlan?.checkoutFields || selectedPlan.checkoutFields.length === 0) && (
+                <div className='rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3'>
+                  <div className='flex items-center gap-2.5 pb-2.5 border-b border-border/60'>
+                    <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0'>
+                      <Zap className='size-4' />
                     </div>
-                    <h3 className='text-base sm:text-lg font-bold text-foreground'>
-                      {productTitle}
-                    </h3>
-                    {selectedPlan && (
-                      <p className='text-xs text-muted-foreground mt-0.5'>
-                        پلن انتخابی: <strong className='text-foreground'>{selectedPlan.name}</strong>
+                    <div>
+                      <h2 className='text-sm sm:text-base font-bold text-foreground'>
+                        شیوه فعال‌سازی و تحویل اشتراک
+                      </h2>
+                      <p className='text-[11px] text-muted-foreground'>
+                        نحوه دریافت اکانت پس از تکمیل پرداخت آنلاین
                       </p>
-                    )}
-                  </div>
-
-                  <Separator className='bg-border/60' />
-
-                  {/* Coupon Code Section */}
-                  <div className='space-y-2'>
-                    <label className='text-xs font-semibold text-foreground/90 flex items-center gap-1.5'>
-                      <Tag className='size-3.5 text-primary' />
-                      <span>کد تخفیف دارید؟</span>
-                    </label>
-
-                    {appliedCoupon ? (
-                      <div className='flex items-center justify-between p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-xs'>
-                        <div className='flex items-center gap-2 min-w-0'>
-                          <Check className='size-4 text-primary shrink-0' />
-                          <span className='font-mono font-bold text-foreground'>{appliedCoupon.code}</span>
-                          <span className='text-primary font-medium truncate text-[11px]'>
-                            ({formatPrice(appliedCoupon.discountAmount)} تخفیف)
-                          </span>
-                        </div>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          onClick={handleRemoveCoupon}
-                          className='h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive shrink-0 cursor-pointer'
-                          title='حذف کد تخفیف'
-                        >
-                          <X className='size-3.5' />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className='flex items-center gap-2'>
-                        <Input
-                          placeholder='کد تخفیف را وارد کنید...'
-                          aria-label='کد تخفیف'
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleApplyCoupon()
-                            }
-                          }}
-                          className='h-9.5 text-xs font-mono uppercase bg-background/90 placeholder:text-xs'
-                          disabled={validatingCoupon || buying}
-                          dir='rtl'
-                        />
-                        <Button
-                          type='button'
-                          variant='outline'
-                          size='sm'
-                          onClick={handleApplyCoupon}
-                          disabled={validatingCoupon || !couponInput.trim() || buying}
-                          aria-busy={validatingCoupon}
-                          className='h-9.5 px-3 text-xs font-semibold shrink-0 cursor-pointer'
-                        >
-                          {validatingCoupon ? (
-                            <Loader2 className='size-3.5 animate-spin' aria-hidden='true' />
-                          ) : (
-                            'اعمال'
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator className='bg-border/60' />
-
-                  {/* Price Breakdown */}
-                  <div className='space-y-2 text-xs sm:text-sm'>
-                    <div className='flex items-center justify-between text-muted-foreground'>
-                      <span>قیمت پایه پلن:</span>
-                      <span className='font-sans font-medium text-foreground'>{formatPrice(effectivePrice)}</span>
-                    </div>
-
-                    {appliedCoupon && (
-                      <div className='flex items-center justify-between text-primary font-medium'>
-                        <span className='flex items-center gap-1'>
-                          <span>تخفیف اعمال‌شده:</span>
-                          <Badge variant='outline' className='text-[10px] py-0 px-1 bg-primary/10 border-primary/20 text-primary'>
-                            {appliedCoupon.code}
-                          </Badge>
-                        </span>
-                        <span className='font-sans'>- {formatPrice(appliedCoupon.discountAmount)}</span>
-                      </div>
-                    )}
-
-                    <div className='pt-2.5 border-t border-border/60 flex items-baseline justify-between'>
-                      <div>
-                        <span className='text-xs sm:text-sm font-bold text-foreground block'>
-                          مبلغ قابل پرداخت:
-                        </span>
-                        <span className='text-[10.5px] text-muted-foreground'>
-                          پرداخت آنلاین با کلیه کارت‌های شتاب
-                        </span>
-                      </div>
-                      <div className='text-start'>
-                        <span className='text-xl sm:text-2xl font-extrabold text-foreground font-sans'>
-                          {formatPrice(payablePrice)}
-                        </span>
-                      </div>
                     </div>
                   </div>
 
-                  {/* Buy / CTA Button */}
-                  <div className='pt-1 space-y-2.5'>
-                    <Button
-                      size='lg'
-                      className='w-full h-12 sm:h-13 text-sm sm:text-base font-bold shadow-md cursor-pointer rounded-xl transition-all'
-                      onClick={handleBuy}
-                      disabled={buying}
-                      aria-busy={buying}
-                    >
-                      {buying ? (
-                        <>
-                          <Loader2 className='me-2 size-5 animate-spin' aria-hidden='true' />
-                          <span className='sr-only'>در حال اتصال به درگاه پرداخت...</span>
-                        </>
-                      ) : (
-                        <ShoppingCart className='me-2 size-5' aria-hidden='true' />
-                      )}
-                      اتصال به درگاه پرداخت و دریافت اشتراک
-                    </Button>
-
-                    <div className='flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center'>
-                      <Lock className='size-3.5 text-primary shrink-0' />
+                  <div className='space-y-2 text-xs text-muted-foreground leading-relaxed'>
+                    <div className='flex items-start gap-2 text-foreground'>
+                      <Clock className='size-4 text-primary shrink-0 mt-0.5' />
                       <span>
-                        {isPreCreatedPlan && preCreatedMode === 'own'
-                          ? 'پس از پرداخت، ادمین اشتراک را روی اکانت شما فعال خواهد کرد'
-                          : 'پرداخت امن شاپرک | تحویل آنی با تضمین بازگشت وجه'}
+                        بلافاصله پس از پرداخت موفق، اطلاعات فعال‌سازی و دسترسی در صفحه رهگیری سفارش و پنل کاربری‌تان تحویل داده خواهد شد.
                       </span>
                     </div>
-                  </div>
-
-                  <Separator className='bg-border/60' />
-
-                  {/* Features & Guarantees list */}
-                  <div className='space-y-2 pt-0.5'>
-                    <span className='text-[11.5px] sm:text-xs font-semibold text-muted-foreground block'>
-                      مزایا و تضمین‌های خرید:
-                    </span>
-                    <ul className='space-y-1.5 text-[11.5px] sm:text-xs'>
-                      {(
-                        Array.isArray(product.features) && product.features.length > 0
-                          ? (product.features as string[])
-                          : defaultFeatures
-                      )
-                        .slice(0, 4)
-                        .map((feat, idx) => (
-                          <li key={idx} className='flex items-start gap-2 text-foreground/85'>
-                            <Check className='size-3.5 text-primary shrink-0 mt-0.5' />
-                            <span className='leading-tight'>{feat}</span>
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-
-                  {/* Trust badges row */}
-                  <div className='pt-2 border-t border-border/50 grid grid-cols-3 gap-2 text-center text-[10.5px] text-muted-foreground'>
-                    <div className='p-2 rounded-lg bg-muted/20 border border-border/30 flex flex-col items-center gap-1'>
-                      <ShieldCheck className='size-4 text-primary' />
-                      <span className='leading-tight'>ضمانت فعال‌سازی</span>
-                    </div>
-                    <div className='p-2 rounded-lg bg-muted/20 border border-border/30 flex flex-col items-center gap-1'>
-                      <Zap className='size-4 text-primary' />
-                      <span className='leading-tight'>تحویل سریع</span>
-                    </div>
-                    <div className='p-2 rounded-lg bg-muted/20 border border-border/30 flex flex-col items-center gap-1'>
-                      <Lock className='size-4 text-primary' />
-                      <span className='leading-tight'>درگاه رسمی شاپرک</span>
+                    <div className='flex items-start gap-2 text-foreground'>
+                      <ShieldCheck className='size-4 text-primary shrink-0 mt-0.5' />
+                      <span>
+                        اشتراک دارای گارانتی تعویض و فعال‌سازی قانونی بدون قطعی در طول مدت استفاده است.
+                      </span>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Quick Customer Support & Peace of Mind Box */}
+              <div className='rounded-2xl border border-border/50 bg-muted/20 p-3.5 sm:p-4 text-xs text-muted-foreground flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+                <div className='flex items-center gap-2.5'>
+                  <Headphones className='size-4 text-primary shrink-0' />
+                  <div>
+                    <span className='font-semibold text-foreground block text-xs'>
+                      نیاز به راهنمایی قبل از خرید دارید؟
+                    </span>
+                    <span className='text-[11px]'>
+                      پشتیبانی تلگرام و آنلاین در تمامی ساعات پاسخگوی شماست.
+                    </span>
+                  </div>
+                </div>
+
+                <a
+                  href='https://t.me/ArioChatSupport'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 shrink-0'
+                >
+                  <span>ارتباط با پشتیبانی</span>
+                  <ChevronLeft className='size-3' />
+                </a>
               </div>
+            </div>
+
+            {/* LEFT COLUMN (lg:col-span-5) — Sticky Order Summary & Pay */}
+            <div className='lg:col-span-5 lg:sticky lg:top-24 space-y-4'>
+              <CheckoutOrderSummary
+                productTitle={productTitle}
+                productSlug={product.slug}
+                productImage={product.image}
+                planName={selectedPlan?.name || 'پلن عادی'}
+                fulfillmentType={getFulfillmentLabel(selectedPlan?.fulfillmentType)}
+                effectivePrice={effectivePrice}
+                payablePrice={payablePrice}
+                appliedCoupon={appliedCoupon}
+                couponInput={couponInput}
+                setCouponInput={setCouponInput}
+                validatingCoupon={validatingCoupon}
+                handleApplyCoupon={handleApplyCoupon}
+                handleRemoveCoupon={handleRemoveCoupon}
+                buying={buying}
+                handleBuy={handleBuy}
+                deliveryPreferenceLabel={deliveryPreferenceLabel}
+              />
             </div>
           </div>
         )}
       </main>
 
+      {/* Global Footer */}
+      <LandingFooter />
+
+      {/* Mobile Sticky CTA Bar */}
+      {!loading && product && (
+        <CheckoutMobileBar
+          payablePrice={payablePrice}
+          buying={buying}
+          handleBuy={handleBuy}
+          productTitle={productTitle}
+        />
+      )}
+
+      {/* Deferred Auth Modal */}
       <AuthModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}

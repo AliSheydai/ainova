@@ -225,7 +225,7 @@ export function ProductBuyCard({
                       </span>
                     )}
                     {!planHasStock && (
-                      <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium border border-amber-500/25'>
+                      <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
                         ارسال ۱ روزه
                       </span>
                     )}
@@ -277,11 +277,11 @@ export function ProductBuyCard({
                       اکانت اختصاصی
                     </span>
                   )}
-                  {!planHasStock && (
-                    <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium border border-amber-500/25'>
+                  {/* {!planHasStock && (
+                    <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
                       ارسال ۱ روزه
                     </span>
-                  )}
+                  )} */}
                 </button>
               )
             })}
@@ -307,7 +307,7 @@ export function ProductBuyCard({
             </div>
           ) : (
             <div className='flex flex-col items-end gap-1'>
-              <Badge className='bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] sm:text-xs font-medium'>
+              <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs font-medium'>
                 ارسال طی یک روز کاری
               </Badge>
               <span className='text-[10px] text-muted-foreground'>
@@ -320,7 +320,7 @@ export function ProductBuyCard({
             تحویل آنی
           </Badge>
         ) : (
-          <Badge className='bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] sm:text-xs font-medium'>
+          <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs font-medium'>
             ارسال طی یک روز کاری
           </Badge>
         )}

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+// framer-motion kept for potential future use (already in dependencies)
 import {
   Search,
   X,
@@ -10,14 +10,9 @@ import {
   Zap,
   ArrowLeft,
   Check,
-  Filter,
   SlidersHorizontal,
-  Sparkles,
   Bot,
   Layers,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
   Clock,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -141,6 +136,9 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const [onlyInStock, setOnlyInStock] = useState(false)
   const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'newest'>('popular')
   const [currentPage, setCurrentPage] = useState(1)
+  // Animation state: toggled on each filter change to re-trigger CSS keyframe
+  const [gridAnimKey, setGridAnimKey] = useState(0)
+  const [isGridAnimating, setIsGridAnimating] = useState(false)
 
   const catalogTopRef = useRef<HTMLDivElement>(null)
 
@@ -226,11 +224,21 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
     return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE)
   }, [filteredProducts, currentPage])
 
-  // Reset page when filters change
+  // Reset page when filters change — triggers a lightweight CSS grid animation
   const handleFilterChange = (updater: () => void) => {
     updater()
     setCurrentPage(1)
+    // Increment key to re-trigger CSS animation on the grid
+    setGridAnimKey((k) => k + 1)
+    setIsGridAnimating(true)
   }
+
+  // Clear animation flag after the CSS transition completes (150ms)
+  useEffect(() => {
+    if (!isGridAnimating) return
+    const timer = setTimeout(() => setIsGridAnimating(false), 150)
+    return () => clearTimeout(timer)
+  }, [isGridAnimating, gridAnimKey])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -246,6 +254,8 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
     setOnlyInStock(false)
     setSortBy('popular')
     setCurrentPage(1)
+    setGridAnimKey((k) => k + 1)
+    setIsGridAnimating(true)
   }
 
   const hasActiveFilters =
@@ -492,9 +502,19 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
           </Button>
         </div>
       ) : (
-        /* Product Cards Grid */
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
-          {paginatedProducts.map((prod) => {
+        /* Product Cards Grid — uses CSS animation key to trigger smooth fade-in on filter change */
+        <div
+          key={gridAnimKey}
+          className={cn(
+            'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6',
+            'catalog-grid'
+          )}
+          style={{
+            // CSS custom property controls animation delay per-card via nth-child
+            '--grid-anim-duration': '200ms',
+          } as React.CSSProperties}
+        >
+          {paginatedProducts.map((prod, index) => {
             const hasPreCreatedPlan = prod.plans.some(
               (p) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT'
             )
@@ -505,7 +525,12 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             return (
               <Card
                 key={prod.id}
-                className='h-full flex flex-col justify-between overflow-hidden border-border/80 bg-card rounded-2xl shadow-xs hover:shadow-md hover:border-primary/40 transition-all duration-200'
+                className='catalog-card h-full flex flex-col justify-between overflow-hidden border-border/80 bg-card rounded-2xl shadow-xs hover:shadow-md hover:border-primary/40 transition-[box-shadow,border-color] duration-200'
+                style={{
+                  // Stagger delay: each card enters slightly after the previous.
+                  // Capped at 5 cards worth of delay to avoid long waits on large grids.
+                  animationDelay: `${Math.min(index, 5) * 35}ms`,
+                } as React.CSSProperties}
               >
                 <CardHeader className='p-4 sm:p-5 pb-3'>
                   {/* Top Bar: Image/Icon + Badges */}

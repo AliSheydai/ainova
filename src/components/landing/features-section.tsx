@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Sparkles,
   Code2,
@@ -9,20 +9,12 @@ import {
   Search,
   Palette,
   Video,
-  ChevronLeft,
-  ChevronRight,
-  Layers,
-  ArrowUpDown,
   ChevronDown,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { fadeUp, viewportOnce } from '@/lib/motion'
@@ -108,17 +100,6 @@ export function FeaturesSection() {
 
   const ActiveCategoryIcon = categoryIcons[activeCategory] || Sparkles
 
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current)
-      }
-    }
-  }, [])
-
   // Instantly update gallery textures when theme changes
   useEffect(() => {
     setGalleryItems(getFeatureGalleryItems(currentTheme, activeCategory))
@@ -127,22 +108,14 @@ export function FeaturesSection() {
   const handleCategoryChange = (category: FeatureCategory) => {
     if (category === activeCategory) return
 
-    // 1. Immediately update active category so button pill responds with zero delay
+    // Immediately update active category and reset active index
     setActiveCategory(category)
     setActiveIndex(0)
 
-    // 2. Soft, lightweight crossfade: fade down briefly, swap cards in-place, then smoothly fade in
-    setIsTransitioning(true)
-    if (transitionTimeoutRef.current) {
-      clearTimeout(transitionTimeoutRef.current)
-    }
-
-    transitionTimeoutRef.current = setTimeout(() => {
-      setGalleryItems(getFeatureGalleryItems(currentTheme, category))
-      requestAnimationFrame(() => {
-        setIsTransitioning(false)
-      })
-    }, 120)
+    // Instantly update gallery items without artificial timeout or lag
+    const newItems = getFeatureGalleryItems(currentTheme, category)
+    setGalleryItems(newItems)
+    galleryRef.current?.updateItems(newItems)
   }
 
   const handlePrev = () => {
@@ -214,10 +187,10 @@ export function FeaturesSection() {
               <DropdownMenuTrigger asChild>
                 <button
                   type='button'
-                  className='group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-primary/30 bg-card/95 text-card-foreground shadow-sm active:scale-[0.98] transition-all cursor-pointer select-none text-right'
+                  className='group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-primary/30 bg-card text-card-foreground shadow-sm transition-colors duration-150 cursor-pointer select-none text-right'
                 >
                   <div className='flex items-center gap-2 min-w-0'>
-                    <div className='flex items-center justify-center size-7 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0 group-hover:scale-105 transition-transform'>
+                    <div className='flex items-center justify-center size-7 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0'>
                       <ActiveCategoryIcon className='size-3.5' />
                     </div>
                     <div className='flex flex-col text-right truncate'>
@@ -242,8 +215,8 @@ export function FeaturesSection() {
               <DropdownMenuContent
                 align='center'
                 sideOffset={6}
-                className='w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)] p-1.5 rounded-xl shadow-xl border border-border/80 bg-popover dark:bg-[#111422] text-popover-foreground [direction:rtl] text-right z-50'
-                style={{ opacity: 1, width: 'var(--radix-dropdown-menu-trigger-width)' }}
+                className='w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)] p-1.5 rounded-xl shadow-2xl border border-primary/30 bg-card text-card-foreground [direction:rtl] text-right z-50 !animate-none !transition-none data-[state=open]:!animate-none data-[state=closed]:!animate-none'
+                style={{ opacity: 1, filter: 'none', width: 'var(--radix-dropdown-menu-trigger-width)' }}
               >
                 <div className='px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1 mb-1'>
                   <span className='text-[11px] font-bold text-foreground'>
@@ -264,7 +237,7 @@ export function FeaturesSection() {
                       <DropdownMenuItem
                         key={category.id}
                         onClick={() => handleCategoryChange(category.id)}
-                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all select-none border ${
+                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors duration-75 select-none border ${
                           isSelected
                             ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs focus:bg-primary focus:text-primary-foreground'
                             : 'bg-transparent hover:bg-muted/70 focus:bg-muted/70 text-foreground border-transparent font-medium'
@@ -289,8 +262,8 @@ export function FeaturesSection() {
                               {category.label}
                             </span>
                             <span
-                              className={`text-[10px] truncate leading-none mt-0.5 ${
-                                isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                              className={`text-[10.5px] truncate leading-normal mt-0.5 font-medium ${
+                                isSelected ? 'text-primary-foreground/85' : 'text-muted-foreground'
                               }`}
                             >
                               {category.badgeText}
@@ -338,7 +311,7 @@ export function FeaturesSection() {
                     <motion.div
                       layoutId='activeCategoryPill'
                       className='absolute inset-0 rounded-xl bg-primary shadow-md shadow-primary/25'
-                      transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.5 }}
                     />
                   )}
 
@@ -376,11 +349,7 @@ export function FeaturesSection() {
         >
           {/* Main 3D Floating Stage - zero borders or bounding box, cards float freely in section background */}
           <div
-            className={`relative w-full h-[520px] sm:h-[570px] md:h-[630px] overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)] transition-all duration-200 ease-out ${
-              isTransitioning
-                ? 'opacity-0 scale-[0.98] blur-[0.5px]'
-                : 'opacity-100 scale-100 blur-0'
-            }`}
+            className='relative w-full h-[520px] sm:h-[570px] md:h-[630px] overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]'
           >
             {/* Circular Gallery WebGL canvas */}
             {galleryItems.length > 0 && (

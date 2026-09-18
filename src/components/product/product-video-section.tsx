@@ -54,7 +54,7 @@ export function ProductVideoSection({ videoUrl, productTitle }: ProductVideoSect
               <span>ویدئو معرفی و آموزش</span>
             </Badge>
             <span className='hidden sm:inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium'>
-              <Sparkles className='size-3 text-amber-500' />
+              <Sparkles className='size-3 text-primary' />
               بررسی کامل قابلیت‌ها
             </span>
           </div>
