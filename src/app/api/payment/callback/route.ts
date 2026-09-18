@@ -15,11 +15,13 @@ import { sendOrderConfirmationSms } from '@/lib/auth/sms'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const authority =
+    searchParams.get('purchaseId') ||
     searchParams.get('Authority') ||
     searchParams.get('authority') ||
     searchParams.get('transactionId')
   const status = searchParams.get('Status') || searchParams.get('status')
   const querySource = searchParams.get('source')
+  const orderIdParam = searchParams.get('orderId')
 
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
@@ -30,27 +32,49 @@ export async function GET(req: NextRequest) {
       ? reqOrigin
       : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
 
-  if (!authority) {
+  if (!authority && !orderIdParam) {
     return NextResponse.redirect(`${appUrl}/?payment=invalid_request`)
   }
 
-  // Find payment record
-  const payment = await prisma.payment.findUnique({
-    where: { authority },
-    include: {
-      order: {
-        include: {
-          user: true,
-          product: true,
-          plan: {
-            include: {
+  try {
+    // Find payment record by authority or fallback to orderId
+    let payment = authority
+      ? await prisma.payment.findUnique({
+          where: { authority },
+          include: {
+            order: {
+              include: {
+              user: true,
               product: true,
+              plan: {
+                include: {
+                  product: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : null
+
+  if (!payment && orderIdParam) {
+    payment = await prisma.payment.findUnique({
+      where: { orderId: orderIdParam },
+      include: {
+        order: {
+          include: {
+            user: true,
+            product: true,
+            plan: {
+              include: {
+                product: true,
+              },
             },
           },
         },
       },
-    },
-  })
+    })
+  }
 
   if (!payment) {
     if (querySource === 'telegram') {
@@ -112,7 +136,16 @@ export async function GET(req: NextRequest) {
   }
 
   // 2. If bank/provider returned cancelled or error status
-  if (status && status !== 'OK' && status !== 'success') {
+  const isSuccessStatus = [
+    'OK',
+    'ok',
+    'success',
+    'SUCCESS',
+    'SUCCESSFUL',
+    'READY_TO_VERIFY',
+  ].includes(status || '')
+
+  if (status && !isSuccessStatus) {
     if (payment.status === 'PENDING') {
       await prisma.$transaction(async (tx) => {
         await tx.payment.update({
@@ -170,12 +203,17 @@ export async function GET(req: NextRequest) {
   }
 
   // 4. Verify payment via PaymentService
+  const effectiveTransactionId =
+    authority || payment.authority || searchParams.get('purchaseId') || ''
+
   const verifyResult = await PaymentService.verifyPayment({
-    transactionId: authority,
+    transactionId: effectiveTransactionId,
     amount: payment.amount,
     providerName: payment.gatewayName,
     extraParams: {
+      status: status || 'OK',
       Status: status || 'OK',
+      purchaseId: searchParams.get('purchaseId') || effectiveTransactionId,
     },
   })
 
@@ -484,4 +522,14 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.redirect(`${appUrl}/?payment=processing_error`)
   }
+} catch (topError: unknown) {
+  console.error('Fatal error in payment callback handler:', topError)
+  const querySource = searchParams.get('source')
+  if (querySource === 'telegram') {
+    return NextResponse.redirect(
+      `${appUrl}/telegram-return?status=failed&msg=server_error`
+    )
+  }
+  return NextResponse.redirect(`${appUrl}/?payment=failed&msg=server_error`)
+}
 }

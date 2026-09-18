@@ -235,7 +235,13 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">درگاه پرداخت:</span>
                 <span className="font-medium text-foreground">
-                  {order.payment?.gatewayName === 'zarinpal' ? 'زرین‌پال' : order.payment?.gatewayName || '-'}
+                  {order.payment?.gatewayName === 'zarinpal'
+                    ? 'زرین‌پال'
+                    : order.payment?.gatewayName === 'jibit'
+                      ? 'جیبیت'
+                      : order.payment?.gatewayName === 'mock'
+                        ? 'درگاه تستی (Mock)'
+                        : order.payment?.gatewayName || '-'}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
