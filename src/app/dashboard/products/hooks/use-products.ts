@@ -19,6 +19,7 @@ export function useProducts() {
   const [formProdDesc, setFormProdDesc] = useState('')
   const [formProdPrice, setFormProdPrice] = useState('')
   const [formProdImage, setFormProdImage] = useState('')
+  const [formProdVideoUrl, setFormProdVideoUrl] = useState('')
   const [formProdSortOrder, setFormProdSortOrder] = useState('1')
   const [submittingProduct, setSubmittingProduct] = useState(false)
 
@@ -28,6 +29,7 @@ export function useProducts() {
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null)
   const [planTargetProductId, setPlanTargetProductId] = useState<string>('')
   const [formPlanName, setFormPlanName] = useState('')
+  const [formPlanType, setFormPlanType] = useState('')
   const [formPlanDuration, setFormPlanDuration] = useState('1')
   const [formPlanPrice, setFormPlanPrice] = useState('')
   const [formPlanFulfillmentType, setFormPlanFulfillmentType] = useState<FulfillmentType>('ACTIVATION_LINK')
@@ -76,6 +78,7 @@ export function useProducts() {
     setFormProdDesc('')
     setFormProdPrice('')
     setFormProdImage('')
+    setFormProdVideoUrl('')
     setFormProdSortOrder(String(products.length + 1))
     setProductDialogOpen(true)
   }
@@ -89,6 +92,7 @@ export function useProducts() {
     setFormProdDesc(prod.description || '')
     setFormProdPrice(String(prod.price))
     setFormProdImage(prod.image || '')
+    setFormProdVideoUrl(prod.videoUrl || '')
     setFormProdSortOrder(String(prod.sortOrder || 1))
     setProductDialogOpen(true)
   }
@@ -109,6 +113,7 @@ export function useProducts() {
         description: formProdDesc.trim(),
         price: parseInt(formProdPrice, 10) || 0,
         image: formProdImage.trim(),
+        videoUrl: formProdVideoUrl.trim() || null,
         sortOrder: parseInt(formProdSortOrder, 10) || 0,
       }
 
@@ -190,6 +195,7 @@ export function useProducts() {
     setCurrentPlanId(null)
     setPlanTargetProductId(productId)
     setFormPlanName('')
+    setFormPlanType('')
     setFormPlanDuration('1')
     setFormPlanPrice('')
     setFormPlanFulfillmentType('ACTIVATION_LINK')
@@ -206,6 +212,7 @@ export function useProducts() {
     setCurrentPlanId(plan.id)
     setPlanTargetProductId(plan.productId)
     setFormPlanName(plan.name)
+    setFormPlanType(plan.planType || '')
     setFormPlanDuration(String(plan.duration))
     setFormPlanPrice(String(plan.price))
     setFormPlanFulfillmentType(plan.fulfillmentType || 'ACTIVATION_LINK')
@@ -237,6 +244,7 @@ export function useProducts() {
         id: currentPlanId,
         productId: planTargetProductId,
         name: formPlanName.trim(),
+        planType: formPlanType.trim() || null,
         duration: durationNum,
         price: priceNum,
         fulfillmentType: formPlanFulfillmentType,
@@ -305,6 +313,8 @@ export function useProducts() {
     setFormProdPrice,
     formProdImage,
     setFormProdImage,
+    formProdVideoUrl,
+    setFormProdVideoUrl,
     formProdSortOrder,
     setFormProdSortOrder,
     submittingProduct,
@@ -326,6 +336,8 @@ export function useProducts() {
     planTargetProductTitle: targetProduct?.title || 'محصول',
     formPlanName,
     setFormPlanName,
+    formPlanType,
+    setFormPlanType,
     formPlanDuration,
     setFormPlanDuration,
     formPlanPrice,

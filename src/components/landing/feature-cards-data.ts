@@ -1,15 +1,73 @@
+export type FeatureCategory = 'all' | 'coding' | 'education' | 'research' | 'design' | 'media'
+
+export interface FeatureCategoryInfo {
+  id: FeatureCategory
+  label: string
+  shortLabel: string
+  description: string
+  badgeText: string
+}
+
+export const featureCategories: FeatureCategoryInfo[] = [
+  {
+    id: 'all',
+    label: 'همه امکانات',
+    shortLabel: 'همه',
+    description: 'نگاهی جامع به برجسته‌ترین قابلیت‌های اشتراک‌های نسل جدید هوش مصنوعی',
+    badgeText: 'پوشش کامل',
+  },
+  {
+    id: 'coding',
+    label: 'کدنویسی و توسعه',
+    shortLabel: 'برنامه‌نویسی',
+    description: 'ابزارهای تخصصی برای برنامه‌نویسان، تحلیل معماری کد، اجرای زنده و عیب‌یابی',
+    badgeText: 'ویژه توسعه‌دهندگان',
+  },
+  {
+    id: 'education',
+    label: 'تحصیل و یادگیری',
+    shortLabel: 'دانشگاه و تحصیل',
+    description: 'خلاصه‌سازی کتب و مقالات دانشگاهی، حل تمرین، پادکست‌های علمی و یادگیری سریع',
+    badgeText: 'ویژه دانشجویان و اساتید',
+  },
+  {
+    id: 'research',
+    label: 'پژوهش و تحقیق عمیق',
+    shortLabel: 'تحقیق و سرچ',
+    description: 'عامل‌های کاوشگر خودکار وب، فکت‌چک علمی و پردازش اسناد هزار صفحه‌ای',
+    badgeText: 'ویژه پژوهشگران',
+  },
+  {
+    id: 'design',
+    label: 'طراحی و هنر دیجیتال',
+    shortLabel: 'طراحی و گرافیک',
+    description: 'تولید تصاویر فوق‌واقع‌گرایانه، طراحی پوستر، کانسپت آرت و ادیت هوشمند بصری',
+    badgeText: 'ویژه طراحان و هنرمندان',
+  },
+  {
+    id: 'media',
+    label: 'ویدیو، فیلم و رسانه',
+    shortLabel: 'ویدیو و فیلم',
+    description: 'ساخت ویدیوهای سینمایی 4K با هوش مصنوعی، چت با فیلم‌ها و دوبله چندزبانه',
+    badgeText: 'ویژه فیلم‌سازان و مدیا',
+  },
+]
+
 export interface FeatureItem {
   id: number
+  categories: FeatureCategory[]
   tag: string
   title: string
   subtitle: string
   description: string
   highlights: [string, string, string]
+  iconType: string
 }
 
 export const featureItemsData: FeatureItem[] = [
   {
     id: 1,
+    categories: ['all', 'coding', 'research'],
     tag: 'Next-Gen Models',
     title: 'مدل‌های فوق‌پیشرفته هوش مصنوعی',
     subtitle: 'GPT-5 • Claude 3.7 • Gemini 2.5',
@@ -20,9 +78,11 @@ export const featureItemsData: FeatureItem[] = [
       'تحلیل پروژه‌های سنگین کدنویسی و دیباگ',
       'پنجره متنی ۲ میلیون توکن با فهم دقیق',
     ],
+    iconType: 'chip',
   },
   {
     id: 2,
+    categories: ['all', 'research'],
     tag: 'Deep Research',
     title: 'پژوهش خودکار و قابلیت‌های Agentic',
     subtitle: 'Autonomous Web Agents • Synthesis',
@@ -33,22 +93,26 @@ export const featureItemsData: FeatureItem[] = [
       'استخراج رفرنس و ارزیابی فکت‌چک علمی',
       'تدوین گزارش تحلیلی مستند و ساختاریافته',
     ],
+    iconType: 'compass',
   },
   {
     id: 3,
+    categories: ['all', 'media', 'design'],
     tag: 'Video Studio',
     title: 'استودیوی ویدیوسازی و متحرک‌سازی',
     subtitle: 'Veo 3.1 • Sora • Runway Gen-3',
     description:
-      'خلق ویدیوهای باکیفیت و صحنه‌پردازی سینمایی با مدل‌های پیشرو (مانند Veo 3.1 و Flow)؛ تبدیل آنی ایده‌های متنی و تصاویر ثابت به ویدیوهای متحرک.',
+      'خلق ویدیوهای باکیفیت و صحنه‌پردازی سینمایی با مدل‌های پیشرو؛ تبدیل آنی ایده‌های متنی و تصاویر ثابت به ویدیوهای متحرک 4K با افکت‌های واقع‌گرایانه.',
     highlights: [
       'تبدیل آنی ایده و عکس به ویدیوهای سینمایی',
       'کیفیت سینمایی 4K با فیزیک و نورپردازی دقیق',
       'حفظ کامل پیوستگی کاراکتر و زوایای دوربین',
     ],
+    iconType: 'camera',
   },
   {
     id: 4,
+    categories: ['all', 'design'],
     tag: 'Image Generation',
     title: 'طراحی گرافیک و تولید تصویر هنری',
     subtitle: 'Midjourney v7 • Imagen 3 • DALL-E',
@@ -59,22 +123,26 @@ export const featureItemsData: FeatureItem[] = [
       'طراحی پوستر تبلیغاتی و کانسپت آرت حرفه‌ای',
       'ابزارهای ویرایش و روتوش هوشمند Inpainting',
     ],
+    iconType: 'palette',
   },
   {
     id: 5,
+    categories: ['all', 'coding'],
     tag: 'Canvas & Custom Bots',
     title: 'محیط تعاملی کار و ساخت دستیار اختصاصی',
     subtitle: 'Interactive Canvas • Custom GPTs',
     description:
-      'فضای کار هوشمند Canvas برای برنامه‌نویسی زنده و نگارش متون تعاملی، همراه با قابلیت شخصی‌سازی دستیارهای اختصاصی متناسب با اهداف کاری شما.',
+      'فضای کار هوشمند Canvas برای برنامه‌نویسی زنده و نگارش متون تعاملی، همراه با قابلیت شخصی‌سازی دستیارهای اختصاصی متناسب با داکیومنت‌های کاری شما.',
     highlights: [
       'بوم تعاملی برای کدنویسی زنده و نگارش متن',
       'ساخت دستیاران هوشمند سفارشی با دانش شما',
       'اتصال آسان به پروژه‌ها، مخازن و مستندات',
     ],
+    iconType: 'terminal',
   },
   {
     id: 6,
+    categories: ['all', 'education', 'research'],
     tag: 'Smart Research',
     title: 'دستیار مطالعاتی و دانشگاهی هوشمند',
     subtitle: 'NotebookLM • Deep Search',
@@ -85,45 +153,157 @@ export const featureItemsData: FeatureItem[] = [
       'تولید خودکار پادکست‌های صوتی گفتگو‌محور',
       'پاسخ‌های تحلیلی و مستند بر پایه منابع شما',
     ],
+    iconType: 'academic',
   },
   {
     id: 7,
+    categories: ['all', 'media', 'education'],
     tag: 'Video Analytics',
     title: 'چت و خلاصه‌سازی هوشمند ویدیوها',
     subtitle: 'Video Intelligence • Timestamp Index',
     description:
-      'گفتگو و طرح سوال پیرامون محتوای ویدیوهای آموزشی و یوتیوب؛ استخراج سرفصل‌ها، نکات کلیدی و کدهای آموزشی بدون اتلاف وقت.',
+      'گفتگو و طرح سوال پیرامون محتوای ویدیوهای آموزشی و یوتیوب؛ استخراج سرفصل‌ها، نکات کلیدی و کدهای آموزشی بدون اتلاف وقت در تماشای ساعت‌ها فیلم.',
     highlights: [
       'خلاصه‌سازی ویدیوهای طولانی آموزشی و یوتیوب',
       'استخراج دقیق سرفصل‌ها، کدها و نکات کلیدی',
       'پرسش و پاسخ تعاملی از محتوای ثانیه‌به‌ثانیه',
     ],
+    iconType: 'youtube',
   },
   {
     id: 8,
+    categories: ['all', 'education', 'research'],
     tag: 'Workspace & Web',
     title: 'یکپارچگی با ابزارهای اداری و مرورگر',
     subtitle: 'Google Workspace • Browser Extensions',
     description:
-      'نگارش و خلاصه‌سازی ایمیل‌ها، تدوین اسناد متنی، ساخت ارائه‌ها و اسلایدها با دستیار هوشمند درون محیط کاربری و مرورگر وب.',
+      'نگارش و خلاصه‌سازی ایمیل‌ها، تدوین اسناد متنی، ساخت ارائه‌ها و اسلایدها با دستیار هوشمند درون محیط کاربری، Docs ،Gmail و مرورگر وب.',
     highlights: [
       'نگارش سریع و بازنویسی حرفه‌ای ایمیل‌ها',
       'تدوین اسناد متنی و ساخت ارائه‌ها و اسلایدها',
       'دستیار هوشمند ادغام‌شده در محیط مرورگر وب',
     ],
+    iconType: 'workspace',
   },
   {
     id: 9,
+    categories: ['all', 'media', 'coding'],
     tag: 'Cloud Storage',
     title: 'فضای ذخیره‌سازی ابری پرظرفیت و امن',
     subtitle: '2TB to 5TB Cloud • Google One',
     description:
-      'بهره‌مندی از حجم بالای فضای ابری مطمئن برای پشتیبان‌گیری تمام عکس‌ها، ویدیوها، پروژه‌ها و اسناد اداری بدون دغدغه محدودیت حافظه.',
+      'بهره‌مندی از حجم بالای فضای ابری مطمئن برای پشتیبان‌گیری تمام عکس‌ها، ویدیوها، پروژه‌های کدنویسی و اسناد اداری بدون دغدغه محدودیت حافظه.',
     highlights: [
       'فضای ابری پرظرفیت چند ترابایتی پرسرعت',
       'پشتیبان‌گیری رمزنگاری‌شده و کاملاً مطمئن',
       'دسترسی همگام و آنی در تمام دستگاه‌ها',
     ],
+    iconType: 'cloud',
+  },
+  {
+    id: 10,
+    categories: ['coding'],
+    tag: 'Code Architecture',
+    title: 'تحلیل معماری نرم‌افزار و رفع باگ',
+    subtitle: 'Full-Stack Debugging • Code Refactor',
+    description:
+      'بررسی عمیق پول‌ریکوئست‌ها، ساختار پایگاه داده و پیدا کردن گلوگاه‌های کارایی و امنیتی در پروژه‌های پیچیده و بزرگ با ارائه کدهای بهینه.',
+    highlights: [
+      'کشف خودکار خطاهای منطقی و امنیتی نرم‌افزار',
+      'پیشنهاد ریفکتور تمیز و بهینه‌سازی دیتابیس',
+      'تولید خودکار یونیت‌تست‌ها و داکیومنت فنی',
+    ],
+    iconType: 'bug-check',
+  },
+  {
+    id: 11,
+    categories: ['education'],
+    tag: 'Step-by-Step Tutor',
+    title: 'مدرس خصوصی و حل‌کننده گام‌به‌گام',
+    subtitle: 'Interactive STEM Tutor • Exam Prep',
+    description:
+      'آموزش تعاملی مباحث سنگین ریاضی، فیزیک، مهندسی و علوم کامپیوتر با حل گام‌به‌گام و شیوه تدریس سقراطی متناسب با سطح درک هر دانشجو.',
+    highlights: [
+      'حل تشریحی مسائل ریاضی و مهندسی با فرمول',
+      'شبیه‌سازی سناریوهای امتحانی و آزمون‌یار هوشمند',
+      'توضیح مفهومی مباحث با مثال‌های بصری و ساده',
+    ],
+    iconType: 'tutor',
+  },
+  {
+    id: 12,
+    categories: ['research', 'education'],
+    tag: 'Massive Context',
+    title: 'تحلیل اسناد حجیم با ۲ میلیون توکن',
+    subtitle: 'Long Context Engine • Cross-Document',
+    description:
+      'آپلود صدها صفحه کتاب، قراردادهای پیچیده و مقالات ژورنال بدون افت کیفیت فهم؛ پاسخ‌دهی دقیق به سوالات موشکافانه با ذکر شماره صفحه و پاراگراف.',
+    highlights: [
+      'تحلیل همزمان چندین جلد کتاب و پایان‌نامه',
+      'جستجوی مفهومی فوق‌سریع در هزاران صفحه سند',
+      'استخراج دقیق جدول‌ها، نمودارها و ارقام کلیدی',
+    ],
+    iconType: 'doc-search',
+  },
+  {
+    id: 13,
+    categories: ['design'],
+    tag: 'Brand & Marketing',
+    title: 'طراحی هویت بصری و گرافیک تبلیغاتی',
+    subtitle: 'Visual Identity • Marketing Assets',
+    description:
+      'خلق لوگو، بنرهای شبکه‌های اجتماعی، پالت‌های رنگی برند و موکاپ‌های محصول با بالاترین رزولوشن چاپی و دیجیتال متناسب با استراتژی بازاریابی.',
+    highlights: [
+      'طراحی بنرهای چشم‌نواز اینستاگرام و وب‌سایت',
+      'تولید هویت بصری یکپارچه و استایل‌گاید برند',
+      'خروجی باکیفیت وکتوری و بدون افت رزولوشن',
+    ],
+    iconType: 'brand-art',
+  },
+  {
+    id: 14,
+    categories: ['media'],
+    tag: 'AI Dubbing & Voice',
+    title: 'دوبله هوشمند، زیرنویس و ترجمه فیلم',
+    subtitle: 'Multilingual Audio • Voice Match',
+    description:
+      'ترجمه و دوبله صوتی ویدیوهای یوتیوب و دوره‌های آموزشی با بازسازی تن صدا، احساس و زیرنویس هماهنگ ثانیه‌به‌ثانیه به ده‌ها زبان زنده دنیا.',
+    highlights: [
+      'دوبله طبیعی با حفظ لحن و هیجان گوینده اصلی',
+      'تولید فایل زیرنویس SRT بی‌نقص و تایم‌کد دقیق',
+      'پشتیبانی جامع از فیلم‌ها، مصاحبه‌ها و پادکست‌ها',
+    ],
+    iconType: 'soundwave',
+  },
+  {
+    id: 15,
+    categories: ['coding', 'research'],
+    tag: 'Custom Knowledge Bots',
+    title: 'ساخت ایجنت‌های متصل به پایگاه دانش',
+    subtitle: 'RAG Systems • API Agents',
+    description:
+      'توسعه بات‌های هوشمند اختصاصی که به APIها، مستندات شرکتی و دیتابیس‌های شما متصل شده و امور پرتکرار را به صورت خودکار و دقیق مدیریت می‌کنند.',
+    highlights: [
+      'اتصال مستقیم به داده‌ها و مستندات محلی شما',
+      'فراخوانی توابع و وب‌هوک‌ها به صورت خودکار',
+      'حفظ کامل محرمانگی داده‌ها و حریم خصوصی',
+    ],
+    iconType: 'bot-agent',
+  },
+  {
+    id: 16,
+    categories: ['media'],
+    tag: 'Media Archive & Streaming',
+    title: 'آرشیو و استریم اختصاصی فیلم و محتوا',
+    subtitle: 'High-Bitrate Media • Fast Sync',
+    description:
+      'نگهداری و پخش روان ساعت‌ها فیلم باکیفیت بالا، مستندها و دوره‌های ویدیویی روی فضای ابری اختصاصی بدون افت کیفیت در موبایل، تبلت و لپ‌تاپ.',
+    highlights: [
+      'استریم پرسرعت بدون قطعی و بافرینگ آزاردهنده',
+      'دسترسی همگام به کلکسیون فیلم‌ها در تمام پلتفرم‌ها',
+      'فضای ابری حجیم اختصاصی بدون ریسک مسدودی',
+    ],
+    iconType: 'media-vault',
   },
 ]
 
@@ -176,7 +356,7 @@ function wrapText(
 // Draw a themed vector icon for each feature to give the card identity
 function drawFeatureIcon(
   ctx: CanvasRenderingContext2D,
-  id: number,
+  iconType: string,
   cx: number,
   cy: number,
   isDark: boolean = true
@@ -189,14 +369,12 @@ function drawFeatureIcon(
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
-  switch (id) {
-    case 1: {
+  switch (iconType) {
+    case 'chip': {
       // AI Brain / Microchip
       ctx.beginPath()
       ctx.strokeRect(cx - 14, cy - 14, 28, 28)
-      // Core
       ctx.fillRect(cx - 6, cy - 6, 12, 12)
-      // Pins
       const pins = [-10, 0, 10]
       pins.forEach((p) => {
         ctx.beginPath()
@@ -218,12 +396,11 @@ function drawFeatureIcon(
       })
       break
     }
-    case 2: {
+    case 'compass': {
       // Deep Search / Agent Compass
       ctx.beginPath()
       ctx.arc(cx, cy, 16, 0, Math.PI * 2)
       ctx.stroke()
-      // Compass needle
       ctx.beginPath()
       ctx.moveTo(cx, cy - 11)
       ctx.lineTo(cx + 5, cy)
@@ -236,7 +413,7 @@ function drawFeatureIcon(
       ctx.fill()
       break
     }
-    case 3: {
+    case 'camera': {
       // Cinema / Video Camera
       ctx.beginPath()
       ctx.strokeRect(cx - 15, cy - 11, 20, 22)
@@ -247,13 +424,12 @@ function drawFeatureIcon(
       ctx.lineTo(cx + 5, cy + 5)
       ctx.closePath()
       ctx.stroke()
-      // Reel circle
       ctx.beginPath()
       ctx.arc(cx - 5, cy, 4, 0, Math.PI * 2)
       ctx.stroke()
       break
     }
-    case 4: {
+    case 'palette': {
       // Art Palette / Image Generation
       ctx.beginPath()
       ctx.arc(cx, cy, 16, 0, Math.PI * 2)
@@ -273,7 +449,7 @@ function drawFeatureIcon(
       ctx.stroke()
       break
     }
-    case 5: {
+    case 'terminal': {
       // Canvas / Interactive Studio & Bot
       ctx.beginPath()
       ctx.strokeRect(cx - 15, cy - 12, 30, 24)
@@ -281,12 +457,10 @@ function drawFeatureIcon(
       ctx.moveTo(cx - 15, cy - 4)
       ctx.lineTo(cx + 15, cy - 4)
       ctx.stroke()
-      // Dot controls
       ctx.beginPath()
       ctx.arc(cx - 9, cy - 8, 2, 0, Math.PI * 2)
       ctx.arc(cx - 3, cy - 8, 2, 0, Math.PI * 2)
       ctx.fill()
-      // Terminal prompt
       ctx.beginPath()
       ctx.moveTo(cx - 9, cy + 2)
       ctx.lineTo(cx - 4, cy + 6)
@@ -294,25 +468,29 @@ function drawFeatureIcon(
       ctx.stroke()
       break
     }
-    case 6: {
-      // Academic / Smart Research Book
+    case 'academic': {
+      // Academic Hat & Book
       ctx.beginPath()
-      ctx.moveTo(cx, cy - 8)
-      ctx.lineTo(cx + 15, cy - 12)
-      ctx.lineTo(cx + 15, cy + 10)
-      ctx.lineTo(cx, cy + 14)
-      ctx.lineTo(cx - 15, cy + 10)
-      ctx.lineTo(cx - 15, cy - 12)
+      ctx.moveTo(cx, cy - 12)
+      ctx.lineTo(cx + 15, cy - 5)
+      ctx.lineTo(cx, cy + 2)
+      ctx.lineTo(cx - 15, cy - 5)
       ctx.closePath()
       ctx.stroke()
       ctx.beginPath()
-      ctx.moveTo(cx, cy - 8)
-      ctx.lineTo(cx, cy + 14)
+      ctx.moveTo(cx - 10, cy - 3)
+      ctx.lineTo(cx - 10, cy + 8)
+      ctx.quadraticCurveTo(cx, cy + 14, cx + 10, cy + 8)
+      ctx.lineTo(cx + 10, cy - 3)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx + 15, cy - 5)
+      ctx.lineTo(cx + 15, cy + 7)
       ctx.stroke()
       break
     }
-    case 7: {
-      // Video Analytics & Timestamp
+    case 'youtube': {
+      // Video Analytics & Play
       ctx.beginPath()
       ctx.strokeRect(cx - 16, cy - 11, 32, 22)
       ctx.beginPath()
@@ -323,7 +501,7 @@ function drawFeatureIcon(
       ctx.fill()
       break
     }
-    case 8: {
+    case 'workspace': {
       // Workspace & Cloud Apps
       ctx.beginPath()
       ctx.strokeRect(cx - 14, cy - 14, 12, 12)
@@ -332,7 +510,7 @@ function drawFeatureIcon(
       ctx.strokeRect(cx + 2, cy + 2, 12, 12)
       break
     }
-    case 9: {
+    case 'cloud': {
       // Cloud Storage
       ctx.beginPath()
       ctx.arc(cx - 6, cy - 1, 9, Math.PI * 0.8, Math.PI * 2)
@@ -342,6 +520,133 @@ function drawFeatureIcon(
       ctx.arc(cx - 11, cy + 5, 7, Math.PI * 0.5, Math.PI * 1.4)
       ctx.closePath()
       ctx.stroke()
+      break
+    }
+    case 'bug-check': {
+      // Code Inspection / Bug / Shield
+      ctx.beginPath()
+      ctx.arc(cx, cy - 1, 10, 0, Math.PI * 2)
+      ctx.stroke()
+      // Bug antennae & legs
+      ctx.beginPath()
+      ctx.moveTo(cx - 10, cy - 4)
+      ctx.lineTo(cx - 16, cy - 8)
+      ctx.moveTo(cx + 10, cy - 4)
+      ctx.lineTo(cx + 16, cy - 8)
+      ctx.moveTo(cx - 10, cy + 2)
+      ctx.lineTo(cx - 16, cy + 4)
+      ctx.moveTo(cx + 10, cy + 2)
+      ctx.lineTo(cx + 16, cy + 4)
+      ctx.stroke()
+      // Inner checkmark
+      ctx.beginPath()
+      ctx.moveTo(cx - 4, cy)
+      ctx.lineTo(cx - 1, cy + 3)
+      ctx.lineTo(cx + 4, cy - 3)
+      ctx.stroke()
+      break
+    }
+    case 'tutor': {
+      // Smart Step-by-Step Solver (Atom / Math Formula)
+      ctx.beginPath()
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, 15, 6, Math.PI / 4, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, 15, 6, -Math.PI / 4, 0, Math.PI * 2)
+      ctx.stroke()
+      break
+    }
+    case 'doc-search': {
+      // Massive Document Context
+      ctx.beginPath()
+      ctx.strokeRect(cx - 12, cy - 14, 18, 24)
+      ctx.beginPath()
+      ctx.moveTo(cx - 8, cy - 7)
+      ctx.lineTo(cx + 2, cy - 7)
+      ctx.moveTo(cx - 8, cy - 1)
+      ctx.lineTo(cx + 2, cy - 1)
+      ctx.moveTo(cx - 8, cy + 5)
+      ctx.lineTo(cx, cy + 5)
+      ctx.stroke()
+      // Magnifying glass on corner
+      ctx.beginPath()
+      ctx.arc(cx + 7, cy + 6, 6, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx + 11, cy + 10)
+      ctx.lineTo(cx + 16, cy + 15)
+      ctx.stroke()
+      break
+    }
+    case 'brand-art': {
+      // Visual Brand & Vector Pen Tool
+      ctx.beginPath()
+      ctx.moveTo(cx, cy - 14)
+      ctx.lineTo(cx + 11, cy)
+      ctx.lineTo(cx, cy + 14)
+      ctx.lineTo(cx - 11, cy)
+      ctx.closePath()
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2)
+      ctx.fill()
+      break
+    }
+    case 'soundwave': {
+      // Voice / Sound Waves / AI Dubbing
+      const heights = [6, 12, 18, 14, 8]
+      const xs = [-12, -6, 0, 6, 12]
+      xs.forEach((x, i) => {
+        const h = heights[i]
+        ctx.beginPath()
+        ctx.moveTo(cx + x, cy - h)
+        ctx.lineTo(cx + x, cy + h)
+        ctx.stroke()
+      })
+      break
+    }
+    case 'bot-agent': {
+      // Autonomous Bot / Custom Agent
+      ctx.beginPath()
+      ctx.strokeRect(cx - 12, cy - 8, 24, 18)
+      // Antennas
+      ctx.beginPath()
+      ctx.moveTo(cx, cy - 8)
+      ctx.lineTo(cx, cy - 14)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(cx, cy - 15, 2.5, 0, Math.PI * 2)
+      ctx.fill()
+      // Eyes
+      ctx.beginPath()
+      ctx.arc(cx - 5, cy - 1, 2.5, 0, Math.PI * 2)
+      ctx.arc(cx + 5, cy - 1, 2.5, 0, Math.PI * 2)
+      ctx.fill()
+      // Smile
+      ctx.beginPath()
+      ctx.arc(cx, cy + 4, 4, 0, Math.PI)
+      ctx.stroke()
+      break
+    }
+    case 'media-vault': {
+      // Film Reel / Media Vault
+      ctx.beginPath()
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2)
+      ctx.stroke()
+      const holeAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3]
+      holeAngles.forEach((ang) => {
+        const hx = cx + Math.cos(ang) * 8.5
+        const hy = cy + Math.sin(ang) * 8.5
+        ctx.beginPath()
+        ctx.arc(hx, hy, 2, 0, Math.PI * 2)
+        ctx.fill()
+      })
       break
     }
     default: {
@@ -354,12 +659,27 @@ function drawFeatureIcon(
   ctx.restore()
 }
 
+const featureCardDataUrlCache = new Map<string, string>()
+
+export function preloadFeatureCardsCache(theme: 'dark' | 'light' = 'dark') {
+  if (typeof document === 'undefined') return
+  featureItemsData.forEach((item) => {
+    createFeatureCardDataUrl(item, theme)
+  })
+}
+
 export function createFeatureCardDataUrl(
   item: FeatureItem,
   theme: 'dark' | 'light' = 'dark'
 ): string {
   if (typeof document === 'undefined') {
     return ''
+  }
+
+  const cacheKey = `${item.id}-${theme}`
+  const cached = featureCardDataUrlCache.get(cacheKey)
+  if (cached) {
+    return cached
   }
 
   const isDark = theme === 'dark'
@@ -442,7 +762,7 @@ export function createFeatureCardDataUrl(
   ctx.stroke()
 
   // Draw custom vector icon
-  drawFeatureIcon(ctx, item.id, iconBoxX + iconBoxSize / 2, iconRowY + iconBoxSize / 2, isDark)
+  drawFeatureIcon(ctx, item.iconType, iconBoxX + iconBoxSize / 2, iconRowY + iconBoxSize / 2, isDark)
 
   // Subtitle / Models Pill (placed next to icon box)
   const subH = iconBoxSize
@@ -590,18 +910,31 @@ export function createFeatureCardDataUrl(
   ctx.lineWidth = 1.5
   ctx.stroke()
 
-  // Shield / check tick inside footer
   ctx.direction = 'rtl'
   ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
   ctx.font = '700 24px Vazirmatn, system-ui, sans-serif'
   ctx.fillStyle = isDark ? '#93c5fd' : '#1d4ed8'
   ctx.fillText('تحویل آنی و فعال‌سازی قانونی روی حساب شخصی شما', width / 2, footerY + footerH / 2 + 1)
 
-  return canvas.toDataURL('image/png')
+  const dataUrl = canvas.toDataURL('image/png')
+  featureCardDataUrlCache.set(cacheKey, dataUrl)
+  return dataUrl
 }
 
-export function getFeatureGalleryItems(theme: 'dark' | 'light' = 'dark') {
-  return featureItemsData.map((item) => ({
+export function getFeaturesByCategory(category: FeatureCategory): FeatureItem[] {
+  if (category === 'all') {
+    return featureItemsData
+  }
+  return featureItemsData.filter((item) => item.categories.includes(category))
+}
+
+export function getFeatureGalleryItems(
+  theme: 'dark' | 'light' = 'dark',
+  category: FeatureCategory = 'all'
+) {
+  const items = getFeaturesByCategory(category)
+  return items.map((item) => ({
     image: createFeatureCardDataUrl(item, theme),
     text: '', // Empty text so no duplicate WebGL mesh below card
     tag: item.tag,
@@ -611,4 +944,5 @@ export function getFeatureGalleryItems(theme: 'dark' | 'light' = 'dark') {
     highlights: item.highlights,
   }))
 }
+
 

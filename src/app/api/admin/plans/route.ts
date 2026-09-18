@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     // Enrich plans with real-time stock
     const enrichedPlans = await Promise.all(
-      plans.map(async (plan) => {
+      plans.map(async (plan: any) => {
         const stock = await FulfillmentService.getPlanStock(plan.id)
         return {
           ...plan,
@@ -42,6 +42,25 @@ export async function GET(req: NextRequest) {
         }
       })
     )
+
+    // Ensure planType is populated if Prisma Client in memory missed it
+    try {
+      const missingTypeIds = enrichedPlans.filter((p: any) => p.planType === undefined).map((p: any) => p.id)
+      if (missingTypeIds.length > 0) {
+        const rawRows = await prisma.$queryRawUnsafe<{ id: string; planType: string | null }[]>(
+          `SELECT "id", "planType" FROM "plans" WHERE "id" = ANY($1::text[])`,
+          missingTypeIds
+        )
+        const typeMap = new Map(rawRows.map((r) => [r.id, r.planType]))
+        for (const p of enrichedPlans as any[]) {
+          if (p.planType === undefined) {
+            p.planType = typeMap.get(p.id) || null
+          }
+        }
+      }
+    } catch {
+      // Ignore fallback error if column doesn't exist
+    }
 
     return NextResponse.json({
       success: true,
@@ -66,6 +85,7 @@ export async function POST(req: NextRequest) {
       productId,
       name,
       duration,
+      planType,
       price,
       fulfillmentType,
       checkoutFields,
@@ -88,21 +108,64 @@ export async function POST(req: NextRequest) {
       ? (fulfillmentType as FulfillmentType)
       : 'ACTIVATION_LINK'
 
-    const plan = await prisma.plan.create({
-      data: {
-        productId,
-        name: name.trim(),
-        duration: isNaN(durationNum) ? 1 : durationNum,
-        price: isNaN(priceNum) ? 0 : priceNum,
-        fulfillmentType: validFulfillmentType,
-        checkoutFields: checkoutFields || [],
-        sortOrder: isNaN(sortOrderNum) ? 0 : sortOrderNum,
-        active: active !== undefined ? Boolean(active) : true,
-      },
-      include: {
-        product: true,
-      },
-    })
+    const trimmedPlanType = planType ? String(planType).trim() : null
+
+    let plan: any
+    try {
+      plan = await prisma.plan.create({
+        data: {
+          productId,
+          name: name.trim(),
+          duration: isNaN(durationNum) ? 1 : durationNum,
+          planType: trimmedPlanType,
+          price: isNaN(priceNum) ? 0 : priceNum,
+          fulfillmentType: validFulfillmentType,
+          checkoutFields: checkoutFields || [],
+          sortOrder: isNaN(sortOrderNum) ? 0 : sortOrderNum,
+          active: active !== undefined ? Boolean(active) : true,
+        },
+        include: {
+          product: true,
+        },
+      })
+    } catch (createError: any) {
+      // If Prisma client memory instance has not reloaded schema (Unknown argument planType)
+      if (
+        createError?.message?.includes('planType') ||
+        createError?.name === 'PrismaClientValidationError'
+      ) {
+        plan = await prisma.plan.create({
+          data: {
+            productId,
+            name: name.trim(),
+            duration: isNaN(durationNum) ? 1 : durationNum,
+            price: isNaN(priceNum) ? 0 : priceNum,
+            fulfillmentType: validFulfillmentType,
+            checkoutFields: checkoutFields || [],
+            sortOrder: isNaN(sortOrderNum) ? 0 : sortOrderNum,
+            active: active !== undefined ? Boolean(active) : true,
+          },
+          include: {
+            product: true,
+          },
+        })
+
+        if (trimmedPlanType) {
+          try {
+            await prisma.$executeRawUnsafe(
+              `UPDATE "plans" SET "planType" = $1 WHERE "id" = $2`,
+              trimmedPlanType,
+              plan.id
+            )
+            plan.planType = trimmedPlanType
+          } catch (sqlErr) {
+            console.warn('Fallback update for planType failed:', sqlErr)
+          }
+        }
+      } else {
+        throw createError
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -111,8 +174,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: unknown) {
     console.error('Error creating plan:', error)
+    const errorMsg = error instanceof Error ? error.message : 'خطا در ایجاد پلن.'
     return NextResponse.json(
-      { success: false, error: 'خطا در ایجاد پلن.' },
+      { success: false, error: errorMsg },
       { status: 500 }
     )
   }
@@ -128,6 +192,7 @@ export async function PATCH(req: NextRequest) {
       id,
       name,
       duration,
+      planType,
       price,
       fulfillmentType,
       checkoutFields,
@@ -154,11 +219,48 @@ export async function PATCH(req: NextRequest) {
       updateData.fulfillmentType = fulfillmentType
     }
 
-    const updatedPlan = await prisma.plan.update({
-      where: { id },
-      data: updateData,
-      include: { product: true },
-    })
+    const trimmedPlanType =
+      planType !== undefined ? (planType ? String(planType).trim() : null) : undefined
+
+    let updatedPlan: any
+    try {
+      if (trimmedPlanType !== undefined) {
+        ;(updateData as any).planType = trimmedPlanType
+      }
+      updatedPlan = await prisma.plan.update({
+        where: { id },
+        data: updateData,
+        include: { product: true },
+      })
+    } catch (patchError: any) {
+      // If Prisma client memory instance has not reloaded schema (Unknown argument planType)
+      if (
+        patchError?.message?.includes('planType') ||
+        patchError?.name === 'PrismaClientValidationError'
+      ) {
+        delete (updateData as any).planType
+        updatedPlan = await prisma.plan.update({
+          where: { id },
+          data: updateData,
+          include: { product: true },
+        })
+
+        if (trimmedPlanType !== undefined) {
+          try {
+            await prisma.$executeRawUnsafe(
+              `UPDATE "plans" SET "planType" = $1 WHERE "id" = $2`,
+              trimmedPlanType,
+              id
+            )
+            updatedPlan.planType = trimmedPlanType
+          } catch (sqlErr) {
+            console.warn('Fallback update for planType failed:', sqlErr)
+          }
+        }
+      } else {
+        throw patchError
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -167,8 +269,9 @@ export async function PATCH(req: NextRequest) {
     })
   } catch (error: unknown) {
     console.error('Error updating plan:', error)
+    const errorMsg = error instanceof Error ? error.message : 'خطا در به‌روزرسانی پلن.'
     return NextResponse.json(
-      { success: false, error: 'خطا در به‌روزرسانی پلن.' },
+      { success: false, error: errorMsg },
       { status: 500 }
     )
   }

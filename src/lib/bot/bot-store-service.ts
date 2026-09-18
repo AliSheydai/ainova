@@ -289,11 +289,8 @@ export class BotStoreService {
           if (invRows && invRows.length > 0) {
             reservedInventoryItemId = invRows[0].id
           } else {
-            throw new Error(
-              fulfillmentType === 'PRE_CREATED_ACCOUNT'
-                ? 'READY_ACCOUNT_STOCK_EXHAUSTED'
-                : 'STOCK_EXHAUSTED'
-            )
+            // When inventory is 0, allow purchasing for 1-working-day fulfillment
+            reservedInventoryItemId = null
           }
         }
 

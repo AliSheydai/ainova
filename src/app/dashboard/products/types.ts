@@ -7,6 +7,7 @@ export interface PlanItem {
   productId: string
   name: string
   duration: number
+  planType?: string | null
   price: number
   active: boolean
   fulfillmentType: FulfillmentType
@@ -25,6 +26,7 @@ export interface ProductItem {
   shortDescription: string | null
   description: string | null
   image: string | null
+  videoUrl?: string | null
   price: number
   status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
   stock: number

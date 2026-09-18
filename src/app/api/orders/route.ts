@@ -5,7 +5,7 @@ import { PaymentService } from '@/lib/payment'
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
-import { encryptCredential } from '@/lib/security/crypto'
+import { encryptCredential, decryptCredential } from '@/lib/security/crypto'
 import { InMemoryRateLimiter, getClientIp } from '@/lib/security/rate-limit'
 
 const ALLOWED_SOURCES = ['web', 'telegram', 'bale', 'rubika', 'soroush'] as const
@@ -279,11 +279,9 @@ export async function POST(req: NextRequest) {
           if (invRows && invRows.length > 0) {
             reservedInventoryItemId = invRows[0].id
           } else {
-            throw new Error(
-              fulfillmentType === 'PRE_CREATED_ACCOUNT'
-                ? 'READY_ACCOUNT_STOCK_EXHAUSTED'
-                : 'STOCK_EXHAUSTED'
-            )
+            // Warehouse stock exhausted: do NOT block order.
+            // Order is recorded for 1-working-day fulfillment by admin.
+            reservedInventoryItemId = null
           }
         }
 
@@ -470,7 +468,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Security: Mask sensitive credentials in bulk order list
+    // Decrypt delivery credentials for the authenticated order owner
     const safeOrders = orders.map((ord) => {
       if (ord.delivery && ord.delivery.data) {
         const rawData = ord.delivery.data as Record<string, any>
@@ -481,7 +479,7 @@ export async function GET(req: NextRequest) {
               ...ord.delivery,
               data: {
                 ...rawData,
-                password: '••••••••',
+                password: decryptCredential(rawData.password),
               },
             },
           }

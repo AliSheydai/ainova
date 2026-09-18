@@ -32,7 +32,7 @@ export class MultiBotController {
     const inlineKeyboard: Array<Array<{ text: string; callbackData?: string }>> = []
 
     for (const p of products) {
-      const stockBadge = p.stock > 0 ? `✅ موجود (${p.stock} عدد)` : '❌ ناموجود'
+      const stockBadge = p.stock > 0 ? `⚡ تحویل آنی (${p.stock} عدد)` : '🕒 ارسال طی یک روز کاری'
       text += `📦 **${p.title}**\n💰 قیمت از: ${p.price.toLocaleString('fa-IR')} تومان — ${stockBadge}\n\n`
 
       inlineKeyboard.push([
@@ -65,16 +65,14 @@ export class MultiBotController {
       const isAvailable = plan.stock > 0
       text += `🔹 **${plan.name}**\n`
       text += `   💵 قیمت: ${plan.price.toLocaleString('fa-IR')} تومان\n`
-      text += `   📦 وضعیت: ${isAvailable ? `موجود (${plan.stock} عدد)` : 'اتمام موجودی'}\n\n`
+      text += `   📦 وضعیت: ${isAvailable ? `تحویل آنی (${plan.stock} عدد)` : 'ارسال طی یک روز کاری'}\n\n`
 
-      if (isAvailable) {
-        inlineKeyboard.push([
-          {
-            text: `🛒 انتخاب پلن: ${plan.name} (${plan.price.toLocaleString('fa-IR')} تومان)`,
-            callbackData: `plan:select:${plan.id}`,
-          },
-        ])
-      }
+      inlineKeyboard.push([
+        {
+          text: `🛒 انتخاب پلن: ${plan.name} (${plan.price.toLocaleString('fa-IR')} تومان)`,
+          callbackData: `plan:select:${plan.id}`,
+        },
+      ])
     }
 
     inlineKeyboard.push([{ text: '🔙 بازگشت به لیست محصولات', callbackData: 'nav:products' }])

@@ -70,7 +70,7 @@ export function productsListInlineKeyboard(
 ) {
   const kb = new InlineKeyboard()
   for (const prod of products) {
-    const stockStr = prod.stock > 0 ? '' : ' (ناموجود)'
+    const stockStr = prod.stock > 0 ? '' : ' (ارسال طی ۱ روز کاری)'
     kb.text(
       `🔹 ${prod.title} — ${prod.price.toLocaleString('fa-IR')} تومان${stockStr}`,
       `product:select:${prod.id}`
@@ -83,15 +83,13 @@ export function productsListInlineKeyboard(
 export function productDetailsKeyboard(
   productId: string,
   price: number,
-  isAvailable: boolean
+  isAvailable: boolean = true
 ) {
   const kb = new InlineKeyboard()
-  if (isAvailable) {
-    kb.text(
-      `💳 خرید این محصول (${price.toLocaleString('fa-IR')} تومان)`,
-      `buy:product:${productId}`
-    ).row()
-  }
+  kb.text(
+    `💳 خرید این محصول (${price.toLocaleString('fa-IR')} تومان)`,
+    `buy:product:${productId}`
+  ).row()
   kb.text('📋 بازگشت به لیست محصولات', 'nav:products').row()
   kb.text('🔙 منوی اصلی', 'nav:main')
   return kb
@@ -165,7 +163,7 @@ export function deliveryPreferenceKeyboard(
   if (hasInventory) {
     kb.text('⚡ اکانت آماده — تحویل فوری', `delivery:mode:${planId}:ready`).row()
   } else {
-    kb.text('⚠️ اکانت آماده (موقتاً ناموجود)', `delivery:mode:${planId}:exhausted`).row()
+    kb.text('📦 اکانت آماده — ارسال طی یک روز کاری', `delivery:mode:${planId}:ready`).row()
   }
 
   kb.text('👤 فعال‌سازی روی جیمیل من', `delivery:mode:${planId}:own`).row()

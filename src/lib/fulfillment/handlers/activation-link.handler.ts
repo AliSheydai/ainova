@@ -7,11 +7,31 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
     tx,
     order,
     now,
+    manualDeliveryData,
+    adminUserId: _adminUserId,
   }: {
     tx: PrismaTransactionClient
     order: OrderWithFulfillmentDetails
     now: Date
+    manualDeliveryData?: import('../types').ManualDeliveryData
+    adminUserId?: string
   }) {
+    // 0. Check if manual delivery data was provided by admin
+    if (manualDeliveryData?.linkUrl) {
+      const deliveryData: ActivationLinkDeliveryData = {
+        url: manualDeliveryData.linkUrl.trim(),
+        instructions:
+          manualDeliveryData.instructions?.trim() ||
+          'روی لینک کلیک کنید و در حساب کاربری گوگل خود فعال‌سازی را تأیید فرمایید.',
+      }
+
+      return {
+        status: 'COMPLETED' as const,
+        message: 'سفارش با موفقیت توسط مدیر تکمیل و لینک فعال‌سازی اختصاص داده شد.',
+        deliveryData,
+      }
+    }
+
     const effectiveProduct = order.product || order.plan?.product
     const productId = effectiveProduct?.id
     const planId = order.planId

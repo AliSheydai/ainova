@@ -381,13 +381,18 @@ class Media {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = this.image;
-    img.onload = () => {
+    const applyImage = () => {
       texture.image = img;
       this.program.uniforms.uImageSizes.value = [
         img.naturalWidth || img.width || 840,
         img.naturalHeight || img.height || 1120,
       ];
     };
+    if (img.complete && img.naturalWidth > 0) {
+      applyImage();
+    } else {
+      img.onload = applyImage;
+    }
   }
 
   updateImage(newImage: string) {
@@ -395,7 +400,7 @@ class Media {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = newImage;
-    img.onload = () => {
+    const applyImage = () => {
       const texture = this.program.uniforms.tMap.value;
       if (texture) {
         texture.image = img;
@@ -405,6 +410,11 @@ class Media {
         img.naturalHeight || img.height || 1120,
       ];
     };
+    if (img.complete && img.naturalWidth > 0) {
+      applyImage();
+    } else {
+      img.onload = applyImage;
+    }
   }
 
   createMesh() {
@@ -479,7 +489,7 @@ class Media {
     const isTablet = this.screen.width < 1024;
 
     // Card height fraction relative to viewport - balanced padding and optimal legibility
-    const cardHeightFrac = isMobile ? 0.76 : isTablet ? 0.76 : 0.78;
+    const cardHeightFrac = isMobile ? 0.80 : isTablet ? 0.82 : 0.84;
     const aspect = 0.75; // precise 840:1120 (3:4) card aspect ratio
 
     this.plane.scale.y = this.viewport.height * cardHeightFrac;
@@ -560,6 +570,10 @@ class App {
   isTouch: boolean = false;
   touchDirectionLocked: boolean = false;
   isVerticalScroll: boolean = false;
+  bend: number;
+  textColor: string;
+  borderRadius: number;
+  font: string;
 
   constructor(
     container: HTMLElement,
@@ -577,6 +591,10 @@ class App {
     }: AppConfig
   ) {
     this.container = container;
+    this.bend = bend;
+    this.textColor = textColor;
+    this.borderRadius = borderRadius;
+    this.font = font;
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.autoRotate = autoRotate;
@@ -785,12 +803,45 @@ class App {
     const galleryItems = items && items.length ? items : [];
     this.itemsCount = galleryItems.length;
     this.mediasImages = galleryItems.concat(galleryItems);
-    this.medias.forEach((media, idx) => {
-      const itemData = this.mediasImages[idx];
-      if (itemData && itemData.image) {
-        media.updateImage(itemData.image);
-      }
+
+    // Clean up old media meshes from the scene without destroying WebGL context
+    if (this.medias) {
+      this.medias.forEach((media) => {
+        if (media.plane) {
+          media.plane.setParent(null);
+        }
+      });
+      this.medias = [];
+    }
+
+    // Recreate medias with new items
+    this.medias = this.mediasImages.map((data, index) => {
+      return new Media({
+        geometry: this.planeGeometry,
+        gl: this.gl,
+        image: data.image,
+        index,
+        length: this.mediasImages.length,
+        renderer: this.renderer,
+        scene: this.scene,
+        screen: this.screen,
+        text: data.text || '',
+        viewport: this.viewport,
+        bend: this.bend,
+        textColor: this.textColor,
+        borderRadius: this.borderRadius,
+        font: this.font,
+      });
     });
+
+    // Reset scroll smoothly to the beginning
+    this.scroll.target = 0;
+    this.scroll.current = 0;
+    this.scroll.last = 0;
+    this.currentActiveIndex = 0;
+    if (this.onActiveChange) {
+      this.onActiveChange(0);
+    }
   }
 
   update() {

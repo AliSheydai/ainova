@@ -4,7 +4,42 @@ import { encryptCredential, decryptCredential } from '@/lib/security/crypto'
 export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler {
   type = 'PRE_CREATED_ACCOUNT' as const
 
-  async fulfill({ tx, order, now }: { tx: PrismaTransactionClient; order: OrderWithFulfillmentDetails; now: Date }) {
+  async fulfill({
+    tx,
+    order,
+    now,
+    manualDeliveryData,
+    adminUserId: _adminUserId,
+  }: {
+    tx: PrismaTransactionClient
+    order: OrderWithFulfillmentDetails
+    now: Date
+    manualDeliveryData?: import('../types').ManualDeliveryData
+    adminUserId?: string
+  }) {
+    // 0. If admin provides manual delivery data with email and password
+    if (manualDeliveryData?.email) {
+      const email = manualDeliveryData.email.trim()
+      const rawPassword = manualDeliveryData.password?.trim() || ''
+      const encryptedPassword = encryptCredential(rawPassword)
+
+      const deliveryData: AccountCredentialsDeliveryData = {
+        email,
+        password: encryptedPassword,
+        username: email,
+        recoveryEmail: manualDeliveryData.recoveryEmail?.trim() || null,
+        note:
+          manualDeliveryData.manualNote ||
+          'لطفاً بلافاصله پس از اولین ورود، اطلاعات امنیتی و رمز عبور را تغییر دهید.',
+      }
+
+      return {
+        status: 'COMPLETED' as const,
+        message: 'اکانت اختصاصی با موفقیت توسط مدیر به خریدار تحویل داده شد.',
+        deliveryData,
+      }
+    }
+
     const checkoutData = (order.checkoutData as Record<string, unknown>) || {}
 
     // Check if customer provided their own Gmail credentials

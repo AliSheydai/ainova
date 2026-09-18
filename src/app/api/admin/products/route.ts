@@ -45,6 +45,26 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // Ensure planType is populated on plans if Prisma client in memory missed it
+    try {
+      const allPlans = enrichedProducts.flatMap((p) => p.plans || [])
+      const missingTypeIds = allPlans.filter((p: any) => p.planType === undefined).map((p: any) => p.id)
+      if (missingTypeIds.length > 0) {
+        const rawRows = await prisma.$queryRawUnsafe<{ id: string; planType: string | null }[]>(
+          `SELECT "id", "planType" FROM "plans" WHERE "id" = ANY($1::text[])`,
+          missingTypeIds
+        )
+        const typeMap = new Map(rawRows.map((r) => [r.id, r.planType]))
+        for (const pl of allPlans as any[]) {
+          if (pl.planType === undefined) {
+            pl.planType = typeMap.get(pl.id) || null
+          }
+        }
+      }
+    } catch {
+      // Silently fall back
+    }
+
     return NextResponse.json({
       success: true,
       products: enrichedProducts,
@@ -71,6 +91,7 @@ export async function POST(req: NextRequest) {
       description,
       price,
       image,
+      videoUrl,
       sortOrder,
     } = body
 
@@ -107,6 +128,7 @@ export async function POST(req: NextRequest) {
         description: description?.trim() || null,
         price: isNaN(parsedPrice) ? 0 : parsedPrice,
         image: image?.trim() || null,
+        videoUrl: videoUrl?.trim() || null,
         sortOrder: isNaN(parsedSortOrder) ? 0 : parsedSortOrder,
         status: ProductStatus.ACTIVE,
       },
@@ -141,6 +163,7 @@ export async function PATCH(req: NextRequest) {
       description,
       price,
       image,
+      videoUrl,
       status,
       sortOrder,
     } = body
@@ -178,6 +201,7 @@ export async function PATCH(req: NextRequest) {
     if (shortDescription !== undefined) updateData.shortDescription = shortDescription?.trim() || null
     if (description !== undefined) updateData.description = description?.trim() || null
     if (image !== undefined) updateData.image = image?.trim() || null
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl?.trim() || null
 
     if (price !== undefined) {
       const p = parseInt(String(price), 10)

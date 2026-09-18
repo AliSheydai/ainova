@@ -390,11 +390,17 @@ export async function PATCH(req: NextRequest) {
       })
     }
 
-    // Special Action: Fulfill Manual Delivery
+    // Special Action: Fulfill Manual Delivery (Links, Ready Accounts, or Manual Notes)
     if (action === 'FULFILL_MANUAL') {
-      if (!manualNote?.trim()) {
+      const linkUrl = typeof body.linkUrl === 'string' ? body.linkUrl.trim() : ''
+      const instructions = typeof body.instructions === 'string' ? body.instructions.trim() : ''
+      const accountEmail = typeof (body.accountEmail || body.email) === 'string' ? (body.accountEmail || body.email).trim() : ''
+      const accountPassword = typeof (body.accountPassword || body.password) === 'string' ? (body.accountPassword || body.password).trim() : ''
+      const recoveryEmail = typeof body.recoveryEmail === 'string' ? body.recoveryEmail.trim() : ''
+
+      if (!linkUrl && !accountEmail && !manualNote?.trim() && !deliveredInfo?.trim()) {
         return NextResponse.json(
-          { success: false, error: 'توضیحات و یادداشت تحویل الزامی است.' },
+          { success: false, error: 'لطفاً لینک فعال‌سازی، مشخصات اکانت یا یادداشت تحویل را وارد فرمایید.' },
           { status: 400 }
         )
       }
@@ -402,7 +408,12 @@ export async function PATCH(req: NextRequest) {
       const fulfillResult = await FulfillmentService.fulfillManualOrder(
         orderId,
         {
-          manualNote: manualNote.trim(),
+          linkUrl: linkUrl || undefined,
+          instructions: instructions || undefined,
+          email: accountEmail || undefined,
+          password: accountPassword || undefined,
+          recoveryEmail: recoveryEmail || undefined,
+          manualNote: manualNote?.trim() || (linkUrl ? 'لینک اختصاصی فعال‌سازی توسط مدیر تحویل داده شد.' : accountEmail ? 'اکانت اختصاصی توسط مدیر تحویل داده شد.' : ''),
           deliveredInfo: deliveredInfo?.trim() || '',
         },
         user.id
@@ -416,6 +427,32 @@ export async function PATCH(req: NextRequest) {
           type: NotificationType.ORDER_READY,
           metadata: { orderId: fulfillResult.order.id },
         }).catch(() => {})
+
+        // Send Telegram notification to customer if linked
+        const customerTelegram = fulfillResult.order.telegramChatId || (fulfillResult.order as any).user?.telegramId
+        if (customerTelegram) {
+          const productTitle =
+            fulfillResult.order.product?.title ||
+            fulfillResult.order.plan?.product?.title ||
+            'اشتراک'
+          let deliveryDetails = ''
+          if (linkUrl) {
+            deliveryDetails = `🔗 **لینک فعال‌سازی:**\n\`${linkUrl}\`\n\n`
+          } else if (accountEmail) {
+            deliveryDetails = `📧 **ایمیل:** \`${accountEmail}\`\n🔑 **رمز عبور:** \`${accountPassword}\`\n\n`
+          } else if (manualNote?.trim()) {
+            deliveryDetails = `📝 **یادداشت تحویل:**\n${manualNote.trim()}\n\n`
+          }
+
+          const msg =
+            `🎉 **سفارش شما تحویل داده شد!**\n\n` +
+            `📦 **محصول:** ${productTitle}\n` +
+            `🔢 **شماره سفارش:** #${fulfillResult.order.id.slice(-6).toUpperCase()}\n\n` +
+            deliveryDetails +
+            `همچنین می‌توانید با مراجعه به وب‌سایت در تب «سفارش‌های من»، مشخصات کامل محصول خود را دریافت فرمایید.`
+
+          sendTelegramNotification(customerTelegram, msg).catch(() => {})
+        }
       }
 
       return NextResponse.json({

@@ -275,7 +275,7 @@ export class FulfillmentService {
       // 4. Get appropriate handler from registry
       const handler = FulfillmentRegistry.getHandler(fulfillmentType)
 
-      const result = await handler.fulfill({
+      let result = await handler.fulfill({
         tx,
         order,
         now,
@@ -284,6 +284,22 @@ export class FulfillmentService {
         manualDeliveryData,
         adminUserId,
       })
+
+      // Fallback: If admin explicitly provided manual delivery data and specific handler did not complete, use Manual handler
+      if (
+        result.status !== 'COMPLETED' &&
+        manualDeliveryData &&
+        (manualDeliveryData.manualNote || manualDeliveryData.deliveredInfo)
+      ) {
+        const manualHandler = FulfillmentRegistry.getHandler('MANUAL')
+        result = await manualHandler.fulfill({
+          tx,
+          order,
+          now,
+          manualDeliveryData,
+          adminUserId,
+        })
+      }
 
       // 5. Process Handler Outcome
       if (result.status === 'COMPLETED') {

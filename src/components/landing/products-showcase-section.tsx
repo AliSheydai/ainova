@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Package, ArrowLeft, Check, Zap, Tag } from 'lucide-react'
+import { Package, ArrowLeft, Check, Zap, Tag, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -86,8 +86,9 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                           تحویل آنی
                         </Badge>
                       ) : (
-                        <Badge variant='outline' className='text-rose-500 border-rose-500/30 text-[10px]'>
-                          اتمام موجودی
+                        <Badge variant='outline' className='bg-primary/5 text-primary border-primary/25 text-[10px] font-medium'>
+                          <Clock className='size-2.5 me-1' />
+                          ارسال طی یک روز کاری
                         </Badge>
                       )}
                     </div>
@@ -117,7 +118,7 @@ export function ProductsShowcaseSection({ products }: { products: ProductSummary
                     </div>
 
                     <div className='flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-xl font-sans'>
-                      <span>موجودی: {isAvailable ? `${toPersianDigits(prod.stock)} عدد` : 'ناموجود'}</span>
+                      <span>{isAvailable ? `موجودی: ${toPersianDigits(prod.stock)} عدد` : 'تحویل: ۱ روز کاری'}</span>
                       <span>{toPersianDigits(prod.purchaseCount)} خرید موفق</span>
                     </div>
 

@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  Clock,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -528,14 +529,15 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                     )}
 
                     <div className='flex flex-col items-end gap-1.5'>
-                      {isAvailable ? (
+                      {prod.stock > 0 ? (
                         <Badge className='bg-primary/10 text-primary border-primary/20 text-[10px] font-sans font-medium'>
                           <Zap className='size-2.5 me-1' />
                           تحویل آنی
                         </Badge>
                       ) : (
-                        <Badge variant='outline' className='text-rose-500 border-rose-500/30 text-[10px] font-sans'>
-                          اتمام موجودی
+                        <Badge variant='outline' className='bg-primary/5 text-primary border-primary/25 text-[10px] font-sans font-medium'>
+                          <Clock className='size-2.5 me-1' />
+                          ارسال طی یک روز کاری
                         </Badge>
                       )}
 
@@ -596,9 +598,9 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                   {/* Stock and Purchase metrics */}
                   <div className='flex items-center justify-between text-[11px] text-muted-foreground bg-muted/40 px-3 py-2 rounded-xl font-sans'>
                     <span>
-                      {isAvailable
-                        ? `موجودی: ${toPersianDigits(prod.stock)} عدد`
-                        : 'وضعیت: ناموجود'}
+                      {prod.stock > 0
+                        ? `موجودی انبار: ${toPersianDigits(prod.stock)} عدد`
+                        : 'تحویل: ۱ روز کاری'}
                     </span>
                     <span>{toPersianDigits(prod.purchaseCount)} خرید موفق</span>
                   </div>
@@ -606,10 +608,10 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                   {/* Action Button */}
                   <Link href={`/products/${prod.slug}`} className='block w-full'>
                     <Button
-                      variant={isAvailable ? 'default' : 'secondary'}
+                      variant='default'
                       className='w-full text-xs sm:text-sm font-semibold gap-1.5 h-10 rounded-xl transition-transform active:scale-[0.98]'
                     >
-                      <span>{isAvailable ? 'مشاهده و خرید اشتراک' : 'اطلاعات بیشتر'}</span>
+                      <span>مشاهده و خرید اشتراک</span>
                       <ArrowLeft className='size-3.5 rtl:rotate-0' />
                     </Button>
                   </Link>

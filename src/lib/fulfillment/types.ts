@@ -40,10 +40,15 @@ export interface CustomerProvisioningDeliveryData {
 }
 
 export interface ManualDeliveryData {
-  manualNote: string
+  manualNote?: string
   deliveredInfo?: string
   deliveredByAdminId?: string
   deliveredAt?: string
+  linkUrl?: string
+  instructions?: string
+  email?: string
+  password?: string
+  recoveryEmail?: string
 }
 
 export type AnyDeliveryData =

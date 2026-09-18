@@ -229,7 +229,7 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
         return (
           <Badge className="bg-primary/10 text-primary border border-primary/25 font-medium gap-1 text-[11px]">
             <Clock className="size-3" />
-            پرداخت‌شده (در حال آماده‌سازی)
+            ارسال طی ۱ روز کاری (در حال آماده‌سازی)
           </Badge>
         )
       case 'PENDING_PAYMENT':
@@ -701,10 +701,10 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                         <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs space-y-1">
                           <div className="flex items-center gap-1.5 font-bold text-primary">
                             <Clock className="size-3.5" />
-                            <span>در حال آماده‌سازی و تحویل</span>
+                            <span>ارسال طی یک روز کاری (در حال آماده‌سازی)</span>
                           </div>
-                          <p className="text-muted-foreground">
-                            پرداخت شما تایید شده و سفارش در دست اقدام توسط پشتیبانی یا سیستم تامین است.
+                          <p className="text-muted-foreground leading-relaxed">
+                            پرداخت شما تأیید شده و سفارش جهت تحویل حداکثر ظرف ۱ روز کاری در دست اقدام توسط کارشناسان پشتیبانی است. به محض آماده‌سازی، مشخصات در همین بخش قرار می‌گیرد.
                           </p>
                         </div>
                       )}

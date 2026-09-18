@@ -62,6 +62,11 @@ export function ProductPlansAccordion({
                         <h3 className='font-bold text-foreground text-xs sm:text-sm'>
                           {plan.name}
                         </h3>
+                        {plan.planType && (
+                          <Badge variant='outline' className='text-[9px] px-1.5 py-0 text-primary border-primary/30 bg-primary/10 font-bold'>
+                            {plan.planType}
+                          </Badge>
+                        )}
                         {!plan.active && (
                           <Badge variant='outline' className='text-[9px] px-1.5 py-0 text-amber-500 border-amber-500/30 bg-amber-500/10'>
                             غیرفعال

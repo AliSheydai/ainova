@@ -511,21 +511,21 @@ function SuccessContent() {
             </div>
           )}
 
-          {/* 6. STOCK EXHAUSTION */}
+          {/* 6. STOCK EXHAUSTION / 1-DAY DELIVERY */}
           {isStockWaiting && (
-            <div className='rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 sm:p-5 text-start space-y-2.5'>
-              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-400'>
+            <div className='rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5 text-start space-y-2.5'>
+              <div className='flex items-center gap-2 text-xs sm:text-sm font-bold text-primary'>
                 <Clock className='size-4 shrink-0' />
-                <span>در حال تامین موجودی (وضعیت: PAID)</span>
+                <span>ارسال طی یک روز کاری (در حال آماده‌سازی)</span>
               </div>
               <p className='text-xs sm:text-sm text-muted-foreground leading-relaxed'>
-                پرداخت شما با موفقیت تایید شده است. به دلیل تقاضای بالا، آیتم تحویل شما به زودی توسط سیستم تخصیص داده خواهد شد.
+                پرداخت شما با موفقیت تأیید گردید. مشخصات این اشتراک ظرف حداکثر ۱ روز کاری توسط کارشناسان پشتیبانی آماده شده و در بخش «سفارش‌های من» پنل کاربری شما قرار خواهد گرفت.
               </p>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={fetchOrder}
-                className='text-xs sm:text-sm gap-1.5 mt-2 border-blue-500/40 text-blue-600 rounded-xl'
+                className='text-xs sm:text-sm gap-1.5 mt-2 border-primary/30 text-primary rounded-xl'
               >
                 <RefreshCw className='size-3.5' />
                 بررسی مجدد وضعیت

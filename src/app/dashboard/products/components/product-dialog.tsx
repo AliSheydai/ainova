@@ -8,8 +8,12 @@ import {
   Trash2,
   Link2,
   CheckCircle2,
+  Video,
+  Film,
+  PlayCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { parseVideoUrl } from '@/lib/video-utils'
 import {
   Dialog,
   DialogContent,
@@ -45,6 +49,8 @@ interface ProductDialogProps {
   setFormProdPrice: (v: string) => void
   formProdImage: string
   setFormProdImage: (v: string) => void
+  formProdVideoUrl: string
+  setFormProdVideoUrl: (v: string) => void
   formProdSortOrder: string
   setFormProdSortOrder: (v: string) => void
   onSave: () => void
@@ -67,6 +73,8 @@ export function ProductDialog({
   setFormProdPrice,
   formProdImage,
   setFormProdImage,
+  formProdVideoUrl,
+  setFormProdVideoUrl,
   formProdSortOrder,
   setFormProdSortOrder,
   onSave,
@@ -161,10 +169,58 @@ export function ProductDialog({
     }
   }
 
+  // Video States & Handlers
+  const [uploadingVideo, setUploadingVideo] = React.useState(false)
+  const [isVideoDragOver, setIsVideoDragOver] = React.useState(false)
+  const [videoUploadMode, setVideoUploadMode] = React.useState<'url' | 'upload'>('url')
+  const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
+
+  const handleVideoFileUpload = async (file: File) => {
+    if (!file.type.startsWith('video/')) {
+      toast.error('لطفاً یک فایل ویدیویی معتبر انتخاب کنید (مانند MP4 یا WebM).')
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('حجم ویدئو نباید بیشتر از ۵۰ مگابایت باشد.')
+      return
+    }
+
+    setUploadingVideo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (data.success && data.url) {
+        setFormProdVideoUrl(data.url)
+        toast.success('ویدئو محصول با موفقیت آپلود شد.')
+      } else {
+        toast.error(data.error || 'خطا در بارگذاری ویدئو.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور هنگام آپلود فایل ویدئو.')
+    } finally {
+      setUploadingVideo(false)
+      if (videoFileInputRef.current) {
+        videoFileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const parsedVideo = React.useMemo(() => {
+    return parseVideoUrl(formProdVideoUrl)
+  }, [formProdVideoUrl])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-xl p-4 sm:p-6'>
-        <DialogHeader className='pb-3 border-b border-border/50 pe-7'>
+      <DialogContent className='sm:max-w-xl p-4 sm:p-6 max-h-[90vh] flex flex-col'>
+        <DialogHeader className='pb-3 border-b border-border/50 pe-7 shrink-0'>
           <div className='flex items-center gap-2.5'>
             <div className='size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
               <ShoppingBag className='size-4' />
@@ -180,7 +236,7 @@ export function ProductDialog({
           </div>
         </DialogHeader>
 
-        <div className='space-y-3.5 py-1 sm:py-2'>
+        <div className='space-y-3.5 py-1 sm:py-2 overflow-y-auto flex-1 pe-1'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div>
               <span className='text-xs font-medium text-foreground block mb-1'>
@@ -423,6 +479,189 @@ export function ProductDialog({
                     </span>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* Video Introduction Section */}
+          <div className='p-3 rounded-xl border border-border/70 bg-muted/15 space-y-2.5'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-1.5'>
+                <Film className='size-3.5 text-primary' />
+                <span className='text-xs font-semibold text-foreground'>
+                  ویدئو معرفی محصول:
+                </span>
+                <span className='text-[10px] text-muted-foreground'>(اختیاری)</span>
+              </div>
+              <button
+                type='button'
+                onClick={() => setVideoUploadMode(videoUploadMode === 'upload' ? 'url' : 'upload')}
+                className='text-[11px] text-primary hover:underline transition-all flex items-center gap-1 cursor-pointer'
+              >
+                {videoUploadMode === 'upload' ? (
+                  <>
+                    <Link2 className='size-3' />
+                    <span>ورود لینک آپارات، یوتیوب یا مستقیم</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className='size-3' />
+                    <span>آپلود مستقیم فایل ویدئو</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {videoUploadMode === 'upload' ? (
+              <div className='space-y-2'>
+                <input
+                  ref={videoFileInputRef}
+                  type='file'
+                  accept='video/mp4,video/webm,video/ogg,video/quicktime'
+                  className='hidden'
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleVideoFileUpload(e.target.files[0])
+                    }
+                  }}
+                />
+
+                {!formProdVideoUrl ? (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setIsVideoDragOver(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setIsVideoDragOver(false)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setIsVideoDragOver(false)
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleVideoFileUpload(e.dataTransfer.files[0])
+                      }
+                    }}
+                    onClick={() => {
+                      if (!uploadingVideo) videoFileInputRef.current?.click()
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-3.5 text-center cursor-pointer transition-all duration-200 ${
+                      isVideoDragOver
+                        ? 'border-primary bg-primary/5 scale-[0.99]'
+                        : 'border-border/80 hover:border-primary/50 hover:bg-muted/30 bg-muted/10'
+                    } ${uploadingVideo ? 'pointer-events-none opacity-70' : ''}`}
+                  >
+                    <div className='flex flex-col items-center justify-center gap-1'>
+                      <div className='size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center'>
+                        {uploadingVideo ? (
+                          <Loader2 className='size-4 animate-spin text-primary' />
+                        ) : (
+                          <Video className='size-4' />
+                        )}
+                      </div>
+                      <div className='text-xs font-medium text-foreground'>
+                        {uploadingVideo ? (
+                          <span>در حال آپلود و ذخیره فایل ویدئو...</span>
+                        ) : (
+                          <span>برای انتخاب فایل ویدئو کلیک کنید یا آن را به اینجا بکشید</span>
+                        )}
+                      </div>
+                      <p className='text-[10px] text-muted-foreground'>
+                        فرمت‌های مجاز: MP4، WebM (حداکثر ۵۰ مگابایت)
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className='space-y-1.5'>
+                <Input
+                  value={formProdVideoUrl}
+                  onChange={(e) => setFormProdVideoUrl(e.target.value)}
+                  placeholder='مثال: https://www.aparat.com/v/xyz یا یوتیوب یا لینک فایل MP4'
+                  className='text-xs h-9 rounded-xl font-mono'
+                  dir='ltr'
+                />
+                <p className='text-[10px] text-muted-foreground leading-relaxed'>
+                  پشتیبانی از لینک ویدئوی آپارات، یوتیوب، یا آدرس مستقیم فایل MP4/WebM.
+                </p>
+              </div>
+            )}
+
+            {/* Video Preview Card if URL is present */}
+            {formProdVideoUrl && (
+              <div className='p-2.5 rounded-xl border border-border/80 bg-background/80 space-y-2'>
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-1.5 min-w-0'>
+                    <PlayCircle className='size-3.5 text-primary shrink-0' />
+                    <span className='text-xs font-medium text-foreground'>
+                      پیش‌نمایش ویدئو:
+                    </span>
+                    {parsedVideo && (
+                      <span className='text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md shrink-0'>
+                        {parsedVideo.label}
+                      </span>
+                    )}
+                  </div>
+                  <div className='flex items-center gap-1 shrink-0'>
+                    {videoUploadMode === 'upload' && (
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        disabled={uploadingVideo}
+                        onClick={() => videoFileInputRef.current?.click()}
+                        className='h-7 text-[11px] px-2 rounded-lg'
+                      >
+                        {uploadingVideo ? <Loader2 className='size-3 animate-spin' /> : 'تغییر فایل'}
+                      </Button>
+                    )}
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      disabled={uploadingVideo}
+                      onClick={() => setFormProdVideoUrl('')}
+                      className='h-7 text-[11px] px-2 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg'
+                      title='حذف ویدئو'
+                    >
+                      <Trash2 className='size-3.5' />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Video Player Preview */}
+                <div className='w-full aspect-video max-h-48 rounded-lg overflow-hidden border border-border bg-black/90 flex items-center justify-center'>
+                  {parsedVideo?.type === 'aparat' || parsedVideo?.type === 'youtube' ? (
+                    <iframe
+                      src={parsedVideo.src}
+                      title='پیش‌نمایش ویدئو'
+                      allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                      allowFullScreen
+                      className='w-full h-full border-0'
+                    />
+                  ) : parsedVideo?.type === 'direct' ? (
+                    <video
+                      src={parsedVideo.src}
+                      controls
+                      playsInline
+                      preload='metadata'
+                      className='w-full h-full object-contain'
+                    />
+                  ) : (
+                    <div className='text-center p-3 text-muted-foreground text-xs'>
+                      لینک ویدئو وارد شده است اما منبع آن شناخته‌شده نیست.
+                    </div>
+                  )}
+                </div>
+
+                <p className='text-[10px] font-mono text-muted-foreground truncate' dir='ltr'>
+                  {formProdVideoUrl}
+                </p>
               </div>
             )}
           </div>

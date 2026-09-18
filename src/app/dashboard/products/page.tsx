@@ -74,6 +74,8 @@ export default function AdminProductsPage() {
     setFormProdPrice,
     formProdImage,
     setFormProdImage,
+    formProdVideoUrl,
+    setFormProdVideoUrl,
     formProdSortOrder,
     setFormProdSortOrder,
     submittingProduct,
@@ -95,6 +97,8 @@ export default function AdminProductsPage() {
     planTargetProductTitle,
     formPlanName,
     setFormPlanName,
+    formPlanType,
+    setFormPlanType,
     formPlanDuration,
     setFormPlanDuration,
     formPlanPrice,
@@ -552,6 +556,8 @@ export default function AdminProductsPage() {
         setFormProdPrice={setFormProdPrice}
         formProdImage={formProdImage}
         setFormProdImage={setFormProdImage}
+        formProdVideoUrl={formProdVideoUrl}
+        setFormProdVideoUrl={setFormProdVideoUrl}
         formProdSortOrder={formProdSortOrder}
         setFormProdSortOrder={setFormProdSortOrder}
         onSave={handleSaveProduct}
@@ -566,6 +572,8 @@ export default function AdminProductsPage() {
         planTargetProductTitle={planTargetProductTitle}
         formPlanName={formPlanName}
         setFormPlanName={setFormPlanName}
+        formPlanType={formPlanType}
+        setFormPlanType={setFormPlanType}
         formPlanDuration={formPlanDuration}
         setFormPlanDuration={setFormPlanDuration}
         formPlanPrice={formPlanPrice}

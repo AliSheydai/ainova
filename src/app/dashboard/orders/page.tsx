@@ -365,6 +365,11 @@ export default function AdminOrdersPage() {
   const [manualDialogOpen, setManualDialogOpen] = useState(false)
   const [manualNote, setManualNote] = useState('')
   const [manualInfo, setManualInfo] = useState('')
+  const [manualLinkUrl, setManualLinkUrl] = useState('')
+  const [manualInstructions, setManualInstructions] = useState('')
+  const [manualAccountEmail, setManualAccountEmail] = useState('')
+  const [manualAccountPassword, setManualAccountPassword] = useState('')
+  const [manualRecoveryEmail, setManualRecoveryEmail] = useState('')
   const [deliveringManual, setDeliveringManual] = useState(false)
 
   // Refund Modal States (Section 4.1)
@@ -523,10 +528,23 @@ export default function AdminOrdersPage() {
     }
   }
 
-  // Fulfill Manual Order
+  // Fulfill Manual Order (Link, Account, or Notes)
   const handleFulfillManual = async () => {
     if (!selectedOrder) return
-    if (!manualNote.trim()) {
+
+    const fType = selectedOrder.plan?.fulfillmentType || selectedOrder.delivery?.type || 'ACTIVATION_LINK'
+
+    if (fType === 'ACTIVATION_LINK' && !manualLinkUrl.trim() && !manualNote.trim()) {
+      toast.error('لطفاً لینک اختصاصی فعال‌سازی را وارد نمایید.')
+      return
+    }
+
+    if (fType === 'PRE_CREATED_ACCOUNT' && !manualAccountEmail.trim() && !manualNote.trim()) {
+      toast.error('لطفاً آدرس ایمیل اکانت اختصاصی را وارد نمایید.')
+      return
+    }
+
+    if (fType !== 'ACTIVATION_LINK' && fType !== 'PRE_CREATED_ACCOUNT' && !manualNote.trim() && !manualInfo.trim()) {
       toast.error('لطفاً توضیحات یا اطلاعات تحویل را وارد نمایید.')
       return
     }
@@ -539,8 +557,13 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({
           orderId: selectedOrder.id,
           action: 'FULFILL_MANUAL',
-          manualNote: manualNote.trim(),
-          deliveredInfo: manualInfo.trim(),
+          linkUrl: manualLinkUrl.trim() || undefined,
+          instructions: manualInstructions.trim() || undefined,
+          accountEmail: manualAccountEmail.trim() || undefined,
+          accountPassword: manualAccountPassword.trim() || undefined,
+          recoveryEmail: manualRecoveryEmail.trim() || undefined,
+          manualNote: manualNote.trim() || undefined,
+          deliveredInfo: manualInfo.trim() || undefined,
         }),
       })
       const data = await res.json()
@@ -549,6 +572,11 @@ export default function AdminOrdersPage() {
         setManualDialogOpen(false)
         setManualNote('')
         setManualInfo('')
+        setManualLinkUrl('')
+        setManualInstructions('')
+        setManualAccountEmail('')
+        setManualAccountPassword('')
+        setManualRecoveryEmail('')
         fetchOrders()
         setSelectedOrder(null)
       } else {
@@ -2587,7 +2615,7 @@ export default function AdminOrdersPage() {
 
                 {/* Action Buttons in Detail Modal */}
                 <div className='flex flex-col sm:flex-row gap-2 pt-1'>
-                  {/* If order is PAID and no customer gmail, provide button for Manual Delivery */}
+                  {/* If order is PAID and no customer gmail, provide button for Manual Delivery / Product Fulfillment */}
                   {selectedOrder.status === 'PAID' &&
                    !((selectedOrder.checkoutData as any)?.customer_email || (selectedOrder.checkoutData as any)?.customer_gmail) && (
                     <Button
@@ -2599,12 +2627,17 @@ export default function AdminOrdersPage() {
                             : ''
                         )
                         setManualInfo('')
+                        setManualLinkUrl('')
+                        setManualInstructions('روی لینک کلیک کنید و در حساب کاربری گوگل خود فعال‌سازی را تأیید فرمایید.')
+                        setManualAccountEmail('')
+                        setManualAccountPassword('')
+                        setManualRecoveryEmail('')
                         setManualDialogOpen(true)
                       }}
-                      className='flex-1 text-xs font-semibold gap-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-9'
+                      className='flex-1 text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-9'
                     >
                       <Send className='size-3.5' />
-                      <span>تکمیل و تحویل دستی (Manual Delivery)</span>
+                      <span>ارسال و تحویل محصول به خریدار</span>
                     </Button>
                   )}
 
@@ -2728,35 +2761,122 @@ export default function AdminOrdersPage() {
           <DialogHeader>
             <DialogTitle className='text-base font-bold flex items-center gap-2'>
               <Send className='size-4 text-primary' />
-              <span>تحویل دستی سفارش #{selectedOrder?.id.slice(-6).toUpperCase()}</span>
+              <span>ارسال و تحویل محصول به سفارش #{selectedOrder?.id.slice(-6).toUpperCase()}</span>
             </DialogTitle>
             <DialogDescription className='text-xs'>
-              اطلاعات وارد شده مستقیماً در بخش تحویل (Delivery) ثبت شده و سفارش به وضعیت تکمیل‌شده (COMPLETED) تغییر خواهد یافت.
+              اطلاعات وارد شده مستقیماً در بخش تحویل (Delivery) ثبت شده، اعلان تحویل برای خریدار ارسال شده و سفارش به وضعیت تکمیل‌شده (COMPLETED) تغییر خواهد یافت.
             </DialogDescription>
           </DialogHeader>
 
-          <div className='space-y-3 py-2 text-xs'>
-            <div>
-              <label className='font-semibold block mb-1'>یادداشت و اطلاعات تحویل به مشتری: *</label>
-              <Textarea
-                rows={3}
-                value={manualNote}
-                onChange={(e) => setManualNote(e.target.value)}
-                placeholder='مثلاً: اشتراک شما با موفقیت فعال شد / جزییات دسترسی ...'
-                className='text-xs rounded-xl'
-              />
-            </div>
+          {(() => {
+            const fType = selectedOrder?.plan?.fulfillmentType || selectedOrder?.delivery?.type || 'ACTIVATION_LINK'
+            if (fType === 'ACTIVATION_LINK') {
+              return (
+                <div className='space-y-3 py-2 text-xs'>
+                  <div>
+                    <label className='font-semibold block mb-1'>لینک اختصاصی فعال‌سازی (URL): *</label>
+                    <Input
+                      dir='ltr'
+                      value={manualLinkUrl}
+                      onChange={(e) => setManualLinkUrl(e.target.value)}
+                      placeholder='https://families.google.com/join/...'
+                      className='text-xs font-mono h-10 rounded-xl'
+                    />
+                  </div>
+                  <div>
+                    <label className='font-semibold block mb-1'>دستورالعمل و راهنمای فعال‌سازی (اختیاری):</label>
+                    <Textarea
+                      rows={2}
+                      value={manualInstructions}
+                      onChange={(e) => setManualInstructions(e.target.value)}
+                      placeholder='روی لینک کلیک کنید و در حساب کاربری گوگل خود فعال‌سازی را تأیید فرمایید.'
+                      className='text-xs rounded-xl'
+                    />
+                  </div>
+                  <div>
+                    <label className='font-semibold block mb-1'>یادداشت تکمیلی برای خریدار (اختیاری):</label>
+                    <Input
+                      value={manualNote}
+                      onChange={(e) => setManualNote(e.target.value)}
+                      placeholder='مثلاً: اشتراک با موفقیت ایجاد شد.'
+                      className='text-xs rounded-xl'
+                    />
+                  </div>
+                </div>
+              )
+            }
 
-            <div>
-              <label className='font-semibold block mb-1'>اطلاعات محرمانه یا اکانت اضافی (اختیاری):</label>
-              <Input
-                value={manualInfo}
-                onChange={(e) => setManualInfo(e.target.value)}
-                placeholder='یوزرنیم، پسورد، یا لینک اختصاصی...'
-                className='text-xs rounded-xl'
-              />
-            </div>
-          </div>
+            if (fType === 'PRE_CREATED_ACCOUNT') {
+              return (
+                <div className='space-y-3 py-2 text-xs'>
+                  <div>
+                    <label className='font-semibold block mb-1'>ایمیل / نام‌کاربری اکانت اختصاصی: *</label>
+                    <Input
+                      dir='ltr'
+                      value={manualAccountEmail}
+                      onChange={(e) => setManualAccountEmail(e.target.value)}
+                      placeholder='example@gmail.com'
+                      className='text-xs font-mono h-10 rounded-xl'
+                    />
+                  </div>
+                  <div>
+                    <label className='font-semibold block mb-1'>رمز عبور اکانت: *</label>
+                    <Input
+                      dir='ltr'
+                      value={manualAccountPassword}
+                      onChange={(e) => setManualAccountPassword(e.target.value)}
+                      placeholder='رمز عبور ورود به اکانت'
+                      className='text-xs font-mono h-10 rounded-xl'
+                    />
+                  </div>
+                  <div>
+                    <label className='font-semibold block mb-1'>ایمیل بازیابی یا یادداشت تکمیلی (اختیاری):</label>
+                    <Input
+                      dir='ltr'
+                      value={manualRecoveryEmail}
+                      onChange={(e) => setManualRecoveryEmail(e.target.value)}
+                      placeholder='recovery@gmail.com یا کد بکاپ'
+                      className='text-xs font-mono h-10 rounded-xl'
+                    />
+                  </div>
+                  <div>
+                    <label className='font-semibold block mb-1'>یادداشت تحویل (اختیاری):</label>
+                    <Input
+                      value={manualNote}
+                      onChange={(e) => setManualNote(e.target.value)}
+                      placeholder='لطفاً پس از اولین ورود اطلاعات امنیتی را تغییر دهید.'
+                      className='text-xs rounded-xl'
+                    />
+                  </div>
+                </div>
+              )
+            }
+
+            return (
+              <div className='space-y-3 py-2 text-xs'>
+                <div>
+                  <label className='font-semibold block mb-1'>یادداشت و اطلاعات تحویل به مشتری: *</label>
+                  <Textarea
+                    rows={3}
+                    value={manualNote}
+                    onChange={(e) => setManualNote(e.target.value)}
+                    placeholder='مثلاً: اشتراک شما با موفقیت فعال شد / جزییات دسترسی ...'
+                    className='text-xs rounded-xl'
+                  />
+                </div>
+
+                <div>
+                  <label className='font-semibold block mb-1'>اطلاعات محرمانه یا اکانت اضافی (اختیاری):</label>
+                  <Input
+                    value={manualInfo}
+                    onChange={(e) => setManualInfo(e.target.value)}
+                    placeholder='یوزرنیم، پسورد، یا لینک اختصاصی...'
+                    className='text-xs rounded-xl'
+                  />
+                </div>
+              </div>
+            )
+          })()}
 
           <DialogFooter className='flex flex-col-reverse sm:flex-row gap-2 pt-2'>
             <Button

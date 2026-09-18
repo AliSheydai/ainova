@@ -52,7 +52,7 @@ export async function handleShowProducts(ctx: Context) {
 
     const keyboard = new InlineKeyboard()
     for (const p of products) {
-      const stockBadge = p.stock > 0 ? `✅ موجود` : '❌ ناموجود'
+      const stockBadge = p.stock > 0 ? `⚡ تحویل آنی` : '🕒 ارسال طی ۱ روز کاری'
       keyboard
         .text(`📦 ${p.title} — از ${p.price.toLocaleString('fa-IR')} ت (${stockBadge})`, `product:select:${p.id}`)
         .row()
@@ -113,7 +113,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
     for (const plan of plans) {
       const isPreCreated = plan.fulfillmentType === 'PRE_CREATED_ACCOUNT'
       const warehouseStock = plan.availableInventoryCount ?? 0
-      const isAvailable = isPreCreated ? true : plan.stock > 0
+      const isAvailable = true
       const fulfillmentBadge = getFulfillmentLabel(plan.fulfillmentType)
 
       detailsText += `🔹 <b>پلن ${escapeHtml(plan.name)}</b>\n`
@@ -122,19 +122,17 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
 
       if (isPreCreated) {
         if (warehouseStock > 0) {
-          detailsText += `• 📦 <b>وضعیت:</b> ✅ موجود در انبار (${warehouseStock.toLocaleString('fa-IR')} اکانت آماده) یا فعال‌سازی روی جیمیل شما\n\n`
+          detailsText += `• 📦 <b>وضعیت:</b> ⚡ موجود در انبار (${warehouseStock.toLocaleString('fa-IR')} اکانت آماده تحویل فوری) یا فعال‌سازی روی جیمیل شما\n\n`
         } else {
-          detailsText += `• 📦 <b>وضعیت:</b> ✅ فعال‌سازی روی جیمیل شخصی شما (انبار آماده موقتاً اتمام)\n\n`
+          detailsText += `• 📦 <b>وضعیت:</b> 🕒 ارسال طی یک روز کاری (اکانت اختصاصی نو یا فعال‌سازی روی جیمیل شما)\n\n`
         }
       } else {
-        detailsText += `• 📦 <b>وضعیت:</b> ${isAvailable ? `✅ آماده تحویل (${plan.stock.toLocaleString('fa-IR')} عدد)` : '❌ موقتاً ناموجود'}\n\n`
+        detailsText += `• 📦 <b>وضعیت:</b> ${plan.stock > 0 ? `⚡ آماده تحویل آنی (${plan.stock.toLocaleString('fa-IR')} عدد)` : '🕒 ارسال طی یک روز کاری'}\n\n`
       }
 
-      if (isAvailable) {
-        keyboard
-          .text(`🛒 سفارش پلن ${plan.name} — ${formatPrice(plan.price)}`, `plan:buy:${plan.id}`)
-          .row()
-      }
+      keyboard
+        .text(`🛒 سفارش پلن ${plan.name} — ${formatPrice(plan.price)}`, `plan:buy:${plan.id}`)
+        .row()
     }
 
     detailsText += `👇 جهت سفارش، پلن مورد نظر خود را از دکمه‌های زیر انتخاب فرمایید:`
@@ -277,11 +275,7 @@ export async function handleSelectDeliveryPreference(
   const telegramId = String(from.id)
 
   if (mode === 'exhausted') {
-    await ctx.answerCallbackQuery({
-      text: 'موجودی اکانت‌های آماده انبار موقتاً تمام شده است. لطفاً گزینه «فعال‌سازی روی جیمیل شخصی» را انتخاب فرمایید.',
-      show_alert: true,
-    }).catch(() => {})
-    return
+    mode = 'ready'
   }
 
   await ctx.answerCallbackQuery().catch(() => {})

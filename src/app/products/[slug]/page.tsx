@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Check, ChevronLeft, ShieldCheck, Zap, Clock } from 'lucide-react'
 import { StickyMobileCta } from '@/components/product/sticky-mobile-cta'
 import { ProductReviews } from '@/components/product/product-reviews'
+import { ProductVideoSection } from '@/components/product/product-video-section'
 
 export const revalidate = 60
 
@@ -82,6 +83,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
     name: plan.name,
     price: plan.price,
     duration: plan.duration,
+    planType: plan.planType,
     fulfillmentType: plan.fulfillmentType,
     stock: metrics?.planStocks[plan.id] ?? 0,
   }))
@@ -92,7 +94,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
       : null
 
   const hasPreCreatedPlan = enrichedPlans.some((p) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT')
-  const isAvailable = stock > 0 || hasPreCreatedPlan
+  const isAvailable = true
 
   // Fetch approved reviews for this product
   const approvedReviews = await prisma.review.findMany({
@@ -154,7 +156,11 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
             {/* Column 1: Product Image */}
             <div className='lg:sticky lg:top-24 lg:self-start'>
-              <ProductDetailVisual image={product.image} title={product.title} />
+              <ProductDetailVisual
+                image={product.image}
+                title={product.title}
+                hasVideo={Boolean(product.videoUrl)}
+              />
             </div>
 
             {/* Column 2: Content + Buy Section */}
@@ -162,13 +168,13 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
               {/* Title & Status */}
               <div className='space-y-2.5 sm:space-y-3'>
-                {isAvailable ? (
-                  <Badge className='bg-primary/8 text-primary border-primary/20 text-[11px] sm:text-xs'>
+                {stock > 0 ? (
+                  <Badge className='bg-primary/10 text-primary border-primary/20 text-[11px] sm:text-xs font-medium'>
                     آماده تحویل آنی
                   </Badge>
                 ) : (
-                  <Badge variant='outline' className='text-destructive/80 border-destructive/20 text-[11px] sm:text-xs'>
-                    اتمام موجودی موقت
+                  <Badge className='bg-primary/10 text-primary border-primary/20 text-[11px] sm:text-xs font-medium'>
+                    ارسال طی یک روز کاری
                   </Badge>
                 )}
 
@@ -249,6 +255,14 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
             </div>
           </div>
+
+          {/* Product Video Section — only rendered if video is assigned by admin */}
+          {product.videoUrl && (
+            <ProductVideoSection
+              videoUrl={product.videoUrl}
+              productTitle={product.title}
+            />
+          )}
 
           {/* Product Reviews Section */}
           <ProductReviews

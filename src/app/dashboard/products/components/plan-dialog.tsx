@@ -13,6 +13,7 @@ import {
   Minus,
   Coins,
   ArrowUpDown,
+  Layers,
 } from 'lucide-react'
 import {
   Dialog,
@@ -36,6 +37,15 @@ import {
   formatPlanDurationLabel,
 } from '@/lib/persian-utils'
 
+const COMMON_PLAN_TYPES = [
+  { label: 'پرو (Pro)', value: 'Pro' },
+  { label: 'پلاس (Plus)', value: 'Plus' },
+  { label: 'دانشجویی (Student)', value: 'Student' },
+  { label: 'استاندارد (Standard)', value: 'Standard' },
+  { label: 'بیزینس (Business)', value: 'Business' },
+  { label: 'اینترپرایز (Enterprise)', value: 'Enterprise' },
+]
+
 interface PlanDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -45,6 +55,8 @@ interface PlanDialogProps {
   // Form State
   formPlanName: string
   setFormPlanName: (v: string) => void
+  formPlanType: string
+  setFormPlanType: (v: string) => void
   formPlanDuration: string
   setFormPlanDuration: (v: string) => void
   formPlanPrice: string
@@ -68,6 +80,8 @@ export function PlanDialog({
   submitting,
   formPlanName,
   setFormPlanName,
+  formPlanType,
+  setFormPlanType,
   formPlanDuration,
   setFormPlanDuration,
   formPlanPrice,
@@ -254,6 +268,61 @@ export function PlanDialog({
                   className='text-xs sm:text-sm h-10 rounded-xl px-3'
                   dir='rtl'
                 />
+              </div>
+
+              {/* Row 1.5: Plan Type / Tier */}
+              <div className='space-y-1.5 rounded-xl bg-muted/20 border border-border/50 p-3'>
+                <div className='flex items-center justify-between gap-2 min-w-0 flex-wrap'>
+                  <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
+                    <Layers className='size-3.5 text-primary shrink-0' />
+                    <span>نوع / رده پلن (Plan Type / Tier)</span>
+                    <span className='text-[10px] sm:text-[10.5px] text-muted-foreground font-normal'>
+                      (اختیاری — جهت تفکیک پلن‌های Pro، Plus، Student و...)
+                    </span>
+                  </label>
+                  {formPlanType.trim() && (
+                    <span className='text-[10.5px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg'>
+                      {formPlanType.trim()}
+                    </span>
+                  )}
+                </div>
+                <Input
+                  value={formPlanType}
+                  onChange={(e) => setFormPlanType(e.target.value)}
+                  placeholder='مثال: Pro یا Plus یا Student یا اختصاصی...'
+                  className='text-xs sm:text-sm h-9 rounded-xl px-3 bg-background'
+                  dir='ltr'
+                />
+                {/* Quick Select Type Chips */}
+                <div className='flex items-center gap-1.5 pt-1 flex-wrap'>
+                  <span className='text-[10px] text-muted-foreground shrink-0'>پیشنهادات:</span>
+                  {COMMON_PLAN_TYPES.map((typePreset) => {
+                    const isSelected = formPlanType.trim().toLowerCase() === typePreset.value.toLowerCase()
+                    return (
+                      <button
+                        key={typePreset.value}
+                        type='button'
+                        onClick={() => setFormPlanType(isSelected ? '' : typePreset.value)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] sm:text-[10.5px] font-medium transition-all ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                            : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        {typePreset.label}
+                      </button>
+                    )
+                  })}
+                  {formPlanType.trim() && (
+                    <button
+                      type='button'
+                      onClick={() => setFormPlanType('')}
+                      className='text-[10px] text-rose-500 hover:underline px-1'
+                    >
+                      پاک کردن
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Row 2: Duration & Sort Order (2 Balanced Columns) */}
@@ -490,6 +559,26 @@ export function PlanDialog({
               <span className='leading-relaxed break-words text-[11px] sm:text-xs min-w-0 flex-1'>
                 پیش‌نمایش فرم نهایی که کاربر در صفحه Checkout پس از انتخاب این پلن مشاهده خواهد کرد:
               </span>
+            </div>
+
+            {/* Plan Identity Banner in Preview */}
+            <div className='flex items-center gap-2 flex-wrap p-3 rounded-xl bg-muted/40 border border-border/60 text-xs'>
+              <span className='font-bold text-foreground'>{formPlanName || 'پلن بدون عنوان'}</span>
+              {formPlanType.trim() && (
+                <span className='text-[10.5px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md'>
+                  {formPlanType.trim()}
+                </span>
+              )}
+              {durationFriendlyText && (
+                <span className='text-[10.5px] text-muted-foreground bg-background border border-border px-2 py-0.5 rounded-md'>
+                  {durationFriendlyText}
+                </span>
+              )}
+              {formPlanPrice && !isNaN(parseInt(formPlanPrice, 10)) && (
+                <span className='text-[11px] font-bold text-emerald-600 dark:text-emerald-400 ms-auto font-sans'>
+                  {formattedPriceDisplay} تومان
+                </span>
+              )}
             </div>
 
             <div className='bg-card rounded-2xl border border-border/80 p-3 sm:p-5 shadow-xs min-w-0 w-full'>

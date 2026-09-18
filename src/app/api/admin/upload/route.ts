@@ -5,7 +5,7 @@ import path from 'path'
 import crypto from 'crypto'
 
 // Allowed MIME types and corresponding safe file extensions
-const ALLOWED_MIME_TYPES: Record<string, string> = {
+const IMAGE_MIME_TYPES: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/jpg': '.jpg',
   'image/png': '.png',
@@ -14,7 +14,15 @@ const ALLOWED_MIME_TYPES: Record<string, string> = {
   'image/svg+xml': '.svg',
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+const VIDEO_MIME_TYPES: Record<string, string> = {
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+  'video/ogg': '.ogv',
+  'video/quicktime': '.mov',
+}
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5 MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export async function POST(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -31,34 +39,40 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'حجم فایل بیشتر از حد مجاز است. حداکثر حجم مجاز ۵ مگابایت می‌باشد.',
-        },
-        { status: 400 }
-      )
-    }
-
-    // Validate MIME type
     const mimeType = file.type?.toLowerCase()
-    const extension = ALLOWED_MIME_TYPES[mimeType]
+    const isImage = Boolean(IMAGE_MIME_TYPES[mimeType])
+    const isVideo = Boolean(VIDEO_MIME_TYPES[mimeType])
 
-    if (!extension) {
+    if (!isImage && !isVideo) {
       return NextResponse.json(
         {
           success: false,
           error:
-            'فرمت فایل نامعتبر است. فرمت‌های مجاز: WebP، PNG، JPG، GIF و SVG.',
+            'فرمت فایل نامعتبر است. فرمت‌های مجاز تصویر: WebP، PNG، JPG، SVG و ویدیو: MP4، WebM.',
         },
         { status: 400 }
       )
     }
 
-    // Target upload folder: public/uploads/products
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products')
+    // Validate size depending on type
+    const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE
+    const maxSizeLabel = isVideo ? '۵۰ مگابایت' : '۵ مگابایت'
+
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `حجم فایل بیشتر از حد مجاز است. حداکثر حجم مجاز ${maxSizeLabel} می‌باشد.`,
+        },
+        { status: 400 }
+      )
+    }
+
+    const extension = isVideo ? VIDEO_MIME_TYPES[mimeType] : IMAGE_MIME_TYPES[mimeType]
+    const subFolder = isVideo ? 'videos' : 'products'
+
+    // Target upload folder
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', subFolder)
     await fs.mkdir(uploadDir, { recursive: true })
 
     // Generate collision-proof unique filename
@@ -71,14 +85,17 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(targetFilePath, buffer)
 
     // Public web accessible URL
-    const publicUrl = `/uploads/products/${uniqueName}`
+    const publicUrl = `/uploads/${subFolder}/${uniqueName}`
 
     return NextResponse.json({
       success: true,
       url: publicUrl,
       fileName: uniqueName,
       size: file.size,
-      message: 'تصویر با موفقیت بارگذاری شد.',
+      isVideo,
+      message: isVideo
+        ? 'ویدئو با موفقیت بارگذاری شد.'
+        : 'تصویر با موفقیت بارگذاری شد.',
     })
   } catch (error: unknown) {
     console.error('Error uploading product image:', error)

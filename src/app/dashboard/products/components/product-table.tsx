@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Loader2,
   Power,
+  Video,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -119,6 +120,16 @@ export function ProductTable({
                       {toPersianDigits(plans.length)} پلن
                     </Badge>
                     <StockBadge stock={prod.stock} />
+                    {prod.videoUrl && (
+                      <Badge
+                        variant='outline'
+                        className='text-[10px] font-sans px-2 py-0.5 gap-1 border-primary/30 text-primary bg-primary/5'
+                        title='دارای ویدئو معرفی محصول'
+                      >
+                        <Video className='size-2.5 shrink-0' />
+                        <span>ویدئو</span>
+                      </Badge>
+                    )}
                   </div>
 
                   {prod.shortDescription && (

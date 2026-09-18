@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, Loader2, ShoppingCart, Package, Zap, ArrowLeft } from 'lucide-react'
+import { Check, Loader2, ShoppingCart, Package, Zap, ArrowLeft, Clock } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -134,8 +134,9 @@ export default function BuyPage() {
                           تحویل آنی
                         </Badge>
                       ) : (
-                        <Badge variant='outline' className='text-rose-500 text-[10px]'>
-                          موقتاً ناموجود
+                        <Badge variant='outline' className='bg-primary/5 text-primary border-primary/20 text-[10px]'>
+                          <Clock className='size-2.5 me-1' />
+                          ارسال طی ۱ روز کاری
                         </Badge>
                       )}
                     </div>
@@ -158,13 +159,13 @@ export default function BuyPage() {
                     <div className='flex gap-2'>
                       <Button
                         className='flex-1 text-xs font-semibold'
-                        disabled={buyingId === prod.id || !isAvailable}
+                        disabled={buyingId === prod.id}
                         onClick={() => handleBuyProduct(prod)}
                       >
                         {buyingId === prod.id ? (
                           <Loader2 className='size-4 animate-spin' />
                         ) : (
-                          <span>خرید آنی</span>
+                          <span>خرید اشتراک</span>
                         )}
                       </Button>
                       <Link href={`/products/${prod.slug}`}>
