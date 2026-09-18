@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Package,
   Zap,
@@ -14,6 +14,7 @@ import {
   Warehouse,
   Check,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -48,14 +49,37 @@ export function CheckoutDeliverySection({
   onClearError,
   disabled = false,
 }: CheckoutDeliverySectionProps) {
+  const [isOpen, setIsOpen] = useState(false)
   const hasInventory = availableCount !== null && availableCount !== undefined && availableCount > 0
   const isInventoryExhausted = availableCount !== null && availableCount !== undefined && availableCount === 0
   const inventoryUnknown = availableCount === null || availableCount === undefined
 
+  // Auto-open if there is any validation error in personal gmail / password fields
+  useEffect(() => {
+    if (errors && (errors.customerGmail || errors.customerPassword)) {
+      setIsOpen(true)
+    }
+  }, [errors])
+
   return (
     <div className='rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-4'>
-      {/* Header */}
-      <div className='flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-border/60'>
+      {/* Header (Collapsible Toggle) */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-2.5 transition-colors cursor-pointer select-none',
+          isOpen ? 'pb-3 border-b border-border/60' : ''
+        )}
+        role='button'
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setIsOpen(!isOpen)
+          }
+        }}
+      >
         <div className='flex items-center gap-2.5'>
           <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs'>
             <Package className='size-4' />
@@ -66,38 +90,54 @@ export function CheckoutDeliverySection({
               <span className='text-rose-500 font-bold'>*</span>
             </h2>
             <p className='text-[11px] sm:text-xs text-muted-foreground'>
-              تمایل دارید اکانت آماده دریافت کنید یا روی جیمیل شخصی شما فعال شود؟
+              {isOpen
+                ? 'تمایل دارید اکانت آماده دریافت کنید یا روی جیمیل شخصی شما فعال شود؟'
+                : mode === 'inventory'
+                  ? 'انتخاب فعلی: اکانت اختصاصی آماده (تحویل آنی)'
+                  : 'انتخاب فعلی: فعال‌سازی روی جیمیل شخصی شما'}
             </p>
           </div>
         </div>
 
-        {/* Warehouse Live Status */}
-        <div className='shrink-0'>
-          {!inventoryUnknown ? (
-            hasInventory ? (
-              <Badge
-                variant='outline'
-                className='text-[10.5px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 py-1'
-              >
-                <span className='size-1.5 rounded-full bg-emerald-500 animate-pulse me-1.5' />
-                <Warehouse className='size-3.5 me-1' />
-                <span>{availableCount} اکانت آماده تحویل آنی</span>
-              </Badge>
-            ) : null
-          ) : (
+        {/* Right side status & toggle button */}
+        <div className='flex items-center gap-2 shrink-0'>
+          {!inventoryUnknown && hasInventory && (
             <Badge
               variant='outline'
-              className='text-[10.5px] sm:text-xs text-muted-foreground bg-muted/40 border-border/60 py-1'
+              className='text-[10.5px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 py-1 hidden xs:inline-flex'
             >
+              <span className='size-1.5 rounded-full bg-emerald-500 animate-pulse me-1.5' />
               <Warehouse className='size-3.5 me-1' />
-              <span>استعلام موجودی...</span>
+              <span>{availableCount} اکانت آماده</span>
             </Badge>
           )}
+
+          <Badge
+            variant='outline'
+            className='text-[10px] sm:text-xs font-semibold bg-primary/10 text-primary border-primary/20 py-1 hidden sm:inline-flex'
+          >
+            {mode === 'inventory' ? 'اکانت آماده' : 'اکانت شخصی'}
+          </Badge>
+
+          <span
+            className='inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors py-1 px-2 rounded-lg bg-primary/5 sm:bg-transparent sm:hover:bg-primary/5'
+          >
+            <span>{isOpen ? 'بستن' : 'تغییر'}</span>
+            <ChevronDown
+              className={cn(
+                'size-3.5 transition-transform duration-200',
+                isOpen ? 'rotate-180 text-primary' : ''
+              )}
+            />
+          </span>
         </div>
       </div>
 
-      {/* Two Delivery Options Grid */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+      {/* Collapsible Delivery Options & Inputs */}
+      {isOpen && (
+        <div className='space-y-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
+          {/* Two Delivery Options Grid */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
         {/* Option 1: Instant Ready Account */}
         <div
           role='radio'
@@ -332,6 +372,8 @@ export function CheckoutDeliverySection({
               )}
             </div>
           </div>
+        </div>
+      )}
         </div>
       )}
     </div>

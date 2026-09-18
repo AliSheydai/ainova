@@ -15,6 +15,10 @@ import {
   PencilLine,
   HelpCircle,
   Headphones,
+  ChevronDown,
+  MessageCircle,
+  Phone,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -29,6 +33,10 @@ import { CheckoutDeliverySection } from '@/components/checkout/checkout-delivery
 import { CheckoutOrderSummary } from '@/components/checkout/checkout-order-summary'
 import { CheckoutMobileBar } from '@/components/checkout/checkout-mobile-bar'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { cn } from '@/lib/utils'
+
+const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '۰۲۱-XXXXXXXX'
+const SUPPORT_TELEGRAM = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM || 'https://t.me/ArioChatSupport'
 
 interface PlanData {
   id: string
@@ -91,6 +99,7 @@ function CheckoutContent() {
   const [customerGmail, setCustomerGmail] = useState('')
   const [customerPassword, setCustomerPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('')
@@ -381,12 +390,6 @@ function CheckoutContent() {
         {/* Page Top Header Bar */}
         <div className='mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border/50'>
           <div>
-            <div className='flex items-center gap-2 mb-1'>
-              <Badge className='bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold'>
-                <Sparkles className='size-3 me-1' />
-                تکمیل نهایی خرید
-              </Badge>
-            </div>
             <h1 className='text-lg sm:text-2xl font-extrabold text-foreground tracking-tight'>
               خرید و فعال‌سازی {productTitle}
             </h1>
@@ -515,29 +518,130 @@ function CheckoutContent() {
                 </div>
               )}
 
-              {/* Quick Customer Support & Peace of Mind Box */}
-              <div className='rounded-2xl border border-border/50 bg-muted/20 p-3.5 sm:p-4 text-xs text-muted-foreground flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
-                <div className='flex items-center gap-2.5'>
-                  <Headphones className='size-4 text-primary shrink-0' />
-                  <div>
-                    <span className='font-semibold text-foreground block text-xs'>
-                      نیاز به راهنمایی قبل از خرید دارید؟
-                    </span>
-                    <span className='text-[11px]'>
-                      پشتیبانی تلگرام و آنلاین در تمامی ساعات پاسخگوی شماست.
-                    </span>
+              {/* Customer Support Collapsible Box (hidden on mobile, expandable with Telegram & Phone) */}
+              <div className='hidden sm:block rounded-2xl border border-border/70 bg-card/70 backdrop-blur-sm p-3.5 sm:p-4 text-xs text-muted-foreground transition-all'>
+                {/* Header Toggle */}
+                <div
+                  onClick={() => setSupportOpen(!supportOpen)}
+                  role='button'
+                  tabIndex={0}
+                  aria-expanded={supportOpen}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setSupportOpen(!supportOpen)
+                    }
+                  }}
+                  className={cn(
+                    'flex items-center justify-between gap-2.5 transition-colors cursor-pointer select-none',
+                    supportOpen ? 'pb-3 border-b border-border/60' : ''
+                  )}
+                >
+                  <div className='flex items-center gap-2.5'>
+                    <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs'>
+                      <Headphones className='size-4' />
+                    </div>
+                    <div>
+                      <span className='font-bold text-foreground block text-xs sm:text-sm'>
+                        نیاز به راهنمایی قبل از خرید دارید؟
+                      </span>
+                      <span className='text-[11px] text-muted-foreground'>
+                        {supportOpen
+                          ? 'از طریق تلگرام یا تماس تلفنی پاسخگوی شما هستیم:'
+                          : 'پشتیبانی آنلاین تلگرام و تماس تلفنی در ساعات کاری'}
+                      </span>
+                    </div>
                   </div>
+
+                  <span className='inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors py-1 px-2.5 rounded-lg bg-primary/5 hover:bg-primary/10 shrink-0'>
+                    <span>{supportOpen ? 'بستن' : 'ارتباط با پشتیبانی'}</span>
+                    <ChevronDown
+                      className={cn(
+                        'size-3.5 transition-transform duration-200',
+                        supportOpen ? 'rotate-180 text-primary' : ''
+                      )}
+                    />
+                  </span>
                 </div>
 
-                <a
-                  href='https://t.me/ArioChatSupport'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 shrink-0'
-                >
-                  <span>ارتباط با پشتیبانی</span>
-                  <ChevronLeft className='size-3' />
-                </a>
+                {/* Collapsible Content: Telegram and Phone Options (matching SupportTab) */}
+                {supportOpen && (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 animate-in fade-in slide-in-from-top-1 duration-150'>
+                    {/* Telegram Card */}
+                    <div className='rounded-xl border border-border/70 bg-background/80 p-3.5 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors'>
+                      <div className='space-y-1.5'>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <div className='size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0'>
+                              <MessageCircle className='size-3.5' />
+                            </div>
+                            <span className='text-xs font-bold text-foreground'>
+                              پشتیبانی تلگرام
+                            </span>
+                          </div>
+                          <Badge className='bg-primary/10 text-primary border-none text-[10px] font-medium'>
+                            روش پیشنهادی
+                          </Badge>
+                        </div>
+                        <p className='text-[11px] text-muted-foreground leading-relaxed'>
+                          سریع‌ترین روش دریافت پشتیبانی، بررسی سفارش یا راهنمایی پیش از خرید از طریق تلگرام است.
+                        </p>
+                      </div>
+
+                      <a
+                        href={SUPPORT_TELEGRAM}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='w-full'
+                      >
+                        <Button
+                          type='button'
+                          size='sm'
+                          className='w-full h-8 text-xs font-semibold rounded-lg gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs'
+                        >
+                          <ExternalLink className='size-3' />
+                          <span>گفتگو در تلگرام</span>
+                        </Button>
+                      </a>
+                    </div>
+
+                    {/* Phone Card */}
+                    <div className='rounded-xl border border-border/70 bg-background/80 p-3.5 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors'>
+                      <div className='space-y-1.5'>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <div className='size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0'>
+                              <Phone className='size-3.5' />
+                            </div>
+                            <span className='text-xs font-bold text-foreground'>
+                              تماس تلفنی ثابت
+                            </span>
+                          </div>
+                          <Badge variant='outline' className='text-[10px] text-muted-foreground border-border/60 font-medium'>
+                            ساعات اداری
+                          </Badge>
+                        </div>
+                        <p className='text-[11px] text-muted-foreground leading-relaxed'>
+                          برای امور اداری، هماهنگی‌ها یا موارد اضطراری می‌توانید مستقیماً تماس حاصل فرمایید.
+                        </p>
+                      </div>
+
+                      <a href={`tel:${SUPPORT_PHONE}`} className='w-full'>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          className='w-full h-8 text-xs font-semibold rounded-lg gap-1.5 border-border/80 hover:bg-muted/50'
+                        >
+                          <Phone className='size-3' />
+                          <span dir='ltr' className='font-sans tabular-nums text-xs'>
+                            {SUPPORT_PHONE}
+                          </span>
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

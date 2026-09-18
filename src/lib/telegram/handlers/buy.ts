@@ -294,25 +294,6 @@ export async function handleSelectDeliveryPreference(
   }
 
   if (mode === 'ready') {
-    // Check warehouse availability
-    const warehouseCount = await prisma.inventoryItem.count({
-      where: {
-        type: 'PRE_CREATED_ACCOUNT',
-        status: 'AVAILABLE',
-        OR: [
-          { planId: plan.id },
-          { productId: plan.productId, planId: null },
-        ],
-      },
-    })
-
-    if (warehouseCount <= 0) {
-      await ctx.reply(
-        '⚠️ موجودی اکانت‌های آماده انبار به اتمام رسیده است. لطفاً سفارش خود را با گزینه «فعال‌سازی روی جیمیل شخصی» تکمیل نمایید.'
-      )
-      return
-    }
-
     const checkoutData = {
       ...(session.checkoutData || {}),
       delivery_preference: 'ready_account',
@@ -325,7 +306,7 @@ export async function handleSelectDeliveryPreference(
       step: 'AWAITING_CHECKOUT_FIELD',
     })
 
-    // Advance directly to Order Creation
+    // Advance directly to Order Creation (fulfilled instantly if stock exists, or within 1 business day if warehouse is empty)
     await proceedToOrderCreation(ctx, plan.id)
     return
   }
