@@ -178,7 +178,7 @@ export async function requestOtp(rawPhone: string, ip?: string): Promise<Request
     success: true,
     message: smsResult.message,
     cooldownRemaining: cooldownSeconds,
-    devCode: smsResult.devCode,
+    devCode: process.env.NODE_ENV === 'development' ? smsResult.devCode : undefined,
   }
 }
 

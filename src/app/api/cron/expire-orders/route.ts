@@ -6,17 +6,15 @@ export const dynamic = 'force-dynamic'
 function isAuthorized(req: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET || process.env.INTERNAL_API_KEY
 
-  // If secret is configured, require matching bearer token, header or query param
+  // If secret is configured, require matching bearer token or x-cron-secret header (query parameters strictly prohibited)
   if (cronSecret) {
     const authHeader = req.headers.get('authorization')
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : null
     const headerSecret = req.headers.get('x-cron-secret')?.trim()
-    const querySecret = req.nextUrl.searchParams.get('secret')?.trim() || req.nextUrl.searchParams.get('key')?.trim()
 
     return (
       bearerToken === cronSecret ||
-      headerSecret === cronSecret ||
-      querySecret === cronSecret
+      headerSecret === cronSecret
     )
   }
 

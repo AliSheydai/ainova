@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getBot } from '@/lib/telegram/bot'
+import { requireAdminApi } from '@/lib/auth/admin'
 
 export async function GET(req: NextRequest) {
+  const { errorResponse } = await requireAdminApi()
+  if (errorResponse) return errorResponse
+
   try {
     const token = process.env.TELEGRAM_BOT_TOKEN
     if (!token) {

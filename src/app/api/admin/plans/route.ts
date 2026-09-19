@@ -30,7 +30,6 @@ export async function GET(req: NextRequest) {
         _count: {
           select: {
             orders: true,
-            activationLinks: true,
             inventoryItems: true,
           },
         },
@@ -379,8 +378,7 @@ export async function DELETE(req: NextRequest) {
       })
     }
 
-    // Safely delete unused links/items and plan
-    await prisma.activationLink.deleteMany({ where: { planId: id } })
+    // Safely delete unused inventory items and plan
     await prisma.inventoryItem.deleteMany({ where: { planId: id } })
     await prisma.plan.delete({ where: { id } })
 

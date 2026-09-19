@@ -12,6 +12,7 @@ function getSecretKey(): Uint8Array {
 
 export const AUTH_COOKIE_NAME = 'auth_token'
 export const TOKEN_EXPIRY = '7d'
+export const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds, exactly matching TOKEN_EXPIRY
 
 export interface UserJwtPayload {
   userId: string

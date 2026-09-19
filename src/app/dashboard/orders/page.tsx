@@ -127,7 +127,7 @@ interface AdminOrder {
     refId: string | null
     createdAt: string
   } | null
-  activationLink: {
+  activationLink?: {
     id: string
     url: string
     status: string
@@ -769,7 +769,9 @@ export default function AdminOrdersPage() {
       `📅 تاریخ: ${formatDate(ord.createdAt)}`,
       `👤 مشتری: ${ord.user?.name || ord.user?.phone || 'مشتری گرامی'}`,
       ord.payment?.refId ? `💳 کد پیگیری پرداخت: ${ord.payment.refId}` : null,
-      ord.activationLink?.url ? `🔗 لینک فعال‌سازی:\n${ord.activationLink.url}` : null,
+      ((ord.delivery?.data as any)?.url || (ord.delivery?.data as any)?.link || ord.activationLink?.url)
+        ? `🔗 لینک فعال‌سازی:\n${(ord.delivery?.data as any)?.url || (ord.delivery?.data as any)?.link || ord.activationLink?.url}`
+        : null,
       `✨ با تشکر از خرید و اعتماد شما!`,
     ].filter(Boolean)
 
@@ -2457,35 +2459,38 @@ export default function AdminOrdersPage() {
                       })}
                     </div>
                   )
-                })() : selectedOrder.activationLink?.url ? (
-                  <div className='space-y-2 min-w-0'>
-                    <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/40 min-w-0'>
-                      <span className='font-mono text-[11px] truncate flex-1 min-w-0 select-all' dir='ltr'>
-                        {selectedOrder.activationLink.url}
-                      </span>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => handleCopyText(selectedOrder.activationLink!.url, 'act-link')}
-                        className='size-7 shrink-0'
-                        title='کپی لینک'
-                      >
-                        <Copy className='size-3.5' />
-                      </Button>
-                      <Button
-                        asChild
-                        variant='ghost'
-                        size='icon'
-                        className='size-7 shrink-0'
-                        title='باز کردن لینک'
-                      >
-                        <a href={selectedOrder.activationLink.url} target='_blank' rel='noopener noreferrer'>
-                          <ExternalLink className='size-3.5' />
-                        </a>
-                      </Button>
+                })() : ((selectedOrder.delivery?.data as any)?.url || (selectedOrder.delivery?.data as any)?.link || selectedOrder.activationLink?.url) ? (() => {
+                  const actUrl = (selectedOrder.delivery?.data as any)?.url || (selectedOrder.delivery?.data as any)?.link || selectedOrder.activationLink?.url
+                  return (
+                    <div className='space-y-2 min-w-0'>
+                      <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/40 min-w-0'>
+                        <span className='font-mono text-[11px] truncate flex-1 min-w-0 select-all' dir='ltr'>
+                          {actUrl}
+                        </span>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => handleCopyText(actUrl, 'act-link')}
+                          className='size-7 shrink-0'
+                          title='کپی لینک'
+                        >
+                          <Copy className='size-3.5' />
+                        </Button>
+                        <Button
+                          asChild
+                          variant='ghost'
+                          size='icon'
+                          className='size-7 shrink-0'
+                          title='باز کردن لینک'
+                        >
+                          <a href={actUrl} target='_blank' rel='noopener noreferrer'>
+                            <ExternalLink className='size-3.5' />
+                          </a>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
+                  )
+                })() : (
                   <p className='text-muted-foreground text-[11px] py-1'>
                     {selectedOrder.status === 'PAID'
                       ? 'سفارش پرداخت شده است اما هنوز داده تحویل اختصاص داده نشده است.'

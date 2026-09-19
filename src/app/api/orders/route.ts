@@ -181,6 +181,17 @@ export async function POST(req: NextRequest) {
 
     // 3. Validate Dynamic Checkout Fields if configured on Plan
     const submittedData = (checkoutData && typeof checkoutData === 'object') ? checkoutData : {}
+
+    // Defense-in-depth: limit maximum length of any submitted checkout field to 500 characters
+    for (const [key, val] of Object.entries(submittedData)) {
+      if (val !== undefined && val !== null && String(val).length > 500) {
+        return NextResponse.json(
+          { success: false, message: `طول مقدار فیلد «${key}» بیش از حد مجاز است (حداکثر ۵۰۰ کاراکتر).` },
+          { status: 400 }
+        )
+      }
+    }
+
     if (Array.isArray(plan.checkoutFields)) {
       const fieldDefs = plan.checkoutFields as unknown as CheckoutFieldDefinition[]
       for (const field of fieldDefs) {
@@ -192,6 +203,13 @@ export async function POST(req: NextRequest) {
               { status: 400 }
             )
           }
+        }
+
+        if (val !== undefined && val !== null && String(val).length > 500) {
+          return NextResponse.json(
+            { success: false, message: `طول مقدار وارد شده برای «${field.label}» بیش از حد مجاز است (حداکثر ۵۰۰ کاراکتر).` },
+            { status: 400 }
+          )
         }
 
         if (val && field.type === 'email') {
@@ -276,7 +294,8 @@ export async function POST(req: NextRequest) {
       const couponValidation = await CouponService.validateAndCalculate(
         couponCode,
         baseAmount,
-        product.id
+        product.id,
+        session.userId
       )
 
       if (!couponValidation.valid) {
@@ -533,7 +552,6 @@ export async function GET(_req: NextRequest) {
           include: { product: true, variant: true },
         },
         payment: true,
-        activationLink: true,
         inventoryItem: true,
         delivery: true,
       },

@@ -189,14 +189,14 @@ function SuccessContent() {
   }
 
   const deliveryData = (order.delivery?.data as Record<string, any>) || {}
-  const deliveryType = order.delivery?.type || (order.activationLink ? 'ACTIVATION_LINK' : 'MANUAL')
+  const deliveryType = order.delivery?.type || (deliveryData.url ? 'ACTIVATION_LINK' : 'MANUAL')
   const isAmountMismatch = statusParam === 'amount_mismatch'
   const isFailed = order.status === 'FAILED' || isAmountMismatch
   const isCompleted = order.status === 'COMPLETED' && !isFailed
   const isManualPending = !isFailed && order.status === 'PAID' && (deliveryType === 'MANUAL' || statusParam === 'awaiting_manual')
   const isStockWaiting = !isFailed && order.status === 'PAID' && statusParam === 'stock_waiting' && !isManualPending
 
-  const linkUrl = deliveryData.url || order.activationLink?.url
+  const linkUrl = deliveryData.url || deliveryData.link || order.activationLink?.url
 
   const productName =
     order.product?.title ||

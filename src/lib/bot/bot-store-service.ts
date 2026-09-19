@@ -388,7 +388,8 @@ export class BotStoreService {
       const couponValidation = await CouponService.validateAndCalculate(
         couponCode,
         baseAmount,
-        plan.productId
+        plan.productId,
+        userId
       )
 
       if (!couponValidation.valid) {

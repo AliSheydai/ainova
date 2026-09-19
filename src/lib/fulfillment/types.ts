@@ -1,4 +1,4 @@
-import { type Prisma, FulfillmentType, DeliveryStatus, FulfillmentStatus, type Order, type Product, type Plan, type Payment, type ActivationLink, type Delivery } from '@prisma/client'
+import { type Prisma, FulfillmentType, DeliveryStatus, FulfillmentStatus, type Order, type Product, type Plan, type Payment, type Delivery } from '@prisma/client'
 
 export { FulfillmentType, DeliveryStatus, FulfillmentStatus }
 
@@ -65,13 +65,13 @@ export interface FulfillOrderOptions {
   rawResponse?: unknown
   manualDeliveryData?: ManualDeliveryData
   adminUserId?: string
+  tx?: PrismaTransactionClient
 }
 
 export type OrderWithFulfillmentDetails = Order & {
   product: Product | null
   plan: (Plan & { product?: Product | null }) | null
   payment: Payment | null
-  activationLink: ActivationLink | null
   delivery: Delivery | null
 }
 
@@ -80,12 +80,10 @@ export interface FulfillOrderResult {
   order: Order & {
     product?: Product | null
     plan?: (Plan & { product?: Product | null }) | null
-    activationLink?: ActivationLink | null
     delivery?: Delivery | null
     payment?: Payment | null
   }
   delivery: Delivery | null
-  activationLink: ActivationLink | null
   status: 'COMPLETED' | 'STOCK_EXHAUSTED' | 'ALREADY_COMPLETED' | 'ORDER_NOT_FOUND' | 'AWAITING_MANUAL_DELIVERY' | 'FAILED'
   message: string
 }
@@ -104,6 +102,5 @@ export interface IFulfillmentHandler {
     status: 'COMPLETED' | 'STOCK_EXHAUSTED' | 'AWAITING_MANUAL_DELIVERY' | 'FAILED'
     message: string
     deliveryData?: AnyDeliveryData
-    activationLink?: ActivationLink | null
   }>
 }

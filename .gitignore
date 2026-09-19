@@ -68,3 +68,7 @@ scratch/
 *.sqlite3
 *.db
 *.db-journal
+
+# Documentation & large API specs
+document.json
+docs/

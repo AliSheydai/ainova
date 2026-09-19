@@ -16,8 +16,16 @@ export async function sendOtpSms(phone: string, token: string): Promise<SendOtpR
   const patternName = process.env.KAVEH_NEGAR_PATTERN_NAME || 'hiknow'
   const isDevBypass = process.env.KAVEH_NEGAR_DEV_BYPASS === 'true'
 
-  // If in dev bypass mode or no API key, log to console for instant local development
+  // If in dev bypass mode or no API key
   if (isDevBypass || !apiKey) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[CRITICAL SECURITY] OTP SMS bypass or missing API key in production environment is forbidden!')
+      return {
+        success: false,
+        message: 'سامانه پیامک در حال حاضر در دسترس نیست. لطفاً با پشتیبانی تماس بگیرید.',
+      }
+    }
+
     console.log(`\n==========================================`)
     console.log(`[DEV OTP BYPASS]`)
     console.log(`Phone: ${phone}`)
@@ -26,7 +34,7 @@ export async function sendOtpSms(phone: string, token: string): Promise<SendOtpR
     return {
       success: true,
       message: 'کد با موفقیت ارسال شد (حالت توسعه)',
-      devCode: token,
+      devCode: process.env.NODE_ENV === 'development' ? token : undefined,
     }
   }
 

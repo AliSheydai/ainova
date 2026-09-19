@@ -12,17 +12,22 @@ export async function POST(req: NextRequest) {
 async function handleCleanup(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization')
+    const headerSecret = req.headers.get('x-cron-secret')?.trim()
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : null
     const cronSecret = process.env.CRON_SECRET
 
-    // Optional security verification if CRON_SECRET is defined in environment
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      const urlKey = req.nextUrl.searchParams.get('key')
-      if (urlKey !== cronSecret) {
+    if (cronSecret) {
+      if (bearerToken !== cronSecret && headerSecret !== cronSecret) {
         return NextResponse.json(
           { success: false, error: 'دسترسی غیرمجاز. کلید امنیتی صحیح نیست.' },
           { status: 401 }
         )
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { success: false, error: 'دسترسی غیرمجاز. کلید امنیتی تعریف نشده است.' },
+        { status: 401 }
+      )
     }
 
     const daysParam = req.nextUrl.searchParams.get('days')

@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
     const result = await CouponService.validateAndCalculate(
       code,
       orderAmount,
-      productId || null
+      productId || null,
+      session.userId
     )
 
     if (!result.valid) {

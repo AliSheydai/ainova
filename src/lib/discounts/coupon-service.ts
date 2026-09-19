@@ -24,7 +24,8 @@ export class CouponService {
   static async validateAndCalculate(
     rawCode: string,
     orderAmount: number,
-    productId?: string | null
+    productId?: string | null,
+    userId?: string | null
   ): Promise<ValidateCouponResult> {
     if (!rawCode || typeof rawCode !== 'string' || !rawCode.trim()) {
       return { valid: false, error: 'کد تخفیف وارد نشده است.' }
@@ -55,6 +56,23 @@ export class CouponService {
       return { valid: false, error: 'ظرفیت استفاده از این کد تخفیف تکمیل شده است.' }
     }
 
+    // Check per-user usage limit
+    if (userId && coupon.maxUsesPerUser !== null && coupon.maxUsesPerUser !== undefined) {
+      const userUsageCount = await prisma.order.count({
+        where: {
+          couponId: coupon.id,
+          userId,
+          status: { notIn: ['EXPIRED', 'CANCELLED', 'FAILED'] },
+        },
+      })
+      if (userUsageCount >= coupon.maxUsesPerUser) {
+        return {
+          valid: false,
+          error: 'شما قبلاً از سقف مجاز استفاده از این کد تخفیف استفاده کرده‌اید.',
+        }
+      }
+    }
+
     // Check product limitation
     if (coupon.productId && productId && coupon.productId !== productId) {
       return {
@@ -73,12 +91,13 @@ export class CouponService {
     }
 
     // Calculate discount amount
-    let rawDiscount = 0
+    let rawDiscount: number
     if (coupon.discountType === 'PERCENTAGE') {
-      rawDiscount = Math.floor((orderAmount * coupon.discountValue) / 100)
-      if (coupon.maxDiscountAmount !== null && rawDiscount > coupon.maxDiscountAmount) {
-        rawDiscount = coupon.maxDiscountAmount
-      }
+      const calculated = Math.floor((orderAmount * coupon.discountValue) / 100)
+      rawDiscount =
+        coupon.maxDiscountAmount !== null && calculated > coupon.maxDiscountAmount
+          ? coupon.maxDiscountAmount
+          : calculated
     } else {
       rawDiscount = coupon.discountValue
     }

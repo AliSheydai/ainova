@@ -49,11 +49,12 @@ async function runAllTests() {
 
   // Add 1 available activation link for Plan A
   const testLinkUrl = `https://one.google.com/promo/test-link-${timestamp}`
-  await prisma.activationLink.create({
+  await prisma.inventoryItem.create({
     data: {
       productId: productA.id,
       planId: planA.id,
-      url: testLinkUrl,
+      type: 'ACTIVATION_LINK',
+      data: { url: testLinkUrl },
       status: 'AVAILABLE',
     },
   })

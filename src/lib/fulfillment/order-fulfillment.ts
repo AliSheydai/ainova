@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { type FulfillmentType, type OrderStatus, type FulfillmentStatus, type DeliveryStatus } from '@prisma/client'
 import { FulfillmentRegistry } from './registry'
-import { type FulfillOrderOptions, type FulfillOrderResult, type ManualDeliveryData } from './types'
+import { type FulfillOrderOptions, type FulfillOrderResult, type ManualDeliveryData, type PrismaTransactionClient } from './types'
 import { memoryCache } from '@/lib/cache/memory-cache'
 
 export interface EnrichedProductMetrics {
@@ -275,8 +275,9 @@ export class FulfillmentService {
     rawResponse,
     manualDeliveryData,
     adminUserId,
+    tx: externalTx,
   }: FulfillOrderOptions): Promise<FulfillOrderResult> {
-    const txResult = await prisma.$transaction<FulfillOrderResult>(async (tx) => {
+    const executeFulfillment = async (tx: PrismaTransactionClient): Promise<FulfillOrderResult> => {
       // 1. Fetch order with product, plan, variant, delivery, inventoryItem and payment
       const order = await tx.order.findUnique({
         where: { id: orderId },
@@ -287,7 +288,6 @@ export class FulfillmentService {
           },
           variant: true,
           payment: true,
-          activationLink: true,
           inventoryItem: true,
           delivery: true,
           user: true,
@@ -308,7 +308,6 @@ export class FulfillmentService {
           success: true,
           order,
           delivery: order.delivery,
-          activationLink: order.activationLink,
           status: 'ALREADY_COMPLETED',
           message: 'سفارش قبلاً با موفقیت تکمیل و تحویل داده شده است.',
         }
@@ -389,7 +388,6 @@ export class FulfillmentService {
             product: true,
             plan: { include: { product: true } },
             payment: true,
-            activationLink: true,
             inventoryItem: true,
             delivery: true,
           },
@@ -408,7 +406,6 @@ export class FulfillmentService {
           success: true,
           order: updatedOrder,
           delivery: deliveryRecord,
-          activationLink: result.activationLink || order.activationLink,
           status: 'COMPLETED',
           message: result.message,
         }
@@ -440,7 +437,6 @@ export class FulfillmentService {
           product: true,
           plan: { include: { product: true } },
           payment: true,
-          activationLink: true,
           inventoryItem: true,
           delivery: true,
         },
@@ -450,11 +446,14 @@ export class FulfillmentService {
         success: false,
         order: updatedOrder,
         delivery: deliveryRecord,
-        activationLink: null,
         status: result.status,
         message: result.message,
       }
-    })
+    }
+
+    const txResult = externalTx
+      ? await executeFulfillment(externalTx)
+      : await prisma.$transaction<FulfillOrderResult>(executeFulfillment)
 
     // Invalidate stock and overview cache on successful mutation
     FulfillmentService.invalidateStockCache()

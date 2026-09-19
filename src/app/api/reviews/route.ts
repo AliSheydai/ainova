@@ -2,6 +2,12 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { ReviewStatus } from '@prisma/client'
+import { InMemoryRateLimiter, getClientIp } from '@/lib/security/rate-limit'
+import { sanitizeInputText } from '@/lib/security/sanitize'
+
+// Rate limits: 3 reviews per hour per user, 5 per hour per IP
+const userReviewRateLimiter = new InMemoryRateLimiter(60 * 60 * 1000, 3)
+const ipReviewRateLimiter = new InMemoryRateLimiter(60 * 60 * 1000, 5)
 
 export async function GET(req: NextRequest) {
   try {
@@ -98,6 +104,35 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Mandatory authentication to prevent anonymous review spam
+    const session = await getCurrentUser()
+    if (!session?.userId) {
+      return NextResponse.json(
+        { success: false, error: 'برای ثبت نظر، ابتدا باید وارد حساب کاربری خود شوید.' },
+        { status: 401 }
+      )
+    }
+
+    // 2. Rate limiting check (per user and per IP)
+    const ip = getClientIp(req.headers)
+    const ipCheck = ipReviewRateLimiter.check(`ip:${ip}`)
+    const userCheck = userReviewRateLimiter.check(`user:${session.userId}`)
+
+    if (!ipCheck.success || !userCheck.success) {
+      const resetAt = !userCheck.success ? userCheck.resetAt : ipCheck.resetAt
+      const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000))
+
+      const rateLimitResponse = NextResponse.json(
+        {
+          success: false,
+          error: 'تعداد نظرات ارسالی شما بیش از حد مجاز است. لطفاً ساعاتی دیگر تلاش فرمایید.',
+        },
+        { status: 429 }
+      )
+      rateLimitResponse.headers.set('Retry-After', retryAfterSeconds.toString())
+      return rateLimitResponse
+    }
+
     const body = await req.json()
     const { productId, userName, rating, comment } = body
 
@@ -108,8 +143,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const trimmedName = typeof userName === 'string' ? userName.trim() : ''
-    const trimmedComment = typeof comment === 'string' ? comment.trim() : ''
+    // 3. Sanitize inputs (strip HTML and script tags)
+    const trimmedName = sanitizeInputText(typeof userName === 'string' ? userName : '')
+    const trimmedComment = sanitizeInputText(typeof comment === 'string' ? comment : '')
     const numericRating = Number(rating)
 
     if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 50) {
@@ -133,7 +169,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check if product exists
+    // 4. Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
       select: { id: true, title: true },
@@ -146,14 +182,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Optional user session
-    const session = await getCurrentUser()
+    // 5. Check if user already has a pending review for this product
+    const existingPending = await prisma.review.findFirst({
+      where: {
+        productId,
+        userId: session.userId,
+        status: ReviewStatus.PENDING,
+      },
+    })
 
-    // Create review with PENDING status
+    if (existingPending) {
+      return NextResponse.json(
+        { success: false, error: 'شما قبلاً برای این محصول نظری ثبت کرده‌اید که در انتظار بررسی مدیریت است.' },
+        { status: 400 }
+      )
+    }
+
+    // 6. Create review with PENDING status attached to authenticated user
     const review = await prisma.review.create({
       data: {
         productId,
-        userId: session?.userId || null,
+        userId: session.userId,
         userName: trimmedName,
         rating: Math.round(numericRating),
         comment: trimmedComment,

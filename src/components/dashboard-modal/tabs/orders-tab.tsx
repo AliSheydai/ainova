@@ -340,9 +340,9 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
         >
           {orders.map((order) => {
             const delivery = order.delivery
-            const deliveryType = delivery?.type || (order.activationLink ? 'ACTIVATION_LINK' : 'MANUAL')
             const deliveryData = (delivery?.data as Record<string, any>) || {}
-            const linkUrl = deliveryData.url || order.activationLink?.url
+            const deliveryType = delivery?.type || (deliveryData.url ? 'ACTIVATION_LINK' : 'MANUAL')
+            const linkUrl = deliveryData.url || deliveryData.link || order.activationLink?.url
 
             return (
               <motion.div

@@ -754,7 +754,8 @@ export function registerHandlers(bot: Bot) {
           const couponValidation = await CouponService.validateAndCalculate(
             text,
             basePrice,
-            order.productId
+            order.productId,
+            order.userId
           )
 
           if (!couponValidation.valid || !couponValidation.coupon) {
@@ -878,11 +879,18 @@ export function registerHandlers(bot: Bot) {
           const plan = await prisma.plan.findUnique({ where: { id: session.planId } })
           if (!plan) return
 
+          let botUserId: string | null = null
+          if (session.phone) {
+            const botUser = await prisma.user.findUnique({ where: { phone: session.phone }, select: { id: true } })
+            botUserId = botUser?.id || null
+          }
+
           const { CouponService } = await import('@/lib/discounts/coupon-service')
           const couponValidation = await CouponService.validateAndCalculate(
             text,
             plan.price,
-            plan.productId
+            plan.productId,
+            botUserId
           )
 
           if (couponValidation.valid && couponValidation.coupon) {

@@ -94,9 +94,10 @@ interface UserDetailModalData {
       status: string
       refId: string | null
     } | null
-    activationLink?: {
-      url: string
+    delivery?: {
+      type: string
       status: string
+      data?: any
     } | null
   }[]
 }

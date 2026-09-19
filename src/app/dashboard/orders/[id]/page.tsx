@@ -36,7 +36,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
         include: { product: true, variant: true },
       },
       payment: true,
-      activationLink: true,
+      delivery: true,
     },
   })
 
@@ -46,6 +46,8 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
 
   const isCompleted = order.status === 'COMPLETED'
   const isJustPaid = paymentParam === 'success'
+  const deliveryData = (order.delivery?.data as Record<string, any>) || {}
+  const linkUrl = typeof deliveryData.url === 'string' ? deliveryData.url : (typeof deliveryData.link === 'string' ? deliveryData.link : null)
 
   return (
     <>
@@ -117,7 +119,7 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
         <Separator />
 
         {/* ACTIVATION LINK SECTION (The Hero of this page) */}
-        {isCompleted && order.activationLink?.url ? (
+        {isCompleted && linkUrl ? (
           <Card className="border-primary/30 bg-gradient-to-b from-primary/5 to-transparent shadow-lg overflow-hidden">
             <CardHeader className="pb-3 border-b border-primary/15">
               <div className="flex items-center gap-2">
@@ -136,16 +138,16 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                 <input
                   type="text"
                   readOnly
-                  value={order.activationLink.url}
+                  value={linkUrl}
                   className="flex-1 bg-transparent px-3 text-xs font-sans text-foreground outline-none truncate"
                   dir="ltr"
                 />
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <CopyButton text={order.activationLink.url} />
+                  <CopyButton text={linkUrl} />
 
                   <Button asChild size="sm" className="gap-1.5 text-xs">
-                    <a href={order.activationLink.url} target="_blank" rel="noopener noreferrer">
+                    <a href={linkUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="size-3.5" />
                       باز کردن و فعال‌سازی
                     </a>

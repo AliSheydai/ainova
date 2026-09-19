@@ -189,13 +189,111 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/?payment=cancelled`)
   }
 
-  // 3. Concurrency Lock: Prevent double-fulfillment on concurrent callback retries (Bug 2.4)
-  const paymentLock = await prisma.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM payments
-    WHERE id = ${payment.id} AND status = 'PENDING'
-    FOR UPDATE SKIP LOCKED
-  `
-  if (!paymentLock || paymentLock.length === 0) {
+  // 3. Concurrency Lock & Processing Transaction: Prevent double-fulfillment on concurrent callback retries (Issue #3)
+  let alreadyProcessed = false
+  let verificationFailed = false
+  let verificationErrorMessage = ''
+  let amountMismatch = false
+  let fulfillment: Awaited<ReturnType<typeof FulfillmentService.fulfillOrder>> | null = null
+  let verifyResultRefId: string | undefined
+
+  await prisma.$transaction(
+    async (tx) => {
+      const paymentLock = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM payments
+        WHERE id = ${payment.id} AND status = 'PENDING'
+        FOR UPDATE SKIP LOCKED
+      `
+      if (!paymentLock || paymentLock.length === 0) {
+        alreadyProcessed = true
+        return
+      }
+
+      // 4. Verify payment via PaymentService
+      const effectiveTransactionId =
+        authority || payment.authority || searchParams.get('purchaseId') || ''
+
+      const verifyResult = await PaymentService.verifyPayment({
+        transactionId: effectiveTransactionId,
+        amount: payment.amount,
+        providerName: payment.gatewayName,
+        extraParams: {
+          status: status || 'OK',
+          Status: status || 'OK',
+          purchaseId: searchParams.get('purchaseId') || effectiveTransactionId,
+        },
+      })
+
+      if (!verifyResult.success) {
+        verificationFailed = true
+        verificationErrorMessage = verifyResult.message || 'خطا در تایید تراکنش'
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: { status: 'FAILED' },
+        })
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: { status: 'FAILED' },
+        })
+        await tx.inventoryItem.updateMany({
+          where: { orderId: payment.orderId, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+        if (payment.order.couponId) {
+          await CouponService.decrementCouponUsage(payment.order.couponId, tx)
+        }
+        return
+      }
+
+      // 5. Bug 2.1: Strict validation of paid amount against order/payment amount
+      const rawResponseObj = verifyResult.rawResponse as Record<string, unknown> | undefined
+      const verifiedAmount =
+        verifyResult.amount !== undefined ? verifyResult.amount : (rawResponseObj?.amount as number | string | undefined)
+
+      if (
+        verifiedAmount !== undefined &&
+        verifiedAmount !== null &&
+        Number(verifiedAmount) !== payment.amount
+      ) {
+        console.error(
+          `SECURITY: Amount mismatch! Expected ${payment.amount}, got ${verifiedAmount} for payment ${payment.id}`
+        )
+        amountMismatch = true
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: { status: 'FAILED' },
+        })
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: { status: 'FAILED' },
+        })
+        await tx.inventoryItem.updateMany({
+          where: { orderId: payment.orderId, status: 'RESERVED' },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+        if (payment.order.couponId) {
+          await CouponService.decrementCouponUsage(payment.order.couponId, tx)
+        }
+        return
+      }
+
+      verifyResultRefId = verifyResult.refId
+
+      // 6. Fulfill Order and assign Activation Link atomically within the lock transaction
+      fulfillment = await FulfillmentService.fulfillOrder({
+        orderId: payment.orderId,
+        refId: verifyResult.refId,
+        rawResponse: verifyResult.rawResponse,
+        tx,
+      })
+    },
+    {
+      timeout: 15000,
+      maxWait: 5000,
+    }
+  )
+
+  if (alreadyProcessed) {
     if (isTelegram) {
       return NextResponse.redirect(
         `${appUrl}/telegram-return?status=success&orderId=${payment.orderId}`
@@ -206,46 +304,12 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // 4. Verify payment via PaymentService
-  const effectiveTransactionId =
-    authority || payment.authority || searchParams.get('purchaseId') || ''
-
-  const verifyResult = await PaymentService.verifyPayment({
-    transactionId: effectiveTransactionId,
-    amount: payment.amount,
-    providerName: payment.gatewayName,
-    extraParams: {
-      status: status || 'OK',
-      Status: status || 'OK',
-      purchaseId: searchParams.get('purchaseId') || effectiveTransactionId,
-    },
-  })
-
-  if (!verifyResult.success) {
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: { status: 'FAILED' },
-      })
-      await tx.order.update({
-        where: { id: payment.orderId },
-        data: { status: 'FAILED' },
-      })
-      await tx.inventoryItem.updateMany({
-        where: { orderId: payment.orderId, status: 'RESERVED' },
-        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-      })
-      if (payment.order.couponId) {
-        await CouponService.decrementCouponUsage(payment.order.couponId, tx)
-      }
-    })
-
-    const errorMsg = verifyResult.message || 'خطا در تایید تراکنش'
+  if (verificationFailed) {
     if (payment.order.userId) {
       UserNotificationService.createNotification({
         userId: payment.order.userId,
         title: 'خطا در پرداخت سفارش',
-        message: `تراکنش سفارش #${payment.order.id.slice(-6).toUpperCase()} با خطا مواجه شد: ${errorMsg}`,
+        message: `تراکنش سفارش #${payment.order.id.slice(-6).toUpperCase()} با خطا مواجه شد: ${verificationErrorMessage}`,
         type: NotificationType.ORDER_FAILED,
         metadata: { orderId: payment.order.id },
       }).catch((err) => console.error('Notification error:', err))
@@ -253,47 +317,17 @@ export async function GET(req: NextRequest) {
     if (isTelegram) {
       return NextResponse.redirect(
         `${appUrl}/telegram-return?status=failed&orderId=${payment.orderId}&msg=${encodeURIComponent(
-          errorMsg
+          verificationErrorMessage
         )}`
       )
     }
 
     return NextResponse.redirect(
-      `${appUrl}/?payment=failed&msg=${encodeURIComponent(errorMsg)}`
+      `${appUrl}/?payment=failed&msg=${encodeURIComponent(verificationErrorMessage)}`
     )
   }
 
-  // 5. Bug 2.1: Strict validation of paid amount against order/payment amount
-  const rawResponseObj = verifyResult.rawResponse as Record<string, any> | undefined
-  const verifiedAmount =
-    verifyResult.amount !== undefined ? verifyResult.amount : rawResponseObj?.amount
-
-  if (
-    verifiedAmount !== undefined &&
-    verifiedAmount !== null &&
-    Number(verifiedAmount) !== payment.amount
-  ) {
-    console.error(
-      `SECURITY: Amount mismatch! Expected ${payment.amount}, got ${verifiedAmount} for payment ${payment.id}`
-    )
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: { status: 'FAILED' },
-      })
-      await tx.order.update({
-        where: { id: payment.orderId },
-        data: { status: 'FAILED' },
-      })
-      await tx.inventoryItem.updateMany({
-        where: { orderId: payment.orderId, status: 'RESERVED' },
-        data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
-      })
-      if (payment.order.couponId) {
-        await CouponService.decrementCouponUsage(payment.order.couponId, tx)
-      }
-    })
-
+  if (amountMismatch) {
     if (payment.order.userId) {
       UserNotificationService.createNotification({
         userId: payment.order.userId,
@@ -315,14 +349,12 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // 6. Fulfill Order and assign Activation Link atomically
-  try {
-    const fulfillment = await FulfillmentService.fulfillOrder({
-      orderId: payment.orderId,
-      refId: verifyResult.refId,
-      rawResponse: verifyResult.rawResponse,
-    })
+  if (!fulfillment) {
+    throw new Error('Fulfillment failed to produce a result within transaction')
+  }
 
+  // 7. Post-fulfillment notifications and redirects (executed outside DB transaction)
+  try {
     // Send Realtime Notification to Admin for Paid Order
     AdminNotificationService.notifyOrderPaid({
       id: payment.order.id,
@@ -334,7 +366,7 @@ export async function GET(req: NextRequest) {
       variant: payment.order.variant,
       plan: payment.order.plan,
       payment: {
-        refId: verifyResult.refId,
+        refId: verifyResultRefId,
         gatewayName: payment.gatewayName,
       },
     }).catch((err) => console.error('Admin order paid notification error:', err))
@@ -444,7 +476,7 @@ export async function GET(req: NextRequest) {
     // Success with generic delivery!
     const delivery = fulfillment.delivery
     const deliveryType = delivery?.type || 'ACTIVATION_LINK'
-    const deliveryData = (delivery?.data as Record<string, any>) || {}
+    const deliveryData = (delivery?.data as Record<string, unknown>) || {}
 
     if (payment.order.userId) {
       UserNotificationService.createNotification({
@@ -457,10 +489,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Send SMS confirmation to user if phone number is available
+    const checkoutDataObj = payment.order.checkoutData as Record<string, unknown> | null
     const customerPhone =
       payment.order.user?.phone ||
-      (payment.order.checkoutData as Record<string, any> | null)?.phone ||
-      (payment.order.checkoutData as Record<string, any> | null)?.customer_phone
+      (typeof checkoutDataObj?.phone === 'string' ? checkoutDataObj.phone : undefined) ||
+      (typeof checkoutDataObj?.customer_phone === 'string' ? checkoutDataObj.customer_phone : undefined)
 
     if (customerPhone) {
       const shortOrderId = payment.order.id.slice(-6).toUpperCase()
@@ -472,7 +505,9 @@ export async function GET(req: NextRequest) {
 
     if (targetChatId) {
       if (deliveryType === 'ACTIVATION_LINK') {
-        const assignedLinkUrl = deliveryData.url || fulfillment.activationLink?.url
+        const assignedLinkUrl =
+          (typeof deliveryData.url === 'string' ? deliveryData.url : undefined) ||
+          (typeof deliveryData.link === 'string' ? deliveryData.link : undefined)
         if (assignedLinkUrl) {
           await sendTelegramNotification(
             targetChatId,
@@ -485,12 +520,21 @@ export async function GET(req: NextRequest) {
         }
       } else if (deliveryType === 'PRE_CREATED_ACCOUNT') {
         const orderUrl = `${appUrl}/orders?orderId=${payment.orderId}`
+        const accountUsername =
+          (typeof deliveryData.email === 'string' ? deliveryData.email : undefined) ||
+          (typeof deliveryData.username === 'string' ? deliveryData.username : undefined) ||
+          'کاربر'
+        const accountNote =
+          typeof deliveryData.note === 'string'
+            ? deliveryData.note
+            : 'لطفاً بلافاصله پس از ورود، کلمه عبور را تغییر دهید.'
+
         const accountMsg =
           `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
           `📦 **محصول:** ${productTitle}\n` +
-          `👤 **نام کاربری / ایمیل:** \`${deliveryData.email || deliveryData.username}\`\n` +
+          `👤 **نام کاربری / ایمیل:** \`${accountUsername}\`\n` +
           `🔑 **رمز عبور:** برای مشاهده رمز، به پنل کاربری مراجعه فرمایید.\n\n` +
-          `⚠️ ${deliveryData.note || 'لطفاً بلافاصله پس از ورود، کلمه عبور را تغییر دهید.'}`
+          `⚠️ ${accountNote}`
 
         await sendTelegramNotification(
           targetChatId,

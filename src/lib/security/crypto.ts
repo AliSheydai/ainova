@@ -3,7 +3,16 @@ import crypto from 'node:crypto'
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12
 
+let hasWarnedMissingEncryptionKey = false
+
 function getEncryptionKey(): Buffer {
+  if (process.env.NODE_ENV === 'production' && !process.env.CREDENTIALS_ENCRYPTION_KEY) {
+    if (!hasWarnedMissingEncryptionKey) {
+      console.warn('WARNING: CREDENTIALS_ENCRYPTION_KEY not set, falling back to JWT_SECRET')
+      hasWarnedMissingEncryptionKey = true
+    }
+  }
+
   const secret = process.env.CREDENTIALS_ENCRYPTION_KEY || process.env.JWT_SECRET
   if (!secret) {
     throw new Error(
@@ -11,6 +20,15 @@ function getEncryptionKey(): Buffer {
     )
   }
   return crypto.createHash('sha256').update(secret).digest()
+}
+
+function getFallbackKeys(): Buffer[] {
+  const fallbackSecrets = [
+    process.env.CREDENTIALS_ENCRYPTION_FALLBACK_KEY,
+    process.env.JWT_SECRET,
+  ].filter((s): s is string => Boolean(s && s.trim().length > 0))
+
+  return fallbackSecrets.map((s) => crypto.createHash('sha256').update(s).digest())
 }
 
 /**
@@ -52,6 +70,7 @@ export function encryptCredential(plainText: string): string {
 
 /**
  * Decrypts a string encrypted with encryptCredential.
+ * Tries the primary encryption key first, followed by configured fallback keys (e.g. during key rotation).
  * If the string does not match the encrypted format, returns the raw string for backwards compatibility.
  */
 export function decryptCredential(encryptedText: string): string {
@@ -62,21 +81,38 @@ export function decryptCredential(encryptedText: string): string {
     return encryptedText
   }
 
-  try {
-    const [ivHex, authTagHex, cipherTextHex] = parts
-    const key = getEncryptionKey()
-    const iv = Buffer.from(ivHex, 'hex')
-    const authTag = Buffer.from(authTagHex, 'hex')
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
-    decipher.setAuthTag(authTag)
-
-    let decrypted = decipher.update(cipherTextHex, 'hex', 'utf8')
-    decrypted += decipher.final('utf8')
-    return decrypted
-  } catch (error) {
-    console.error('Failed to decrypt credential:', error)
+  const [ivHex, authTagHex, cipherTextHex] = parts
+  const isHex = (str: string) => /^[0-9a-fA-F]+$/.test(str)
+  if (
+    ivHex.length !== IV_LENGTH * 2 ||
+    !isHex(ivHex) ||
+    authTagHex.length !== 32 ||
+    !isHex(authTagHex) ||
+    !isHex(cipherTextHex)
+  ) {
     return encryptedText
   }
+
+  const keysToTry: Buffer[] = [getEncryptionKey(), ...getFallbackKeys()]
+
+  for (const key of keysToTry) {
+    try {
+      const iv = Buffer.from(ivHex, 'hex')
+      const authTag = Buffer.from(authTagHex, 'hex')
+      const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
+      decipher.setAuthTag(authTag)
+
+      let decrypted = decipher.update(cipherTextHex, 'hex', 'utf8')
+      decrypted += decipher.final('utf8')
+      return decrypted
+    } catch {
+      // Decryption failed with this key (e.g. auth tag mismatch), try next key
+      continue
+    }
+  }
+
+  console.error('Failed to decrypt credential with primary and fallback keys')
+  return encryptedText
 }
 
 /**

@@ -22,7 +22,7 @@ export async function GET(
               include: { product: true },
             },
             payment: true,
-            activationLink: true,
+            delivery: true,
           },
         },
         supportTickets: {

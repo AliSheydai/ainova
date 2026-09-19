@@ -24,6 +24,11 @@ RUN pnpm build
 # ─── Runner ─────────────────────────────────────────────────
 FROM base AS runner
 
+# Note: In production container deployments, ensure you inject:
+# - DATABASE_URL
+# - JWT_SECRET
+# - CREDENTIALS_ENCRYPTION_KEY (AES-256-GCM dedicated key, distinct from JWT_SECRET)
+# - CRON_SECRET (required for cron jobs verification)
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0

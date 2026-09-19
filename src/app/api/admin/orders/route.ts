@@ -168,9 +168,6 @@ export async function GET(req: NextRequest) {
             select: { id: true, code: true, discountType: true, discountValue: true },
           },
           payment: true,
-          activationLink: {
-            select: { id: true, url: true, status: true, assignedAt: true, usedAt: true },
-          },
           delivery: true,
         },
       }),

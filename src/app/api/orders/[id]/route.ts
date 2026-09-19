@@ -46,14 +46,6 @@ export async function GET(
             createdAt: true,
           },
         },
-        activationLink: {
-          select: {
-            id: true,
-            url: true,
-            status: true,
-            assignedAt: true,
-          },
-        },
         delivery: true,
       },
     })

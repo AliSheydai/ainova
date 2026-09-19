@@ -11,7 +11,6 @@ const IMAGE_MIME_TYPES: Record<string, string> = {
   'image/png': '.png',
   'image/webp': '.webp',
   'image/gif': '.gif',
-  'image/svg+xml': '.svg',
 }
 
 const VIDEO_MIME_TYPES: Record<string, string> = {
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           error:
-            'فرمت فایل نامعتبر است. فرمت‌های مجاز تصویر: WebP، PNG، JPG، SVG و ویدیو: MP4، WebM.',
+            'فرمت فایل نامعتبر است. فرمت‌های مجاز تصویر: WebP، PNG، JPG و ویدیو: MP4، WebM.',
         },
         { status: 400 }
       )

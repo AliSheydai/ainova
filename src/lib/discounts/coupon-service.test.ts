@@ -9,6 +9,9 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    order: {
+      count: vi.fn(),
+    },
   },
 }))
 
@@ -170,6 +173,75 @@ describe('CouponService', () => {
       expect(result.valid).toBe(true)
       expect(result.discountAmount).toBe(50000)
       expect(result.finalAmount).toBe(100000)
+    })
+
+    it('returns error when user has reached per-user usage limit', async () => {
+      vi.mocked(prisma.coupon.findUnique).mockResolvedValue({
+        id: 'c_user_limit',
+        code: 'USERLIMIT',
+        active: true,
+        expiresAt: null,
+        maxUses: 100,
+        maxUsesPerUser: 1,
+        usedCount: 5,
+        discountType: 'PERCENTAGE',
+        discountValue: 10,
+        maxDiscountAmount: null,
+        minOrderAmount: null,
+        productId: null,
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any)
+
+      vi.mocked(prisma.order.count).mockResolvedValue(1)
+
+      const result = await CouponService.validateAndCalculate(
+        'USERLIMIT',
+        100000,
+        null,
+        'user-123'
+      )
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('سقف مجاز استفاده')
+      expect(prisma.order.count).toHaveBeenCalledWith({
+        where: {
+          couponId: 'c_user_limit',
+          userId: 'user-123',
+          status: { notIn: ['EXPIRED', 'CANCELLED', 'FAILED'] },
+        },
+      })
+    })
+
+    it('allows coupon application when user is below per-user limit', async () => {
+      vi.mocked(prisma.coupon.findUnique).mockResolvedValue({
+        id: 'c_user_limit_2',
+        code: 'USERLIMIT2',
+        active: true,
+        expiresAt: null,
+        maxUses: 100,
+        maxUsesPerUser: 2,
+        usedCount: 5,
+        discountType: 'PERCENTAGE',
+        discountValue: 10,
+        maxDiscountAmount: null,
+        minOrderAmount: null,
+        productId: null,
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any)
+
+      vi.mocked(prisma.order.count).mockResolvedValue(1)
+
+      const result = await CouponService.validateAndCalculate(
+        'USERLIMIT2',
+        100000,
+        null,
+        'user-123'
+      )
+      expect(result.valid).toBe(true)
+      expect(result.discountAmount).toBe(10000)
     })
   })
 

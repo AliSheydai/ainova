@@ -13,7 +13,6 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
         plan: {
           include: { product: true },
         },
-        activationLink: true,
         inventoryItem: true,
         delivery: true,
         payment: true,
@@ -26,8 +25,7 @@ export async function notifyTelegramPaymentSuccess(orderId: string) {
 
     const linkUrl =
       (order.delivery?.data as any)?.url ||
-      (order.inventoryItem?.data as any)?.url ||
-      order.activationLink?.url
+      (order.inventoryItem?.data as any)?.url
 
     if (!linkUrl) {
       return
