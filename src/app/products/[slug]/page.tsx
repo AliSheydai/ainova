@@ -8,7 +8,7 @@ import { LandingHeader } from '@/components/landing/landing-header'
 import { LandingFooter } from '@/components/landing/landing-footer'
 import { ProductBuyCard } from '@/components/product/product-buy-card'
 import { ProductDetailVisual } from '@/components/product/product-detail-visual'
-import { MarkdownView } from '@/components/ui/markdown-view'
+import { ProductExpandableDescription } from '@/components/product/product-expandable-description'
 import { Badge } from '@/components/ui/badge'
 import { Check, ChevronLeft, ShieldCheck, Zap, Clock } from 'lucide-react'
 import { StickyMobileCta } from '@/components/product/sticky-mobile-cta'
@@ -226,16 +226,9 @@ export default async function ProductDetailPage(props: ProductPageProps) {
               {/* Divider */}
               <hr className='border-border/50' />
 
-              {/* Full Description */}
+              {/* Full Description (Collapsible / Expandable) */}
               {product.description && (
-                <div className='space-y-2.5 sm:space-y-3'>
-                  <h2 className='text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
-                    توضیحات محصول
-                  </h2>
-                  <div className='prose-sm text-xs sm:text-sm leading-relaxed text-foreground/90'>
-                    <MarkdownView content={product.description} />
-                  </div>
-                </div>
+                <ProductExpandableDescription description={product.description} />
               )}
 
               {/* Features List — only if product has custom features */}
