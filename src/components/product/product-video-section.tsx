@@ -115,30 +115,6 @@ export function ProductVideoSection({ videoUrl, productTitle }: ProductVideoSect
             )}
           </div>
         </div>
-
-        {/* Video Footer Info Bar */}
-        <div className='relative z-10 mt-3.5 sm:mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] sm:text-xs text-muted-foreground pt-2 border-t border-border/40'>
-          <div className='flex items-center gap-2'>
-            <span className='inline-flex items-center gap-1 font-medium text-foreground'>
-              <PlayCircle className='size-3.5 text-primary' />
-              منبع پخش:
-            </span>
-            <span className='bg-muted/60 px-2 py-0.5 rounded-md border border-border/50 text-[11px] font-sans'>
-              {parsed?.label || 'پلیر اختصاصی'}
-            </span>
-          </div>
-
-          <div className='flex items-center gap-3 sm:gap-4'>
-            <span className='inline-flex items-center gap-1'>
-              <Maximize2 className='size-3 text-muted-foreground' />
-              پشتیبانی از حالت تمام‌صفحه
-            </span>
-            <span className='inline-flex items-center gap-1'>
-              <Video className='size-3 text-muted-foreground' />
-              کیفیت بالا (HD)
-            </span>
-          </div>
-        </div>
       </div>
     </section>
   )
