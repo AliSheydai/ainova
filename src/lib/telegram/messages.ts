@@ -1,4 +1,4 @@
-import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
+import { formatPrice, toPersianDigits } from '../persian-utils'
 import { escapeHtml } from './formatting'
 
 export const MESSAGES = {
@@ -94,11 +94,15 @@ export const MESSAGES = {
       originalAmount?: number
       discountAmount?: number
       couponCode?: string
+      variantName?: string
     }
   ) => {
     let text = `🧾 <b>سفارش شما ایجاد شد</b>\n\n`
     text += `• 🔢 <b>شناسه سفارش:</b> <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code>\n`
     text += `• 🛍 <b>محصول:</b> <b>${escapeHtml(planName)}</b>\n`
+    if (options?.variantName) {
+      text += `• 📦 <b>نوع محصول:</b> <b>${escapeHtml(options.variantName)}</b>\n`
+    }
 
     if (
       options?.couponCode &&
@@ -221,6 +225,7 @@ export const MESSAGES = {
   orderSummaryCard: (options: {
     productTitle: string
     planName: string
+    variantName?: string
     deliveryLabel: string
     amount: number
     originalAmount?: number
@@ -231,6 +236,7 @@ export const MESSAGES = {
     const {
       productTitle,
       planName,
+      variantName,
       deliveryLabel,
       amount,
       originalAmount,
@@ -241,6 +247,9 @@ export const MESSAGES = {
 
     let text = `🧾 <b>پیش‌فاکتور و بررسی نهایی سفارش</b>\n\n`
     text += `• 🛍 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n`
+    if (variantName) {
+      text += `• 📦 <b>نوع محصول:</b> <b>${escapeHtml(variantName)}</b>\n`
+    }
     text += `• ⏱ <b>پلن انتخابی:</b> <b>${escapeHtml(planName)}</b>\n`
     text += `• 🚀 <b>شیوه تحویل:</b> <code>${escapeHtml(deliveryLabel)}</code>\n`
     if (customerGmail) {

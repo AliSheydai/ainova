@@ -25,6 +25,7 @@ export interface BotLoginSession {
   lastSentAt?: number
   planId?: string
   productId?: string
+  variantId?: string
   orderId?: string
   currentFieldKey?: string
   currentFieldLabel?: string

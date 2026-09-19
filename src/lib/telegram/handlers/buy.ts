@@ -83,8 +83,100 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
       return
     }
 
-    const { product, plans } = data
+    const { product, variants, plans } = data
     const title = product.title
+
+    // If product has active variants, show variant cards first
+    if (variants && variants.length > 0) {
+      let detailsText = `✨ <b>${escapeHtml(title)}</b>\n\n`
+      if (product.shortDescription) {
+        detailsText += `${escapeHtml(product.shortDescription)}\n\n`
+      }
+
+      if (Array.isArray(product.features) && product.features.length > 0) {
+        detailsText += `🌟 <b>امکانات و مزایای شاخص:</b>\n`
+        const displayFeatures = product.features.slice(0, 4)
+        for (const feat of displayFeatures) {
+          const featText = typeof feat === 'string' ? feat : (feat as any)?.text || (feat as any)?.title || ''
+          if (featText) {
+            detailsText += `• ${escapeHtml(featText)}\n`
+          }
+        }
+        detailsText += `\n`
+      } else if (product.description) {
+        detailsText += `📋 <b>توضیحات محصول:</b>\n${escapeHtml(product.description.slice(0, 250))}...\n\n`
+      }
+
+      detailsText += `🏷 <b>انواع موجود برای این محصول:</b>\n\n`
+
+      const keyboard = new InlineKeyboard()
+
+      for (const variant of variants) {
+        const hasDiscount =
+          variant.discountedPrice !== null &&
+          variant.discountedPrice !== undefined &&
+          variant.discountedPrice > 0 &&
+          variant.discountedPrice < variant.price
+
+        const effectivePrice = hasDiscount ? variant.discountedPrice! : variant.price
+        const badgeText = variant.badge ? ` [${escapeHtml(variant.badge)}]` : ''
+        const discountLabel = variant.discountLabel ? ` (${escapeHtml(variant.discountLabel)})` : ''
+
+        detailsText += `🔸 <b>نوع «${escapeHtml(variant.name)}»</b>${badgeText}\n`
+        if (hasDiscount) {
+          detailsText += `• 💵 <b>قیمت:</b> <s>${formatPrice(variant.price)}</s> <b>${formatPrice(effectivePrice)}</b>${discountLabel}\n`
+        } else {
+          detailsText += `• 💵 <b>قیمت:</b> <b>${formatPrice(effectivePrice)}</b>\n`
+        }
+
+        if (variant.duration && variant.duration > 0) {
+          detailsText += `• ⏱ <b>مدت زمان:</b> ${variant.duration.toLocaleString('fa-IR')} ماهه\n`
+        }
+
+        if (variant.description) {
+          detailsText += `• 📝 ${escapeHtml(variant.description)}\n`
+        }
+
+        if (variant.features && variant.features.length > 0) {
+          for (const feat of variant.features.slice(0, 3)) {
+            detailsText += `  ▫️ ${escapeHtml(feat)}\n`
+          }
+        }
+        detailsText += `\n`
+
+        const btnBadge = variant.badge ? ` (${variant.badge})` : ''
+        keyboard
+          .text(
+            `📦 انتخاب نوع ${variant.name} — ${formatPrice(effectivePrice)}${btnBadge}`,
+            `variant:select:${variant.id}`
+          )
+          .row()
+      }
+
+      detailsText += `👇 جهت مشاهده جزئیات و ثبت سفارش، نوع مورد نظر خود را انتخاب فرمایید:`
+
+      keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
+      keyboard.text('🏠 منوی اصلی', 'nav:main')
+
+      if (ctx.callbackQuery) {
+        await ctx.editMessageText(detailsText, {
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+        }).catch(async () => {
+          await ctx.reply(detailsText, {
+            parse_mode: 'HTML',
+            reply_markup: keyboard,
+          })
+        })
+        await ctx.answerCallbackQuery().catch(() => {})
+      } else {
+        await ctx.reply(detailsText, {
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+        })
+      }
+      return
+    }
 
     let detailsText = `✨ <b>${escapeHtml(title)}</b>\n\n`
     if (product.shortDescription) {
@@ -163,6 +255,138 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
   }
 }
 
+export async function handleSelectVariant(ctx: Context, variantId: string) {
+  try {
+    const variant = await prisma.productVariant.findUnique({
+      where: { id: variantId },
+      include: {
+        product: true,
+      },
+    })
+
+    if (!variant || !variant.active) {
+      await ctx.answerCallbackQuery({ text: 'نوع محصول یافت نشد یا غیرفعال است.', show_alert: true }).catch(() => {})
+      return
+    }
+
+    // Save selected variantId into user's session
+    const from = ctx.from
+    if (from) {
+      const telegramId = String(from.id)
+      const session = await getBotLoginSession(telegramId)
+      await setBotLoginSession(telegramId, {
+        ...(session || { step: 'AWAITING_CHECKOUT_FIELD' }),
+        step: 'AWAITING_CHECKOUT_FIELD',
+        productId: variant.productId,
+        variantId: variant.id,
+      })
+    }
+
+    const data = await BotStoreService.getProductPlans(variant.productId, variant.id)
+    if (!data) {
+      await ctx.answerCallbackQuery({ text: 'اطلاعات پلن یافت نشد.', show_alert: true }).catch(() => {})
+      return
+    }
+
+    const { product, plans } = data
+    const hasDiscount =
+      variant.discountedPrice !== null &&
+      variant.discountedPrice !== undefined &&
+      variant.discountedPrice > 0 &&
+      variant.discountedPrice < variant.price
+
+    const effectivePrice = hasDiscount ? variant.discountedPrice! : variant.price
+    const badgeText = variant.badge ? ` [${escapeHtml(variant.badge)}]` : ''
+    const discountLabel = variant.discountLabel ? ` (${escapeHtml(variant.discountLabel)})` : ''
+
+    let detailsText = `✨ <b>${escapeHtml(product.title)} — نوع «${escapeHtml(variant.name)}»</b>${badgeText}\n\n`
+
+    if (variant.description) {
+      detailsText += `${escapeHtml(variant.description)}\n\n`
+    }
+
+    if (hasDiscount) {
+      detailsText += `• 💵 <b>قیمت:</b> <s>${formatPrice(variant.price)}</s> <b>${formatPrice(effectivePrice)}</b>${discountLabel}\n`
+    } else {
+      detailsText += `• 💵 <b>قیمت:</b> <b>${formatPrice(effectivePrice)}</b>\n`
+    }
+
+    if (variant.duration && variant.duration > 0) {
+      detailsText += `• ⏱ <b>مدت اعتبار:</b> ${variant.duration.toLocaleString('fa-IR')} ماهه\n`
+    }
+
+    let feats: string[] = []
+    if (Array.isArray(variant.features)) {
+      feats = variant.features
+        .map((f) => (typeof f === 'string' ? f : String((f as any)?.text || (f as any)?.title || '')))
+        .filter(Boolean)
+    }
+
+    if (feats.length > 0) {
+      detailsText += `\n🌟 <b>امکانات و مزایای این نوع:</b>\n`
+      for (const feat of feats.slice(0, 4)) {
+        detailsText += `• ${escapeHtml(feat)}\n`
+      }
+    }
+    detailsText += `\n`
+
+    detailsText += `📦 <b>پلن‌ها و شیوه تحویل:</b>\n\n`
+
+    const keyboard = new InlineKeyboard()
+
+    for (const plan of plans) {
+      const isPreCreated = plan.fulfillmentType === 'PRE_CREATED_ACCOUNT'
+      const warehouseStock = plan.availableInventoryCount ?? 0
+      const fulfillmentBadge = getFulfillmentLabel(plan.fulfillmentType)
+
+      detailsText += `🔹 <b>پلن ${escapeHtml(plan.name)}</b>\n`
+      detailsText += `• 💵 <b>مبلغ قابل پرداخت:</b> <b>${formatPrice(effectivePrice)}</b>\n`
+      detailsText += `• 🚀 <b>شیوه تحویل:</b> <code>${escapeHtml(fulfillmentBadge)}</code>\n`
+
+      if (isPreCreated) {
+        if (warehouseStock > 0) {
+          detailsText += `• 📦 <b>وضعیت:</b> ⚡ موجود در انبار (${warehouseStock.toLocaleString('fa-IR')} اکانت آماده تحویل فوری) یا فعال‌سازی روی جیمیل شما\n\n`
+        } else {
+          detailsText += `• 📦 <b>وضعیت:</b> 🕒 ارسال طی یک روز کاری (اکانت اختصاصی نو یا فعال‌سازی روی جیمیل شما)\n\n`
+        }
+      } else {
+        detailsText += `• 📦 <b>وضعیت:</b> ${plan.stock > 0 ? `⚡ آماده تحویل آنی (${plan.stock.toLocaleString('fa-IR')} عدد)` : '🕒 ارسال طی یک روز کاری'}\n\n`
+      }
+
+      keyboard
+        .text(`🛒 سفارش پلن ${plan.name} — ${formatPrice(effectivePrice)}`, `plan:buy:${plan.id}`)
+        .row()
+    }
+
+    detailsText += `👇 جهت سفارش، پلن مورد نظر خود را از دکمه‌های زیر انتخاب فرمایید:`
+
+    keyboard.text('🔙 تغییر نوع محصول', `product:select:${variant.productId}`).row()
+    keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
+    keyboard.text('🏠 منوی اصلی', 'nav:main')
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(detailsText, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      }).catch(async () => {
+        await ctx.reply(detailsText, {
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+        })
+      })
+      await ctx.answerCallbackQuery().catch(() => {})
+    } else {
+      await ctx.reply(detailsText, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      })
+    }
+  } catch (error) {
+    console.error('Error in handleSelectVariant:', error)
+    await ctx.reply('خطا در دریافت اطلاعات نوع محصول. لطفاً مجدداً تلاش فرمایید.')
+  }
+}
+
 export async function handleBuyPlan(ctx: Context, planId: string) {
   const from = ctx.from
   if (!from || !ctx.chat) return
@@ -189,13 +413,16 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
     // 2. Fetch plan details
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
-      include: { product: true },
+      include: { product: true, variant: true },
     })
 
     if (!plan || !plan.active) {
       await ctx.reply('پلن انتخاب‌شده یافت نشد یا غیرفعال است.')
       return
     }
+
+    const session = await getBotLoginSession(telegramId)
+    const effectiveVariantId = session?.variantId || plan.variantId || null
 
     // 3. For PRE_CREATED_ACCOUNT: prompt user for delivery preference (Warehouse Ready Account vs Personal Gmail)
     if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
@@ -212,10 +439,12 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
 
       // Initialize session for this order
       await setBotLoginSession(telegramId, {
+        ...(session || {}),
         step: 'AWAITING_CHECKOUT_FIELD',
         planId: plan.id,
         productId: plan.productId,
-        checkoutData: {},
+        variantId: effectiveVariantId || undefined,
+        checkoutData: session?.checkoutData || {},
       })
 
       const message = MESSAGES.preCreatedDeliveryChoice(plan.name, warehouseCount)
@@ -241,12 +470,14 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
     if (requiredFields.length > 0) {
       const firstField = requiredFields[0]
       await setBotLoginSession(telegramId, {
+        ...(session || {}),
         step: 'AWAITING_CHECKOUT_FIELD',
         planId: plan.id,
         productId: plan.productId,
+        variantId: effectiveVariantId || undefined,
         currentFieldKey: firstField.key,
         currentFieldLabel: firstField.label,
-        checkoutData: {},
+        checkoutData: session?.checkoutData || {},
       })
 
       await ctx.reply(
@@ -389,7 +620,8 @@ export async function proceedToOrderCreation(ctx: Context, planId: string) {
     planId,
     session.checkoutData || {},
     String(ctx.chat.id),
-    session.couponCode
+    session.couponCode,
+    session.variantId
   )
 }
 
@@ -399,12 +631,14 @@ export async function executeBotOrderCreation(
   planId: string,
   checkoutData: Record<string, unknown>,
   chatId: string,
-  couponCode?: string
+  couponCode?: string,
+  variantId?: string
 ) {
   try {
     const result = await BotStoreService.createBotOrder({
       userId: user.id,
       planId,
+      variantId,
       checkoutData,
       couponCode,
       source: 'telegram',
@@ -422,20 +656,23 @@ export async function executeBotOrderCreation(
         orderId: result.order.id,
         planId,
         productId: result.order.productId,
+        variantId: result.order.variantId || variantId || undefined,
         couponCode: couponCode || undefined,
         couponDiscount: result.order.discountAmount || undefined,
         checkoutData,
       })
     }
 
+    const variantSuffix = result.variantName ? ` [${result.variantName}]` : ''
     const messageText = MESSAGES.orderCreated(
       result.order.id,
-      `${result.productTitle} (${result.planName})`,
+      `${result.productTitle}${variantSuffix} (${result.planName})`,
       result.amount,
       {
         originalAmount: result.amount + (result.order.discountAmount || 0),
         discountAmount: result.order.discountAmount || 0,
         couponCode,
+        variantName: result.variantName || undefined,
       }
     )
 

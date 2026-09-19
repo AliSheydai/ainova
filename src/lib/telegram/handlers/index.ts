@@ -3,7 +3,7 @@ import { BUTTONS, mainMenuKeyboard, orderCreatedKeyboard } from '../keyboards'
 import { MESSAGES } from '../messages'
 import { escapeHtml } from '../formatting'
 import { handleStart } from './start'
-import { handleShowProducts, handleSelectProduct, handleBuyProduct, handleBuyCallback } from './buy'
+import { handleShowProducts, handleSelectProduct, handleSelectVariant, handleBuyProduct, handleBuyCallback } from './buy'
 import {
   handleOrders,
   handleFixCredentialsPrompt,
@@ -202,6 +202,12 @@ export function registerHandlers(bot: Bot) {
     await handleSelectProduct(ctx, productId)
   })
 
+  // Callback Queries: Select product variant
+  bot.callbackQuery(/^variant:select:(.+)$/, async (ctx) => {
+    const variantId = ctx.match[1]
+    await handleSelectVariant(ctx, variantId)
+  })
+
   // Callback Queries: Buy specific plan
   bot.callbackQuery(/^plan:buy:(.+)$/, async (ctx) => {
     const { handleBuyPlan } = await import('./buy')
@@ -241,7 +247,8 @@ export function registerHandlers(bot: Bot) {
       planId,
       session?.checkoutData || {},
       String(ctx.chat.id),
-      session?.couponCode
+      session?.couponCode,
+      session?.variantId
     )
   })
 
@@ -309,10 +316,20 @@ export function registerHandlers(bot: Bot) {
 
     const order = await prisma.order.findUnique({
       where: { id: targetId },
-      include: { plan: { include: { product: true } } },
+      include: { plan: { include: { product: true } }, variant: true },
     })
 
     if (order && order.status === 'PENDING_PAYMENT') {
+      const hasVariantDiscount =
+        order.variant?.discountedPrice !== null &&
+        order.variant?.discountedPrice !== undefined &&
+        order.variant.discountedPrice > 0 &&
+        order.variant.discountedPrice < order.variant.price
+
+      const basePrice = order.variant
+        ? (hasVariantDiscount ? order.variant.discountedPrice! : order.variant.price)
+        : order.plan.price
+
       if (order.couponId) {
         await prisma.$transaction(async (tx) => {
           await tx.coupon.updateMany({
@@ -322,7 +339,7 @@ export function registerHandlers(bot: Bot) {
           await tx.order.update({
             where: { id: order.id },
             data: {
-              amount: order.plan.price,
+              amount: basePrice,
               discountAmount: 0,
               couponId: null,
             },
@@ -343,12 +360,13 @@ export function registerHandlers(bot: Bot) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const callbackUrl = `${appUrl}/api/payment/callback?source=telegram&orderId=${order.id}`
       const productTitle = order.plan.product.title
+      const variantSuffix = order.variant?.name ? ` [${order.variant.name}]` : ''
       const u = await prisma.user.findUnique({ where: { telegramId } })
 
       const payResult = await PaymentService.createPayment({
         orderId: order.id,
-        amount: order.plan.price,
-        description: `خرید (telegram): ${productTitle} (${order.plan.name})`,
+        amount: basePrice,
+        description: `خرید (telegram): ${productTitle}${variantSuffix} (${order.plan.name})`,
         callbackUrl,
         mobile: u?.phone || undefined,
       })
@@ -357,8 +375,11 @@ export function registerHandlers(bot: Bot) {
 
       const updatedText = MESSAGES.orderCreated(
         order.id,
-        `${productTitle} (${order.plan.name})`,
-        order.plan.price
+        `${productTitle}${variantSuffix} (${order.plan.name})`,
+        basePrice,
+        {
+          variantName: order.variant?.name,
+        }
       )
       const kb = orderCreatedKeyboard(order.id, payResult.paymentUrl || '', false)
 
@@ -654,7 +675,7 @@ export function registerHandlers(bot: Bot) {
           if (orderId) {
             const order = await prisma.order.findUnique({
               where: { id: orderId },
-              include: { plan: { include: { product: true } } },
+              include: { plan: { include: { product: true } }, variant: true },
             })
             if (order) {
               const payment = await prisma.payment.findUnique({
@@ -671,14 +692,26 @@ export function registerHandlers(bot: Bot) {
                       payment?.authority || ''
                     )}&amount=${order.amount}&callbackUrl=${encodeURIComponent(callbackUrl)}`
 
+              const hasVariantDiscount =
+                order.variant?.discountedPrice !== null &&
+                order.variant?.discountedPrice !== undefined &&
+                order.variant.discountedPrice > 0 &&
+                order.variant.discountedPrice < order.variant.price
+
+              const basePrice = order.variant
+                ? (hasVariantDiscount ? order.variant.discountedPrice! : order.variant.price)
+                : order.plan.price
+
+              const variantSuffix = order.variant?.name ? ` [${order.variant.name}]` : ''
               const messageText = MESSAGES.orderCreated(
                 order.id,
-                `${order.plan.product.title} (${order.plan.name})`,
+                `${order.plan.product.title}${variantSuffix} (${order.plan.name})`,
                 order.amount,
                 {
-                  originalAmount: order.plan.price,
+                  originalAmount: basePrice,
                   discountAmount: order.discountAmount,
                   couponCode: session.couponCode,
+                  variantName: order.variant?.name,
                 }
               )
               const kb = orderCreatedKeyboard(order.id, paymentUrl, Boolean(order.couponId))
@@ -698,7 +731,7 @@ export function registerHandlers(bot: Bot) {
         if (orderId) {
           const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { plan: { include: { product: true } } },
+            include: { plan: { include: { product: true } }, variant: true },
           })
 
           if (!order || order.status !== 'PENDING_PAYMENT') {
@@ -707,10 +740,20 @@ export function registerHandlers(bot: Bot) {
             return
           }
 
+          const hasVariantDiscount =
+            order.variant?.discountedPrice !== null &&
+            order.variant?.discountedPrice !== undefined &&
+            order.variant.discountedPrice > 0 &&
+            order.variant.discountedPrice < order.variant.price
+
+          const basePrice = order.variant
+            ? (hasVariantDiscount ? order.variant.discountedPrice! : order.variant.price)
+            : order.plan.price
+
           const { CouponService } = await import('@/lib/discounts/coupon-service')
           const couponValidation = await CouponService.validateAndCalculate(
             text,
-            order.plan.price,
+            basePrice,
             order.productId
           )
 
@@ -725,7 +768,7 @@ export function registerHandlers(bot: Bot) {
           }
 
           const discountAmount = couponValidation.discountAmount || 0
-          const newAmount = Math.max(0, order.plan.price - discountAmount)
+          const newAmount = Math.max(0, basePrice - discountAmount)
 
           if (newAmount < 1000) {
             await ctx.reply('❌ مبلغ سفارش پس از تخفیف کمتر از حداقل مجاز درگاه (۱,۰۰۰ تومان) است.')
@@ -786,12 +829,13 @@ export function registerHandlers(bot: Bot) {
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
           const callbackUrl = `${appUrl}/api/payment/callback?source=telegram&orderId=${order.id}`
           const productTitle = order.plan.product.title
+          const variantSuffix = order.variant?.name ? ` [${order.variant.name}]` : ''
 
           const u = await prisma.user.findUnique({ where: { telegramId } })
           const payResult = await PaymentService.createPayment({
             orderId: order.id,
             amount: newAmount,
-            description: `خرید (telegram): ${productTitle} (${order.plan.name})`,
+            description: `خرید (telegram): ${productTitle}${variantSuffix} (${order.plan.name})`,
             callbackUrl,
             mobile: u?.phone || undefined,
           })
@@ -811,12 +855,13 @@ export function registerHandlers(bot: Bot) {
 
           const updatedText = MESSAGES.orderCreated(
             order.id,
-            `${productTitle} (${order.plan.name})`,
+            `${productTitle}${variantSuffix} (${order.plan.name})`,
             newAmount,
             {
-              originalAmount: order.plan.price,
+              originalAmount: basePrice,
               discountAmount,
               couponCode: couponValidation.coupon.code,
+              variantName: order.variant?.name,
             }
           )
 

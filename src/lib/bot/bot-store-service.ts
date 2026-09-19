@@ -18,11 +18,30 @@ export interface BotProductSummary {
   price: number
   stock: number
   plansCount: number
+  variantsCount?: number
+}
+
+export interface BotVariantSummary {
+  id: string
+  productId: string
+  name: string
+  slug?: string | null
+  description?: string | null
+  price: number
+  discountedPrice?: number | null
+  discountLabel?: string | null
+  duration: number
+  badge?: string | null
+  features: string[]
+  sortOrder: number
+  active: boolean
+  plansCount: number
 }
 
 export interface BotPlanSummary {
   id: string
   productId: string
+  variantId?: string | null
   name: string
   duration: number
   price: number
@@ -44,6 +63,10 @@ export class BotStoreService {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: {
+        variants: {
+          where: { active: true },
+          orderBy: { price: 'asc' },
+        },
         plans: {
           where: { active: true },
           orderBy: { price: 'asc' },
@@ -55,28 +78,88 @@ export class BotStoreService {
 
     return products.map((p) => {
       const metrics = metricsMap.get(p.id)
+      const lowestVariantPrice = p.variants[0]
+        ? (p.variants[0].discountedPrice && p.variants[0].discountedPrice > 0
+            ? p.variants[0].discountedPrice
+            : p.variants[0].price)
+        : null
+      const lowestPlanPrice = p.plans[0]?.price ?? null
+      const displayPrice = lowestVariantPrice ?? lowestPlanPrice ?? p.price
+
       return {
         id: p.id,
         title: p.title,
         name: p.title,
         slug: p.slug,
-        price: p.plans[0]?.price ?? p.price,
+        price: displayPrice,
         stock: metrics?.stock ?? 0,
         plansCount: p.plans.length,
+        variantsCount: p.variants.length,
       }
     })
   }
 
   /**
-   * Retrieves a product with its active plans and calculated stock.
+   * Retrieves active variants for a product with plans count.
    */
-  static async getProductPlans(productId: string): Promise<{
+  static async getProductVariants(productId: string): Promise<BotVariantSummary[]> {
+    const variants = await prisma.productVariant.findMany({
+      where: {
+        productId,
+        active: true,
+      },
+      include: {
+        plans: {
+          where: { active: true },
+        },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    })
+
+    return variants.map((v) => {
+      let feats: string[] = []
+      if (Array.isArray(v.features)) {
+        feats = v.features
+          .map((f) => (typeof f === 'string' ? f : String((f as any)?.text || (f as any)?.title || '')))
+          .filter(Boolean)
+      }
+      return {
+        id: v.id,
+        productId: v.productId,
+        name: v.name,
+        slug: v.slug,
+        description: v.description,
+        price: v.price,
+        discountedPrice: v.discountedPrice,
+        discountLabel: v.discountLabel,
+        duration: v.duration,
+        badge: v.badge,
+        features: feats,
+        sortOrder: v.sortOrder,
+        active: v.active,
+        plansCount: v.plans.length,
+      }
+    })
+  }
+
+  /**
+   * Retrieves a product with its active variants, plans, and calculated stock.
+   */
+  static async getProductPlans(productId: string, variantId?: string): Promise<{
     product: any
+    variants: BotVariantSummary[]
     plans: BotPlanSummary[]
   } | null> {
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
+        variants: {
+          where: { active: true },
+          include: {
+            plans: { where: { active: true } },
+          },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        },
         plans: {
           where: { active: true },
           orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
@@ -89,8 +172,18 @@ export class BotStoreService {
     const metricsMap = await FulfillmentService.batchGetProductsStockAndPurchases([product])
     const productMetrics = metricsMap.get(product.id)
 
+    const rawPlans = product.plans
+    // If variantId is given, prefer plans for that variant; if none match, fallback to unassigned or all plans
+    const filteredPlans = variantId
+      ? (rawPlans.some((p) => p.variantId === variantId)
+          ? rawPlans.filter((p) => p.variantId === variantId)
+          : rawPlans.filter((p) => !p.variantId).length > 0
+            ? rawPlans.filter((p) => !p.variantId)
+            : rawPlans)
+      : rawPlans
+
     const plans = await Promise.all(
-      product.plans.map(async (plan) => {
+      filteredPlans.map(async (plan) => {
         const stock = productMetrics?.planStocks[plan.id] ?? 0
         let availableCount: number | null = null
 
@@ -114,6 +207,7 @@ export class BotStoreService {
         return {
           id: plan.id,
           productId: plan.productId,
+          variantId: plan.variantId,
           name: plan.name,
           duration: plan.duration,
           price: plan.price,
@@ -125,7 +219,32 @@ export class BotStoreService {
       })
     )
 
-    return { product, plans }
+    const variants: BotVariantSummary[] = (product.variants || []).map((v) => {
+      let feats: string[] = []
+      if (Array.isArray(v.features)) {
+        feats = v.features
+          .map((f) => (typeof f === 'string' ? f : String((f as any)?.text || (f as any)?.title || '')))
+          .filter(Boolean)
+      }
+      return {
+        id: v.id,
+        productId: v.productId,
+        name: v.name,
+        slug: v.slug,
+        description: v.description,
+        price: v.price,
+        discountedPrice: v.discountedPrice,
+        discountLabel: v.discountLabel,
+        duration: v.duration,
+        badge: v.badge,
+        features: feats,
+        sortOrder: v.sortOrder,
+        active: v.active,
+        plansCount: v.plans.length,
+      }
+    })
+
+    return { product, variants, plans }
   }
 
   /**
@@ -135,13 +254,14 @@ export class BotStoreService {
   static async createBotOrder(options: {
     userId: string
     planId: string
+    variantId?: string
     checkoutData?: Record<string, any>
     couponCode?: string
     source: 'telegram' | 'bale' | 'rubika' | 'soroush'
     chatId?: string
     mobile?: string | null
   }) {
-    const { userId, planId, checkoutData = {}, couponCode, source, chatId, mobile } = options
+    const { userId, planId, variantId, checkoutData = {}, couponCode, source, chatId, mobile } = options
 
     const rateKey = chatId || userId
     const rateCheck = botOrderRateLimiter.check(rateKey)
@@ -165,7 +285,7 @@ export class BotStoreService {
 
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
-      include: { product: true },
+      include: { product: true, variant: true },
     })
 
     if (!plan || !plan.active) {
@@ -174,6 +294,24 @@ export class BotStoreService {
 
     if (!plan.product || plan.product.status !== 'ACTIVE') {
       throw new Error('محصول مرتبط با این پلن در حال حاضر غیرفعال است.')
+    }
+
+    // Resolve variant: from options.variantId or plan.variantId or plan.variant
+    const effectiveVariantId = variantId || plan.variantId || null
+    let targetVariant: any = null
+
+    if (effectiveVariantId) {
+      targetVariant = await prisma.productVariant.findUnique({
+        where: { id: effectiveVariantId },
+      })
+      if (targetVariant && !targetVariant.active) {
+        throw new Error('نوع محصول انتخاب‌شده در حال حاضر غیرفعال است.')
+      }
+      if (targetVariant && targetVariant.productId !== plan.productId) {
+        throw new Error('نوع محصول انتخاب‌شده با این محصول همخوانی ندارد.')
+      }
+    } else if (plan.variant && plan.variant.active) {
+      targetVariant = plan.variant
     }
 
     const fulfillmentType: FulfillmentType = plan.fulfillmentType || 'ACTIVATION_LINK'
@@ -231,7 +369,19 @@ export class BotStoreService {
     }
 
     // Determine base amount and validate coupon
-    const baseAmount = plan.price
+    let baseAmount: number
+    if (targetVariant) {
+      const hasDiscount =
+        targetVariant.discountedPrice !== null &&
+        targetVariant.discountedPrice !== undefined &&
+        targetVariant.discountedPrice > 0 &&
+        targetVariant.discountedPrice < targetVariant.price
+
+      baseAmount = hasDiscount ? targetVariant.discountedPrice! : targetVariant.price
+    } else {
+      baseAmount = plan.price
+    }
+
     if (baseAmount <= 0) {
       throw new Error('قیمت محصول یا پلن نامعتبر است.')
     }
@@ -337,7 +487,7 @@ export class BotStoreService {
             userId,
             productId: plan.productId,
             planId: plan.id,
-            variantId: plan.variantId || null,
+            variantId: targetVariant?.id || plan.variantId || null,
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,
@@ -385,10 +535,11 @@ export class BotStoreService {
     const callbackUrl = `${appUrl}/api/payment/callback?source=${source}&orderId=${order.id}`
     const productTitle = plan.product.title
 
+    const variantDesc = targetVariant?.name ? ` - ${targetVariant.name}` : ''
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
       amount: payableAmount,
-      description: `خرید (${source}): ${productTitle} (${plan.name})`,
+      description: `خرید (${source}): ${productTitle}${variantDesc} (${plan.name})`,
       callbackUrl,
       mobile: mobile || undefined,
     })
@@ -418,6 +569,7 @@ export class BotStoreService {
       paymentUrl: fullPaymentUrl,
       productTitle,
       planName: plan.name,
+      variantName: targetVariant?.name || null,
       amount: payableAmount,
       originalAmount: baseAmount,
       discountAmount: appliedDiscountAmount,
