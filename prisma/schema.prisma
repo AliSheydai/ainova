@@ -142,6 +142,7 @@ model ProductVariant {
   product          Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   plans            Plan[]       // هر Variant می‌تواند چندین Plan داشته باشد
   orders           Order[]
+  inventoryItems   InventoryItem[]
 
   @@index([productId])
   @@index([productId, active])
@@ -404,6 +405,7 @@ model InventoryItem {
   id         String        @id @default(cuid())
   productId  String?
   planId     String?
+  variantId  String?
   type       InventoryType
   status     LinkStatus    @default(AVAILABLE) // AVAILABLE, RESERVED, USED, INVALID
   data       Json          // { url?: string } or { email?: string, password?: string, note?: string }
@@ -413,16 +415,20 @@ model InventoryItem {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
-  product    Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
-  plan       Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
-  order      Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  product    Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  plan       Plan?           @relation(fields: [planId], references: [id], onDelete: SetNull)
+  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  order      Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([productId, planId, status])
   @@index([planId, status])
   @@index([productId, status])
+  @@index([variantId, status])
   @@index([type, status])
   @@index([type, status, planId])
   @@index([type, status, productId])
+  @@index([type, status, variantId])
+  @@index([productId, variantId, planId, status])
   @@map("inventory_items")
 }
 

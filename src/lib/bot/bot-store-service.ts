@@ -173,14 +173,8 @@ export class BotStoreService {
     const productMetrics = metricsMap.get(product.id)
 
     const rawPlans = product.plans
-    // If variantId is given, prefer plans for that variant; if none match, fallback to unassigned or all plans
-    const filteredPlans = variantId
-      ? (rawPlans.some((p) => p.variantId === variantId)
-          ? rawPlans.filter((p) => p.variantId === variantId)
-          : rawPlans.filter((p) => !p.variantId).length > 0
-            ? rawPlans.filter((p) => !p.variantId)
-            : rawPlans)
-      : rawPlans
+    // All active product plans are universally available for any variant
+    const filteredPlans = rawPlans
 
     const plans = await Promise.all(
       filteredPlans.map(async (plan) => {

@@ -13,12 +13,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const productId = searchParams.get('productId')
     const planId = searchParams.get('planId')
+    const variantId = searchParams.get('variantId')
     const type = searchParams.get('type') as InventoryType | null
     const status = searchParams.get('status') as LinkStatus | null
 
     const where: Prisma.InventoryItemWhereInput = {}
     if (productId) where.productId = productId
     if (planId) where.planId = planId
+    if (variantId && variantId !== 'ALL') where.variantId = variantId
     if (type && Object.values(InventoryType).includes(type)) where.type = type
     if (status && Object.values(LinkStatus).includes(status)) where.status = status
 
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
       include: {
         product: { select: { id: true, title: true, slug: true } },
         plan: { select: { id: true, name: true } },
+        variant: { select: { id: true, name: true } },
         order: {
           select: {
             id: true,
@@ -71,6 +74,7 @@ export async function POST(req: NextRequest) {
     const {
       productId,
       planId,
+      variantId,
       type, // 'ACTIVATION_LINK' | 'PRE_CREATED_ACCOUNT'
       rawContent, // string with lines
       items, // array of objects
@@ -86,6 +90,7 @@ export async function POST(req: NextRequest) {
     const itemsToCreate: Array<{
       productId?: string | null
       planId?: string | null
+      variantId?: string | null
       type: InventoryType
       status: LinkStatus
       data: Prisma.InputJsonValue
@@ -99,6 +104,7 @@ export async function POST(req: NextRequest) {
             itemsToCreate.push({
               productId: productId || null,
               planId: planId || null,
+              variantId: variantId || item.variantId || null,
               type: 'ACTIVATION_LINK',
               status: 'AVAILABLE',
               data: { url },
@@ -111,6 +117,7 @@ export async function POST(req: NextRequest) {
             itemsToCreate.push({
               productId: productId || null,
               planId: planId || null,
+              variantId: variantId || item.variantId || null,
               type: 'PRE_CREATED_ACCOUNT',
               status: 'AVAILABLE',
               data: {
@@ -133,6 +140,7 @@ export async function POST(req: NextRequest) {
             itemsToCreate.push({
               productId: productId || null,
               planId: planId || null,
+              variantId: variantId || null,
               type: 'ACTIVATION_LINK',
               status: 'AVAILABLE',
               data: { url: line },
@@ -149,6 +157,7 @@ export async function POST(req: NextRequest) {
             itemsToCreate.push({
               productId: productId || null,
               planId: planId || null,
+              variantId: variantId || null,
               type: 'PRE_CREATED_ACCOUNT',
               status: 'AVAILABLE',
               data: {

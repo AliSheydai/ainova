@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
     const statusFilter = searchParams.get('status') as LinkStatus | null
     const productIdFilter = searchParams.get('productId')
     const planIdFilter = searchParams.get('planId')
+    const variantIdFilter = searchParams.get('variantId')
     const sortBy = searchParams.get('sortBy')?.trim() || 'NEWEST'
 
     const where: Prisma.InventoryItemWhereInput = {
@@ -37,6 +38,10 @@ export async function GET(req: NextRequest) {
       where.planId = planIdFilter
     }
 
+    if (variantIdFilter && variantIdFilter !== 'ALL') {
+      where.variantId = variantIdFilter
+    }
+
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' } },
@@ -45,6 +50,7 @@ export async function GET(req: NextRequest) {
         { order: { user: { name: { contains: search, mode: 'insensitive' } } } },
         { product: { title: { contains: search, mode: 'insensitive' } } },
         { plan: { name: { contains: search, mode: 'insensitive' } } },
+        { variant: { name: { contains: search, mode: 'insensitive' } } },
       ]
     }
 
@@ -65,6 +71,7 @@ export async function GET(req: NextRequest) {
           plan: {
             include: { product: true },
           },
+          variant: true,
           order: {
             select: {
               id: true,
@@ -83,7 +90,10 @@ export async function GET(req: NextRequest) {
       prisma.product.findMany({
         where: { status: { not: 'ARCHIVED' } },
         orderBy: { sortOrder: 'asc' },
-        include: { plans: true },
+        include: {
+          plans: true,
+          variants: { where: { active: true }, orderBy: { sortOrder: 'asc' } },
+        },
       }),
       prisma.inventoryItem.groupBy({
         by: ['productId', 'planId'],
@@ -123,6 +133,7 @@ export async function GET(req: NextRequest) {
         ...pl,
         availableCount: planAvailableMap.get(pl.id) || 0,
       })),
+      variants: p.variants,
     }))
 
     // Format items
@@ -135,6 +146,7 @@ export async function GET(req: NextRequest) {
         id: item.id,
         productId: item.productId,
         planId: item.planId,
+        variantId: item.variantId,
         url: dataObj?.url || dataObj?.link || '',
         status: item.status,
         orderId: item.orderId,
@@ -143,6 +155,7 @@ export async function GET(req: NextRequest) {
         usedAt: item.usedAt,
         product: item.product,
         plan: item.plan,
+        variant: item.variant,
         order: item.order,
       }
     })
@@ -184,7 +197,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { productId, planId, links } = body
+    const { productId, planId, variantId, links } = body
 
     if ((!productId && !planId) || !Array.isArray(links) || links.length === 0) {
       return NextResponse.json(
@@ -235,6 +248,7 @@ export async function POST(req: NextRequest) {
       data: cleanUrls.map((url: string) => ({
         productId: targetProductId,
         planId: targetPlanId || null,
+        variantId: variantId || null,
         type: InventoryType.ACTIVATION_LINK,
         data: { url },
         status: LinkStatus.AVAILABLE,

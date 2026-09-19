@@ -35,6 +35,7 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
     const effectiveProduct = order.product || order.plan?.product
     const productId = effectiveProduct?.id
     const planId = order.planId
+    const variantId = order.variantId || order.plan?.variantId || null
 
     let linkUrl: string | null = null
 
@@ -70,11 +71,30 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
         SELECT id, data
         FROM inventory_items
         WHERE type = 'ACTIVATION_LINK'::"InventoryType"
-          AND (
-            ("planId" = ${planId} AND "planId" IS NOT NULL) OR 
-            ("productId" = ${productId} AND ("planId" IS NULL OR "planId" = ${planId}))
-          )
           AND status = 'AVAILABLE'::"LinkStatus"
+          AND (
+            (${variantId}::text IS NOT NULL AND "variantId" = ${variantId})
+            OR
+            (${variantId}::text IS NULL AND "variantId" IS NULL)
+            OR
+            ("variantId" IS NULL AND "productId" = ${productId})
+          )
+          AND (
+            ${planId}::text IS NULL OR "planId" = ${planId} OR "planId" IS NULL
+          )
+          AND (
+            ${productId}::text IS NULL OR "productId" = ${productId}
+          )
+        ORDER BY
+          (CASE 
+            WHEN "variantId" = ${variantId} AND "planId" = ${planId} THEN 100
+            WHEN "variantId" = ${variantId} AND "planId" IS NULL THEN 80
+            WHEN "variantId" = ${variantId} THEN 70
+            WHEN "variantId" IS NULL AND "planId" = ${planId} THEN 50
+            WHEN "variantId" IS NULL AND "planId" IS NULL THEN 30
+            ELSE 10 
+          END) DESC,
+          "createdAt" ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED
       `

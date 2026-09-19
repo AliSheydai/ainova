@@ -220,7 +220,7 @@ export function VariantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-full max-w-full sm:max-w-2xl p-3.5 sm:p-6 box-border max-h-[90vh] flex flex-col'>
+      <DialogContent className='w-full max-w-full sm:max-w-2xl p-3.5 sm:p-6 box-border max-h-[90vh] flex flex-col overflow-hidden'>
         <DialogHeader className='pb-3 border-b border-border/50 min-w-0 w-full shrink-0'>
           <div className='flex items-center gap-2.5 min-w-0'>
             <div className='size-9 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-xs'>
@@ -238,7 +238,7 @@ export function VariantDialog({
         </DialogHeader>
 
         {/* Scrollable Form Content */}
-        <div className='space-y-4 sm:space-y-5 py-2 overflow-y-auto flex-1 pe-1'>
+        <div className='space-y-4 sm:space-y-5 py-2 overflow-y-auto flex-1 min-h-0 shrink overscroll-contain touch-pan-y pe-1'>
           {/* Section 1: Basic Information */}
           <div className='bg-card rounded-2xl border border-border/70 p-3.5 sm:p-5 shadow-xs space-y-4'>
             {/* Header & Status Toggle */}
@@ -400,7 +400,7 @@ export function VariantDialog({
                     onChange={handlePriceChange}
                     placeholder='مثال: ۱۲۰۰۰۰۰'
                     className='text-xs sm:text-sm h-10 rounded-xl px-3 font-sans'
-                    dir='ltr'
+                    dir='rtl'
                   />
                   <div className='absolute end-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none'>
                     تومان
@@ -438,7 +438,7 @@ export function VariantDialog({
                     onChange={handleDiscountedPriceChange}
                     placeholder='مثال: ۸۹۰۰۰۰'
                     className='text-xs sm:text-sm h-10 rounded-xl px-3 font-sans'
-                    dir='ltr'
+                    dir='rtl'
                   />
                   <div className='absolute end-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none'>
                     تومان

@@ -30,6 +30,14 @@ export interface ProductOption {
   slug: string
   availableCount?: number
   plans?: Array<{ id: string; name: string; availableCount?: number }>
+  variants?: Array<{ id: string; name: string }>
+}
+
+export interface VariantOption {
+  id: string
+  name: string
+  productId?: string
+  active?: boolean
 }
 
 interface BulkAddLinksDialogProps {
@@ -49,6 +57,9 @@ export function BulkAddLinksDialog({
 }: BulkAddLinksDialogProps) {
   const [productId, setProductId] = useState<string>('')
   const [planId, setPlanId] = useState<string>('ALL')
+  const [variantId, setVariantId] = useState<string>('ALL')
+  const [variants, setVariants] = useState<VariantOption[]>([])
+  const [loadingVariants, setLoadingVariants] = useState<boolean>(false)
   const [text, setText] = useState<string>('')
   const [importing, setImporting] = useState<boolean>(false)
 
@@ -61,10 +72,38 @@ export function BulkAddLinksDialog({
     }
   }, [open, products, defaultProductId, productId])
 
-  // Reset plan when product changes
+  // Load variants when product selection changes
+  useEffect(() => {
+    if (!productId) {
+      setVariants([])
+      return
+    }
+    let active = true
+    const timer = setTimeout(() => {
+      if (active) setLoadingVariants(true)
+    }, 0)
+
+    fetch(`/api/admin/variants?productId=${productId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (active) setVariants(d.variants || [])
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoadingVariants(false)
+      })
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
+  }, [productId])
+
+  // Reset plan & variant when product changes
   const handleProductChange = (val: string) => {
     setProductId(val)
     setPlanId('ALL')
+    setVariantId('ALL')
   }
 
   const selectedProduct = useMemo(
@@ -75,6 +114,10 @@ export function BulkAddLinksDialog({
   const selectedPlan = useMemo(
     () => plans.find((pl) => pl.id === planId),
     [plans, planId]
+  )
+  const selectedVariant = useMemo(
+    () => variants.find((v) => v.id === variantId),
+    [variants, variantId]
   )
 
   // Current warehouse stock for the selected product/plan
@@ -133,6 +176,7 @@ export function BulkAddLinksDialog({
         body: JSON.stringify({
           productId,
           planId: planId && planId !== 'ALL' ? planId : undefined,
+          variantId: variantId && variantId !== 'ALL' ? variantId : undefined,
           links: validLines,
         }),
       })
@@ -175,7 +219,7 @@ export function BulkAddLinksDialog({
 
         {/* Content Body */}
         <div className='space-y-3.5 py-1 text-xs'>
-          {/* Target Product & Optional Plan Selectors */}
+          {/* Target Product, Variant & Optional Plan Selectors */}
           <div className='space-y-2.5'>
             <div className='flex flex-col gap-3'>
               <div>
@@ -202,6 +246,28 @@ export function BulkAddLinksDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Variant Selector (Only if product has variants) */}
+              {variants.length > 0 && (
+                <div>
+                  <label className='text-xs font-semibold text-foreground/90 block mb-1.5'>
+                    نوع محصول <span className='text-muted-foreground font-normal'>(اختیاری)</span>
+                  </label>
+                  <Select value={variantId} onValueChange={setVariantId} disabled={importing || loadingVariants}>
+                    <SelectTrigger className='text-xs rounded-xl h-9 bg-background'>
+                      <SelectValue placeholder={loadingVariants ? 'در حال بارگذاری انواع...' : 'همه انواع این محصول (عمومی)'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='ALL'>همه انواع این محصول (عمومی)</SelectItem>
+                      {variants.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          <span>{v.name}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {plans.length > 0 && (
                 <div>

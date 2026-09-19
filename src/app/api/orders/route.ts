@@ -106,14 +106,6 @@ export async function POST(req: NextRequest) {
           )
         }
 
-        // If variant was resolved, ensure plan matches the variant if plan is linked to a variant
-        if (variant && plan.variantId && plan.variantId !== variant.id) {
-          return NextResponse.json(
-            { success: false, message: 'پلن انتخاب‌شده با نوع محصول همخوانی ندارد.' },
-            { status: 400 }
-          )
-        }
-
         // If no variant was explicitly sent, but the plan belongs to a variant:
         if (!variant && plan.variant) {
           if (plan.variant.active) {
@@ -128,10 +120,7 @@ export async function POST(req: NextRequest) {
       })
       if (fetchedProduct) {
         product = fetchedProduct
-        if (variant) {
-          const variantPlan = fetchedProduct.plans.find((p) => p.variantId === variant!.id)
-          plan = variantPlan || fetchedProduct.plans[0] || null
-        } else if (fetchedProduct.plans.length > 0) {
+        if (fetchedProduct.plans.length > 0) {
           plan = fetchedProduct.plans[0]
         }
       }
@@ -142,19 +131,12 @@ export async function POST(req: NextRequest) {
       })
       if (fetchedProduct) {
         product = fetchedProduct
-        if (variant) {
-          const variantPlan = fetchedProduct.plans.find((p) => p.variantId === variant!.id)
-          plan = variantPlan || fetchedProduct.plans[0] || null
-        } else if (fetchedProduct.plans.length > 0) {
+        if (fetchedProduct.plans.length > 0) {
           plan = fetchedProduct.plans[0]
         }
       }
     } else if (variant && product) {
-      const variantPlan = await prisma.plan.findFirst({
-        where: { productId: product.id, variantId: variant.id, active: true },
-        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
-      })
-      plan = variantPlan || await prisma.plan.findFirst({
+      plan = await prisma.plan.findFirst({
         where: { productId: product.id, active: true },
         orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
       })

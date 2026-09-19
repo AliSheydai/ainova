@@ -51,12 +51,14 @@ interface InventoryAccount {
   }
   productId?: string | null
   planId?: string | null
+  variantId?: string | null
   orderId?: string | null
   assignedAt?: string | null
   usedAt?: string | null
   createdAt: string
   product?: { id: string; title: string; slug: string } | null
   plan?: { id: string; name: string } | null
+  variant?: { id: string; name: string } | null
   order?: { id: string; user?: { phone?: string | null; name?: string | null } } | null
 }
 
@@ -392,11 +394,22 @@ export default function ReadyAccountsPage() {
                                   {statusBadge.label}
                                 </Badge>
                               </td>
-                              {/* Product/Plan */}
+                              {/* Product/Variant/Plan */}
                               <td className='px-4 py-3'>
-                                <div className='flex flex-col gap-0.5'>
+                                <div className='flex flex-col gap-1'>
                                   <span className='font-medium text-foreground'>{acc.product?.title || '—'}</span>
-                                  {acc.plan?.name && <span className='text-muted-foreground text-[10.5px]'>{acc.plan.name}</span>}
+                                  <div className='flex items-center gap-1.5 flex-wrap'>
+                                    {acc.variant?.name && (
+                                      <span className='inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10.5px] font-medium'>
+                                        نوع: {acc.variant.name}
+                                      </span>
+                                    )}
+                                    {acc.plan?.name && (
+                                      <span className='text-muted-foreground text-[10.5px]'>
+                                        {acc.plan.name}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </td>
                               {/* Date */}
@@ -447,8 +460,16 @@ export default function ReadyAccountsPage() {
                             </Badge>
                           </div>
 
-                          <div className='flex items-center justify-between text-[10.5px] text-muted-foreground'>
-                            <span>{acc.product?.title || '—'}{acc.plan?.name ? ` / ${acc.plan.name}` : ''}</span>
+                          <div className='flex items-center justify-between text-[10.5px] text-muted-foreground flex-wrap gap-1'>
+                            <div className='flex items-center gap-1.5 flex-wrap'>
+                              <span>{acc.product?.title || '—'}</span>
+                              {acc.variant?.name && (
+                                <span className='px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-medium'>
+                                  {acc.variant.name}
+                                </span>
+                              )}
+                              {acc.plan?.name && <span>/ {acc.plan.name}</span>}
+                            </div>
                             <span>{formatPersianDate(acc.createdAt, { month: 'short', day: 'numeric' })}</span>
                           </div>
 

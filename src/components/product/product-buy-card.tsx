@@ -62,14 +62,8 @@ export function ProductBuyCard({
     return variants[0]?.id ?? null
   }, [hasVariants, selectedVariantId, variants])
 
-  // Filter plans when variants exist
-  const variantPlans = useMemo(() => {
-    if (!hasVariants || !activeVariantId) return plans
-    const matching = plans.filter((p) => p.variantId === activeVariantId)
-    if (matching.length > 0) return matching
-    const unassigned = plans.filter((p) => !p.variantId)
-    return unassigned.length > 0 ? unassigned : plans
-  }, [hasVariants, activeVariantId, plans])
+  // Plans are universally available across all variants
+  const activeProductPlans = plans
 
   // Flat & Matrix Plan Modes (only active if NO variants exist)
   const availablePlanTypes = useMemo(() => {
@@ -105,25 +99,25 @@ export function ProductBuyCard({
   }, [isMatrixMode, selectedPlanType, availablePlanTypes])
 
   const filteredPlans = useMemo(() => {
-    if (hasVariants) return variantPlans
+    if (hasVariants) return plans
     if (!isMatrixMode) return plans
     return plans.filter((p) => {
       const t = p.planType?.trim() || 'سایر'
       return t.toLowerCase() === activePlanType.toLowerCase()
     })
-  }, [hasVariants, variantPlans, isMatrixMode, plans, activePlanType])
+  }, [hasVariants, isMatrixMode, plans, activePlanType])
 
   // Selected Plan state
   const [userSelectedPlanId, setUserSelectedPlanId] = useState<string | null>(null)
 
   // Derive active plan ID safely across all modes
   const activePlanId = useMemo(() => {
-    const currentPool = hasVariants ? variantPlans : isMatrixMode ? filteredPlans : plans
+    const currentPool = hasVariants ? plans : isMatrixMode ? filteredPlans : plans
     if (userSelectedPlanId && currentPool.some((p) => p.id === userSelectedPlanId)) {
       return userSelectedPlanId
     }
     return currentPool[0]?.id ?? null
-  }, [hasVariants, isMatrixMode, userSelectedPlanId, variantPlans, filteredPlans, plans])
+  }, [hasVariants, isMatrixMode, userSelectedPlanId, filteredPlans, plans])
 
   // User & Auth state
   const [buying, setBuying] = useState(false)
@@ -150,7 +144,7 @@ export function ProductBuyCard({
     ? variants.find((v) => v.id === activeVariantId) || variants[0]
     : null
 
-  const currentPlansPool = hasVariants ? variantPlans : isMatrixMode ? filteredPlans : plans
+  const currentPlansPool = hasVariants ? plans : isMatrixMode ? filteredPlans : plans
   const selectedPlan = currentPlansPool.find((p) => p.id === activePlanId) || currentPlansPool[0]
 
   const hasVariantDiscount = Boolean(
@@ -200,18 +194,17 @@ export function ProductBuyCard({
             selectedVariantId={activeVariantId}
             onSelectVariant={(id) => {
               setSelectedVariantId(id)
-              setUserSelectedPlanId(null)
             }}
           />
 
-          {/* Delivery Option Selector (Plans linked to this variant) */}
-          {variantPlans.length > 0 && (
+          {/* Delivery Option Selector (All product delivery plans are available for any variant) */}
+          {plans.length > 0 && (
             <div className='space-y-2 pt-2 border-t border-border/50'>
               <span id='delivery-plan-label' className='text-xs font-semibold text-muted-foreground flex items-center gap-1.5'>
                 <span>نحوه تحویل (پلن):</span>
               </span>
               <div className='flex flex-wrap gap-2' role='radiogroup' aria-labelledby='delivery-plan-label'>
-                {variantPlans.map((p) => {
+                {plans.map((p) => {
                   const isSelected = selectedPlan?.id === p.id
                   const isPlanPreCreated = p.fulfillmentType === 'PRE_CREATED_ACCOUNT'
                   const planHasStock = (p.stock !== undefined ? p.stock : stock) > 0

@@ -191,13 +191,7 @@ function CheckoutContent() {
 
           // 2. Resolve Plan
           const activePlans = loadedProduct.plans?.filter((p) => p.active) || []
-          let candidatePlans = activePlans
-          if (resolvedVariantId) {
-            const variantPlans = activePlans.filter((p) => p.variantId === resolvedVariantId)
-            if (variantPlans.length > 0) {
-              candidatePlans = variantPlans
-            }
-          }
+          const candidatePlans = activePlans
 
           if (planIdParam && candidatePlans.some((p) => p.id === planIdParam)) {
             setSelectedPlanId(planIdParam)
@@ -221,13 +215,7 @@ function CheckoutContent() {
   const selectedVariant = activeVariants.find((v) => v.id === selectedVariantId) || null
 
   const activePlans = React.useMemo(() => product?.plans?.filter((p) => p.active) || [], [product])
-  const candidatePlans = React.useMemo(() => {
-    if (!selectedVariant) return activePlans
-    const variantPlans = activePlans.filter((p) => p.variantId === selectedVariant.id)
-    if (variantPlans.length > 0) return variantPlans
-    const unassigned = activePlans.filter((p) => !p.variantId)
-    return unassigned.length > 0 ? unassigned : activePlans
-  }, [selectedVariant, activePlans])
+  const candidatePlans = activePlans
 
   const selectedPlan =
     candidatePlans.find((p) => p.id === selectedPlanId) ||
@@ -530,50 +518,6 @@ function CheckoutContent() {
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-16 lg:pb-0'>
             {/* RIGHT COLUMN (lg:col-span-7) — Delivery details & custom fields */}
             <div className='lg:col-span-7 space-y-4 sm:space-y-5'>
-              {/* Delivery Option Selector when multiple fulfillment plans exist for this variant/product */}
-              {candidatePlans.length > 1 && (
-                <div className='rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3'>
-                  <div className='flex items-center gap-2 pb-2.5 border-b border-border/60'>
-                    <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0'>
-                      <Zap className='size-4' />
-                    </div>
-                    <div>
-                      <h2 className='text-sm sm:text-base font-bold text-foreground'>
-                        نحوه تحویل اشتراک
-                      </h2>
-                      <p className='text-[11px] text-muted-foreground'>
-                        شیوه دریافت اکانت را انتخاب نمایید.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-wrap gap-2 pt-1' role='radiogroup' aria-label='نحوه تحویل'>
-                    {candidatePlans.map((p) => {
-                      const isSelected = selectedPlan?.id === p.id
-                      return (
-                        <button
-                          key={p.id}
-                          type='button'
-                          role='radio'
-                          aria-checked={isSelected}
-                          onClick={() => setSelectedPlanId(p.id)}
-                          className={cn(
-                            'flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm transition-all cursor-pointer',
-                            isSelected
-                              ? 'border-primary bg-primary/10 text-foreground font-semibold ring-2 ring-primary/30 shadow-2xs'
-                              : 'border-border bg-background/80 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                          )}
-                        >
-                          <span>{p.name}</span>
-                          <span className='text-[10.5px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border'>
-                            {getFulfillmentLabel(p.fulfillmentType)}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
               {/* Delivery Section (if PRE_CREATED_ACCOUNT) */}
               {isPreCreatedPlan && (
                 <CheckoutDeliverySection

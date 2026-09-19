@@ -137,7 +137,7 @@ export function CheckoutDeliverySection({
       {isOpen && (
         <div className='space-y-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-150'>
           {/* Two Delivery Options Grid */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2.5'>
         {/* Option 1: Instant Ready Account */}
         <div
           role='radio'
@@ -151,46 +151,47 @@ export function CheckoutDeliverySection({
             }
           }}
           className={cn(
-            'group relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 text-start transition-all cursor-pointer select-none',
+            'group relative flex flex-col justify-between rounded-2xl border p-3.5 sm:p-4 text-start transition-all cursor-pointer select-none',
             mode === 'inventory'
               ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
               : 'border-border/70 bg-card/60 hover:border-primary/40 hover:bg-muted/30'
           )}
         >
-          <div>
-            <div className='flex items-center justify-between gap-2 mb-2'>
-              <div className='flex items-center gap-2'>
-                <div
-                  className={cn(
-                    'size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
-                    mode === 'inventory'
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-muted-foreground/40'
-                  )}
-                >
-                  {mode === 'inventory' && <div className='size-1.5 rounded-full bg-white' />}
-                </div>
-                <span className='text-xs sm:text-sm font-bold text-foreground'>
-                  اکانت اختصاصی آماده
-                </span>
-              </div>
+          {/* Border Badge — Positioned on the top edge of the card */}
+          <div className='absolute -top-2.5 end-3 z-10'>
+            <Badge
+              variant='outline'
+              className='bg-background px-2 py-0.5 text-[10px] font-semibold text-primary border-primary/30 shadow-2xs whitespace-nowrap flex items-center'
+            >
+              {hasInventory ? (
+                <>
+                  <Zap className='size-2.5 me-1 text-primary' />
+                  تحویل آنی
+                </>
+              ) : (
+                <>
+                  <Clock className='size-2.5 me-1' />
+                  طی ۱ روز کاری
+                </>
+              )}
+            </Badge>
+          </div>
 
-              <Badge
-                variant='outline'
-                className='text-[10px] font-semibold bg-primary/10 text-primary border-primary/20'
-              >
-                {hasInventory ? (
-                  <>
-                    <Zap className='size-2.5 me-1 text-primary' />
-                    تحویل آنی
-                  </>
-                ) : (
-                  <>
-                    <Clock className='size-2.5 me-1' />
-                    ارسال ۱ روز کاری
-                  </>
+          <div>
+            <div className='flex items-center gap-2 mb-2'>
+              <div
+                className={cn(
+                  'size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+                  mode === 'inventory'
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-muted-foreground/40'
                 )}
-              </Badge>
+              >
+                {mode === 'inventory' && <div className='size-1.5 rounded-full bg-white' />}
+              </div>
+              <span className='text-xs sm:text-sm font-bold text-foreground'>
+                اکانت اختصاصی آماده
+              </span>
             </div>
 
             <p className='text-xs text-muted-foreground leading-relaxed'>
@@ -229,37 +230,38 @@ export function CheckoutDeliverySection({
             }
           }}
           className={cn(
-            'group relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-4 text-start transition-all cursor-pointer select-none',
+            'group relative flex flex-col justify-between rounded-2xl border p-3.5 sm:p-4 text-start transition-all cursor-pointer select-none',
             mode === 'own'
               ? 'border-primary bg-primary/8 ring-2 ring-primary/20 shadow-xs'
               : 'border-border/70 bg-card/60 hover:border-primary/40 hover:bg-muted/30'
           )}
         >
-          <div>
-            <div className='flex items-center justify-between gap-2 mb-2'>
-              <div className='flex items-center gap-2'>
-                <div
-                  className={cn(
-                    'size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
-                    mode === 'own'
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-muted-foreground/40'
-                  )}
-                >
-                  {mode === 'own' && <div className='size-1.5 rounded-full bg-white' />}
-                </div>
-                <span className='text-xs sm:text-sm font-bold text-foreground'>
-                  فعال‌سازی روی جیمیل شما
-                </span>
-              </div>
+          {/* Border Badge — Positioned on the top edge of the card */}
+          <div className='absolute -top-2.5 end-3 z-10'>
+            <Badge
+              variant='outline'
+              className='bg-background px-2 py-0.5 text-[10px] font-semibold text-primary border-primary/30 shadow-2xs whitespace-nowrap flex items-center'
+            >
+              <UserIcon className='size-2.5 me-1 text-primary' />
+              اکانت شخصی
+            </Badge>
+          </div>
 
-              <Badge
-                variant='outline'
-                className='text-[10px] font-semibold bg-primary/10 text-primary border-primary/20'
+          <div>
+            <div className='flex items-center gap-2 mb-2'>
+              <div
+                className={cn(
+                  'size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+                  mode === 'own'
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-muted-foreground/40'
+                )}
               >
-                <UserIcon className='size-2.5 me-1 text-primary' />
-                اکانت شخصی
-              </Badge>
+                {mode === 'own' && <div className='size-1.5 rounded-full bg-white' />}
+              </div>
+              <span className='text-xs sm:text-sm font-bold text-foreground'>
+                فعال‌سازی روی جیمیل شما
+              </span>
             </div>
 
             <p className='text-xs text-muted-foreground leading-relaxed'>

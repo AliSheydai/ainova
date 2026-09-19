@@ -58,20 +58,30 @@ import { BulkAddLinksDialog } from './bulk-add-dialog'
 
 interface ActivationLinkItem {
   id: string
-  planId: string
+  productId?: string | null
+  planId?: string | null
+  variantId?: string | null
   url: string
   status: 'AVAILABLE' | 'RESERVED' | 'USED' | 'INVALID'
   orderId: string | null
   createdAt: string
   assignedAt: string | null
   usedAt: string | null
+  product?: {
+    id: string
+    title: string
+  } | null
   plan?: {
     id: string
     name: string
     product?: {
       title: string
     }
-  }
+  } | null
+  variant?: {
+    id: string
+    name: string
+  } | null
   order?: {
     id: string
     user?: {
@@ -96,6 +106,7 @@ interface ProductOption {
   slug: string
   availableCount?: number
   plans?: Array<{ id: string; name: string; availableCount?: number }>
+  variants?: Array<{ id: string; name: string }>
 }
 
 function formatDate(dateStr: string | null): string {
@@ -748,11 +759,18 @@ export default function AdminActivationLinksPage() {
                             {/* Product & Plan */}
                             <td className='py-3.5 px-4 whitespace-nowrap min-w-[200px]'>
                               <span className='font-bold block text-foreground'>
-                                {link.plan?.product?.title || 'محصول سیستم'}
+                                {link.product?.title || link.plan?.product?.title || 'محصول سیستم'}
                               </span>
-                              <span className='text-[10px] text-muted-foreground block mt-0.5'>
-                                پلن: {link.plan?.name || 'پیش‌فرض'}
-                              </span>
+                              <div className='flex items-center gap-1.5 flex-wrap mt-0.5'>
+                                {link.variant?.name && (
+                                  <span className='inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium'>
+                                    نوع: {link.variant.name}
+                                  </span>
+                                )}
+                                <span className='text-[10px] text-muted-foreground'>
+                                  پلن: {link.plan?.name || 'پیش‌فرض'}
+                                </span>
+                              </div>
                             </td>
 
                             {/* URL Box */}
@@ -875,11 +893,18 @@ export default function AdminActivationLinksPage() {
 
                         <div>
                           <h4 className='font-bold text-xs text-foreground'>
-                            {link.plan?.product?.title || 'محصول'}
+                            {link.product?.title || link.plan?.product?.title || 'محصول'}
                           </h4>
-                          <span className='text-[11px] text-muted-foreground'>
-                            پلن: {link.plan?.name || 'پیش‌فرض'}
-                          </span>
+                          <div className='flex items-center gap-1.5 flex-wrap mt-0.5'>
+                            {link.variant?.name && (
+                              <span className='inline-flex items-center px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-medium'>
+                                نوع: {link.variant.name}
+                              </span>
+                            )}
+                            <span className='text-[11px] text-muted-foreground'>
+                              پلن: {link.plan?.name || 'پیش‌فرض'}
+                            </span>
+                          </div>
                         </div>
 
                         {/* URL snippet */}

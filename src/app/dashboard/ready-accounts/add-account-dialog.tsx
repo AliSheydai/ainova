@@ -45,6 +45,7 @@ export interface ProductOption {
   slug: string
   stock?: number
   plans?: Array<{ id: string; name: string; fulfillmentType?: string; stock?: number }>
+  variants?: Array<{ id: string; name: string }>
 }
 
 export interface PlanOption {
@@ -53,6 +54,14 @@ export interface PlanOption {
   productId?: string
   fulfillmentType?: string
   stock?: number
+}
+
+export interface VariantOption {
+  id: string
+  name: string
+  productId?: string
+  active?: boolean
+  price?: number
 }
 
 interface AddAccountDialogProps {
@@ -79,11 +88,15 @@ export function AddAccountDialog({
 }: AddAccountDialogProps) {
   const [mode, setMode] = useState<'SINGLE' | 'BULK'>('SINGLE')
 
-  // Product & Plan
+  // Product, Variant & Plan
   const [selectedProductId, setSelectedProductId] = useState<string>(() => products[0]?.id || '')
   const [plans, setPlans] = useState<PlanOption[]>([])
   const [selectedPlanId, setSelectedPlanId] = useState<string>('NONE')
   const [loadingPlans, setLoadingPlans] = useState<boolean>(false)
+
+  const [variants, setVariants] = useState<VariantOption[]>([])
+  const [selectedVariantId, setSelectedVariantId] = useState<string>('NONE')
+  const [loadingVariants, setLoadingVariants] = useState<boolean>(false)
 
   // Single form fields
   const [email, setEmail] = useState<string>('')
@@ -101,10 +114,13 @@ export function AddAccountDialog({
   const handleProductChange = useCallback((newProductId: string) => {
     setSelectedProductId(newProductId)
     setSelectedPlanId('NONE')
+    setSelectedVariantId('NONE')
     if (!newProductId) {
       setPlans([])
+      setVariants([])
       return
     }
+
     setLoadingPlans(true)
     fetch(`/api/admin/plans?productId=${newProductId}`)
       .then((r) => r.json())
@@ -121,16 +137,28 @@ export function AddAccountDialog({
         toast.error('خطا در دریافت لیست پلن‌های محصول')
       })
       .finally(() => setLoadingPlans(false))
+
+    setLoadingVariants(true)
+    fetch(`/api/admin/variants?productId=${newProductId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setVariants(d.variants || [])
+      })
+      .catch(() => {})
+      .finally(() => setLoadingVariants(false))
   }, [])
 
-  // Load plans when product selection changes or dialog opens with initial product
+  // Load plans & variants when product selection changes or dialog opens with initial product
   useEffect(() => {
     const targetId = selectedProductId || products[0]?.id
     if (!targetId) return
 
     let active = true
     const timer = setTimeout(() => {
-      if (active) setLoadingPlans(true)
+      if (active) {
+        setLoadingPlans(true)
+        setLoadingVariants(true)
+      }
     }, 0)
 
     fetch(`/api/admin/plans?productId=${targetId}`)
@@ -150,6 +178,17 @@ export function AddAccountDialog({
         if (active) setLoadingPlans(false)
       })
 
+    fetch(`/api/admin/variants?productId=${targetId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!active) return
+        setVariants(d.variants || [])
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoadingVariants(false)
+      })
+
     return () => {
       active = false
       clearTimeout(timer)
@@ -160,6 +199,12 @@ export function AddAccountDialog({
   const currentProduct = useMemo(
     () => products.find((p) => p.id === (selectedProductId || products[0]?.id)),
     [products, selectedProductId]
+  )
+
+  // Selected variant object
+  const currentVariant = useMemo(
+    () => variants.find((v) => v.id === selectedVariantId),
+    [variants, selectedVariantId]
   )
 
   // Selected plan object
@@ -288,6 +333,7 @@ export function AddAccountDialog({
     }
 
     const finalPlanId = selectedPlanId && selectedPlanId !== 'NONE' ? selectedPlanId : null
+    const finalVariantId = selectedVariantId && selectedVariantId !== 'NONE' ? selectedVariantId : null
 
     let body: Record<string, unknown>
 
@@ -311,6 +357,7 @@ export function AddAccountDialog({
       body = {
         productId: selectedProductId,
         planId: finalPlanId,
+        variantId: finalVariantId,
         type: 'PRE_CREATED_ACCOUNT',
         items: [
           {
@@ -330,6 +377,7 @@ export function AddAccountDialog({
       body = {
         productId: selectedProductId,
         planId: finalPlanId,
+        variantId: finalVariantId,
         type: 'PRE_CREATED_ACCOUNT',
         items: validBulkAccounts.map((a) => ({
           email: a.email,
@@ -376,7 +424,7 @@ export function AddAccountDialog({
         dir='rtl'
       >
         {/* Header */}
-        <DialogHeader className='p-4 sm:p-5 border-b border-border/60 bg-muted/20 text-start'>
+        <DialogHeader className='p-4 sm:p-5 border-b border-border/60 bg-muted/20 text-start shrink-0'>
           <div className='flex items-center gap-3'>
             <div className='size-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-xs'>
               <Archive className='size-5' />
@@ -393,7 +441,7 @@ export function AddAccountDialog({
         </DialogHeader>
 
         {/* Scrollable Form Body */}
-        <div className='p-4 sm:p-5 overflow-y-auto space-y-4 text-xs flex-1'>
+        <div className='p-4 sm:p-5 overflow-y-auto space-y-4 text-xs flex-1 min-h-0 shrink overscroll-contain touch-pan-y'>
           {/* Mode Switcher */}
           <div className='grid grid-cols-2 p-1 rounded-xl bg-muted/50 border border-border/60 gap-1'>
             <button
@@ -429,9 +477,9 @@ export function AddAccountDialog({
             </button>
           </div>
 
-          {/* Product & Plan Selectors */}
+          {/* Product, Variant & Plan Selectors */}
           <div className='space-y-3 p-3 sm:p-3.5 rounded-xl border border-border/60 bg-muted/20'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='flex flex-col gap-3'>
               {/* Product */}
               <div className='space-y-1.5'>
                 <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
@@ -456,6 +504,38 @@ export function AddAccountDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Variant (Only if product has variants) */}
+              {variants.length > 0 && (
+                <div className='space-y-1.5'>
+                  <label className='text-xs font-semibold text-foreground flex items-center justify-between'>
+                    <span className='flex items-center gap-1.5'>
+                      <Layers className='size-3.5 text-primary' />
+                      <span>نوع محصول</span>
+                    </span>
+                    <span className='text-[10.5px] text-muted-foreground font-normal'>اختیاری</span>
+                  </label>
+                  <Select
+                    value={selectedVariantId}
+                    onValueChange={setSelectedVariantId}
+                    disabled={!selectedProductId || loadingVariants || submitting}
+                  >
+                    <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
+                      <SelectValue
+                        placeholder={loadingVariants ? 'در حال بارگذاری انواع...' : 'همه انواع (عمومی)'}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='NONE'>همه انواع (عمومی / بدون نوع خاص)</SelectItem>
+                      {variants.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Plan */}
               <div className='space-y-1.5'>
@@ -488,13 +568,15 @@ export function AddAccountDialog({
               </div>
             </div>
 
-            {/* Selected Product/Plan stock badge */}
+            {/* Selected Product/Variant/Plan stock badge */}
             {currentProduct && (
               <div className='flex items-center justify-between gap-2 pt-2 border-t border-border/50 text-[11px] text-muted-foreground'>
                 <span className='truncate'>
-                  موجودی فعلی در انبار:{' '}
+                  هدف انبار:{' '}
                   <span className='font-medium text-foreground'>
-                    {currentPlan ? currentPlan.name : currentProduct.title}
+                    {currentProduct.title}
+                    {currentVariant ? ` » نوع ${currentVariant.name}` : ''}
+                    {currentPlan ? ` (${currentPlan.name})` : ''}
                   </span>
                 </span>
                 <span className='inline-flex items-center gap-1 font-sans font-medium text-primary bg-primary/10 px-2.5 py-0.5 rounded-md'>
@@ -723,7 +805,7 @@ export function AddAccountDialog({
         </div>
 
         {/* Footer Actions */}
-        <div className='p-4 sm:p-5 border-t border-border/60 bg-muted/10 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5'>
+        <div className='p-4 sm:p-5 border-t border-border/60 bg-muted/10 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 shrink-0'>
           <Button
             type='button'
             variant='outline'

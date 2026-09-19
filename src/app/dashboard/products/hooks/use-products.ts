@@ -210,18 +210,17 @@ export function useProducts() {
   }
 
   // --- Plan Actions ---
-  const openCreatePlanDialog = (productId: string, variantId?: string | null) => {
+  const openCreatePlanDialog = (productId: string) => {
     setIsEditingPlan(false)
     setCurrentPlanId(null)
     setPlanTargetProductId(productId)
-    setFormPlanVariantId(variantId || null)
+    setFormPlanVariantId(null)
     const currentProd = products.find((p) => p.id === productId)
-    const linkedVariant = variantId ? currentProd?.variants?.find((v) => v.id === variantId) : null
 
     setFormPlanName('')
-    setFormPlanType(linkedVariant ? linkedVariant.name : '')
-    setFormPlanDuration(linkedVariant ? String(linkedVariant.duration) : '1')
-    setFormPlanPrice(linkedVariant ? String(linkedVariant.discountedPrice || linkedVariant.price) : '')
+    setFormPlanType('')
+    setFormPlanDuration('1')
+    setFormPlanPrice('')
     setFormPlanFulfillmentType('ACTIVATION_LINK')
     setFormPlanFields([])
     setFormPlanActive(true)
@@ -234,7 +233,7 @@ export function useProducts() {
     setIsEditingPlan(true)
     setCurrentPlanId(plan.id)
     setPlanTargetProductId(plan.productId)
-    setFormPlanVariantId(plan.variantId || null)
+    setFormPlanVariantId(null)
     setFormPlanName(plan.name)
     setFormPlanType(plan.planType || '')
     setFormPlanDuration(String(plan.duration))
@@ -267,9 +266,9 @@ export function useProducts() {
       const payload = {
         id: currentPlanId,
         productId: planTargetProductId,
-        variantId: formPlanVariantId || null,
+        variantId: null,
         name: formPlanName.trim(),
-        planType: formPlanType.trim() || null,
+        planType: null,
         duration: durationNum,
         price: priceNum,
         fulfillmentType: formPlanFulfillmentType,

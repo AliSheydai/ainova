@@ -8,6 +8,7 @@ export interface EnrichedProductMetrics {
   stock: number
   purchaseCount: number
   planStocks: Record<string, number>
+  variantStocks?: Record<string, number>
 }
 
 export class FulfillmentService {
@@ -27,6 +28,7 @@ export class FulfillmentService {
     products: Array<{
       id: string
       plans?: Array<{ id: string; fulfillmentType?: FulfillmentType | string }>
+      variants?: Array<{ id: string }>
     }>
   ): Promise<Map<string, EnrichedProductMetrics>> {
     const resultMap = new Map<string, EnrichedProductMetrics>()
@@ -45,9 +47,9 @@ export class FulfillmentService {
         },
         _count: { _all: true },
       }),
-      // 2. Grouped available inventory items per product, plan, and type
+      // 2. Grouped available inventory items per product, plan, variant, and type
       prisma.inventoryItem.groupBy({
-        by: ['productId', 'planId', 'type'],
+        by: ['productId', 'planId', 'variantId', 'type'],
         where: {
           productId: { in: productIds },
           status: 'AVAILABLE',
@@ -66,9 +68,22 @@ export class FulfillmentService {
     for (const prod of products) {
       const purchaseCount = purchaseCountMap.get(prod.id) || 0
       const planStocks: Record<string, number> = {}
+      const variantStocks: Record<string, number> = {}
       let totalProductStock = 0
 
       const activePlans = prod.plans || []
+      const productVariants = prod.variants || []
+
+      // Calculate variant stocks
+      for (const variant of productVariants) {
+        let vStock = 0
+        for (const inv of inventoryCounts) {
+          if (inv.productId === prod.id && inv.variantId === variant.id) {
+            vStock += inv._count._all
+          }
+        }
+        variantStocks[variant.id] = vStock
+      }
 
       if (activePlans.length > 0) {
         for (const plan of activePlans) {
@@ -111,6 +126,7 @@ export class FulfillmentService {
         stock: totalProductStock,
         purchaseCount,
         planStocks,
+        variantStocks,
       })
     }
 
@@ -118,10 +134,26 @@ export class FulfillmentService {
   }
 
   /**
-   * Calculates real-time available stock for a specific plan with caching.
+   * Calculates real-time available stock for a specific product variant with caching.
    */
-  static async getPlanStock(planId: string): Promise<number> {
-    const cacheKey = `stock:plan:${planId}`
+  static async getVariantStock(variantId: string): Promise<number> {
+    const cacheKey = `stock:variant:${variantId}`
+    return memoryCache.getOrSet(cacheKey, 30, async () => {
+      return await prisma.inventoryItem.count({
+        where: {
+          variantId,
+          status: 'AVAILABLE',
+        },
+      })
+    })
+  }
+
+  /**
+   * Calculates real-time available stock for a specific plan with caching.
+   * If variantId is provided, accurately prioritizes variant-specific stock.
+   */
+  static async getPlanStock(planId: string, variantId?: string | null): Promise<number> {
+    const cacheKey = `stock:plan:${planId}:${variantId || 'all'}`
     return memoryCache.getOrSet(cacheKey, 30, async () => {
       const plan = await prisma.plan.findUnique({
         where: { id: planId },
@@ -131,40 +163,57 @@ export class FulfillmentService {
 
       const fulfillmentType: FulfillmentType = plan.fulfillmentType || 'ACTIVATION_LINK'
 
-      switch (fulfillmentType) {
-        case 'ACTIVATION_LINK': {
-          return await prisma.inventoryItem.count({
-            where: {
-              type: 'ACTIVATION_LINK',
-              status: 'AVAILABLE',
-              OR: [
-                { planId: plan.id },
-                { productId: plan.productId, planId: null },
-              ],
-            },
-          })
-        }
-
-        case 'PRE_CREATED_ACCOUNT': {
-          return await prisma.inventoryItem.count({
-            where: {
-              type: 'PRE_CREATED_ACCOUNT',
-              status: 'AVAILABLE',
-              OR: [
-                { planId: plan.id },
-                { productId: plan.productId, planId: null },
-              ],
-            },
-          })
-        }
-
-        case 'CUSTOMER_PROVISIONING':
-        case 'MANUAL':
-        default: {
-          // Digital on-demand services: always available
-          return 999
-        }
+      if (
+        fulfillmentType === 'CUSTOMER_PROVISIONING' ||
+        fulfillmentType === 'MANUAL' ||
+        fulfillmentType === 'DOWNLOAD' ||
+        fulfillmentType === 'ACTIVATION_CODE'
+      ) {
+        return 999
       }
+
+      const effectiveVariantId = variantId || plan.variantId || null
+
+      if (effectiveVariantId) {
+        // First check stock allocated specifically to this variant
+        const variantCount = await prisma.inventoryItem.count({
+          where: {
+            type: fulfillmentType,
+            variantId: effectiveVariantId,
+            status: 'AVAILABLE',
+            OR: [
+              { planId: plan.id },
+              { productId: plan.productId, planId: null },
+            ],
+          },
+        })
+
+        if (variantCount > 0) return variantCount
+
+        // Fallback: Check general stock with variantId null
+        return await prisma.inventoryItem.count({
+          where: {
+            type: fulfillmentType,
+            variantId: null,
+            status: 'AVAILABLE',
+            OR: [
+              { planId: plan.id },
+              { productId: plan.productId, planId: null },
+            ],
+          },
+        })
+      }
+
+      return await prisma.inventoryItem.count({
+        where: {
+          type: fulfillmentType,
+          status: 'AVAILABLE',
+          OR: [
+            { planId: plan.id },
+            { productId: plan.productId, planId: null },
+          ],
+        },
+      })
     })
   }
 
@@ -178,6 +227,7 @@ export class FulfillmentService {
         where: { id: productId },
         include: {
           plans: { where: { active: true } },
+          variants: { where: { active: true } },
         },
       })
 
@@ -191,7 +241,13 @@ export class FulfillmentService {
         return planStocks.reduce((sum, s) => sum + s, 0)
       }
 
-      return 0
+      // Count unassigned product inventory items
+      return await prisma.inventoryItem.count({
+        where: {
+          productId,
+          status: 'AVAILABLE',
+        },
+      })
     })
   }
 
@@ -221,7 +277,7 @@ export class FulfillmentService {
     adminUserId,
   }: FulfillOrderOptions): Promise<FulfillOrderResult> {
     const txResult = await prisma.$transaction<FulfillOrderResult>(async (tx) => {
-      // 1. Fetch order with product, plan, delivery, inventoryItem and payment
+      // 1. Fetch order with product, plan, variant, delivery, inventoryItem and payment
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: {
@@ -229,6 +285,7 @@ export class FulfillmentService {
           plan: {
             include: { product: true },
           },
+          variant: true,
           payment: true,
           activationLink: true,
           inventoryItem: true,

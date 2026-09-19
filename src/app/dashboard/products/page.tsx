@@ -630,8 +630,6 @@ export default function AdminProductsPage() {
         setFormPlanVariantId={setFormPlanVariantId}
         formPlanName={formPlanName}
         setFormPlanName={setFormPlanName}
-        formPlanType={formPlanType}
-        setFormPlanType={setFormPlanType}
         formPlanDuration={formPlanDuration}
         setFormPlanDuration={setFormPlanDuration}
         formPlanPrice={formPlanPrice}

@@ -22,7 +22,6 @@ interface ProductVariantsAccordionProps {
   onAddVariant: (productId: string) => void
   onEditVariant: (variant: VariantItem) => void
   onDeleteVariant: (variantId: string) => void
-  onAddPlanForVariant?: (productId: string, variantId: string) => void
 }
 
 export function ProductVariantsAccordion({
@@ -32,7 +31,6 @@ export function ProductVariantsAccordion({
   onAddVariant,
   onEditVariant,
   onDeleteVariant,
-  onAddPlanForVariant,
 }: ProductVariantsAccordionProps) {
   return (
     <div className='bg-muted/15 p-4 sm:p-5 space-y-3 border-b border-border/40'>
@@ -83,9 +81,6 @@ export function ProductVariantsAccordion({
               ? Math.round(((variant.price - variant.discountedPrice!) / variant.price) * 100)
               : 0
 
-            // Count plans associated with this variant
-            const linkedPlans = plans.filter((p) => p.variantId === variant.id)
-            const plansCount = linkedPlans.length > 0 ? linkedPlans.length : variant._count?.plans || 0
 
             const features = Array.isArray(variant.features) ? variant.features : []
 
@@ -192,25 +187,6 @@ export function ProductVariantsAccordion({
                     </div>
                   )}
 
-                  {/* Associated Plans Metric */}
-                  <div className='flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40'>
-                    <span>پلن‌های متصل (نحوه تحویل):</span>
-                    <div className='flex items-center gap-1.5'>
-                      <Badge variant='outline' className='text-[10px] font-sans'>
-                        {toPersianDigits(plansCount)} پلن
-                      </Badge>
-                      {onAddPlanForVariant && (
-                        <button
-                          type='button'
-                          onClick={() => onAddPlanForVariant(productId, variant.id)}
-                          className='text-[10px] text-primary hover:underline'
-                          title='افزودن پلن جدید برای این نوع محصول'
-                        >
-                          + پلن
-                        </button>
-                      )}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Actions Footer */}

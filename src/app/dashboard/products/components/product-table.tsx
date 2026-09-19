@@ -251,7 +251,6 @@ export function ProductTable({
                   onAddVariant={onAddVariant}
                   onEditVariant={onEditVariant}
                   onDeleteVariant={onDeleteVariant}
-                  onAddPlanForVariant={onAddPlan}
                 />
                 <ProductPlansAccordion
                   plans={plans}
