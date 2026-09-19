@@ -165,28 +165,28 @@ function JibitGatewayContent() {
       </header>
 
       {/* Main Container */}
-      <main className='w-full max-w-lg mx-auto my-auto px-4 py-8 sm:py-10'>
-        <Card className='border-border/60 shadow-xl bg-card/90 backdrop-blur-sm relative overflow-hidden'>
+      <main className='w-full max-w-lg mx-auto my-auto px-3.5 sm:px-4 py-6 sm:py-10'>
+        <Card className='border-border/60 shadow-xl bg-card/90 backdrop-blur-sm relative overflow-hidden py-4 sm:py-6 gap-4 sm:gap-6'>
           {/* Top Blue Accent Strip */}
           <div className='h-1.5 w-full bg-gradient-to-r from-blue-600 via-primary to-indigo-600' />
 
-          <CardHeader className='pb-4 pt-6'>
-            <div className='flex items-start justify-between gap-4'>
+          <CardHeader className='px-4 sm:px-6 pb-2 sm:pb-4 pt-1 sm:pt-4'>
+            <div className='flex items-start justify-between gap-3 sm:gap-4'>
               <div>
-                <CardTitle className='text-xl font-bold flex items-center gap-2 text-foreground'>
+                <CardTitle className='text-lg sm:text-xl font-bold flex items-center gap-2 text-foreground'>
                   <span>شبیه‌ساز درگاه جیبیت</span>
                 </CardTitle>
                 <CardDescription className='mt-1 text-xs text-muted-foreground leading-relaxed'>
                   این درگاه آزمایشی جهت اعتبارسنجی فرآیند خرید طبق مستندات فنی جیبیت (document.json) آماده شده است.
                 </CardDescription>
               </div>
-              <div className='p-2.5 rounded-xl bg-primary/10 text-primary shrink-0 border border-primary/20'>
-                <ShieldCheck className='size-6' />
+              <div className='p-2 sm:p-2.5 rounded-xl bg-primary/10 text-primary shrink-0 border border-primary/20'>
+                <ShieldCheck className='size-5 sm:size-6' />
               </div>
             </div>
 
             {/* Mobile Timer Badge */}
-            <div className='sm:hidden mt-3 flex items-center justify-between text-xs text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg'>
+            <div className='sm:hidden mt-3 flex items-center justify-between text-xs text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50'>
               <span className='flex items-center gap-1.5'>
                 <Clock className='size-3.5 text-primary' />
                 زمان انقضای نشست:
@@ -197,55 +197,73 @@ function JibitGatewayContent() {
             </div>
           </CardHeader>
 
-          <CardContent className='space-y-4 text-sm'>
+          <CardContent className='px-4 sm:px-6 space-y-4 text-sm'>
             {/* Order & Payment Details Box */}
-            <div className='rounded-xl border border-border/70 bg-muted/30 p-3.5 space-y-2.5'>
-              <div className='flex justify-between items-center text-xs'>
-                <span className='text-muted-foreground'>شناسه خرید جیبیت (Purchase ID):</span>
-                <span className='font-mono font-semibold text-foreground dir-ltr'>
+            <div className='rounded-xl border border-border/70 bg-muted/30 p-3 sm:p-4 divide-y divide-border/50'>
+              {/* Row 1: Purchase ID */}
+              <div className='flex items-center justify-between gap-2 py-2 first:pt-0 text-xs'>
+                <span className='text-muted-foreground shrink-0'>شناسه خرید جیبیت:</span>
+                <Badge
+                  variant='secondary'
+                  className='font-mono font-semibold text-foreground dir-ltr text-xs px-2.5 py-0.5 bg-background/80 border border-border/70 shadow-2xs'
+                  title={purchaseId}
+                >
                   {purchaseId}
-                </span>
+                </Badge>
               </div>
 
-              <div className='flex justify-between items-center text-xs'>
-                <span className='text-muted-foreground'>شماره سفارش:</span>
-                <span className='font-mono text-foreground font-semibold dir-ltr'>
+              {/* Row 2: Order ID */}
+              <div className='flex items-center justify-between gap-2 py-2 text-xs'>
+                <span className='text-muted-foreground shrink-0'>شماره سفارش:</span>
+                <Badge
+                  variant='secondary'
+                  className='font-mono font-semibold text-foreground dir-ltr text-xs px-2.5 py-0.5 bg-background/80 border border-border/70 shadow-2xs'
+                  title={orderId}
+                >
                   #{orderId.slice(-8).toUpperCase()}
-                </span>
+                </Badge>
               </div>
 
+              {/* Row 3: Description (بابت) */}
               {description && (
-                <div className='flex justify-between items-center text-xs'>
-                  <span className='text-muted-foreground'>بابت:</span>
-                  <span className='text-foreground font-medium truncate max-w-[200px]'>
+                <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3 py-2 text-xs'>
+                  <span className='text-muted-foreground shrink-0 pt-0.5'>بابت:</span>
+                  <span
+                    className='text-foreground font-medium sm:text-left leading-relaxed break-words'
+                    dir='auto'
+                  >
                     {description}
                   </span>
                 </div>
               )}
 
               {mobile && (
-                <div className='flex justify-between items-center text-xs'>
-                  <span className='text-muted-foreground'>شماره موبایل خریدار:</span>
-                  <span className='font-mono text-foreground dir-ltr'>
+                <div className='flex items-center justify-between gap-2 py-2 text-xs'>
+                  <span className='text-muted-foreground shrink-0'>شماره موبایل خریدار:</span>
+                  <span className='font-mono text-foreground font-medium dir-ltr'>
                     {mobile}
                   </span>
                 </div>
               )}
 
-              <div className='pt-2.5 border-t border-border/60 flex justify-between items-baseline'>
+              {/* Row 5: Payable Amount */}
+              <div className='pt-3 flex items-center justify-between gap-2'>
                 <span className='text-xs text-muted-foreground font-medium'>
                   مبلغ قابل پرداخت:
                 </span>
-                <div className='text-left'>
-                  <div className='text-xl font-bold text-primary'>
-                    {amountToman.toLocaleString('fa-IR')}{' '}
+                <div className='flex flex-col items-end gap-1'>
+                  <div className='text-lg sm:text-xl font-bold text-primary flex items-baseline gap-1'>
+                    <span>{amountToman.toLocaleString('fa-IR')}</span>
                     <span className='text-xs font-normal text-muted-foreground'>
                       تومان
                     </span>
                   </div>
-                  <div className='text-[11px] text-muted-foreground font-mono'>
+                  <Badge
+                    variant='outline'
+                    className='text-[10.5px] font-mono font-medium text-muted-foreground dir-ltr px-1.5 py-0.5 border-border/70 bg-background/80'
+                  >
                     ({amountRials.toLocaleString('en-US')} IRR)
-                  </div>
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -253,7 +271,7 @@ function JibitGatewayContent() {
             {/* Sandbox Notice Box (Blue Theme) */}
             <div className='flex items-start gap-2.5 p-3 rounded-lg bg-primary/10 border border-primary/20 text-xs text-foreground/90'>
               <Info className='size-4 shrink-0 mt-0.5 text-primary' />
-              <p className='leading-relaxed'>
+              <p className='leading-relaxed text-[11.5px] sm:text-xs'>
                 <strong>محیط آزمایشی جیبیت:</strong> عملکرد سیستم را با دو دکمه زیر بررسی نمایید.
                 با زدن <b>خرید موفق</b>، تراکنش به عنوان پرداخت‌شده تایید شده و تحویل سفارش انجام خواهد شد.
                 با زدن <b>خرید ناموفق</b>، سناریوی انصراف یا خطای درگاه بررسی می‌شود.
@@ -262,7 +280,7 @@ function JibitGatewayContent() {
           </CardContent>
 
           {/* Action Buttons: The Two Required Buttons (Blue Theme) */}
-          <CardFooter className='flex flex-col gap-2.5 pt-2 pb-6'>
+          <CardFooter className='px-4 sm:px-6 flex flex-col gap-2.5 pt-1 pb-4 sm:pb-6'>
             {/* 1. خرید موفق (آبی اصلی سایت) */}
             <Button
               id='btn-jibit-success'

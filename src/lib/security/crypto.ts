@@ -87,3 +87,18 @@ export function maskCredential(secret: string): string {
   if (secret.length <= 4) return '••••••••'
   return `${secret.slice(0, 2)}••••${secret.slice(-2)}`
 }
+
+/**
+ * Detects any encrypted credential (iv:authTag:cipher) embedded within a larger string
+ * (e.g. "ایمیل: ... | رمزعبور: a1...:b2...:c3...") and replaces it with decrypted plain text.
+ */
+export function decryptEmbeddedCredentials(text: string): string {
+  if (!text || typeof text !== 'string') return text
+  return text.replace(/\b([0-9a-fA-F]{24}:[0-9a-fA-F]{32}:[0-9a-fA-F]+)\b/g, (match) => {
+    try {
+      return decryptCredential(match)
+    } catch {
+      return match
+    }
+  })
+}

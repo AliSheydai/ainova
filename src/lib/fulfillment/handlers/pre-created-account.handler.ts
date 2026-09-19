@@ -57,12 +57,15 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
         order.product?.title ||
         'سرویس'
 
+      const rawCustomerPassword = customerPassword ? decryptCredential(customerPassword) : ''
+
       const deliveryData: CustomerProvisioningDeliveryData = {
         email: customerEmail,
+        password: rawCustomerPassword || undefined,
         serviceName,
         provisionDetails: `اشتراک ${serviceName} پس از بررسی و تأیید ادمین روی حساب «${customerEmail}» فعال خواهد شد.`,
-        accountInfo: customerPassword
-          ? `ایمیل: ${customerEmail} | رمزعبور: ${encryptCredential(customerPassword)}`
+        accountInfo: rawCustomerPassword
+          ? `ایمیل: ${customerEmail} | رمزعبور: ${rawCustomerPassword}`
           : `ایمیل: ${customerEmail}`,
         status: 'PENDING',
       }

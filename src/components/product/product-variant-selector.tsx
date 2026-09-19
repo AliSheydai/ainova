@@ -59,7 +59,7 @@ export function ProductVariantSelector({
         <div
           role='radiogroup'
           aria-labelledby='variant-selector-heading'
-          className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1.5'
+          className='grid grid-cols-2 gap-3 pt-1.5'
         >
           {variants.map((variant) => {
             const isSelected = selectedVariant?.id === variant.id

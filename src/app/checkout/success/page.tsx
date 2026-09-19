@@ -92,6 +92,8 @@ function SuccessContent() {
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedUser, setCopiedUser] = useState(false)
   const [copiedPass, setCopiedPass] = useState(false)
+  const [copiedOrderId, setCopiedOrderId] = useState(false)
+  const [copiedRefId, setCopiedRefId] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [pollCount, setPollCount] = useState(0)
 
@@ -135,7 +137,7 @@ function SuccessContent() {
     }
   }, [order, pollCount])
 
-  const copyText = (text: string, type: 'link' | 'user' | 'pass') => {
+  const copyText = (text: string, type: 'link' | 'user' | 'pass' | 'orderId' | 'refId') => {
     navigator.clipboard.writeText(text)
     if (type === 'link') {
       setCopiedLink(true)
@@ -146,6 +148,12 @@ function SuccessContent() {
     } else if (type === 'pass') {
       setCopiedPass(true)
       setTimeout(() => setCopiedPass(false), 2000)
+    } else if (type === 'orderId') {
+      setCopiedOrderId(true)
+      setTimeout(() => setCopiedOrderId(false), 2000)
+    } else if (type === 'refId') {
+      setCopiedRefId(true)
+      setTimeout(() => setCopiedRefId(false), 2000)
     }
     toast.success('کپی شد.')
   }
@@ -255,33 +263,67 @@ function SuccessContent() {
 
         <CardContent className='space-y-5 sm:space-y-6 pt-2 px-4 sm:px-6'>
           {/* Order Brief Summary */}
-          <div className='rounded-2xl border border-border/70 bg-muted/30 p-3.5 sm:p-5'>
-            <div className='grid grid-cols-2 gap-3 sm:gap-3.5 text-xs sm:text-sm'>
+          <div className='rounded-2xl border border-border/70 bg-muted/30 p-3.5 sm:p-5 space-y-4'>
+            {/* Product Title (Full width, no truncation/ellipsis) */}
+            <div className='border-b border-border/50 pb-3'>
+              <span className='text-muted-foreground block text-[11px] sm:text-xs mb-1'>محصول خریداری‌شده:</span>
+              <span className='font-bold text-foreground text-sm sm:text-base leading-relaxed break-words block'>
+                {productName}
+                {order.variant?.name ? ` — ${order.variant.name}` : ''}
+                {planName ? ` (${planName})` : ''}
+              </span>
+            </div>
+
+            {/* Details Grid */}
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 items-start text-xs sm:text-sm'>
               <div>
-                <span className='text-muted-foreground block text-[11px] sm:text-xs'>محصول خریداری‌شده:</span>
-                <span className='font-bold text-foreground text-xs sm:text-sm mt-0.5 block truncate'>
-                  {productName}
-                  {order.variant?.name ? ` — ${order.variant.name}` : ''}
-                  {planName ? ` (${planName})` : ''}
-                </span>
-              </div>
-              <div>
-                <span className='text-muted-foreground block text-[11px] sm:text-xs'>مبلغ پرداختی:</span>
-                <span className='font-extrabold text-primary text-xs sm:text-sm mt-0.5 block font-sans'>
+                <span className='text-muted-foreground block text-[11px] sm:text-xs mb-1.5'>مبلغ پرداختی:</span>
+                <span className='font-extrabold text-primary text-sm sm:text-base block font-sans'>
                   {new Intl.NumberFormat('fa-IR').format(order.amount)} تومان
                 </span>
               </div>
+
               <div>
-                <span className='text-muted-foreground block text-[11px] sm:text-xs'>شناسه سفارش:</span>
-                <span className='font-mono font-bold text-foreground text-xs sm:text-sm mt-0.5 block select-all truncate'>
-                  {order.id}
-                </span>
+                <span className='text-muted-foreground block text-[11px] sm:text-xs mb-1.5'>شناسه سفارش:</span>
+                <Badge
+                  variant='secondary'
+                  onClick={() => copyText(order.id, 'orderId')}
+                  className='cursor-pointer font-mono font-semibold text-foreground bg-secondary/90 hover:bg-secondary border border-border/70 text-[11px] sm:text-xs px-2.5 py-1 rounded-lg select-all max-w-full gap-1.5 transition-colors inline-flex items-center'
+                  title='کلیک جهت کپی شناسه سفارش'
+                >
+                  <span className='truncate'>{order.id}</span>
+                  {copiedOrderId ? (
+                    <Check className='size-3 text-primary shrink-0' />
+                  ) : (
+                    <Copy className='size-3 text-muted-foreground shrink-0' />
+                  )}
+                </Badge>
               </div>
+
               <div>
-                <span className='text-muted-foreground block text-[11px] sm:text-xs'>کد پیگیری بانکی (RefId):</span>
-                <span className='font-mono font-bold text-primary text-xs sm:text-sm mt-0.5 block select-all truncate'>
-                  {order.payment?.refId || '—'}
-                </span>
+                <span className='text-muted-foreground block text-[11px] sm:text-xs mb-1.5'>کد پیگیری بانکی (RefId):</span>
+                {order.payment?.refId ? (
+                  <Badge
+                    variant='outline'
+                    onClick={() => copyText(order.payment!.refId!, 'refId')}
+                    className='cursor-pointer font-mono font-semibold text-primary bg-primary/10 hover:bg-primary/15 border-primary/30 text-[11px] sm:text-xs px-2.5 py-1 rounded-lg select-all max-w-full gap-1.5 transition-colors inline-flex items-center'
+                    title='کلیک جهت کپی کد پیگیری'
+                  >
+                    <span>{order.payment.refId}</span>
+                    {copiedRefId ? (
+                      <Check className='size-3 text-primary shrink-0' />
+                    ) : (
+                      <Copy className='size-3 text-primary/70 shrink-0' />
+                    )}
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant='outline'
+                    className='font-mono text-muted-foreground border-border/60 text-xs px-2.5 py-1 rounded-lg'
+                  >
+                    —
+                  </Badge>
+                )}
               </div>
             </div>
           </div>

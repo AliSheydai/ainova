@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { OrderStatus, type FulfillmentType, DeliveryStatus, type Prisma } from '@prisma/client'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
-import { decryptCredential } from '@/lib/security/crypto'
+import { decryptCredential, isEncryptedCredential, decryptEmbeddedCredentials } from '@/lib/security/crypto'
 import { AdminNotificationService } from '@/lib/notifications/admin-notification'
 import { UserNotificationService } from '@/lib/notifications/user-notification-service'
 import { NotificationType } from '@prisma/client'
@@ -199,24 +199,47 @@ export async function GET(req: NextRequest) {
       }),
     ])
 
-    // Decrypt credentials for delivery
+    // Decrypt credentials for delivery and customer checkoutData (so admin can view customer's Gmail password to activate)
     const safeOrders = orders.map((ord) => {
+      let delivery = ord.delivery
       if (ord.delivery && ord.delivery.data) {
         const rawData = ord.delivery.data as Record<string, any>
-        if (rawData.password) {
-          return {
-            ...ord,
-            delivery: {
-              ...ord.delivery,
-              data: {
-                ...rawData,
-                password: decryptCredential(rawData.password),
-              },
-            },
-          }
+        const decryptedData = { ...rawData }
+        if (typeof decryptedData.password === 'string') {
+          decryptedData.password = decryptCredential(decryptedData.password)
+        }
+        if (typeof decryptedData.customer_password === 'string') {
+          decryptedData.customer_password = decryptCredential(decryptedData.customer_password)
+        }
+        if (typeof decryptedData.accountInfo === 'string') {
+          decryptedData.accountInfo = decryptEmbeddedCredentials(decryptedData.accountInfo)
+        }
+        delivery = {
+          ...ord.delivery,
+          data: decryptedData,
         }
       }
-      return ord
+
+      let checkoutData = ord.checkoutData as Record<string, any> | null
+      if (checkoutData && typeof checkoutData === 'object') {
+        const decryptedCheckout: Record<string, any> = { ...checkoutData }
+        for (const [key, value] of Object.entries(decryptedCheckout)) {
+          if (typeof value === 'string') {
+            if (isEncryptedCredential(value) || key.toLowerCase().includes('pass')) {
+              decryptedCheckout[key] = decryptCredential(value)
+            } else {
+              decryptedCheckout[key] = decryptEmbeddedCredentials(value)
+            }
+          }
+        }
+        checkoutData = decryptedCheckout
+      }
+
+      return {
+        ...ord,
+        delivery,
+        checkoutData,
+      }
     })
 
     const totalPages = Math.ceil(totalFiltered / limit) || 1

@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { InventoryType, LinkStatus, type Prisma } from '@prisma/client'
-import { encryptCredential } from '@/lib/security/crypto'
+import { encryptCredential, decryptCredential } from '@/lib/security/crypto'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
 export async function GET(req: NextRequest) {
@@ -47,9 +47,26 @@ export async function GET(req: NextRequest) {
       prisma.inventoryItem.count({ where: { ...where, status: 'USED' } }),
     ])
 
+    // Decrypt passwords for admin view
+    const safeItems = items.map((item) => {
+      if (item.data && typeof item.data === 'object') {
+        const rawData = item.data as Record<string, any>
+        if (rawData.password && typeof rawData.password === 'string') {
+          return {
+            ...item,
+            data: {
+              ...rawData,
+              password: decryptCredential(rawData.password),
+            },
+          }
+        }
+      }
+      return item
+    })
+
     return NextResponse.json({
       success: true,
-      items,
+      items: safeItems,
       stats: {
         total: items.length,
         available: totalAvailable,

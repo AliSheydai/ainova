@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
-import { decryptCredential } from '@/lib/security/crypto'
+import { decryptCredential, isEncryptedCredential, decryptEmbeddedCredentials } from '@/lib/security/crypto'
 
 export async function GET(
   _req: NextRequest,
@@ -76,19 +76,39 @@ export async function GET(
       )
     }
 
-    // Decrypt sensitive credentials in delivery data if present
+    // Decrypt sensitive credentials in delivery data and checkoutData if present
     let safeDelivery = order.delivery
     if (order.delivery && order.delivery.data) {
       const rawData = order.delivery.data as Record<string, unknown>
-      if (typeof rawData.password === 'string') {
-        safeDelivery = {
-          ...order.delivery,
-          data: {
-            ...rawData,
-            password: decryptCredential(rawData.password),
-          },
+      const decryptedData = { ...rawData }
+      if (typeof decryptedData.password === 'string') {
+        decryptedData.password = decryptCredential(decryptedData.password)
+      }
+      if (typeof decryptedData.customer_password === 'string') {
+        decryptedData.customer_password = decryptCredential(decryptedData.customer_password)
+      }
+      if (typeof decryptedData.accountInfo === 'string') {
+        decryptedData.accountInfo = decryptEmbeddedCredentials(decryptedData.accountInfo)
+      }
+      safeDelivery = {
+        ...order.delivery,
+        data: decryptedData as any,
+      }
+    }
+
+    let safeCheckoutData = order.checkoutData as Record<string, any> | null
+    if (safeCheckoutData && typeof safeCheckoutData === 'object') {
+      const decryptedCheckout: Record<string, any> = { ...safeCheckoutData }
+      for (const [key, value] of Object.entries(decryptedCheckout)) {
+        if (typeof value === 'string') {
+          if (isEncryptedCredential(value) || key.toLowerCase().includes('pass')) {
+            decryptedCheckout[key] = decryptCredential(value)
+          } else {
+            decryptedCheckout[key] = decryptEmbeddedCredentials(value)
+          }
         }
       }
+      safeCheckoutData = decryptedCheckout
     }
 
     const response = NextResponse.json({
@@ -96,6 +116,7 @@ export async function GET(
       order: {
         ...order,
         delivery: safeDelivery,
+        checkoutData: safeCheckoutData,
       },
     })
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')

@@ -208,6 +208,16 @@ const DELIVERY_FIELD_LABELS: Record<string, string> = {
   note: 'یادداشت',
 }
 
+const CHECKOUT_FIELD_LABELS: Record<string, string> = {
+  customer_email: 'آدرس جیمیل خریدار',
+  customer_gmail: 'آدرس جیمیل خریدار',
+  customer_password: 'رمز عبور اکانت جیمیل',
+  customerPassword: 'رمز عبور اکانت جیمیل',
+  password: 'رمز عبور',
+  delivery_preference: 'نحوه تحویل انتخابی',
+  customer_correction_note: 'یادداشت اصلاح اطلاعات توسط خریدار',
+}
+
 function isLtrValue(val: string): boolean {
   if (!val) return false
   const trimmed = val.trim()
@@ -2177,30 +2187,37 @@ export default function AdminOrdersPage() {
                     داده‌های وارد شده توسط مشتری هنگام خرید (Checkout Data):
                   </h4>
                   <div className='grid grid-cols-1 gap-1 text-xs bg-background/90 p-3 rounded-lg border border-border/70 min-w-0 overflow-hidden'>
-                    {Object.entries(selectedOrder.checkoutData).map(([k, v]) => (
-                      <div
-                        key={k}
-                        className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 border-b border-border/30 last:border-b-0 min-w-0'
-                      >
-                        <span className='text-muted-foreground font-medium text-[11px] sm:text-xs shrink-0'>{k}:</span>
-                        <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1 max-w-full'>
-                          <span
-                            className='font-mono font-bold text-foreground select-all text-xs break-all sm:truncate min-w-0'
-                            dir={isLtrValue(String(v)) ? 'ltr' : undefined}
-                          >
-                            {String(v)}
+                    {Object.entries(selectedOrder.checkoutData).map(([k, v]) => {
+                      const isPass = k.toLowerCase().includes('pass')
+                      return (
+                        <div
+                          key={k}
+                          className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 border-b border-border/30 last:border-b-0 min-w-0'
+                        >
+                          <span className={`font-medium text-[11px] sm:text-xs shrink-0 flex items-center gap-1.5 ${isPass ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                            {isPass ? <Key className='size-3 text-primary shrink-0' /> : null}
+                            {k.toLowerCase().includes('email') || k.toLowerCase().includes('gmail') ? <User className='size-3 text-primary shrink-0' /> : null}
+                            <span>{CHECKOUT_FIELD_LABELS[k] || k}:</span>
                           </span>
-                          <button
-                            type='button'
-                            onClick={() => handleCopyText(String(v), `checkout-${k}`)}
-                            className='text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0'
-                            title='کپی'
-                          >
-                            <Copy className='size-3' />
-                          </button>
+                          <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1 max-w-full'>
+                            <span
+                              className={`font-mono font-bold select-all text-xs break-all sm:truncate min-w-0 ${isPass ? 'text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20' : 'text-foreground'}`}
+                              dir={isLtrValue(String(v)) ? 'ltr' : undefined}
+                            >
+                              {String(v)}
+                            </span>
+                            <button
+                              type='button'
+                              onClick={() => handleCopyText(String(v), `checkout-${k}`, isPass ? 'رمز عبور کپی شد.' : undefined)}
+                              className='text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-muted shrink-0'
+                              title='کپی'
+                            >
+                              <Copy className='size-3' />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -2479,9 +2496,19 @@ export default function AdminOrdersPage() {
                 {/* Customer Account Info Banner — for PRE_CREATED_ACCOUNT with customer's own Gmail */}
                 {(() => {
                   const cdata = selectedOrder.checkoutData as Record<string, any> | null
-                  const customerEmail = cdata?.customer_email || cdata?.customer_gmail
+                  const delivData = selectedOrder.delivery?.data as Record<string, any> | null
+                  const customerEmail =
+                    cdata?.customer_email ||
+                    cdata?.customer_gmail ||
+                    cdata?.email ||
+                    delivData?.email
+                  const customerPassword =
+                    cdata?.customer_password ||
+                    cdata?.customerPassword ||
+                    cdata?.password ||
+                    delivData?.password
                   const isPending = selectedOrder.status === 'PAID' && selectedOrder.fulfillmentStatus !== 'COMPLETED'
-                  if (!customerEmail) return null
+                  if (!customerEmail && !customerPassword) return null
                   return (
                     <div
                       className='rounded-xl border border-primary/25 bg-primary/5 p-3.5 space-y-3 min-w-0 overflow-hidden'
@@ -2538,37 +2565,53 @@ export default function AdminOrdersPage() {
                         </div>
                       )}
 
-                      <div className='text-[11px] space-y-1 bg-background/70 rounded-lg p-2.5 border border-border/50 min-w-0 overflow-hidden'>
-                        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0'>
-                          <span className='text-muted-foreground shrink-0'>جیمیل مشتری:</span>
-                          <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1'>
-                            <span className='font-mono font-bold text-foreground break-all select-all min-w-0' dir='ltr'>
-                              {customerEmail}
+                      <div className='text-[11px] space-y-2 bg-background/90 rounded-lg p-3 border border-border/70 min-w-0 overflow-hidden shadow-2xs'>
+                        {customerEmail && (
+                          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0'>
+                            <span className='text-muted-foreground font-medium shrink-0 flex items-center gap-1.5'>
+                              <User className='size-3 text-primary shrink-0' />
+                              <span>جیمیل خریدار:</span>
                             </span>
-                            <button
-                              type='button'
-                              onClick={() => handleCopyText(customerEmail, 'cust-gmail')}
-                              className='text-muted-foreground hover:text-primary p-1 shrink-0'
-                              title='کپی'
-                            >
-                              <Copy className='size-3' />
-                            </button>
-                          </div>
-                        </div>
-                        {cdata?.customer_password && (
-                          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0 pt-1 border-t border-border/30'>
-                            <span className='text-muted-foreground shrink-0'>رمزعبور اکانت:</span>
                             <div className='flex items-center justify-between sm:justify-end gap-1.5 min-w-0 flex-1'>
-                              <span className='font-mono font-bold text-foreground select-all break-all min-w-0' dir='ltr'>
-                                {cdata.customer_password}
+                              <span className='font-mono font-bold text-foreground break-all select-all min-w-0 text-xs' dir='ltr'>
+                                {customerEmail}
                               </span>
                               <button
                                 type='button'
-                                onClick={() => handleCopyText(cdata.customer_password, 'cust-pass', 'رمزعبور کپی شد.')}
-                                className='text-muted-foreground hover:text-primary p-1 shrink-0'
-                                title='کپی رمزعبور'
+                                onClick={() => handleCopyText(customerEmail, 'cust-gmail', 'جیمیل مشتری کپی شد.')}
+                                className='text-muted-foreground hover:text-primary p-1 shrink-0 transition-colors rounded hover:bg-muted'
+                                title='کپی آدرس جیمیل'
                               >
-                                <Copy className='size-3' />
+                                {copiedId === 'cust-gmail' ? (
+                                  <Check className='size-3.5 text-emerald-500' />
+                                ) : (
+                                  <Copy className='size-3.5' />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {customerPassword && (
+                          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0 pt-2 border-t border-border/40'>
+                            <span className='font-bold shrink-0 flex items-center gap-1.5 text-primary'>
+                              <Key className='size-3.5 text-primary shrink-0' />
+                              <span>رمز عبور اکانت جیمیل:</span>
+                            </span>
+                            <div className='flex items-center justify-between sm:justify-end gap-2 min-w-0 flex-1'>
+                              <span className='font-mono font-black text-foreground select-all break-all min-w-0 text-xs sm:text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-md border border-primary/25 tracking-wide' dir='ltr'>
+                                {customerPassword}
+                              </span>
+                              <button
+                                type='button'
+                                onClick={() => handleCopyText(customerPassword, 'cust-pass', 'رمز عبور اکانت کپی شد.')}
+                                className='text-primary hover:text-primary/80 bg-primary/15 hover:bg-primary/25 p-1.5 shrink-0 transition-colors rounded-md'
+                                title='کپی رمز عبور'
+                              >
+                                {copiedId === 'cust-pass' ? (
+                                  <Check className='size-3.5 text-emerald-500' />
+                                ) : (
+                                  <Copy className='size-3.5' />
+                                )}
                               </button>
                             </div>
                           </div>

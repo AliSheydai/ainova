@@ -377,10 +377,13 @@ export default function ReadyAccountsPage() {
                                 {acc.data?.password ? (
                                   <div className='flex items-center gap-1.5'>
                                     <span className='font-mono text-foreground select-all' dir='ltr'>
-                                      {isPassVisible ? '(رمزگذاری‌شده)' : '••••••••'}
+                                      {isPassVisible ? acc.data.password : '••••••••'}
                                     </span>
-                                    <button type='button' onClick={() => togglePasswordVisibility(acc.id)} className='text-muted-foreground hover:text-foreground'>
+                                    <button type='button' onClick={() => togglePasswordVisibility(acc.id)} className='text-muted-foreground hover:text-foreground' title={isPassVisible ? 'مخفی کردن' : 'نمایش رمز عبور'}>
                                       {isPassVisible ? <EyeOff className='size-3' /> : <Eye className='size-3' />}
+                                    </button>
+                                    <button type='button' onClick={() => handleCopy(acc.data.password, `pass-${acc.id}`)} className='text-muted-foreground hover:text-primary transition-colors' title='کپی رمز عبور'>
+                                      {copiedId === `pass-${acc.id}` ? <Check className='size-3 text-primary' /> : <Copy className='size-3' />}
                                     </button>
                                   </div>
                                 ) : (

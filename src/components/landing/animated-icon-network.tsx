@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { gsap, MotionPathPlugin, useGSAP } from '@/lib/gsap-config'
 import { Logo } from '@/assets/logo'
+import { useTheme } from '@/context/theme-provider'
 
 // ─── Product Image Items ───────────────────────────────────────────────────────
 // Real brand logos from public/images/product for subscriptions offered in store
@@ -11,6 +12,7 @@ export interface ProductImageItem {
   id: string
   label: string
   src: string
+  srcDark?: string
   glowColor: string
 }
 
@@ -21,13 +23,29 @@ export const PRODUCT_IMAGE_ITEMS: ProductImageItem[] = [
   { id: 'cursor', label: 'Cursor', src: '/images/product/cursor.png', glowColor: 'rgba(147, 51, 234, 0.45)' },
   { id: 'canva', label: 'Canva', src: '/images/product/canva.png', glowColor: 'rgba(6, 182, 212, 0.45)' },
   { id: 'lovable', label: 'Lovable', src: '/images/product/lovable.png', glowColor: 'rgba(236, 72, 153, 0.45)' },
-  { id: 'perplexiti', label: 'Perplexity', src: '/images/product/perplexiti.png', glowColor: 'rgba(20, 184, 166, 0.45)' },
-  { id: 'capcut', label: 'CapCut', src: '/images/product/capcut.png', glowColor: 'rgba(244, 63, 94, 0.45)' },
+  {
+    id: 'perplexiti',
+    label: 'Perplexity',
+    src: '/images/product/perplexiti-light.png',
+    srcDark: '/images/product/perplexiti-dark.png',
+    glowColor: 'rgba(20, 184, 166, 0.45)',
+  },
+  {
+    id: 'capcut',
+    label: 'CapCut',
+    src: '/images/product/capcut-light.png',
+    srcDark: '/images/product/capcut-dark.png',
+    glowColor: 'rgba(244, 63, 94, 0.45)',
+  },
   { id: 'netflix', label: 'Netflix', src: '/images/product/netflix.png', glowColor: 'rgba(229, 9, 20, 0.45)' },
   { id: 'spotify', label: 'Spotify', src: '/images/product/spotify.png', glowColor: 'rgba(29, 185, 84, 0.45)' },
   { id: 'youtube', label: 'YouTube', src: '/images/product/youtube.png', glowColor: 'rgba(255, 0, 0, 0.45)' },
   { id: 'notion', label: 'Notion', src: '/images/product/notion.png', glowColor: 'rgba(100, 116, 139, 0.45)' },
 ]
+
+export function getProductImageSrc(item: ProductImageItem, isDark: boolean): string {
+  return isDark && item.srcDark ? item.srcDark : item.src
+}
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
@@ -130,6 +148,25 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
   const [isMounted, setIsMounted] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
 
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  const isDarkRef = useRef(isDark)
+
+  // ── Sync active particle images on theme change ────────────────────────────
+  useEffect(() => {
+    isDarkRef.current = isDark
+    particleRefs.current.forEach((el) => {
+      if (!el) return
+      const imgEl = el.querySelector('img')
+      if (!imgEl) return
+      const prodId = imgEl.getAttribute('data-product-id')
+      const product = PRODUCT_IMAGE_ITEMS.find((it) => it.id === prodId)
+      if (product && product.srcDark) {
+        imgEl.src = getProductImageSrc(product, isDark)
+      }
+    })
+  }, [isDark])
+
   // ── Client-side mount detection ────────────────────────────────────────────
   useEffect(() => {
     setIsMounted(true)
@@ -230,8 +267,12 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             const nextProdIdx = (index + currentCycle * config.particleCount) % PRODUCT_IMAGE_ITEMS.length
             const nextProduct = PRODUCT_IMAGE_ITEMS[nextProdIdx]
             if (nextProduct) {
-              imgEl.src = nextProduct.src
+              const currentIsDark =
+                isDarkRef.current ||
+                (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'))
+              imgEl.src = getProductImageSrc(nextProduct, currentIsDark)
               imgEl.alt = nextProduct.label
+              imgEl.setAttribute('data-product-id', nextProduct.id)
             }
           }
 
@@ -366,8 +407,9 @@ export function AnimatedIconNetwork({ className }: { className?: string }) {
             }}
           >
             <img
-              src={p.item.src}
+              src={getProductImageSrc(p.item, isDark)}
               alt={p.item.label}
+              data-product-id={p.item.id}
               width={config.imgSize}
               height={config.imgSize}
               className='w-auto h-auto object-contain pointer-events-none select-none rounded-[5px]'

@@ -33,6 +33,7 @@ export interface AccountCredentialsDeliveryData {
 
 export interface CustomerProvisioningDeliveryData {
   email: string
+  password?: string
   serviceName?: string
   provisionDetails?: string
   accountInfo?: string

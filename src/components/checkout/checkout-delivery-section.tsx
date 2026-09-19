@@ -67,7 +67,7 @@ export function CheckoutDeliverySection({
       <div
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex flex-wrap items-center justify-between gap-2.5 transition-colors cursor-pointer select-none',
+          'flex items-center justify-between gap-2.5 sm:gap-3 transition-colors cursor-pointer select-none',
           isOpen ? 'pb-3 border-b border-border/60' : ''
         )}
         role='button'
@@ -80,16 +80,16 @@ export function CheckoutDeliverySection({
           }
         }}
       >
-        <div className='flex items-center gap-2.5'>
+        <div className='flex items-center gap-2.5 min-w-0 flex-1'>
           <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs'>
             <Package className='size-4' />
           </div>
-          <div>
+          <div className='min-w-0 flex-1'>
             <h2 className='text-sm sm:text-base font-bold text-foreground flex items-center gap-2'>
               <span>شیوه تحویل اشتراک</span>
               <span className='text-rose-500 font-bold'>*</span>
             </h2>
-            <p className='text-[11px] sm:text-xs text-muted-foreground'>
+            <p className='text-[11px] sm:text-xs text-muted-foreground leading-relaxed'>
               {isOpen
                 ? 'تمایل دارید اکانت آماده دریافت کنید یا روی جیمیل شخصی شما فعال شود؟'
                 : mode === 'inventory'
@@ -104,7 +104,7 @@ export function CheckoutDeliverySection({
           {!inventoryUnknown && hasInventory && (
             <Badge
               variant='outline'
-              className='text-[10.5px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 py-1 hidden xs:inline-flex'
+              className='text-[10.5px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 py-1 hidden sm:inline-flex'
             >
               <span className='size-1.5 rounded-full bg-emerald-500 animate-pulse me-1.5' />
               <Warehouse className='size-3.5 me-1' />
@@ -120,7 +120,7 @@ export function CheckoutDeliverySection({
           </Badge>
 
           <span
-            className='inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors py-1 px-2 rounded-lg bg-primary/5 sm:bg-transparent sm:hover:bg-primary/5'
+            className='inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors py-1 px-2 rounded-lg bg-primary/5 sm:bg-transparent sm:hover:bg-primary/5 shrink-0'
           >
             <span>{isOpen ? 'بستن' : 'تغییر'}</span>
             <ChevronDown

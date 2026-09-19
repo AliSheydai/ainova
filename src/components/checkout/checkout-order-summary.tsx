@@ -114,7 +114,7 @@ export function CheckoutOrderSummary({
             )}
 
             <div className='flex-1 min-w-0'>
-              <h3 className='text-sm sm:text-base font-bold text-foreground leading-snug truncate'>
+              <h3 className='text-sm sm:text-base font-bold text-foreground leading-snug break-words'>
                 {productTitle}
               </h3>
 
