@@ -337,6 +337,7 @@ export class BotStoreService {
             userId,
             productId: plan.productId,
             planId: plan.id,
+            variantId: plan.variantId || null,
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,

@@ -44,37 +44,41 @@ export async function GET(req: NextRequest) {
           include: {
             order: {
               include: {
+                user: true,
+                product: true,
+                variant: true,
+                plan: {
+                  include: {
+                    product: true,
+                    variant: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+      : null
+
+    if (!payment && orderIdParam) {
+      payment = await prisma.payment.findUnique({
+        where: { orderId: orderIdParam },
+        include: {
+          order: {
+            include: {
               user: true,
               product: true,
+              variant: true,
               plan: {
                 include: {
                   product: true,
+                  variant: true,
                 },
               },
             },
           },
         },
       })
-    : null
-
-  if (!payment && orderIdParam) {
-    payment = await prisma.payment.findUnique({
-      where: { orderId: orderIdParam },
-      include: {
-        order: {
-          include: {
-            user: true,
-            product: true,
-            plan: {
-              include: {
-                product: true,
-              },
-            },
-          },
-        },
-      },
-    })
-  }
+    }
 
   if (!payment) {
     if (querySource === 'telegram') {
@@ -327,6 +331,7 @@ export async function GET(req: NextRequest) {
       source: payment.order.source,
       user: payment.order.user,
       product: payment.order.product,
+      variant: payment.order.variant,
       plan: payment.order.plan,
       payment: {
         refId: verifyResult.refId,
@@ -336,9 +341,12 @@ export async function GET(req: NextRequest) {
 
     const targetChatId =
       payment.order.telegramChatId || payment.order.user?.telegramId
-    const productTitle =
+    const baseTitle =
       payment.order.product?.title ||
       (payment.order.plan ? `${payment.order.plan.product.title} — ${payment.order.plan.name}` : 'محصول')
+    const productTitle = payment.order.variant?.name
+      ? `${baseTitle} [${payment.order.variant.name}]`
+      : baseTitle
     const planName = payment.order.plan?.name || ''
 
     // If stock ran out:

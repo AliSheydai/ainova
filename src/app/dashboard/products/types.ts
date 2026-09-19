@@ -2,9 +2,32 @@ import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfil
 import { formatPrice } from '@/lib/persian-utils'
 export { formatPrice }
 
+export interface VariantItem {
+  id: string
+  productId: string
+  name: string
+  slug?: string | null
+  description?: string | null
+  price: number
+  discountedPrice?: number | null
+  discountLabel?: string | null
+  duration: number
+  features?: string[] | null
+  badge?: string | null
+  active: boolean
+  sortOrder: number
+  plans?: PlanItem[]
+  _count?: {
+    orders: number
+    plans?: number
+  }
+}
+
 export interface PlanItem {
   id: string
   productId: string
+  variantId?: string | null
+  variant?: VariantItem | null
   name: string
   duration: number
   planType?: string | null
@@ -34,6 +57,7 @@ export interface ProductItem {
   sortOrder: number
   createdAt: string
   plans?: PlanItem[]
+  variants?: VariantItem[]
   _count?: {
     orders: number
     inventoryItems: number

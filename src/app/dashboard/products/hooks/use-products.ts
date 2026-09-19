@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { type ProductItem, type PlanItem } from '../types'
+import { type ProductItem, type PlanItem, type VariantItem } from '../types'
 import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfillment/types'
 import { toEnglishDigits } from '@/lib/persian-utils'
 
@@ -28,6 +28,7 @@ export function useProducts() {
   const [isEditingPlan, setIsEditingPlan] = useState(false)
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null)
   const [planTargetProductId, setPlanTargetProductId] = useState<string>('')
+  const [formPlanVariantId, setFormPlanVariantId] = useState<string | null>(null)
   const [formPlanName, setFormPlanName] = useState('')
   const [formPlanType, setFormPlanType] = useState('')
   const [formPlanDuration, setFormPlanDuration] = useState('1')
@@ -37,6 +38,24 @@ export function useProducts() {
   const [formPlanActive, setFormPlanActive] = useState(true)
   const [formPlanSortOrder, setFormPlanSortOrder] = useState('1')
   const [submittingPlan, setSubmittingPlan] = useState(false)
+
+  // Variant Dialog State
+  const [variantDialogOpen, setVariantDialogOpen] = useState(false)
+  const [isEditingVariant, setIsEditingVariant] = useState(false)
+  const [currentVariantId, setCurrentVariantId] = useState<string | null>(null)
+  const [variantTargetProductId, setVariantTargetProductId] = useState<string>('')
+  const [formVariantName, setFormVariantName] = useState('')
+  const [formVariantSlug, setFormVariantSlug] = useState('')
+  const [formVariantDescription, setFormVariantDescription] = useState('')
+  const [formVariantPrice, setFormVariantPrice] = useState('')
+  const [formVariantDiscountedPrice, setFormVariantDiscountedPrice] = useState('')
+  const [formVariantDiscountLabel, setFormVariantDiscountLabel] = useState('')
+  const [formVariantDuration, setFormVariantDuration] = useState('1')
+  const [formVariantFeatures, setFormVariantFeatures] = useState<string[]>([])
+  const [formVariantBadge, setFormVariantBadge] = useState('')
+  const [formVariantActive, setFormVariantActive] = useState(true)
+  const [formVariantSortOrder, setFormVariantSortOrder] = useState('1')
+  const [submittingVariant, setSubmittingVariant] = useState(false)
 
   // Delete Alert
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -61,6 +80,7 @@ export function useProducts() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts()
   }, [])
 
@@ -190,18 +210,21 @@ export function useProducts() {
   }
 
   // --- Plan Actions ---
-  const openCreatePlanDialog = (productId: string) => {
+  const openCreatePlanDialog = (productId: string, variantId?: string | null) => {
     setIsEditingPlan(false)
     setCurrentPlanId(null)
     setPlanTargetProductId(productId)
+    setFormPlanVariantId(variantId || null)
+    const currentProd = products.find((p) => p.id === productId)
+    const linkedVariant = variantId ? currentProd?.variants?.find((v) => v.id === variantId) : null
+
     setFormPlanName('')
-    setFormPlanType('')
-    setFormPlanDuration('1')
-    setFormPlanPrice('')
+    setFormPlanType(linkedVariant ? linkedVariant.name : '')
+    setFormPlanDuration(linkedVariant ? String(linkedVariant.duration) : '1')
+    setFormPlanPrice(linkedVariant ? String(linkedVariant.discountedPrice || linkedVariant.price) : '')
     setFormPlanFulfillmentType('ACTIVATION_LINK')
     setFormPlanFields([])
     setFormPlanActive(true)
-    const currentProd = products.find((p) => p.id === productId)
     const existingPlansCount = currentProd?.plans?.length || 0
     setFormPlanSortOrder(String(existingPlansCount + 1))
     setPlanDialogOpen(true)
@@ -211,6 +234,7 @@ export function useProducts() {
     setIsEditingPlan(true)
     setCurrentPlanId(plan.id)
     setPlanTargetProductId(plan.productId)
+    setFormPlanVariantId(plan.variantId || null)
     setFormPlanName(plan.name)
     setFormPlanType(plan.planType || '')
     setFormPlanDuration(String(plan.duration))
@@ -243,6 +267,7 @@ export function useProducts() {
       const payload = {
         id: currentPlanId,
         productId: planTargetProductId,
+        variantId: formPlanVariantId || null,
         name: formPlanName.trim(),
         planType: formPlanType.trim() || null,
         duration: durationNum,
@@ -289,7 +314,140 @@ export function useProducts() {
     }
   }
 
+  // --- Variant Actions ---
+  const openCreateVariantDialog = (productId: string) => {
+    setIsEditingVariant(false)
+    setCurrentVariantId(null)
+    setVariantTargetProductId(productId)
+    setFormVariantName('')
+    setFormVariantSlug('')
+    setFormVariantDescription('')
+    setFormVariantPrice('')
+    setFormVariantDiscountedPrice('')
+    setFormVariantDiscountLabel('')
+    setFormVariantDuration('1')
+    setFormVariantFeatures([])
+    setFormVariantBadge('')
+    setFormVariantActive(true)
+    const currentProd = products.find((p) => p.id === productId)
+    const existingVariantsCount = currentProd?.variants?.length || 0
+    setFormVariantSortOrder(String(existingVariantsCount + 1))
+    setVariantDialogOpen(true)
+  }
+
+  const openEditVariantDialog = (variant: VariantItem) => {
+    setIsEditingVariant(true)
+    setCurrentVariantId(variant.id)
+    setVariantTargetProductId(variant.productId)
+    setFormVariantName(variant.name || '')
+    setFormVariantSlug(variant.slug || '')
+    setFormVariantDescription(variant.description || '')
+    setFormVariantPrice(String(variant.price || ''))
+    setFormVariantDiscountedPrice(
+      variant.discountedPrice !== null && variant.discountedPrice !== undefined
+        ? String(variant.discountedPrice)
+        : ''
+    )
+    setFormVariantDiscountLabel(variant.discountLabel || '')
+    setFormVariantDuration(String(variant.duration || 1))
+    setFormVariantFeatures(Array.isArray(variant.features) ? variant.features : [])
+    setFormVariantBadge(variant.badge || '')
+    setFormVariantActive(variant.active !== undefined ? variant.active : true)
+    setFormVariantSortOrder(String(variant.sortOrder || 1))
+    setVariantDialogOpen(true)
+  }
+
+  const handleSaveVariant = async () => {
+    if (!formVariantName.trim()) {
+      toast.error('نام نوع محصول الزامی است.')
+      return
+    }
+
+    const cleanPrice = toEnglishDigits(formVariantPrice).replace(/[^\d]/g, '')
+    const priceNum = parseInt(cleanPrice, 10)
+    if (isNaN(priceNum) || priceNum < 0) {
+      toast.error('مبلغ معتبری برای نوع محصول وارد فرمایید.')
+      return
+    }
+
+    let parsedDiscountedPrice: number | null = null
+    if (formVariantDiscountedPrice.trim()) {
+      const cleanDisc = toEnglishDigits(formVariantDiscountedPrice).replace(/[^\d]/g, '')
+      const discNum = parseInt(cleanDisc, 10)
+      if (isNaN(discNum) || discNum < 0) {
+        toast.error('قیمت تخفیف‌خورده نامعتبر است.')
+        return
+      }
+      if (discNum >= priceNum && priceNum > 0) {
+        toast.error('قیمت تخفیف‌خورده باید کمتر از قیمت اصلی باشد.')
+        return
+      }
+      parsedDiscountedPrice = discNum
+    }
+
+    const durationNum =
+      parseInt(toEnglishDigits(formVariantDuration).replace(/[^\d]/g, ''), 10) || 1
+    const sortOrderNum =
+      parseInt(toEnglishDigits(formVariantSortOrder).replace(/[^\d]/g, ''), 10) || 1
+
+    setSubmittingVariant(true)
+    try {
+      const payload = {
+        id: currentVariantId,
+        productId: variantTargetProductId,
+        name: formVariantName.trim(),
+        slug: formVariantSlug.trim() || null,
+        description: formVariantDescription.trim() || null,
+        price: priceNum,
+        discountedPrice: parsedDiscountedPrice,
+        discountLabel: formVariantDiscountLabel.trim() || null,
+        duration: durationNum,
+        features: formVariantFeatures,
+        badge: formVariantBadge.trim() || null,
+        active: formVariantActive,
+        sortOrder: sortOrderNum,
+      }
+
+      const res = await fetch('/api/admin/variants', {
+        method: isEditingVariant ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        setVariantDialogOpen(false)
+        fetchProducts()
+      } else {
+        toast.error(data.error || 'خطا در ذخیره نوع محصول.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    } finally {
+      setSubmittingVariant(false)
+    }
+  }
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!confirm('آیا از حذف یا غیرفعال‌سازی این نوع محصول اطمینان دارید؟')) return
+    try {
+      const res = await fetch(`/api/admin/variants?id=${variantId}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        fetchProducts()
+      } else {
+        toast.error(data.error || 'خطا در حذف نوع محصول.')
+      }
+    } catch {
+      toast.error('خطای سرور.')
+    }
+  }
+
   const targetProduct = products.find((p) => p.id === planTargetProductId)
+  const variantTargetProduct = products.find((p) => p.id === variantTargetProductId)
 
   return {
     products,
@@ -334,6 +492,9 @@ export function useProducts() {
     setPlanDialogOpen,
     isEditingPlan,
     planTargetProductTitle: targetProduct?.title || 'محصول',
+    planTargetProductVariants: targetProduct?.variants || [],
+    formPlanVariantId,
+    setFormPlanVariantId,
     formPlanName,
     setFormPlanName,
     formPlanType,
@@ -355,5 +516,37 @@ export function useProducts() {
     openEditPlanDialog,
     handleSavePlan,
     handleDeletePlan,
+    // Variant dialog
+    variantDialogOpen,
+    setVariantDialogOpen,
+    isEditingVariant,
+    variantTargetProductTitle: variantTargetProduct?.title || 'محصول',
+    formVariantName,
+    setFormVariantName,
+    formVariantSlug,
+    setFormVariantSlug,
+    formVariantDescription,
+    setFormVariantDescription,
+    formVariantPrice,
+    setFormVariantPrice,
+    formVariantDiscountedPrice,
+    setFormVariantDiscountedPrice,
+    formVariantDiscountLabel,
+    setFormVariantDiscountLabel,
+    formVariantDuration,
+    setFormVariantDuration,
+    formVariantFeatures,
+    setFormVariantFeatures,
+    formVariantBadge,
+    setFormVariantBadge,
+    formVariantActive,
+    setFormVariantActive,
+    formVariantSortOrder,
+    setFormVariantSortOrder,
+    submittingVariant,
+    openCreateVariantDialog,
+    openEditVariantDialog,
+    handleSaveVariant,
+    handleDeleteVariant,
   }
 }

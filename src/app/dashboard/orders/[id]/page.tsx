@@ -31,8 +31,9 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
     where: { id },
     include: {
       user: true,
+      variant: true,
       plan: {
-        include: { product: true },
+        include: { product: true, variant: true },
       },
       payment: true,
       activationLink: true,
@@ -89,7 +90,8 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-foreground">
-                {order.plan.product.title} ({order.plan.name})
+                {order.plan.product.title}
+                {order.variant ? ` (${order.variant.name})` : ''} ({order.plan.name})
               </h1>
               {isCompleted ? (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
@@ -210,6 +212,12 @@ export default async function OrderDetailPage({ params, searchParams }: OrderDet
                 <span className="text-muted-foreground">محصول:</span>
                 <span className="font-medium text-foreground">{order.plan.product.title}</span>
               </div>
+              {order.variant && (
+                <div className="flex justify-between py-1 border-b border-border/50">
+                  <span className="text-muted-foreground">نوع محصول:</span>
+                  <span className="font-medium text-primary font-bold">{order.variant.name}</span>
+                </div>
+              )}
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">پلن:</span>
                 <span className="font-medium text-foreground">{order.plan.name}</span>

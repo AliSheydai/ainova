@@ -47,6 +47,12 @@ interface OrderDetails {
     title: string
     name: string
   } | null
+  variant?: {
+    id: string
+    name: string
+    duration?: number
+    badge?: string | null
+  } | null
   plan?: {
     id: string
     name: string
@@ -254,7 +260,9 @@ function SuccessContent() {
               <div>
                 <span className='text-muted-foreground block text-[11px] sm:text-xs'>محصول خریداری‌شده:</span>
                 <span className='font-bold text-foreground text-xs sm:text-sm mt-0.5 block truncate'>
-                  {productName} {planName ? `(${planName})` : ''}
+                  {productName}
+                  {order.variant?.name ? ` — ${order.variant.name}` : ''}
+                  {planName ? ` (${planName})` : ''}
                 </span>
               </div>
               <div>

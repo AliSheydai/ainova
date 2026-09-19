@@ -33,6 +33,10 @@ const getProductBySlug = cache(async (rawSlug: string) => {
         where: { active: true },
         orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
       },
+      variants: {
+        where: { active: true },
+        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+      },
     },
   })
 })
@@ -86,6 +90,23 @@ export default async function ProductDetailPage(props: ProductPageProps) {
     planType: plan.planType,
     fulfillmentType: plan.fulfillmentType,
     stock: metrics?.planStocks[plan.id] ?? 0,
+    variantId: plan.variantId,
+  }))
+
+  const enrichedVariants = (product.variants || []).map((variant) => ({
+    id: variant.id,
+    productId: variant.productId,
+    name: variant.name,
+    slug: variant.slug,
+    description: variant.description,
+    price: variant.price,
+    discountedPrice: variant.discountedPrice,
+    discountLabel: variant.discountLabel,
+    duration: variant.duration,
+    features: Array.isArray(variant.features) ? (variant.features as string[]) : [],
+    badge: variant.badge,
+    active: variant.active,
+    sortOrder: variant.sortOrder,
   }))
 
   const productFeatures =
@@ -93,8 +114,18 @@ export default async function ProductDetailPage(props: ProductPageProps) {
       ? (product.features as string[])
       : null
 
-  const hasPreCreatedPlan = enrichedPlans.some((p) => p.fulfillmentType === 'PRE_CREATED_ACCOUNT')
+  const hasVideo = Boolean(product.videoUrl && product.videoUrl.trim())
   const isAvailable = true
+
+  // Initial price for mobile sticky CTA
+  const initialCtaPrice =
+    enrichedVariants.length > 0
+      ? (enrichedVariants[0].discountedPrice &&
+        enrichedVariants[0].discountedPrice > 0 &&
+        enrichedVariants[0].discountedPrice < enrichedVariants[0].price
+          ? enrichedVariants[0].discountedPrice
+          : enrichedVariants[0].price)
+      : (enrichedPlans[0]?.price ?? product.price)
 
   // Fetch approved reviews for this product
   const approvedReviews = await prisma.review.findMany({
@@ -159,7 +190,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
               <ProductDetailVisual
                 image={product.image}
                 title={product.title}
-                hasVideo={Boolean(product.videoUrl)}
+                hasVideo={hasVideo}
               />
             </div>
 
@@ -168,16 +199,6 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
               {/* Title & Status */}
               <div className='space-y-2.5 sm:space-y-3'>
-                {stock > 0 ? (
-                  <Badge className='bg-primary/10 text-primary border-primary/20 text-[11px] sm:text-xs font-medium'>
-                    آماده تحویل آنی
-                  </Badge>
-                ) : (
-                  <Badge className='bg-primary/10 text-primary border-primary/20 text-[11px] sm:text-xs font-medium'>
-                    ارسال طی یک روز کاری
-                  </Badge>
-                )}
-
                 <h1 className='text-lg font-bold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-3xl'>
                   {product.title}
                 </h1>
@@ -199,6 +220,7 @@ export default async function ProductDetailPage(props: ProductPageProps) {
                 purchaseCount={purchaseCount}
                 shortDescription={product.shortDescription}
                 plans={enrichedPlans}
+                variants={enrichedVariants}
               />
 
               {/* Divider */}
@@ -257,9 +279,9 @@ export default async function ProductDetailPage(props: ProductPageProps) {
           </div>
 
           {/* Product Video Section — only rendered if video is assigned by admin */}
-          {product.videoUrl && (
+          {hasVideo && (
             <ProductVideoSection
-              videoUrl={product.videoUrl}
+              videoUrl={product.videoUrl!.trim()}
               productTitle={product.title}
             />
           )}
@@ -278,10 +300,11 @@ export default async function ProductDetailPage(props: ProductPageProps) {
 
       {/* Sticky Mobile CTA — only visible on mobile when buy button is out of view */}
       <StickyMobileCta
-        price={enrichedPlans[0]?.price ?? product.price}
+        price={initialCtaPrice}
         isAvailable={isAvailable}
         slug={product.slug}
         planId={enrichedPlans[0]?.id}
+        variantId={enrichedVariants[0]?.id}
       />
     </div>
   )

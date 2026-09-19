@@ -11,10 +11,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const productId = searchParams.get('productId')
+    const variantId = searchParams.get('variantId')
 
     const where: Prisma.PlanWhereInput = {}
     if (productId) {
       where.productId = productId
+    }
+    if (variantId) {
+      where.variantId = variantId
     }
 
     const plans = await prisma.plan.findMany({
@@ -22,6 +26,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
       include: {
         product: true,
+        variant: true,
         _count: {
           select: {
             orders: true,
@@ -83,6 +88,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       productId,
+      variantId,
       name,
       duration,
       planType,
@@ -100,6 +106,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    let validVariantId: string | null = null
+    if (variantId && typeof variantId === 'string' && variantId.trim()) {
+      const v = await prisma.productVariant.findUnique({
+        where: { id: variantId.trim() },
+        select: { id: true, productId: true },
+      })
+      if (!v) {
+        return NextResponse.json(
+          { success: false, error: 'نوع محصول انتخاب‌شده یافت نشد.' },
+          { status: 404 }
+        )
+      }
+      if (v.productId !== productId) {
+        return NextResponse.json(
+          { success: false, error: 'نوع محصول انتخاب‌شده به این محصول تعلق ندارد.' },
+          { status: 400 }
+        )
+      }
+      validVariantId = v.id
+    }
+
     const priceNum = parseInt(String(price || 0), 10)
     const durationNum = parseInt(String(duration || 1), 10)
     const sortOrderNum = parseInt(String(sortOrder || 0), 10)
@@ -115,6 +142,7 @@ export async function POST(req: NextRequest) {
       plan = await prisma.plan.create({
         data: {
           productId,
+          variantId: validVariantId,
           name: name.trim(),
           duration: isNaN(durationNum) ? 1 : durationNum,
           planType: trimmedPlanType,
@@ -126,6 +154,7 @@ export async function POST(req: NextRequest) {
         },
         include: {
           product: true,
+          variant: true,
         },
       })
     } catch (createError: any) {
@@ -137,6 +166,7 @@ export async function POST(req: NextRequest) {
         plan = await prisma.plan.create({
           data: {
             productId,
+            variantId: validVariantId,
             name: name.trim(),
             duration: isNaN(durationNum) ? 1 : durationNum,
             price: isNaN(priceNum) ? 0 : priceNum,
@@ -147,6 +177,7 @@ export async function POST(req: NextRequest) {
           },
           include: {
             product: true,
+            variant: true,
           },
         })
 
@@ -190,6 +221,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const {
       id,
+      variantId,
       name,
       duration,
       planType,
@@ -207,6 +239,18 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
+    const currentPlan = await prisma.plan.findUnique({
+      where: { id },
+      select: { id: true, productId: true },
+    })
+
+    if (!currentPlan) {
+      return NextResponse.json(
+        { success: false, error: 'پلن مورد نظر یافت نشد.' },
+        { status: 404 }
+      )
+    }
+
     const updateData: Prisma.PlanUpdateInput = {}
 
     if (name !== undefined) updateData.name = name.trim()
@@ -217,6 +261,30 @@ export async function PATCH(req: NextRequest) {
     if (checkoutFields !== undefined) updateData.checkoutFields = checkoutFields
     if (fulfillmentType !== undefined && Object.values(FulfillmentType).includes(fulfillmentType)) {
       updateData.fulfillmentType = fulfillmentType
+    }
+
+    if (variantId !== undefined) {
+      if (variantId === null || String(variantId).trim() === '') {
+        updateData.variant = { disconnect: true }
+      } else {
+        const v = await prisma.productVariant.findUnique({
+          where: { id: String(variantId).trim() },
+          select: { id: true, productId: true },
+        })
+        if (!v) {
+          return NextResponse.json(
+            { success: false, error: 'نوع محصول انتخاب‌شده یافت نشد.' },
+            { status: 404 }
+          )
+        }
+        if (v.productId !== currentPlan.productId) {
+          return NextResponse.json(
+            { success: false, error: 'نوع محصول انتخاب‌شده با محصول این پلن تطابق ندارد.' },
+            { status: 400 }
+          )
+        }
+        updateData.variant = { connect: { id: v.id } }
+      }
     }
 
     const trimmedPlanType =
@@ -230,7 +298,7 @@ export async function PATCH(req: NextRequest) {
       updatedPlan = await prisma.plan.update({
         where: { id },
         data: updateData,
-        include: { product: true },
+        include: { product: true, variant: true },
       })
     } catch (patchError: any) {
       // If Prisma client memory instance has not reloaded schema (Unknown argument planType)
@@ -242,7 +310,7 @@ export async function PATCH(req: NextRequest) {
         updatedPlan = await prisma.plan.update({
           where: { id },
           data: updateData,
-          include: { product: true },
+          include: { product: true, variant: true },
         })
 
         if (trimmedPlanType !== undefined) {

@@ -99,6 +99,15 @@ interface AdminOrder {
     slug?: string
     name?: string
   } | null
+  variantId?: string | null
+  variant?: {
+    id: string
+    name: string
+    price?: number
+    discountedPrice?: number | null
+    duration?: number
+    badge?: string | null
+  } | null
   plan?: {
     id: string
     name: string
@@ -741,10 +750,11 @@ export default function AdminOrdersPage() {
   // Copy Full Invoice/Message for Customer Support
   const handleCopyCustomerReceipt = (ord: AdminOrder) => {
     const productName = ord.product?.title || ord.plan?.product?.title || 'اشتراک'
+    const variantName = ord.variant?.name ? ` - ${ord.variant.name}` : ''
     const planName = ord.plan?.name || ''
     const lines = [
       `🧾 رسید سفارش #${ord.id.slice(-8).toUpperCase()}`,
-      `📦 محصول: ${productName} (${planName})`,
+      `📦 محصول: ${productName}${variantName} (${planName})`,
       `💰 مبلغ: ${formatPrice(ord.amount)}`,
       `📅 تاریخ: ${formatDate(ord.createdAt)}`,
       `👤 مشتری: ${ord.user?.name || ord.user?.phone || 'مشتری گرامی'}`,
@@ -1480,12 +1490,13 @@ export default function AdminOrdersPage() {
                 role='region'
                 aria-label='جدول سفارش‌های سیستم'
               >
-                <table className='w-full min-w-[1240px] text-xs text-start'>
+                <table className='w-full min-w-[1360px] text-xs text-start'>
                   <thead>
                     <tr className='border-b border-border/60 bg-muted/30 text-muted-foreground font-medium'>
                       <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[120px]'>شناسه</th>
                       <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[180px]'>مشتری</th>
                       <th className='py-3.5 px-4 text-start min-w-[240px]'>محصول و پلن</th>
+                      <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[130px]'>نوع محصول</th>
                       <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[170px]'>روش تحویل</th>
                       <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[90px]'>کانال</th>
                       <th className='py-3.5 px-4 text-start whitespace-nowrap min-w-[120px]'>مبلغ</th>
@@ -1559,6 +1570,14 @@ export default function AdminOrdersPage() {
                                 {ord.product?.title || ord.product?.name || ord.plan?.product?.title || 'محصول'}
                               </span>
                               <div className='flex items-center flex-wrap gap-1.5 mt-1.5'>
+                                {ord.variant && (
+                                  <Badge
+                                    variant='outline'
+                                    className='text-[9px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border-primary/20 font-medium'
+                                  >
+                                    {ord.variant.name}
+                                  </Badge>
+                                )}
                                 <span className='text-[10px] text-muted-foreground font-medium'>
                                   {ord.plan?.name || 'پلن عمومی'}
                                 </span>
@@ -1569,6 +1588,27 @@ export default function AdminOrdersPage() {
                                 ) : null}
                               </div>
                             </div>
+                          </td>
+
+                          {/* Product Variant */}
+                          <td className='py-3.5 px-4 whitespace-nowrap min-w-[130px]'>
+                            {ord.variant ? (
+                              <div className='flex items-center gap-1.5'>
+                                <Badge
+                                  variant='outline'
+                                  className='text-[10px] font-medium bg-primary/10 text-primary border-primary/20 px-2 py-0.5 rounded-md'
+                                >
+                                  {ord.variant.name}
+                                </Badge>
+                                {ord.variant.badge && (
+                                  <span className='text-[9px] px-1.5 py-0.5 rounded bg-muted text-foreground font-medium border border-border/60'>
+                                    {ord.variant.badge}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className='text-muted-foreground text-[11px] font-mono'>—</span>
+                            )}
                           </td>
 
                           {/* Fulfillment Type */}
@@ -1755,9 +1795,19 @@ export default function AdminOrdersPage() {
                           <h4 className='font-bold text-xs text-foreground'>
                             {ord.product?.title || ord.plan?.product?.title || 'اشتراک'}
                           </h4>
-                          <span className='text-[11px] text-muted-foreground'>
-                            {ord.plan?.name} {ord.plan?.duration ? `(${ord.plan.duration} ماهه)` : ''}
-                          </span>
+                          <div className='flex items-center gap-1.5 flex-wrap mt-0.5'>
+                            {ord.variant && (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-primary/20 font-medium'
+                              >
+                                {ord.variant.name}
+                              </Badge>
+                            )}
+                            <span className='text-[11px] text-muted-foreground'>
+                              {ord.plan?.name} {ord.plan?.duration ? `(${ord.plan.duration} ماهه)` : ''}
+                            </span>
+                          </div>
                         </div>
                         <span className='font-bold text-xs text-primary font-sans shrink-0'>
                           {formatPrice(ord.amount)}
@@ -2097,19 +2147,26 @@ export default function AdminOrdersPage() {
                 <div className='flex items-center justify-between'>
                   <span className='text-[11px] font-bold text-foreground flex items-center gap-1.5'>
                     <Tag className='size-3.5 text-primary' />
-                    محصول و پلن سفارش:
+                    محصول، نوع و پلن سفارش:
                   </span>
                   <Badge variant='outline' className='text-[10px] font-normal'>
                     {getFulfillmentBadge(selectedOrder.delivery?.type || selectedOrder.plan?.fulfillmentType).label}
                   </Badge>
                 </div>
-                <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs'>
+                <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs'>
                   <span className='font-bold text-foreground'>
                     {selectedOrder.product?.title || selectedOrder.product?.name || selectedOrder.plan?.product?.title || 'محصول سیستم'}
                   </span>
-                  <span className='text-muted-foreground'>
-                    پلن: {selectedOrder.plan?.name} {selectedOrder.plan?.duration ? `(${selectedOrder.plan.duration} ماهه)` : ''}
-                  </span>
+                  <div className='flex items-center gap-2 flex-wrap'>
+                    {selectedOrder.variant && (
+                      <Badge variant='outline' className='text-[10px] font-medium bg-primary/10 text-primary border-primary/20'>
+                        نوع: {selectedOrder.variant.name}
+                      </Badge>
+                    )}
+                    <span className='text-muted-foreground'>
+                      پلن: {selectedOrder.plan?.name} {selectedOrder.plan?.duration ? `(${selectedOrder.plan.duration} ماهه)` : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
 

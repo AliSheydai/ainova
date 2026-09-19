@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import { ShoppingCart, Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
 import { AuthModal, type AuthUserData } from '@/components/auth/auth-modal'
 import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
+import { ProductVariantSelector, type ProductVariantItem } from './product-variant-selector'
 
-interface PlanItem {
+export interface PlanItem {
   id: string
   name: string
   price: number
@@ -17,9 +17,10 @@ interface PlanItem {
   planType?: string | null
   fulfillmentType?: string
   stock?: number
+  variantId?: string | null
 }
 
-interface ProductBuyCardProps {
+export interface ProductBuyCardProps {
   productId: string
   productTitle: string
   slug: string
@@ -29,29 +30,50 @@ interface ProductBuyCardProps {
   fulfillmentType?: string
   shortDescription?: string | null
   plans?: PlanItem[]
+  variants?: ProductVariantItem[]
 }
 
 export function ProductBuyCard({
-  productId,
-  productTitle,
+  productId: _productId,
+  productTitle: _productTitle,
   slug,
   price,
   stock,
   purchaseCount,
-  fulfillmentType,
-  shortDescription,
+  fulfillmentType: _fulfillmentType,
+  shortDescription: _shortDescription,
   plans = [],
+  variants = [],
 }: ProductBuyCardProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
-    plans.length > 0 ? plans[0].id : null
-  )
-  const [buying, setBuying] = useState(false)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState<AuthUserData | null>(null)
   const router = useRouter()
+  const hasVariants = Boolean(variants && variants.length > 0)
 
-  // Determine unique non-empty plan types
+  // Selected Variant state
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    hasVariants ? variants[0].id : null
+  )
+
+  // Derive active variant ID safely without triggering setState in effect
+  const activeVariantId = useMemo(() => {
+    if (!hasVariants) return null
+    if (selectedVariantId && variants.some((v) => v.id === selectedVariantId)) {
+      return selectedVariantId
+    }
+    return variants[0]?.id ?? null
+  }, [hasVariants, selectedVariantId, variants])
+
+  // Filter plans when variants exist
+  const variantPlans = useMemo(() => {
+    if (!hasVariants || !activeVariantId) return plans
+    const matching = plans.filter((p) => p.variantId === activeVariantId)
+    if (matching.length > 0) return matching
+    const unassigned = plans.filter((p) => !p.variantId)
+    return unassigned.length > 0 ? unassigned : plans
+  }, [hasVariants, activeVariantId, plans])
+
+  // Flat & Matrix Plan Modes (only active if NO variants exist)
   const availablePlanTypes = useMemo(() => {
+    if (hasVariants) return []
     const hasAnyType = plans.some((p) => Boolean(p.planType?.trim()))
     if (!hasAnyType) return []
     const types: string[] = []
@@ -62,9 +84,9 @@ export function ProductBuyCard({
       }
     }
     return types
-  }, [plans])
+  }, [hasVariants, plans])
 
-  const isMatrixMode = availablePlanTypes.length > 1
+  const isMatrixMode = !hasVariants && availablePlanTypes.length > 1
 
   const [selectedPlanType, setSelectedPlanType] = useState<string>(() => {
     if (plans.length > 0) {
@@ -73,32 +95,40 @@ export function ProductBuyCard({
     return ''
   })
 
-  // Synchronize selectedPlanType when plans change
-  useEffect(() => {
-    if (isMatrixMode) {
-      if (!availablePlanTypes.includes(selectedPlanType)) {
-        setSelectedPlanType(availablePlanTypes[0])
-      }
+  // Derive active plan type safely
+  const activePlanType = useMemo(() => {
+    if (!isMatrixMode) return ''
+    if (selectedPlanType && availablePlanTypes.includes(selectedPlanType)) {
+      return selectedPlanType
     }
-  }, [isMatrixMode, availablePlanTypes, selectedPlanType])
+    return availablePlanTypes[0] || ''
+  }, [isMatrixMode, selectedPlanType, availablePlanTypes])
 
   const filteredPlans = useMemo(() => {
+    if (hasVariants) return variantPlans
     if (!isMatrixMode) return plans
     return plans.filter((p) => {
       const t = p.planType?.trim() || 'سایر'
-      return t.toLowerCase() === selectedPlanType.toLowerCase()
+      return t.toLowerCase() === activePlanType.toLowerCase()
     })
-  }, [plans, isMatrixMode, selectedPlanType])
+  }, [hasVariants, variantPlans, isMatrixMode, plans, activePlanType])
 
-  // Synchronize selectedPlanId when filteredPlans change
-  useEffect(() => {
-    if (isMatrixMode && filteredPlans.length > 0) {
-      const isCurrentInFiltered = filteredPlans.some((p) => p.id === selectedPlanId)
-      if (!isCurrentInFiltered) {
-        setSelectedPlanId(filteredPlans[0].id)
-      }
+  // Selected Plan state
+  const [userSelectedPlanId, setUserSelectedPlanId] = useState<string | null>(null)
+
+  // Derive active plan ID safely across all modes
+  const activePlanId = useMemo(() => {
+    const currentPool = hasVariants ? variantPlans : isMatrixMode ? filteredPlans : plans
+    if (userSelectedPlanId && currentPool.some((p) => p.id === userSelectedPlanId)) {
+      return userSelectedPlanId
     }
-  }, [isMatrixMode, filteredPlans, selectedPlanId])
+    return currentPool[0]?.id ?? null
+  }, [hasVariants, isMatrixMode, userSelectedPlanId, variantPlans, filteredPlans, plans])
+
+  // User & Auth state
+  const [buying, setBuying] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<AuthUserData | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -115,17 +145,37 @@ export function ProductBuyCard({
     }
   }, [])
 
-  const selectedPlan = plans.find((p) => p.id === selectedPlanId) || plans[0]
-  const effectivePrice = selectedPlan ? selectedPlan.price : price
+  // Selected item calculations
+  const selectedVariant = hasVariants
+    ? variants.find((v) => v.id === activeVariantId) || variants[0]
+    : null
+
+  const currentPlansPool = hasVariants ? variantPlans : isMatrixMode ? filteredPlans : plans
+  const selectedPlan = currentPlansPool.find((p) => p.id === activePlanId) || currentPlansPool[0]
+
+  const hasVariantDiscount = Boolean(
+    selectedVariant &&
+    selectedVariant.discountedPrice !== null &&
+    selectedVariant.discountedPrice !== undefined &&
+    selectedVariant.discountedPrice > 0 &&
+    selectedVariant.discountedPrice < selectedVariant.price
+  )
+
+  const effectivePrice = selectedVariant
+    ? (hasVariantDiscount ? selectedVariant.discountedPrice! : selectedVariant.price)
+    : (selectedPlan ? selectedPlan.price : price)
+
   const isPreCreated = selectedPlan?.fulfillmentType === 'PRE_CREATED_ACCOUNT'
   const planStock = selectedPlan?.stock !== undefined ? selectedPlan.stock : stock
-  const isAvailable = true // Products can always be purchased (instant if in stock, else 1 business day)
 
   const navigateToCheckout = () => {
     setBuying(true)
-    const checkoutUrl = selectedPlanId
-      ? `/checkout?slug=${slug}&planId=${selectedPlanId}`
-      : `/checkout?slug=${slug}`
+    const params = new URLSearchParams()
+    if (slug) params.set('slug', slug)
+    if (activeVariantId) params.set('variantId', activeVariantId)
+    if (activePlanId) params.set('planId', activePlanId)
+
+    const checkoutUrl = `/checkout?${params.toString()}`
     router.push(checkoutUrl)
   }
 
@@ -141,8 +191,74 @@ export function ProductBuyCard({
 
   return (
     <div className='space-y-5'>
-      {/* 2D Plan Matrix Selector (when multiple types exist) */}
-      {isMatrixMode && (
+      {/* SCENARIO A: PRODUCT HAS VARIANTS */}
+      {hasVariants && (
+        <div className='space-y-4'>
+          {/* Variant Selector Component */}
+          <ProductVariantSelector
+            variants={variants}
+            selectedVariantId={activeVariantId}
+            onSelectVariant={(id) => {
+              setSelectedVariantId(id)
+              setUserSelectedPlanId(null)
+            }}
+          />
+
+          {/* Delivery Option Selector (Plans linked to this variant) */}
+          {variantPlans.length > 0 && (
+            <div className='space-y-2 pt-2 border-t border-border/50'>
+              <span id='delivery-plan-label' className='text-xs font-semibold text-muted-foreground flex items-center gap-1.5'>
+                <span>نحوه تحویل (پلن):</span>
+              </span>
+              <div className='flex flex-wrap gap-2' role='radiogroup' aria-labelledby='delivery-plan-label'>
+                {variantPlans.map((p) => {
+                  const isSelected = selectedPlan?.id === p.id
+                  const isPlanPreCreated = p.fulfillmentType === 'PRE_CREATED_ACCOUNT'
+                  const planHasStock = (p.stock !== undefined ? p.stock : stock) > 0
+
+                  return (
+                    <button
+                      key={p.id}
+                      type='button'
+                      role='radio'
+                      aria-checked={isSelected}
+                      onClick={() => setUserSelectedPlanId(p.id)}
+                      className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-foreground font-semibold ring-2 ring-primary/30 shadow-2xs'
+                          : 'border-border bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                      }`}
+                    >
+                      <span>{p.name}</span>
+                      {isPlanPreCreated ? (
+                        <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
+                          اکانت اختصاصی
+                        </span>
+                      ) : (
+                        <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border'>
+                          {p.fulfillmentType === 'ACTIVATION_LINK' ? 'لینک آنی' : 'تحویل مستقیم'}
+                        </span>
+                      )}
+                      {planHasStock ? (
+                        <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
+                          تحویل آنی
+                        </span>
+                      ) : (
+                        <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border'>
+                          ارسال ۱ روزه
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SCENARIO B: NO VARIANTS — 2D Plan Matrix Selector (when multiple types exist) */}
+      {!hasVariants && isMatrixMode && (
         <div className='space-y-3.5'>
           {/* Row 1: Plan Type Tabs / Chips */}
           <div className='space-y-2'>
@@ -151,7 +267,7 @@ export function ProductBuyCard({
             </span>
             <div className='flex flex-wrap gap-2' role='radiogroup' aria-labelledby='plan-type-label'>
               {availablePlanTypes.map((type) => {
-                const isSelected = selectedPlanType.toLowerCase() === type.toLowerCase()
+                const isSelected = activePlanType.toLowerCase() === type.toLowerCase()
                 const typePlans = plans.filter(
                   (p) => (p.planType?.trim() || 'سایر').toLowerCase() === type.toLowerCase()
                 )
@@ -165,12 +281,7 @@ export function ProductBuyCard({
                     aria-checked={isSelected}
                     onClick={() => {
                       setSelectedPlanType(type)
-                      const firstPlan = plans.find(
-                        (p) => (p.planType?.trim() || 'سایر').toLowerCase() === type.toLowerCase()
-                      )
-                      if (firstPlan) {
-                        setSelectedPlanId(firstPlan.id)
-                      }
+                      setUserSelectedPlanId(null)
                     }}
                     className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                       isSelected
@@ -206,7 +317,7 @@ export function ProductBuyCard({
                     type='button'
                     role='radio'
                     aria-checked={isSelected}
-                    onClick={() => setSelectedPlanId(p.id)}
+                    onClick={() => setUserSelectedPlanId(p.id)}
                     className={`flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm transition-all cursor-pointer ${
                       isSelected
                         ? 'border-primary bg-primary/8 text-foreground font-semibold ring-1 ring-primary/30 shadow-2xs'
@@ -237,8 +348,8 @@ export function ProductBuyCard({
         </div>
       )}
 
-      {/* Flat Plan Selector (when NOT in matrix mode and multiple plans exist) */}
-      {!isMatrixMode && plans.length > 1 && (
+      {/* SCENARIO C: NO VARIANTS — Flat Plan Selector (when multiple plans exist) */}
+      {!hasVariants && !isMatrixMode && plans.length > 1 && (
         <div className='space-y-2'>
           <span id='plan-label' className='text-xs font-medium text-muted-foreground'>
             انتخاب پلن:
@@ -247,14 +358,13 @@ export function ProductBuyCard({
             {plans.map((p) => {
               const isSelected = selectedPlan?.id === p.id
               const isPlanPreCreated = p.fulfillmentType === 'PRE_CREATED_ACCOUNT'
-              const planHasStock = (p.stock !== undefined ? p.stock : stock) > 0
               return (
                 <button
                   key={p.id}
                   type='button'
                   role='radio'
                   aria-checked={isSelected}
-                  onClick={() => setSelectedPlanId(p.id)}
+                  onClick={() => setUserSelectedPlanId(p.id)}
                   className={`flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm transition-colors cursor-pointer ${
                     isSelected
                       ? 'border-primary bg-primary/8 text-foreground font-semibold ring-1 ring-primary/30'
@@ -277,11 +387,6 @@ export function ProductBuyCard({
                       اکانت اختصاصی
                     </span>
                   )}
-                  {/* {!planHasStock && (
-                    <span className='text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium border border-primary/20'>
-                      ارسال ۱ روزه
-                    </span>
-                  )} */}
                 </button>
               )
             })}
@@ -289,11 +394,29 @@ export function ProductBuyCard({
         </div>
       )}
 
-      {/* Price + Status */}
+      {/* Price + Status Breakdown */}
       <div className='flex items-end justify-between gap-3 border-t border-border/50 pt-4 sm:pt-5'>
         <div>
           <span className='mb-1 block text-xs text-muted-foreground'>قیمت نهایی:</span>
-          <span className='text-xl sm:text-2xl font-bold text-foreground font-sans'>{formatPrice(effectivePrice)}</span>
+          {hasVariantDiscount ? (
+            <div className='flex flex-wrap items-baseline gap-2'>
+              <span className='text-xl sm:text-2xl font-bold text-foreground font-sans'>
+                {formatPrice(effectivePrice)}
+              </span>
+              <span className='line-through text-xs sm:text-sm text-muted-foreground font-sans'>
+                {formatPrice(selectedVariant!.price)}
+              </span>
+              {selectedVariant?.discountLabel && (
+                <span className='text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20'>
+                  {selectedVariant.discountLabel}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className='text-xl sm:text-2xl font-bold text-foreground font-sans'>
+              {formatPrice(effectivePrice)}
+            </span>
+          )}
         </div>
         {isPreCreated ? (
           planStock > 0 ? (

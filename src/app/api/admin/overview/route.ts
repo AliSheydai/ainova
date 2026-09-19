@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
           plan: {
             include: { product: true },
           },
+          variant: true,
           payment: {
             select: { status: true, refId: true },
           },

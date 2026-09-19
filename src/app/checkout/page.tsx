@@ -4,16 +4,13 @@ import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
-  Sparkles,
   ChevronLeft,
   ShieldCheck,
   Zap,
-  Lock,
   Loader2,
   FileText,
   Clock,
   PencilLine,
-  HelpCircle,
   Headphones,
   ChevronDown,
   MessageCircle,
@@ -33,10 +30,28 @@ import { CheckoutDeliverySection } from '@/components/checkout/checkout-delivery
 import { CheckoutOrderSummary } from '@/components/checkout/checkout-order-summary'
 import { CheckoutMobileBar } from '@/components/checkout/checkout-mobile-bar'
 import { type CheckoutFieldDefinition } from '@/lib/fulfillment/types'
+import { toPersianDigits } from '@/lib/persian-utils'
 import { cn } from '@/lib/utils'
 
 const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '۰۲۱-XXXXXXXX'
 const SUPPORT_TELEGRAM = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM || 'https://t.me/ArioChatSupport'
+
+interface VariantData {
+  id: string
+  productId: string
+  name: string
+  slug?: string | null
+  description?: string | null
+  price: number
+  discountedPrice?: number | null
+  discountLabel?: string | null
+  duration: number
+  features?: string[] | null
+  badge?: string | null
+  active: boolean
+  sortOrder: number
+  plans?: PlanData[]
+}
 
 interface PlanData {
   id: string
@@ -47,6 +62,8 @@ interface PlanData {
   fulfillmentType: string
   checkoutFields?: CheckoutFieldDefinition[]
   availableInventoryCount?: number | null
+  variantId?: string | null
+  variant?: VariantData | null
 }
 
 interface ProductData {
@@ -60,8 +77,9 @@ interface ProductData {
   price: number
   stock: number
   fulfillmentType: string
-  features?: string[] | any
+  features?: string[] | Record<string, unknown> | null
   plans?: PlanData[]
+  variants?: VariantData[]
 }
 
 function getFulfillmentLabel(type?: string) {
@@ -84,10 +102,12 @@ function CheckoutContent() {
   const slugParam = searchParams.get('slug') || searchParams.get('product')
   const productIdParam = searchParams.get('productId')
   const planIdParam = searchParams.get('planId')
+  const variantIdParam = searchParams.get('variantId')
 
   const [product, setProduct] = useState<ProductData | null>(null)
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(variantIdParam)
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(planIdParam)
-  const [checkoutData, setCheckoutData] = useState<Record<string, any>>({})
+  const [checkoutData, setCheckoutData] = useState<Record<string, unknown>>({})
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [buying, setBuying] = useState(false)
@@ -139,7 +159,7 @@ function CheckoutContent() {
             const data = await res.json()
             if (data.products && data.products.length > 0) {
               if (productIdParam) {
-                const found = data.products.find((p: any) => p.id === productIdParam)
+                const found = data.products.find((p: { id: string }) => p.id === productIdParam)
                 if (found) loadedProduct = found
               }
               if (!loadedProduct) loadedProduct = data.products[0]
@@ -149,9 +169,40 @@ function CheckoutContent() {
 
         if (loadedProduct) {
           setProduct(loadedProduct)
+
+          // 1. Resolve Variant
+          const activeVariants = loadedProduct.variants?.filter((v) => v.active) || []
+          let resolvedVariantId: string | null = null
+
+          if (variantIdParam && activeVariants.some((v) => v.id === variantIdParam)) {
+            resolvedVariantId = variantIdParam
+          } else if (planIdParam) {
+            const matchedPlan = loadedProduct.plans?.find((p) => p.id === planIdParam)
+            if (matchedPlan?.variantId && activeVariants.some((v) => v.id === matchedPlan.variantId)) {
+              resolvedVariantId = matchedPlan.variantId
+            }
+          }
+
+          if (!resolvedVariantId && activeVariants.length > 0) {
+            resolvedVariantId = activeVariants[0].id
+          }
+
+          setSelectedVariantId(resolvedVariantId)
+
+          // 2. Resolve Plan
           const activePlans = loadedProduct.plans?.filter((p) => p.active) || []
-          if (planIdParam && activePlans.some((p) => p.id === planIdParam)) {
+          let candidatePlans = activePlans
+          if (resolvedVariantId) {
+            const variantPlans = activePlans.filter((p) => p.variantId === resolvedVariantId)
+            if (variantPlans.length > 0) {
+              candidatePlans = variantPlans
+            }
+          }
+
+          if (planIdParam && candidatePlans.some((p) => p.id === planIdParam)) {
             setSelectedPlanId(planIdParam)
+          } else if (candidatePlans.length > 0) {
+            setSelectedPlanId(candidatePlans[0].id)
           } else if (activePlans.length > 0) {
             setSelectedPlanId(activePlans[0].id)
           }
@@ -164,11 +215,42 @@ function CheckoutContent() {
     }
 
     loadProduct()
-  }, [slugParam, productIdParam, planIdParam])
+  }, [slugParam, productIdParam, planIdParam, variantIdParam])
 
-  const activePlans = product?.plans?.filter((p) => p.active) || []
-  const selectedPlan = activePlans.find((p) => p.id === selectedPlanId) || activePlans[0]
-  const effectivePrice = selectedPlan ? selectedPlan.price : product?.price || 0
+  const activeVariants = React.useMemo(() => product?.variants?.filter((v) => v.active) || [], [product])
+  const selectedVariant = activeVariants.find((v) => v.id === selectedVariantId) || null
+
+  const activePlans = React.useMemo(() => product?.plans?.filter((p) => p.active) || [], [product])
+  const candidatePlans = React.useMemo(() => {
+    if (!selectedVariant) return activePlans
+    const variantPlans = activePlans.filter((p) => p.variantId === selectedVariant.id)
+    if (variantPlans.length > 0) return variantPlans
+    const unassigned = activePlans.filter((p) => !p.variantId)
+    return unassigned.length > 0 ? unassigned : activePlans
+  }, [selectedVariant, activePlans])
+
+  const selectedPlan =
+    candidatePlans.find((p) => p.id === selectedPlanId) ||
+    activePlans.find((p) => p.id === selectedPlanId) ||
+    candidatePlans[0] ||
+    activePlans[0]
+
+  const hasVariantDiscount = Boolean(
+    selectedVariant &&
+    selectedVariant.discountedPrice !== null &&
+    selectedVariant.discountedPrice !== undefined &&
+    selectedVariant.discountedPrice > 0 &&
+    selectedVariant.discountedPrice < selectedVariant.price
+  )
+
+  const originalPrice = selectedVariant
+    ? selectedVariant.price
+    : (selectedPlan ? selectedPlan.price : product?.price || 0)
+
+  const effectivePrice = selectedVariant
+    ? (hasVariantDiscount ? selectedVariant.discountedPrice! : selectedVariant.price)
+    : (selectedPlan ? selectedPlan.price : product?.price || 0)
+
   const productTitle = product?.title || product?.name || 'اشتراک ویژه'
   const isPreCreatedPlan = selectedPlan?.fulfillmentType === 'PRE_CREATED_ACCOUNT'
 
@@ -230,7 +312,7 @@ function CheckoutContent() {
     toast.info('کد تخفیف حذف گردید.')
   }
 
-  const handleFieldChange = (key: string, value: any) => {
+  const handleFieldChange = (key: string, value: unknown) => {
     setCheckoutData((prev) => ({ ...prev, [key]: value }))
     if (formErrors[key]) {
       setFormErrors((prev) => {
@@ -277,7 +359,7 @@ function CheckoutContent() {
     return Object.keys(errors).length === 0
   }
 
-  const handleBuy = async (overrideUser?: any) => {
+  const handleBuy = async (overrideUser?: { id: string; name?: string; phone?: string } | null) => {
     if (!product) return
 
     if (!validateForm()) {
@@ -318,6 +400,7 @@ function CheckoutContent() {
           productId: product.id,
           slug: product.slug,
           planId: selectedPlan?.id,
+          variantId: selectedVariant?.id || undefined,
           checkoutData: finalCheckoutData,
           couponCode: appliedCoupon?.code || undefined,
           source: 'web',
@@ -395,22 +478,36 @@ function CheckoutContent() {
             </h1>
           </div>
 
-          {selectedPlan && (
-            <div className='flex items-center gap-2 bg-muted/40 border border-border/60 rounded-xl px-3.5 py-2 text-xs self-start sm:self-auto'>
-              <span className='text-muted-foreground'>پلن انتخابی:</span>
-              <span className='font-bold text-foreground'>{selectedPlan.name}</span>
-              {product?.slug && (
-                <Link
-                  href={`/products/${product.slug}`}
-                  className='text-[11px] text-primary hover:underline flex items-center gap-1 font-medium ms-1.5'
-                  title='تغییر پلن یا انتخاب گزینه دیگر'
-                >
-                  <PencilLine className='size-3' />
-                  <span>تغییر پلن</span>
-                </Link>
-              )}
-            </div>
-          )}
+          <div className='flex items-center gap-2 self-start sm:self-auto flex-wrap'>
+            {selectedVariant && (
+              <div className='flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 text-xs text-primary font-semibold'>
+                <span className='text-muted-foreground font-normal'>نوع:</span>
+                <span>{selectedVariant.name}</span>
+                {selectedVariant.duration ? (
+                  <span className='text-[11px] font-sans text-muted-foreground'>
+                    ({toPersianDigits(selectedVariant.duration)} ماهه)
+                  </span>
+                ) : null}
+              </div>
+            )}
+
+            {selectedPlan && (
+              <div className='flex items-center gap-2 bg-muted/40 border border-border/60 rounded-xl px-3 py-1.5 text-xs'>
+                <span className='text-muted-foreground'>{selectedVariant ? 'نحوه تحویل:' : 'پلن انتخابی:'}</span>
+                <span className='font-bold text-foreground'>{selectedPlan.name}</span>
+                {product?.slug && (
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className='text-[11px] text-primary hover:underline flex items-center gap-1 font-medium ms-1.5'
+                    title='تغییر انتخاب یا مشاهده سایر گزینه‌ها'
+                  >
+                    <PencilLine className='size-3' />
+                    <span>تغییر</span>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -433,6 +530,50 @@ function CheckoutContent() {
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-16 lg:pb-0'>
             {/* RIGHT COLUMN (lg:col-span-7) — Delivery details & custom fields */}
             <div className='lg:col-span-7 space-y-4 sm:space-y-5'>
+              {/* Delivery Option Selector when multiple fulfillment plans exist for this variant/product */}
+              {candidatePlans.length > 1 && (
+                <div className='rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 sm:p-5 shadow-xs space-y-3'>
+                  <div className='flex items-center gap-2 pb-2.5 border-b border-border/60'>
+                    <div className='size-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0'>
+                      <Zap className='size-4' />
+                    </div>
+                    <div>
+                      <h2 className='text-sm sm:text-base font-bold text-foreground'>
+                        نحوه تحویل اشتراک
+                      </h2>
+                      <p className='text-[11px] text-muted-foreground'>
+                        شیوه دریافت اکانت را انتخاب نمایید.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-wrap gap-2 pt-1' role='radiogroup' aria-label='نحوه تحویل'>
+                    {candidatePlans.map((p) => {
+                      const isSelected = selectedPlan?.id === p.id
+                      return (
+                        <button
+                          key={p.id}
+                          type='button'
+                          role='radio'
+                          aria-checked={isSelected}
+                          onClick={() => setSelectedPlanId(p.id)}
+                          className={cn(
+                            'flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm transition-all cursor-pointer',
+                            isSelected
+                              ? 'border-primary bg-primary/10 text-foreground font-semibold ring-2 ring-primary/30 shadow-2xs'
+                              : 'border-border bg-background/80 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                          )}
+                        >
+                          <span>{p.name}</span>
+                          <span className='text-[10.5px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border'>
+                            {getFulfillmentLabel(p.fulfillmentType)}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               {/* Delivery Section (if PRE_CREATED_ACCOUNT) */}
               {isPreCreatedPlan && (
                 <CheckoutDeliverySection
@@ -653,6 +794,12 @@ function CheckoutContent() {
                 productImage={product.image}
                 planName={selectedPlan?.name || 'پلن عادی'}
                 fulfillmentType={getFulfillmentLabel(selectedPlan?.fulfillmentType)}
+                variantName={selectedVariant?.name}
+                variantDuration={selectedVariant?.duration}
+                variantBadge={selectedVariant?.badge}
+                originalPrice={originalPrice}
+                variantDiscountLabel={selectedVariant?.discountLabel}
+                hasVariantDiscount={hasVariantDiscount}
                 effectivePrice={effectivePrice}
                 payablePrice={payablePrice}
                 appliedCoupon={appliedCoupon}

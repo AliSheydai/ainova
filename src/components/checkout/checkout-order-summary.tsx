@@ -12,14 +12,13 @@ import {
   ChevronDown,
   ShieldCheck,
   Zap,
-  ArrowUpRight,
   PencilLine,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { formatPrice } from '@/lib/persian-utils'
+import { formatPrice, toPersianDigits } from '@/lib/persian-utils'
 import { cn } from '@/lib/utils'
 
 interface CheckoutOrderSummaryProps {
@@ -28,6 +27,12 @@ interface CheckoutOrderSummaryProps {
   productImage?: string | null
   planName: string
   fulfillmentType?: string
+  variantName?: string | null
+  variantDuration?: number | null
+  variantBadge?: string | null
+  originalPrice?: number | null
+  variantDiscountLabel?: string | null
+  hasVariantDiscount?: boolean
   effectivePrice: number
   payablePrice: number
   appliedCoupon: {
@@ -51,6 +56,12 @@ export function CheckoutOrderSummary({
   productImage,
   planName,
   fulfillmentType,
+  variantName,
+  variantDuration,
+  variantBadge,
+  originalPrice,
+  variantDiscountLabel,
+  hasVariantDiscount = false,
   effectivePrice,
   payablePrice,
   appliedCoupon,
@@ -106,9 +117,30 @@ export function CheckoutOrderSummary({
               <h3 className='text-sm sm:text-base font-bold text-foreground leading-snug truncate'>
                 {productTitle}
               </h3>
+
+              {variantName && (
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 flex-wrap'>
+                  <span>نوع:</span>
+                  <span className='font-bold text-foreground'>{variantName}</span>
+                  {variantDuration ? (
+                    <span className='text-[11px] text-muted-foreground font-sans'>
+                      ({toPersianDigits(variantDuration)} ماهه)
+                    </span>
+                  ) : null}
+                  {variantBadge && (
+                    <Badge
+                      variant='outline'
+                      className='text-[10px] py-0 px-1.5 bg-primary/10 border-primary/20 text-primary font-medium'
+                    >
+                      {variantBadge}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
               <div className='flex items-center justify-between gap-2 mt-1'>
                 <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-                  <span>پلن:</span>
+                  <span>{variantName ? 'نحوه تحویل:' : 'پلن:'}</span>
                   <span className='font-bold text-foreground'>{planName}</span>
                 </div>
 
@@ -116,10 +148,10 @@ export function CheckoutOrderSummary({
                   <Link
                     href={`/products/${productSlug}`}
                     className='text-[11px] font-medium text-primary hover:underline flex items-center gap-0.5 shrink-0 transition-colors'
-                    title='تغییر پلن یا مشاهده سایر گزینه‌ها'
+                    title='تغییر پلن یا انتخاب گزینه دیگر'
                   >
                     <PencilLine className='size-3' />
-                    <span>تغییر پلن</span>
+                    <span>تغییر</span>
                   </Link>
                 )}
               </div>
@@ -221,20 +253,59 @@ export function CheckoutOrderSummary({
 
         {/* Pricing Calculation Details */}
         <div className='space-y-2 text-xs sm:text-sm'>
+          {variantName && (
+            <div className='flex items-center justify-between text-muted-foreground'>
+              <span>نوع محصول:</span>
+              <span className='font-medium text-foreground flex items-center gap-1'>
+                <span>{variantName}</span>
+                {variantDuration ? (
+                  <span className='text-xs text-muted-foreground font-sans'>
+                    ({toPersianDigits(variantDuration)} ماهه)
+                  </span>
+                ) : null}
+              </span>
+            </div>
+          )}
+
           <div className='flex items-center justify-between text-muted-foreground'>
             <span>قیمت پایه اشتراک:</span>
-            <span className='font-sans font-medium text-foreground'>{formatPrice(effectivePrice)}</span>
+            <span
+              className={cn(
+                'font-sans font-medium',
+                hasVariantDiscount
+                  ? 'line-through text-muted-foreground/70'
+                  : 'text-foreground'
+              )}
+            >
+              {formatPrice(originalPrice ?? effectivePrice)}
+            </span>
           </div>
+
+          {hasVariantDiscount && originalPrice && originalPrice > effectivePrice && (
+            <div className='flex items-center justify-between text-primary font-medium'>
+              <span className='flex items-center gap-1.5'>
+                <span>تخفیف ویژه نوع اشتراک:</span>
+                {variantDiscountLabel && (
+                  <Badge variant='outline' className='text-[10px] py-0 px-1.5 bg-primary/10 border-primary/20 text-primary font-medium'>
+                    {variantDiscountLabel}
+                  </Badge>
+                )}
+              </span>
+              <span className='font-sans text-primary font-bold'>
+                - {formatPrice(originalPrice - effectivePrice)}
+              </span>
+            </div>
+          )}
 
           {appliedCoupon && (
             <div className='flex items-center justify-between text-primary font-medium'>
               <span className='flex items-center gap-1.5'>
-                <span>تخفیف اعمال‌شده:</span>
+                <span>تخفیف کوپن:</span>
                 <Badge variant='outline' className='text-[10px] py-0 px-1 bg-primary/10 border-primary/20 text-primary'>
                   {appliedCoupon.code}
                 </Badge>
               </span>
-              <span className='font-sans text-primary'>- {formatPrice(appliedCoupon.discountAmount)}</span>
+              <span className='font-sans text-primary font-bold'>- {formatPrice(appliedCoupon.discountAmount)}</span>
             </div>
           )}
 

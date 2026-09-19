@@ -72,6 +72,10 @@ interface RecentOrder {
       name: string
     }
   } | null
+  variant?: {
+    id: string
+    name: string
+  } | null
 }
 
 interface RecentUser {
@@ -381,7 +385,7 @@ export default function AdminOverviewPage() {
                                 #{toPersianDigits(ord.id.slice(-6))}
                               </span>
                               <span className='text-[11px] text-muted-foreground truncate max-w-[120px]'>
-                                {ord.plan?.name || 'جمینای ۱۸ ماهه'}
+                                {ord.variant?.name ? `${ord.product?.title || 'محصول'} (${ord.variant.name})` : ord.plan?.name || ord.product?.title || 'محصول'}
                               </span>
                             </div>
                             {ord.status === 'COMPLETED' || ord.status === 'PAID' ? (
@@ -439,7 +443,7 @@ export default function AdminOverviewPage() {
                                 {ord.user?.name || ord.user?.phone || 'کاربر'}
                               </td>
                               <td className='py-3 font-medium text-foreground'>
-                                {ord.product?.title || ord.product?.name || ord.plan?.name || 'محصول'}
+                                {ord.variant?.name ? `${ord.product?.title || ord.product?.name || 'محصول'} (${ord.variant.name})` : (ord.product?.title || ord.product?.name || ord.plan?.name || 'محصول')}
                               </td>
                               <td className='py-3 font-bold text-foreground tabular-nums'>
                                 {formatPrice(ord.amount)}

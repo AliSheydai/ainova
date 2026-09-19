@@ -8,7 +8,7 @@ import { toPersianDigits } from '@/lib/persian-utils'
 interface ProductPlansAccordionProps {
   plans: PlanItem[]
   productId: string
-  onAddPlan: (productId: string) => void
+  onAddPlan: (productId: string, variantId?: string | null) => void
   onEditPlan: (plan: PlanItem) => void
   onDeletePlan: (planId: string) => void
 }
@@ -25,7 +25,7 @@ export function ProductPlansAccordion({
       <div className='flex items-center justify-between'>
         <span className='text-xs font-bold text-foreground flex items-center gap-1.5'>
           <Layers className='size-3.5 text-primary' />
-          <span>پلن‌های فروش این محصول ({plans.length} پلن):</span>
+          <span>پلن‌های فروش این محصول ({toPersianDigits(plans.length)} پلن):</span>
         </span>
         <Button
           variant='ghost'
@@ -62,11 +62,15 @@ export function ProductPlansAccordion({
                         <h3 className='font-bold text-foreground text-xs sm:text-sm'>
                           {plan.name}
                         </h3>
-                        {plan.planType && (
+                        {plan.variant?.name ? (
+                          <Badge variant='outline' className='text-[9px] px-1.5 py-0 text-primary border-primary/30 bg-primary/10 font-bold'>
+                            نوع: {plan.variant.name}
+                          </Badge>
+                        ) : plan.planType ? (
                           <Badge variant='outline' className='text-[9px] px-1.5 py-0 text-primary border-primary/30 bg-primary/10 font-bold'>
                             {plan.planType}
                           </Badge>
-                        )}
+                        ) : null}
                         {!plan.active && (
                           <Badge variant='outline' className='text-[9px] px-1.5 py-0 text-amber-500 border-amber-500/30 bg-amber-500/10'>
                             غیرفعال

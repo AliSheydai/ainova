@@ -63,6 +63,15 @@ interface OrderItem {
     name: string
     fulfillmentType?: string
   } | null
+  variantId?: string | null
+  variant?: {
+    id: string
+    name: string
+    duration?: number
+    price?: number
+    discountedPrice?: number | null
+    badge?: string | null
+  } | null
   plan?: {
     name: string
     duration: number
@@ -352,11 +361,19 @@ export function OrdersTab({ onGoToBuy }: OrdersTabProps) {
                             <Package className="size-5" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1.5">
-                            {/* Title & Plan Tag (No broken parentheses, fully responsive) */}
+                            {/* Title, Variant & Plan Tag (No broken parentheses, fully responsive) */}
                             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                               <h4 className="text-sm font-bold text-foreground leading-snug break-words">
                                 {order.product?.title || order.product?.name || order.plan?.product?.name || 'اشتراک ویژه'}
                               </h4>
+                              {order.variant?.name && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[11px] font-medium bg-primary/10 text-primary border-primary/25 px-2 py-0.5 rounded-md shrink-0 shadow-2xs whitespace-normal text-start"
+                                >
+                                  نوع: {order.variant.name}
+                                </Badge>
+                              )}
                               {order.plan?.name && (
                                 <Badge
                                   variant="outline"

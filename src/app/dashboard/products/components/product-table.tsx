@@ -15,10 +15,11 @@ import {
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { type ProductItem, type PlanItem, formatPrice } from '../types'
+import { type ProductItem, type PlanItem, type VariantItem, formatPrice } from '../types'
 import { toPersianDigits } from '@/lib/persian-utils'
 import { ProductStatusBadge, StockBadge } from './product-badges'
 import { ProductPlansAccordion } from './product-plans-accordion'
+import { ProductVariantsAccordion } from './product-variants-accordion'
 
 interface ProductTableProps {
   products: ProductItem[]
@@ -28,9 +29,12 @@ interface ProductTableProps {
   onEditProduct: (product: ProductItem) => void
   onDeleteProduct: (product: ProductItem) => void
   onToggleStatus: (product: ProductItem) => void
-  onAddPlan: (productId: string) => void
+  onAddPlan: (productId: string, variantId?: string | null) => void
   onEditPlan: (plan: PlanItem) => void
   onDeletePlan: (planId: string) => void
+  onAddVariant: (productId: string) => void
+  onEditVariant: (variant: VariantItem) => void
+  onDeleteVariant: (variantId: string) => void
 }
 
 export function ProductTable({
@@ -44,6 +48,9 @@ export function ProductTable({
   onAddPlan,
   onEditPlan,
   onDeletePlan,
+  onAddVariant,
+  onEditVariant,
+  onDeleteVariant,
 }: ProductTableProps) {
   if (loading) {
     return (
@@ -71,6 +78,7 @@ export function ProductTable({
       {products.map((prod) => {
         const isExpanded = expandedProductIds[prod.id] !== false // default expanded
         const plans = prod.plans || []
+        const variants = prod.variants || []
 
         return (
           <Card
@@ -116,6 +124,13 @@ export function ProductTable({
                       <ExternalLink className='size-2.5 shrink-0' />
                     </Link>
                     <ProductStatusBadge status={prod.status} />
+                    <Badge
+                      variant='outline'
+                      className='text-[10px] font-sans px-2 py-0.5 border-primary/30 text-primary bg-primary/5'
+                      title='تعداد انواع محصول (Variants)'
+                    >
+                      {toPersianDigits(variants.length)} نوع محصول
+                    </Badge>
                     <Badge variant='outline' className='text-[10px] font-sans px-2 py-0.5'>
                       {toPersianDigits(plans.length)} پلن
                     </Badge>
@@ -158,8 +173,19 @@ export function ProductTable({
                 <Button
                   variant='outline'
                   size='sm'
+                  onClick={() => onAddVariant(prod.id)}
+                  className='h-8 px-2.5 text-xs gap-1 font-semibold border-primary/40 text-primary hover:bg-primary/10 rounded-xl'
+                  title='ایجاد نوع جدید برای این محصول'
+                >
+                  <Plus className='size-3.5' />
+                  <span>نوع محصول جدید</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
                   onClick={() => onAddPlan(prod.id)}
-                  className='h-8 px-2.5 text-xs gap-1 font-semibold border-primary/30 text-primary hover:bg-primary/10 rounded-xl'
+                  className='h-8 px-2.5 text-xs gap-1 font-semibold border-border/70 text-foreground hover:bg-muted rounded-xl'
+                  title='افزودن پلن جدید به این محصول'
                 >
                   <Plus className='size-3.5' />
                   <span>افزودن پلن</span>
@@ -174,7 +200,7 @@ export function ProductTable({
                   <span>ویرایش</span>
                 </Button>
 
-                {/* Status Toggle Button: Clearly shows current status per user request */}
+                {/* Status Toggle Button */}
                 <Button
                   variant='outline'
                   size='sm'
@@ -208,22 +234,33 @@ export function ProductTable({
                   size='sm'
                   onClick={() => onToggleExpand(prod.id)}
                   className='h-8 px-2 text-xs rounded-xl'
-                  title={isExpanded ? 'بستن پلن‌ها' : 'مشاهده پلن‌ها'}
+                  title={isExpanded ? 'بستن زیربخش‌ها' : 'مشاهده انواع و پلن‌ها'}
                 >
                   {isExpanded ? <ChevronUp className='size-4' /> : <ChevronDown className='size-4' />}
                 </Button>
               </div>
             </div>
 
-            {/* Associated Plans Accordion Section */}
+            {/* Associated Variants & Plans Accordion Sections */}
             {isExpanded && (
-              <ProductPlansAccordion
-                plans={plans}
-                productId={prod.id}
-                onAddPlan={onAddPlan}
-                onEditPlan={onEditPlan}
-                onDeletePlan={onDeletePlan}
-              />
+              <>
+                <ProductVariantsAccordion
+                  variants={variants}
+                  plans={plans}
+                  productId={prod.id}
+                  onAddVariant={onAddVariant}
+                  onEditVariant={onEditVariant}
+                  onDeleteVariant={onDeleteVariant}
+                  onAddPlanForVariant={onAddPlan}
+                />
+                <ProductPlansAccordion
+                  plans={plans}
+                  productId={prod.id}
+                  onAddPlan={onAddPlan}
+                  onEditPlan={onEditPlan}
+                  onDeletePlan={onDeletePlan}
+                />
+              </>
             )}
           </Card>
         )

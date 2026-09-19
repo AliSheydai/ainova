@@ -23,6 +23,20 @@ export async function GET(req: NextRequest) {
       include: {
         plans: {
           orderBy: { price: 'asc' },
+          include: {
+            variant: true,
+          },
+        },
+        variants: {
+          orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+          include: {
+            _count: {
+              select: {
+                orders: true,
+                plans: true,
+              },
+            },
+          },
         },
         _count: {
           select: {
@@ -278,7 +292,9 @@ export async function DELETE(req: NextRequest) {
     await prisma.inventoryItem.deleteMany({ where: { productId: id } })
     // 2. Delete plans if any exist
     await prisma.plan.deleteMany({ where: { productId: id } })
-    // 3. Delete product
+    // 3. Delete product variants if any exist
+    await prisma.productVariant.deleteMany({ where: { productId: id } })
+    // 4. Delete product
     await prisma.product.delete({ where: { id } })
 
     return NextResponse.json({

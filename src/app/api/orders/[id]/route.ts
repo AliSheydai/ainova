@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { decryptCredential } from '@/lib/security/crypto'
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -30,8 +30,9 @@ export async function GET(
       where: { id: orderId },
       include: {
         product: true,
+        variant: true,
         plan: {
-          include: { product: true },
+          include: { product: true, variant: true },
         },
         payment: {
           select: {
@@ -78,8 +79,8 @@ export async function GET(
     // Decrypt sensitive credentials in delivery data if present
     let safeDelivery = order.delivery
     if (order.delivery && order.delivery.data) {
-      const rawData = order.delivery.data as Record<string, any>
-      if (rawData.password) {
+      const rawData = order.delivery.data as Record<string, unknown>
+      if (typeof rawData.password === 'string') {
         safeDelivery = {
           ...order.delivery,
           data: {

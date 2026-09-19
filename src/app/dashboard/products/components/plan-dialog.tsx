@@ -30,6 +30,14 @@ import { type CheckoutFieldDefinition, type FulfillmentType } from '@/lib/fulfil
 import { DynamicCheckoutForm } from '@/components/checkout/dynamic-checkout-form'
 import { CheckoutFieldEditor } from './checkout-field-editor'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { type VariantItem, formatPrice } from '../types'
+import {
   toEnglishDigits,
   toPersianDigits,
   formatNumberWithCommas,
@@ -51,6 +59,9 @@ interface PlanDialogProps {
   onOpenChange: (open: boolean) => void
   isEditing: boolean
   planTargetProductTitle: string
+  productVariants?: VariantItem[]
+  formPlanVariantId?: string | null
+  setFormPlanVariantId?: (v: string | null) => void
   submitting: boolean
   // Form State
   formPlanName: string
@@ -77,6 +88,9 @@ export function PlanDialog({
   onOpenChange,
   isEditing,
   planTargetProductTitle,
+  productVariants = [],
+  formPlanVariantId,
+  setFormPlanVariantId,
   submitting,
   formPlanName,
   setFormPlanName,
@@ -269,6 +283,63 @@ export function PlanDialog({
                   dir='rtl'
                 />
               </div>
+
+              {/* Row 1.25: Associated Product Variant (Only shown if product has variants) */}
+              {productVariants && productVariants.length > 0 && (
+                <div className='space-y-1.5 rounded-xl bg-primary/5 border border-primary/20 p-3'>
+                  <div className='flex items-center justify-between gap-2 min-w-0 flex-wrap'>
+                    <label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
+                      <Layers className='size-3.5 text-primary shrink-0' />
+                      <span>نوع محصول مرتبط (Product Variant)</span>
+                    </label>
+                    {formPlanVariantId && (
+                      <span className='text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg'>
+                        متصل به نوع محصول
+                      </span>
+                    )}
+                  </div>
+                  <p className='text-[10.5px] text-muted-foreground'>
+                    این پلن نحوه تحویل کدام نوع اشتراک (پرو، پلاس و...) را انجام می‌دهد؟
+                  </p>
+                  <Select
+                    value={formPlanVariantId || 'NONE'}
+                    onValueChange={(val) => {
+                      if (val === 'NONE') {
+                        setFormPlanVariantId?.(null)
+                      } else {
+                        setFormPlanVariantId?.(val)
+                        const matchedVariant = productVariants.find((v) => v.id === val)
+                        if (matchedVariant) {
+                          setFormPlanType(matchedVariant.name)
+                          if (!formPlanName.trim()) {
+                            setFormPlanName(matchedVariant.name)
+                          }
+                          if (!formPlanPrice.trim()) {
+                            setFormPlanPrice(
+                              String(matchedVariant.discountedPrice || matchedVariant.price)
+                            )
+                          }
+                          setFormPlanDuration(String(matchedVariant.duration))
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className='text-xs sm:text-sm h-9 rounded-xl bg-background border-border/70'>
+                      <SelectValue placeholder='انتخاب نوع محصول مرتبط...' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='NONE' className='text-xs'>
+                        بدون وابستگی به نوع محصول (پلن مستقل / بدون تیر)
+                      </SelectItem>
+                      {productVariants.map((v) => (
+                        <SelectItem key={v.id} value={v.id} className='text-xs'>
+                          {v.name} ({formatPlanDurationLabel(v.duration)} - {formatPrice(v.discountedPrice || v.price)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Row 1.5: Plan Type / Tier */}
               <div className='space-y-1.5 rounded-xl bg-muted/20 border border-border/50 p-3'>

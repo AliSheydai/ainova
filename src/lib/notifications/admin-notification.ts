@@ -84,6 +84,7 @@ export class AdminNotificationService {
     source?: string | null
     user?: { phone?: string | null; name?: string | null; telegramUsername?: string | null } | null
     product?: { title?: string } | null
+    variant?: { name?: string } | null
     plan?: { name?: string; product?: { title?: string } } | null
     payment?: { refId?: string | null; gatewayName?: string } | null
   }): Promise<boolean> {
@@ -95,6 +96,7 @@ export class AdminNotificationService {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const productTitle =
         order.product?.title || order.plan?.product?.title || 'اشتراک'
+      const variantName = order.variant?.name ? `[${order.variant.name}] ` : ''
       const planName = order.plan?.name ? `(${order.plan.name})` : ''
       const customerInfo =
         order.user?.name ||
@@ -105,7 +107,7 @@ export class AdminNotificationService {
 
       const text =
         `🛍 <b>سفارش جدید ثبت شد — #${shortOrderId}</b>\n\n` +
-        `• 📦 <b>محصول:</b> <b>${escapeHtml(productTitle)} ${escapeHtml(planName)}</b>\n` +
+        `• 📦 <b>محصول:</b> <b>${escapeHtml(productTitle)} ${escapeHtml(variantName)}${escapeHtml(planName)}</b>\n` +
         `• 💰 <b>مبلغ پرداختی:</b> <b>${this.formatPrice(order.amount)}</b>\n` +
         (order.discountAmount && order.discountAmount > 0
           ? `• 🎁 <b>تخفیف:</b> ${this.formatPrice(order.discountAmount)}\n`

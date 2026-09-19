@@ -125,6 +125,7 @@ export async function GET(req: NextRequest) {
         { payment: { refId: { contains: search, mode: 'insensitive' } } },
         { product: { title: { contains: search, mode: 'insensitive' } } },
         { plan: { name: { contains: search, mode: 'insensitive' } } },
+        { variant: { name: { contains: search, mode: 'insensitive' } } },
       ]
 
       if (where.OR) {
@@ -159,8 +160,9 @@ export async function GET(req: NextRequest) {
             select: { id: true, phone: true, name: true, telegramUsername: true },
           },
           product: true,
+          variant: true,
           plan: {
-            include: { product: true },
+            include: { product: true, variant: true },
           },
           coupon: {
             select: { id: true, code: true, discountType: true, discountValue: true },

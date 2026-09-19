@@ -12,8 +12,6 @@ import {
   Package,
   Layers,
   CheckCircle2,
-  AlertTriangle,
-  Archive,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -24,9 +22,6 @@ import { Badge } from '@/components/ui/badge'
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from '@/components/ui/card'
 import {
   Select,
@@ -49,6 +44,7 @@ import { useProducts } from './hooks/use-products'
 import { ProductTable } from './components/product-table'
 import { ProductDialog } from './components/product-dialog'
 import { PlanDialog } from './components/plan-dialog'
+import { VariantDialog } from './components/variant-dialog'
 import { toPersianDigits } from '@/lib/persian-utils'
 
 export default function AdminProductsPage() {
@@ -95,6 +91,9 @@ export default function AdminProductsPage() {
     setPlanDialogOpen,
     isEditingPlan,
     planTargetProductTitle,
+    planTargetProductVariants,
+    formPlanVariantId,
+    setFormPlanVariantId,
     formPlanName,
     setFormPlanName,
     formPlanType,
@@ -116,6 +115,38 @@ export default function AdminProductsPage() {
     openEditPlanDialog,
     handleSavePlan,
     handleDeletePlan,
+    // Variant dialog
+    variantDialogOpen,
+    setVariantDialogOpen,
+    isEditingVariant,
+    variantTargetProductTitle,
+    formVariantName,
+    setFormVariantName,
+    formVariantSlug,
+    setFormVariantSlug,
+    formVariantDescription,
+    setFormVariantDescription,
+    formVariantPrice,
+    setFormVariantPrice,
+    formVariantDiscountedPrice,
+    setFormVariantDiscountedPrice,
+    formVariantDiscountLabel,
+    setFormVariantDiscountLabel,
+    formVariantDuration,
+    setFormVariantDuration,
+    formVariantFeatures,
+    setFormVariantFeatures,
+    formVariantBadge,
+    setFormVariantBadge,
+    formVariantActive,
+    setFormVariantActive,
+    formVariantSortOrder,
+    setFormVariantSortOrder,
+    submittingVariant,
+    openCreateVariantDialog,
+    openEditVariantDialog,
+    handleSaveVariant,
+    handleDeleteVariant,
   } = useProducts()
 
   // Filter States
@@ -131,6 +162,7 @@ export default function AdminProductsPage() {
   const activeProductsCount = products.filter((p) => p.status === 'ACTIVE').length
   const inStockCount = products.filter((p) => (p.stock || 0) > 0).length
   const totalPlansCount = products.reduce((acc, p) => acc + (p.plans?.length || 0), 0)
+  const totalVariantsCount = products.reduce((acc, p) => acc + (p.variants?.length || 0), 0)
 
   // Filtered products calculation
   const filteredProducts = useMemo(() => {
@@ -145,7 +177,13 @@ export default function AdminProductsPage() {
             prod.shortDescription?.toLowerCase().includes(q) ||
             prod.description?.toLowerCase().includes(q)
           const matchesPlan = prod.plans?.some((pl) => pl.name?.toLowerCase().includes(q))
-          if (!matchesTitle && !matchesSlug && !matchesDesc && !matchesPlan) return false
+          const matchesVariant = prod.variants?.some(
+            (v) =>
+              v.name?.toLowerCase().includes(q) ||
+              v.badge?.toLowerCase().includes(q) ||
+              v.slug?.toLowerCase().includes(q)
+          )
+          if (!matchesTitle && !matchesSlug && !matchesDesc && !matchesPlan && !matchesVariant) return false
         }
 
         // Status
@@ -247,7 +285,7 @@ export default function AdminProductsPage() {
       <Main className='p-3.5 sm:p-6 max-w-7xl mx-auto w-full'>
         <div className='flex flex-col gap-4 sm:gap-6 w-full min-w-0'>
           {/* Products KPI Overview Chips */}
-          <div className='grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3'>
             {/* Total Products */}
             <button
               type='button'
@@ -322,6 +360,20 @@ export default function AdminProductsPage() {
                 <span className='text-[10px] text-primary/80'>موجود</span>
               </div>
             </button>
+
+            {/* Total Variants */}
+            <div className='p-3 sm:p-3.5 rounded-xl border border-border/70 bg-card'>
+              <div className='flex items-center justify-between'>
+                <span className='text-[11px] text-muted-foreground font-medium'>کل انواع محصول</span>
+                <Layers className='size-4 text-primary' />
+              </div>
+              <div className='mt-2 flex items-baseline gap-1.5'>
+                <span className='text-lg sm:text-xl font-bold font-sans text-primary'>
+                  {toPersianDigits(totalVariantsCount)}
+                </span>
+                <span className='text-[10px] text-muted-foreground'>نوع (Variant)</span>
+              </div>
+            </div>
 
             {/* Total Plans */}
             <div className='p-3 sm:p-3.5 rounded-xl border border-border/70 bg-card'>
@@ -533,6 +585,9 @@ export default function AdminProductsPage() {
               onAddPlan={openCreatePlanDialog}
               onEditPlan={openEditPlanDialog}
               onDeletePlan={handleDeletePlan}
+              onAddVariant={openCreateVariantDialog}
+              onEditVariant={openEditVariantDialog}
+              onDeleteVariant={handleDeleteVariant}
             />
           )}
         </div>
@@ -570,6 +625,9 @@ export default function AdminProductsPage() {
         isEditing={isEditingPlan}
         submitting={submittingPlan}
         planTargetProductTitle={planTargetProductTitle}
+        productVariants={planTargetProductVariants}
+        formPlanVariantId={formPlanVariantId}
+        setFormPlanVariantId={setFormPlanVariantId}
         formPlanName={formPlanName}
         setFormPlanName={setFormPlanName}
         formPlanType={formPlanType}
@@ -587,6 +645,38 @@ export default function AdminProductsPage() {
         formPlanSortOrder={formPlanSortOrder}
         setFormPlanSortOrder={setFormPlanSortOrder}
         onSave={handleSavePlan}
+      />
+
+      {/* Variant Create/Edit Dialog */}
+      <VariantDialog
+        open={variantDialogOpen}
+        onOpenChange={setVariantDialogOpen}
+        isEditing={isEditingVariant}
+        variantTargetProductTitle={variantTargetProductTitle}
+        submitting={submittingVariant}
+        formVariantName={formVariantName}
+        setFormVariantName={setFormVariantName}
+        formVariantSlug={formVariantSlug}
+        setFormVariantSlug={setFormVariantSlug}
+        formVariantDescription={formVariantDescription}
+        setFormVariantDescription={setFormVariantDescription}
+        formVariantPrice={formVariantPrice}
+        setFormVariantPrice={setFormVariantPrice}
+        formVariantDiscountedPrice={formVariantDiscountedPrice}
+        setFormVariantDiscountedPrice={setFormVariantDiscountedPrice}
+        formVariantDiscountLabel={formVariantDiscountLabel}
+        setFormVariantDiscountLabel={setFormVariantDiscountLabel}
+        formVariantDuration={formVariantDuration}
+        setFormVariantDuration={setFormVariantDuration}
+        formVariantFeatures={formVariantFeatures}
+        setFormVariantFeatures={setFormVariantFeatures}
+        formVariantBadge={formVariantBadge}
+        setFormVariantBadge={setFormVariantBadge}
+        formVariantActive={formVariantActive}
+        setFormVariantActive={setFormVariantActive}
+        formVariantSortOrder={formVariantSortOrder}
+        setFormVariantSortOrder={setFormVariantSortOrder}
+        onSave={handleSaveVariant}
       />
 
       {/* Delete Confirmation Alert Dialog */}

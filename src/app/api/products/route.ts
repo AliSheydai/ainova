@@ -14,6 +14,16 @@ export async function GET(req: NextRequest) {
           where: { active: true },
           orderBy: { price: 'asc' },
         },
+        variants: {
+          where: { active: true },
+          orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+          include: {
+            plans: {
+              where: { active: true },
+              orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+            },
+          },
+        },
       },
     })
 
@@ -48,6 +58,7 @@ export async function GET(req: NextRequest) {
         return {
           ...prod,
           plans: enrichedPlans,
+          variants: prod.variants || [],
           stock: metrics?.stock ?? 0,
           purchaseCount: metrics?.purchaseCount ?? 0,
         }

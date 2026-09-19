@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   props: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -19,7 +19,20 @@ export async function GET(
       include: {
         plans: {
           where: { active: true },
-          orderBy: { sortOrder: 'asc' },
+          orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+          include: {
+            variant: true,
+          },
+        },
+        variants: {
+          where: { active: true },
+          orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+          include: {
+            plans: {
+              where: { active: true },
+              orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+            },
+          },
         },
       },
     })
@@ -33,31 +46,45 @@ export async function GET(
       FulfillmentService.getProductPurchaseCount(product.id),
     ])
 
-    // Enrich each plan with its available inventory count (for PRE_CREATED_ACCOUNT plans)
-    const plansWithStock = await Promise.all(
-      product.plans.map(async (plan) => {
-        if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
-          const availableCount = await prisma.inventoryItem.count({
-            where: {
-              type: 'PRE_CREATED_ACCOUNT',
-              status: 'AVAILABLE',
-              OR: [
-                { planId: plan.id },
-                { productId: product.id, planId: null },
-              ],
-            },
-          })
-          return { ...plan, availableInventoryCount: availableCount }
-        }
-        return { ...plan, availableInventoryCount: null }
-      })
-    )
+    // Enrich plans with available inventory count (for PRE_CREATED_ACCOUNT)
+    const enrichPlanWithStock = async <T extends { id: string; fulfillmentType: string }>(plan: T) => {
+      if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+        const availableCount = await prisma.inventoryItem.count({
+          where: {
+            type: 'PRE_CREATED_ACCOUNT',
+            status: 'AVAILABLE',
+            OR: [
+              { planId: plan.id },
+              { productId: product.id, planId: null },
+            ],
+          },
+        })
+        return { ...plan, availableInventoryCount: availableCount }
+      }
+      return { ...plan, availableInventoryCount: null }
+    }
+
+    const [plansWithStock, variantsWithStock] = await Promise.all([
+      Promise.all(product.plans.map(enrichPlanWithStock)),
+      Promise.all(
+        product.variants.map(async (variant) => {
+          const variantPlans = await Promise.all(
+            (variant.plans || []).map(enrichPlanWithStock)
+          )
+          return {
+            ...variant,
+            plans: variantPlans,
+          }
+        })
+      ),
+    ])
 
     return NextResponse.json({
       success: true,
       product: {
         ...product,
         plans: plansWithStock,
+        variants: variantsWithStock,
         stock,
         purchaseCount,
       },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,9 +11,10 @@ interface StickyMobileCtaProps {
   isAvailable: boolean
   slug: string
   planId?: string
+  variantId?: string
 }
 
-export function StickyMobileCta({ price, isAvailable, slug, planId }: StickyMobileCtaProps) {
+export function StickyMobileCta({ price, isAvailable, slug, planId, variantId }: StickyMobileCtaProps) {
   const [visible, setVisible] = useState(false)
   const router = useRouter()
 
@@ -39,8 +40,11 @@ export function StickyMobileCta({ price, isAvailable, slug, planId }: StickyMobi
     if (mainBtn) {
       mainBtn.click()
     } else {
-      const url = planId ? `/checkout?slug=${slug}&planId=${planId}` : `/checkout?slug=${slug}`
-      router.push(url)
+      const params = new URLSearchParams()
+      if (slug) params.set('slug', slug)
+      if (variantId) params.set('variantId', variantId)
+      if (planId) params.set('planId', planId)
+      router.push(`/checkout?${params.toString()}`)
     }
   }
 

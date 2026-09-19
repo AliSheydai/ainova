@@ -61,8 +61,9 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       where: { userId: user.id },
       include: {
         product: true,
+        variant: true,
         plan: {
-          include: { product: true },
+          include: { product: true, variant: true },
         },
         payment: true,
         activationLink: true,
@@ -88,15 +89,17 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         day: 'numeric',
       }).format(new Date(order.createdAt))
 
+      const variantName = order.variant?.name ? ` [${order.variant.name}]` : ''
       const productTitle =
         order.product?.title ||
         (order.plan ? `${order.plan.product.title} (${order.plan.name})` : 'محصول')
+      const fullTitle = `${productTitle}${variantName}`
 
       if (order.customerActionRequired && order.status === 'PAID') {
         actionOrders.push({ id: order.id, code: orderCode })
       }
 
-      messageText += `🔹 <b>سفارش <code>#${orderCode}</code></b> — ${escapeHtml(productTitle)}\n`
+      messageText += `🔹 <b>سفارش <code>#${orderCode}</code></b> — ${escapeHtml(fullTitle)}\n`
       messageText += `• 📅 <b>تاریخ:</b> ${dateStr}\n`
       messageText += `• 💰 <b>مبلغ:</b> <b>${order.amount.toLocaleString('fa-IR')} تومان</b>\n`
       messageText += `• 📊 <b>وضعیت:</b> ${getStatusBadge(order.status)}\n`

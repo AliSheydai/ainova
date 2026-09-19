@@ -55,47 +55,122 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { productId, slug, planId, checkoutData, source, couponCode } = body
+    const { productId, slug, planId, variantId, checkoutData, source, couponCode } = body
 
     const validSource: AllowedSource =
       typeof source === 'string' && (ALLOWED_SOURCES as readonly string[]).includes(source)
         ? (source as AllowedSource)
         : 'web'
 
-    // 1. Resolve product and plan
+    // 1. Resolve product, plan, and variant
     let product = null
     let plan = null
+    let variant = null
+
+    // 1.1 If variantId is provided, resolve and validate it
+    if (variantId && typeof variantId === 'string' && variantId.trim()) {
+      variant = await prisma.productVariant.findUnique({
+        where: { id: variantId.trim() },
+        include: { product: true },
+      })
+
+      if (!variant) {
+        return NextResponse.json(
+          { success: false, message: 'نوع محصول انتخاب‌شده یافت نشد.' },
+          { status: 404 }
+        )
+      }
+
+      if (!variant.active) {
+        return NextResponse.json(
+          { success: false, message: 'نوع محصول انتخاب‌شده در حال حاضر غیرفعال است.' },
+          { status: 400 }
+        )
+      }
+
+      product = variant.product
+    }
 
     if (planId) {
       plan = await prisma.plan.findUnique({
         where: { id: planId },
-        include: { product: true },
+        include: { product: true, variant: true },
       })
       if (plan) {
-        product = plan.product
+        if (!product) {
+          product = plan.product
+        } else if (plan.productId !== product.id) {
+          return NextResponse.json(
+            { success: false, message: 'پلن انتخاب‌شده به این محصول تعلق ندارد.' },
+            { status: 400 }
+          )
+        }
+
+        // If variant was resolved, ensure plan matches the variant if plan is linked to a variant
+        if (variant && plan.variantId && plan.variantId !== variant.id) {
+          return NextResponse.json(
+            { success: false, message: 'پلن انتخاب‌شده با نوع محصول همخوانی ندارد.' },
+            { status: 400 }
+          )
+        }
+
+        // If no variant was explicitly sent, but the plan belongs to a variant:
+        if (!variant && plan.variant) {
+          if (plan.variant.active) {
+            variant = plan.variant
+          }
+        }
       }
     } else if (productId) {
-      product = await prisma.product.findUnique({
+      const fetchedProduct = await prisma.product.findUnique({
         where: { id: productId },
-        include: { plans: { where: { active: true }, orderBy: { price: 'asc' } } },
+        include: { plans: { where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }] } },
       })
-      if (product && product.plans.length > 0) {
-        plan = product.plans[0]
+      if (fetchedProduct) {
+        product = fetchedProduct
+        if (variant) {
+          const variantPlan = fetchedProduct.plans.find((p) => p.variantId === variant!.id)
+          plan = variantPlan || fetchedProduct.plans[0] || null
+        } else if (fetchedProduct.plans.length > 0) {
+          plan = fetchedProduct.plans[0]
+        }
       }
     } else if (slug) {
-      product = await prisma.product.findUnique({
+      const fetchedProduct = await prisma.product.findUnique({
         where: { slug },
-        include: { plans: { where: { active: true }, orderBy: { price: 'asc' } } },
+        include: { plans: { where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }] } },
       })
-      if (product && product.plans.length > 0) {
-        plan = product.plans[0]
+      if (fetchedProduct) {
+        product = fetchedProduct
+        if (variant) {
+          const variantPlan = fetchedProduct.plans.find((p) => p.variantId === variant!.id)
+          plan = variantPlan || fetchedProduct.plans[0] || null
+        } else if (fetchedProduct.plans.length > 0) {
+          plan = fetchedProduct.plans[0]
+        }
       }
+    } else if (variant && product) {
+      const variantPlan = await prisma.plan.findFirst({
+        where: { productId: product.id, variantId: variant.id, active: true },
+        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+      })
+      plan = variantPlan || await prisma.plan.findFirst({
+        where: { productId: product.id, active: true },
+        orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }],
+      })
     }
 
     if (!product) {
       return NextResponse.json(
         { success: false, message: 'محصول مورد نظر یافت نشد.' },
         { status: 404 }
+      )
+    }
+
+    if (variant && variant.productId !== product.id) {
+      return NextResponse.json(
+        { success: false, message: 'نوع محصول انتخاب‌شده به این محصول تعلق ندارد.' },
+        { status: 400 }
       )
     }
 
@@ -189,8 +264,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Determine base price using nullish coalescing (Section 2.5)
-    const baseAmount = plan?.price ?? product.price ?? 0
+    // 4. Determine base price: if variant is selected, take price from variant (with discount if applicable)
+    let baseAmount: number
+    if (variant) {
+      const hasDiscount =
+        variant.discountedPrice !== null &&
+        variant.discountedPrice !== undefined &&
+        variant.discountedPrice > 0 &&
+        variant.discountedPrice < variant.price
+
+      baseAmount = hasDiscount ? variant.discountedPrice! : variant.price
+    } else {
+      baseAmount = plan?.price ?? product.price ?? 0
+    }
 
     if (baseAmount <= 0) {
       return NextResponse.json(
@@ -320,12 +406,13 @@ export async function POST(req: NextRequest) {
           )
         }
 
-        // Create Order record with coupon discount
+        // Create Order record with coupon discount and variant
         const newOrder = await tx.order.create({
           data: {
             userId: session.userId,
             productId: product.id,
             planId: plan.id,
+            variantId: variant?.id || null,
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,
@@ -395,7 +482,9 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const callbackUrl = `${appUrl}/api/payment/callback?orderId=${order.id}${source ? `&source=${source}` : ''}`
     const productTitle = product.title
-    const fullTitle = `${productTitle} (${plan.name})`
+    const fullTitle = variant
+      ? `${productTitle} - ${variant.name} (${plan.name})`
+      : `${productTitle} (${plan.name})`
 
     const paymentResult = await PaymentService.createPayment({
       orderId: order.id,
@@ -441,7 +530,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const session = await getCurrentUser()
 
@@ -457,8 +546,9 @@ export async function GET(req: NextRequest) {
       where: { userId: session.userId },
       include: {
         product: true,
+        variant: true,
         plan: {
-          include: { product: true },
+          include: { product: true, variant: true },
         },
         payment: true,
         activationLink: true,
@@ -471,8 +561,8 @@ export async function GET(req: NextRequest) {
     // Decrypt delivery credentials for the authenticated order owner
     const safeOrders = orders.map((ord) => {
       if (ord.delivery && ord.delivery.data) {
-        const rawData = ord.delivery.data as Record<string, any>
-        if (rawData.password) {
+        const rawData = ord.delivery.data as Record<string, unknown>
+        if (typeof rawData.password === 'string') {
           return {
             ...ord,
             delivery: {
