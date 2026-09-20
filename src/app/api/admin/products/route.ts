@@ -231,6 +231,69 @@ export async function PATCH(req: NextRequest) {
       updateData.status = status
     }
 
+    if (body.isFeatured !== undefined) {
+      const willBeFeatured = Boolean(body.isFeatured)
+      if (willBeFeatured) {
+        // Check current featured count excluding this product
+        const currentFeatured = await prisma.product.findMany({
+          where: {
+            isFeatured: true,
+            status: { not: ProductStatus.ARCHIVED },
+            id: { not: targetId },
+          },
+          orderBy: { featuredOrder: 'asc' },
+        })
+
+        if (currentFeatured.length >= 3) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'حداکثر ۳ محصول می‌توانند به عنوان محصول ویژه در بخش قیمت‌گذاری لندینگ انتخاب شوند. ابتدا یکی از موارد قبلی را لغو کنید.',
+            },
+            { status: 400 }
+          )
+        }
+
+        // Determine next featuredOrder: find smallest positive integer not taken from [1, 2, 3]
+        const takenOrders = new Set(currentFeatured.map((p) => p.featuredOrder))
+        let nextOrder = 1
+        for (let o = 1; o <= 3; o++) {
+          if (!takenOrders.has(o)) {
+            nextOrder = o
+            break
+          }
+        }
+
+        updateData.isFeatured = true
+        updateData.featuredOrder = body.featuredOrder !== undefined ? Number(body.featuredOrder) : nextOrder
+      } else {
+        updateData.isFeatured = false
+        updateData.featuredOrder = 0
+
+        // Re-index remaining featured products to maintain clean 1, 2... sequence
+        const remaining = await prisma.product.findMany({
+          where: {
+            isFeatured: true,
+            status: { not: ProductStatus.ARCHIVED },
+            id: { not: targetId },
+          },
+          orderBy: { featuredOrder: 'asc' },
+        })
+
+        for (let i = 0; i < remaining.length; i++) {
+          await prisma.product.update({
+            where: { id: remaining[i].id },
+            data: { featuredOrder: i + 1 },
+          })
+        }
+      }
+    } else if (body.featuredOrder !== undefined) {
+      const newOrder = parseInt(String(body.featuredOrder), 10)
+      if (!isNaN(newOrder) && newOrder >= 0) {
+        updateData.featuredOrder = newOrder
+      }
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id: targetId },
       data: updateData,

@@ -11,6 +11,7 @@ import {
   Loader2,
   Power,
   Video,
+  Star,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ interface ProductTableProps {
   onEditProduct: (product: ProductItem) => void
   onDeleteProduct: (product: ProductItem) => void
   onToggleStatus: (product: ProductItem) => void
+  onToggleFeatured: (product: ProductItem) => void
   onAddPlan: (productId: string, variantId?: string | null) => void
   onEditPlan: (plan: PlanItem) => void
   onDeletePlan: (planId: string) => void
@@ -45,6 +47,7 @@ export function ProductTable({
   onEditProduct,
   onDeleteProduct,
   onToggleStatus,
+  onToggleFeatured,
   onAddPlan,
   onEditPlan,
   onDeletePlan,
@@ -145,6 +148,23 @@ export function ProductTable({
                         <span>ویدئو</span>
                       </Badge>
                     )}
+                    {prod.isFeatured && (
+                      <Badge
+                        className='text-[10px] font-sans px-2 py-0.5 gap-1 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                        title={
+                          prod.featuredOrder === 1
+                            ? 'کارت ویژه اصلی: نمایش در وسط با حاشیه آبی در بخش قیمت‌گذاری لندینگ'
+                            : `محصول ویژه ${toPersianDigits(prod.featuredOrder || 2)} در بخش قیمت‌گذاری لندینگ`
+                        }
+                      >
+                        <Star className='size-2.5 fill-amber-500 text-amber-500' />
+                        <span>
+                          {prod.featuredOrder === 1
+                            ? 'ویژه لندینگ (وسط - حاشیه آبی)'
+                            : `ویژه لندینگ (${toPersianDigits(prod.featuredOrder || 2)})`}
+                        </span>
+                      </Badge>
+                    )}
                   </div>
 
                   {prod.shortDescription && (
@@ -218,6 +238,26 @@ export function ProductTable({
                 >
                   <Power className={`size-3.5 ${prod.status === 'ACTIVE' ? 'text-primary' : 'text-muted-foreground'}`} />
                   <span>{prod.status === 'ACTIVE' ? 'فعال' : 'غیرفعال'}</span>
+                </Button>
+
+                {/* Star / Featured Toggle Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onToggleFeatured(prod)}
+                  className={`h-8 px-2.5 text-xs gap-1 rounded-xl font-medium transition-all ${
+                    prod.isFeatured
+                      ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/40 hover:bg-amber-500/20'
+                      : 'text-muted-foreground bg-muted/40 border-border/70 hover:text-amber-500 hover:border-amber-500/40'
+                  }`}
+                  title={
+                    prod.isFeatured
+                      ? `محصول ویژه قیمت‌گذاری (اولویت: ${prod.featuredOrder === 1 ? 'کارت اصلی - حاشیه آبی در وسط' : `کارت ${prod.featuredOrder}`}) - کلیک جهت حذف`
+                      : 'افزودن به کارت‌های ویژه قیمت‌گذاری در لندینگ پیج (حداکثر ۳ محصول)'
+                  }
+                >
+                  <Star className={`size-3.5 ${prod.isFeatured ? 'fill-amber-500 text-amber-500' : ''}`} />
+                  <span>{prod.isFeatured ? 'ویژه لندینگ' : 'ستاره‌دار'}</span>
                 </Button>
 
                 <Button

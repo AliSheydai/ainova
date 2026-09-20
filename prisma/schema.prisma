@@ -108,6 +108,8 @@ model Product {
   archivedAt       DateTime?
   features         Json?           // Array of feature strings or structured feature objects
   videoUrl         String?         // Product introductory/demo video URL or embed
+  isFeatured       Boolean         @default(false) // Whether product is starred for landing pricing section
+  featuredOrder    Int             @default(0)     // Order among featured products (1: primary with blue border and center, 2, 3)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -118,6 +120,7 @@ model Product {
   coupons         Coupon[]
   reviews         Review[]
 
+  @@index([isFeatured, featuredOrder])
   @@map("products")
 }
 

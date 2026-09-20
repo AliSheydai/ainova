@@ -181,6 +181,40 @@ export function useProducts() {
     }
   }
 
+  const handleToggleFeatured = async (prod: ProductItem) => {
+    const nextFeatured = !prod.isFeatured
+    if (nextFeatured) {
+      const currentFeaturedCount = products.filter((p) => p.isFeatured && p.id !== prod.id).length
+      if (currentFeaturedCount >= 3) {
+        toast.error(
+          'حداکثر ۳ محصول می‌توانند به عنوان محصول ویژه در بخش قیمت‌گذاری لندینگ انتخاب شوند. لطفاً ابتدا یکی را لغو کنید.'
+        )
+        return
+      }
+    }
+
+    try {
+      const res = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: prod.id, isFeatured: nextFeatured }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(
+          nextFeatured
+            ? `«${prod.title}» به عنوان محصول ویژه در بخش قیمت‌گذاری انتخاب شد.`
+            : `«${prod.title}» از محصولات ویژه بخش قیمت‌گذاری خارج شد.`
+        )
+        fetchProducts()
+      } else {
+        toast.error(data.error || 'خطا در تغییر وضعیت محصول ویژه.')
+      }
+    } catch {
+      toast.error('خطای ارتباط با سرور.')
+    }
+  }
+
   const promptDeleteProduct = (prod: ProductItem) => {
     setProductToDelete(prod)
     setDeleteDialogOpen(true)
@@ -479,6 +513,7 @@ export function useProducts() {
     openEditProductDialog,
     handleSaveProduct,
     handleToggleProductStatus,
+    handleToggleFeatured,
     // Product delete
     deleteDialogOpen,
     setDeleteDialogOpen,

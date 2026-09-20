@@ -110,9 +110,6 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
               <h3 className="text-base sm:text-lg font-bold text-foreground">
                 راهنمای فعال‌سازی ۲ پلن فروشگاه
               </h3>
-              <Badge variant="outline" className="text-[11px] border-primary/30 text-primary bg-primary/5">
-                ساده و شفاف
-              </Badge>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
               سفارش‌های فروشگاه در قالب <strong>۲ پلن اصلی</strong> تحویل داده میشوند. برای آموزش هر پلن روی کارت آن کلیک کنید.
@@ -341,9 +338,6 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
                     <span className="flex size-2.5 rounded-full bg-primary" />
                     پلن دوم: اکانت اختصاصی روی ایمیل
                   </h5>
-                  <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/30 font-medium">
-                    شامل ۲ حالت تحویل (انتخابی در خرید)
-                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed pt-1">
                   در این پلن، شما هنگام خرید انتخاب کرده‌اید که اکانت آماده تحویل بگیرید یا اشتراک روی جیمیل شخصی خودتان فعال شود. راهنمای حالت انتخابی خود را در زیر مشاهده کنید:
@@ -351,7 +345,7 @@ export function ActivationGuideTab({ onGoToOrders }: ActivationGuideTabProps) {
               </div>
 
               {/* Sub-Mode Segmented Switcher */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-muted/60 rounded-xl border border-border/60 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 p-1 bg-muted/60 rounded-xl border border-border/60 text-xs">
                 <button
                   type="button"
                   onClick={() => setEmailSubMode('inventory')}

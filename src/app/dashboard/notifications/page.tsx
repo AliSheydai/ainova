@@ -219,7 +219,7 @@ export default function AdminNotificationsPage() {
 
       <Main className='p-4 md:p-6 max-w-7xl mx-auto space-y-6'>
         {/* هدر صفحه و دکمه ارسال پیام */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
           <div>
             <h2 className='text-xl font-bold text-foreground'>
               اعلانات سیستم و پیام‌های سراسری

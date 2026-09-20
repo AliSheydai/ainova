@@ -28,6 +28,8 @@ export interface PricingProduct {
   hasMultiplePlans?: boolean
   image?: string | null
   features?: string[] | null
+  isFeatured?: boolean
+  featuredOrder?: number
   plans?: {
     id: string
     name: string
@@ -49,8 +51,12 @@ export function PricingSection({
   productTitle = 'Google AI Pro ۱۸ ماهه',
   productSlug = 'google-ai-pro',
 }: PricingSectionProps) {
-  // If products array is provided and not empty, render dynamic comparison cards
-  const displayProducts = products && products.length > 0 ? products.slice(0, 3) : null
+  // If no products are provided or empty, completely hide the pricing section
+  if (!products || products.length === 0) {
+    return null
+  }
+
+  const displayProducts = products.slice(0, 3)
 
   return (
     <section id='pricing' className='py-20 md:py-24'>
@@ -80,7 +86,7 @@ export function PricingSection({
                 ? 'max-w-md grid-cols-1'
                 : displayProducts.length === 2
                 ? 'max-w-3xl grid-cols-1 md:grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                : 'grid-cols-1 md:grid-cols-3'
             }`}
             initial='hidden'
             whileInView='visible'
@@ -88,7 +94,24 @@ export function PricingSection({
             variants={staggerContainer(0.1)}
           >
             {displayProducts.map((prod, index) => {
-              const isPopular = index === 0
+              // Primary popular product with blue border: first product or the one with featuredOrder === 1
+              const isPopular =
+                prod.featuredOrder === 1 ||
+                (!displayProducts.some((p) => p.featuredOrder === 1) && index === 0)
+
+              // When 3 cards are displayed, place the primary blue-bordered card in the center (column 2 on md+)
+              // while keeping it at the top (order-1) on mobile screens.
+              let orderClass = ''
+              if (displayProducts.length === 3) {
+                if (isPopular) {
+                  orderClass = 'order-1 md:order-2'
+                } else if (index === 1 || (index === 0 && !isPopular)) {
+                  orderClass = 'order-2 md:order-1'
+                } else {
+                  orderClass = 'order-3 md:order-3'
+                }
+              }
+
               const currentPrice = prod.minPrice ?? prod.price
               const feats =
                 Array.isArray(prod.features) && prod.features.length > 0
@@ -96,11 +119,11 @@ export function PricingSection({
                   : fallbackFeatures.slice(0, 5)
 
               return (
-                <motion.div key={prod.id} variants={scaleIn} className='flex'>
+                <motion.div key={prod.id} variants={scaleIn} className={`flex ${orderClass}`}>
                   <Card
                     className={`relative flex flex-col justify-between w-full overflow-hidden transition-all duration-300 rounded-2xl ${
                       isPopular
-                        ? 'border-primary/50 shadow-xl shadow-primary/10 ring-1 ring-primary/20'
+                        ? 'border-primary/60 shadow-xl shadow-primary/10 ring-2 ring-primary/30 md:-translate-y-1 z-10'
                         : 'border-border/70 shadow-xs hover:shadow-md'
                     }`}
                   >
@@ -108,7 +131,7 @@ export function PricingSection({
                     <div
                       className={`absolute left-0 right-0 top-0 h-1.5 ${
                         isPopular
-                          ? 'bg-gradient-to-r from-primary/40 via-primary to-primary/40'
+                          ? 'bg-gradient-to-r from-primary/50 via-primary to-primary/50'
                           : 'bg-border/60'
                       }`}
                     />
@@ -140,15 +163,25 @@ export function PricingSection({
                         )}
                       </div>
 
-                      <h3 className='text-base sm:text-lg md:text-xl font-bold text-foreground line-clamp-1'>
-                        {prod.title}
-                      </h3>
+                      {/* Product Title - Clean Multiline with No Ellipsis Truncation */}
+                      <div className='min-h-[50px] sm:min-h-[56px] flex items-center justify-center px-1'>
+                        <h3 className='text-sm sm:text-base md:text-lg font-bold text-foreground text-center leading-snug break-words'>
+                          {prod.title}
+                        </h3>
+                      </div>
 
-                      {prod.shortDescription && (
-                        <p className='text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed min-h-[32px]'>
-                          {prod.shortDescription}
-                        </p>
-                      )}
+                      {/* Short Description */}
+                      <div className='min-h-[38px] flex items-center justify-center mt-1'>
+                        {prod.shortDescription ? (
+                          <p className='text-xs text-muted-foreground line-clamp-2 leading-relaxed text-center'>
+                            {prod.shortDescription}
+                          </p>
+                        ) : (
+                          <span className='text-[11px] text-muted-foreground/60 text-center'>
+                            دسترسی کامل و قانونی به سرویس
+                          </span>
+                        )}
+                      </div>
 
                       <div className='mt-3 sm:mt-4 flex flex-col items-center justify-center'>
                         {prod.hasMultiplePlans && (

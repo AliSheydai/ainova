@@ -227,16 +227,16 @@ export function BulkAddLinksDialog({
                   محصول مقصد <span className='text-destructive'>*</span>
                 </label>
                 <Select value={productId} onValueChange={handleProductChange} disabled={importing}>
-                  <SelectTrigger className='text-xs rounded-xl h-9 bg-background'>
+                  <SelectTrigger className='w-full text-xs rounded-xl h-9 bg-background'>
                     <SelectValue placeholder='انتخاب محصول' />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        <div className='flex items-center justify-between gap-2 w-full'>
-                          <span>{p.title}</span>
+                        <div className='flex items-center justify-between gap-2 w-full min-w-0'>
+                          <span className='truncate' title={p.title}>{p.title}</span>
                           {typeof p.availableCount === 'number' && (
-                            <span className='text-[10px] text-muted-foreground font-sans'>
+                            <span className='text-[10px] text-muted-foreground font-sans shrink-0'>
                               ({toPersianDigits(p.availableCount)} موجود)
                             </span>
                           )}
@@ -254,14 +254,14 @@ export function BulkAddLinksDialog({
                     نوع محصول <span className='text-muted-foreground font-normal'>(اختیاری)</span>
                   </label>
                   <Select value={variantId} onValueChange={setVariantId} disabled={importing || loadingVariants}>
-                    <SelectTrigger className='text-xs rounded-xl h-9 bg-background'>
+                    <SelectTrigger className='w-full text-xs rounded-xl h-9 bg-background'>
                       <SelectValue placeholder={loadingVariants ? 'در حال بارگذاری انواع...' : 'همه انواع این محصول (عمومی)'} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                       <SelectItem value='ALL'>همه انواع این محصول (عمومی)</SelectItem>
                       {variants.map((v) => (
                         <SelectItem key={v.id} value={v.id}>
-                          <span>{v.name}</span>
+                          <span className='truncate' title={v.name}>{v.name}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -275,17 +275,17 @@ export function BulkAddLinksDialog({
                     پلن اختصاصی <span className='text-muted-foreground font-normal'>(اختیاری)</span>
                   </label>
                   <Select value={planId} onValueChange={setPlanId} disabled={importing}>
-                    <SelectTrigger className='text-xs rounded-xl h-9 bg-background'>
+                    <SelectTrigger className='w-full text-xs rounded-xl h-9 bg-background'>
                       <SelectValue placeholder='همه پلن‌های این محصول' />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                       <SelectItem value='ALL'>همه پلن‌های این محصول</SelectItem>
                       {plans.map((pl) => (
                         <SelectItem key={pl.id} value={pl.id}>
-                          <div className='flex items-center justify-between gap-2 w-full'>
-                            <span>{pl.name}</span>
+                          <div className='flex items-center justify-between gap-2 w-full min-w-0'>
+                            <span className='truncate' title={pl.name}>{pl.name}</span>
                             {typeof pl.availableCount === 'number' && (
-                              <span className='text-[10px] text-muted-foreground font-sans'>
+                              <span className='text-[10px] text-muted-foreground font-sans shrink-0'>
                                 ({toPersianDigits(pl.availableCount)} موجود)
                               </span>
                             )}
@@ -300,7 +300,7 @@ export function BulkAddLinksDialog({
 
             {/* Current Inventory Stock Badge */}
             {selectedProduct && currentStock !== null && (
-              <div className='flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/70 text-xs'>
+              <div className='flex flex-col sm:flex-row items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/70 text-xs'>
                 <div className='flex items-center gap-2 text-muted-foreground text-[11px] min-w-0'>
                   <Layers className='size-3.5 text-primary shrink-0' />
                   <span className='truncate'>

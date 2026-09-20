@@ -80,9 +80,9 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
     rotation = 0,
     cardTilt = 0,
     cardRadius = 14,
-    centerScale = 1.15,
+    centerScale = 1.0,
     edgeFade = 0.3,
-    edgeBlur = 4,
+    edgeBlur = 0,
     pauseOnHover = true,
     imageFit = 'cover',
     grayscale = 0,
@@ -216,8 +216,11 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
       const fadeStart = clamp(1 - edgeFade, 0, 0.98);
       const turnSize = Math.max(cardsPerTurn, 1);
       const halfHeight = height * 0.5;
-      const yFadeStart = halfHeight * 0.42;
-      const yFadeEnd = halfHeight * 0.88;
+      const yFadeStart = halfHeight * 0.55;
+      const yFadeEnd = halfHeight * 0.95;
+
+      // Calculate max depth for normalizing scale (ensures front-most card stays at 1:1 scale with 0 upscaling blur)
+      const maxFrontDepth = perspective / Math.max(perspective - responsiveRadius, 1);
 
       cardRefs.current.forEach((card, index) => {
         if (!card) return;
@@ -231,25 +234,30 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
         const opacity = Math.min(yOpacity, spiralOpacity);
 
         const focus = 1 - Math.min(Math.abs(offset) / Math.max(turnSize * 0.65, 1), 1);
-        const effectiveCenterScale = isMobile ? Math.min(centerScale, 1.06) : centerScale;
+        const effectiveCenterScale = isMobile ? Math.min(centerScale, 1.04) : centerScale;
         const scale = (1 + (effectiveCenterScale - 1) * focus) * fit;
         const angle = offset * (360 / turnSize) + rotation;
         const angleRadians = (angle * Math.PI) / 180;
         const x = Math.sin(angleRadians) * responsiveRadius;
         const z = Math.cos(angleRadians) * responsiveRadius;
-        const depthScale = clamp(
-          perspective / Math.max(perspective - z, 1),
-          0.72,
-          isMobile ? 1.12 : 1.35
-        );
+
+        // Normalized depthScale: front card remains <= 1.0 so browser never bilinearly upscales text
+        const rawDepth = perspective / Math.max(perspective - z, 1);
+        const normalizedDepth = rawDepth / maxFrontDepth;
+        const depthScale = clamp(normalizedDepth, 0.72, 1.0);
         const visualScale = scale * depthScale;
         const depth = (z / Math.max(responsiveRadius, 1) + 1) / 2;
-        const blurFactor = Math.max(edge, yEdge);
-        const blur = edgeBlur * smoothstep(0.25, 1, blurFactor);
 
-        card.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${yPos}px, 0) rotateZ(${cardTilt}deg) scale(${visualScale})`;
+        const blurFactor = Math.max(edge, yEdge);
+        const blur = edgeBlur > 0 ? edgeBlur * smoothstep(0.35, 1, blurFactor) : 0;
+
+        card.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${yPos.toFixed(1)}px, 0) rotateZ(${cardTilt}deg) scale(${visualScale.toFixed(3)})`;
         card.style.opacity = opacity.toFixed(3);
-        card.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : 'none';
+        if (edgeBlur > 0 && blur > 0.05) {
+          card.style.filter = `blur(${blur.toFixed(2)}px)`;
+        } else {
+          card.style.filter = 'none';
+        }
         card.style.zIndex = String(Math.round(depth * 100000) + index);
         card.style.pointerEvents = opacity > 0.35 ? 'auto' : 'none';
       });
@@ -318,6 +326,9 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
     width: cardWidth,
     height: cardHeight,
     borderRadius: cardRadius,
+    WebkitFontSmoothing: 'antialiased',
+    MozOsxFontSmoothing: 'grayscale',
+    textRendering: 'optimizeLegibility',
   };
 
   const imageStyle: CSSProperties = {
@@ -330,7 +341,7 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
   };
 
   const defaultItemClassName =
-    'absolute left-1/2 top-1/2 block overflow-hidden rounded-[var(--spiral-radius)] border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-md shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)] [backface-visibility:hidden] [transform-style:preserve-3d] [will-change:transform,opacity,filter] motion-reduce:transition-none';
+    'absolute left-1/2 top-1/2 block overflow-hidden rounded-[var(--spiral-radius)] border border-border/80 bg-card shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)] [backface-visibility:hidden] [will-change:transform,opacity] antialiased select-none';
 
   const combinedItemClassName = `${defaultItemClassName} ${itemClassName}`.trim();
 

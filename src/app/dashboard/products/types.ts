@@ -55,6 +55,8 @@ export interface ProductItem {
   stock: number
   purchaseCount: number
   sortOrder: number
+  isFeatured?: boolean
+  featuredOrder?: number
   createdAt: string
   plans?: PlanItem[]
   variants?: VariantItem[]

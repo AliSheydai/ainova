@@ -12,6 +12,7 @@ import {
   Package,
   Layers,
   CheckCircle2,
+  Star,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -79,6 +80,7 @@ export default function AdminProductsPage() {
     openEditProductDialog,
     handleSaveProduct,
     handleToggleProductStatus,
+    handleToggleFeatured,
     // Product delete
     deleteDialogOpen,
     setDeleteDialogOpen,
@@ -154,6 +156,7 @@ export default function AdminProductsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [fulfillmentFilter, setFulfillmentFilter] = useState('ALL')
   const [stockFilter, setStockFilter] = useState('ALL')
+  const [featuredOnly, setFeaturedOnly] = useState(false)
   const [sortBy, setSortBy] = useState('DEFAULT')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
@@ -161,6 +164,7 @@ export default function AdminProductsPage() {
   const totalProductsCount = products.length
   const activeProductsCount = products.filter((p) => p.status === 'ACTIVE').length
   const inStockCount = products.filter((p) => (p.stock || 0) > 0).length
+  const featuredCount = products.filter((p) => p.isFeatured).length
   const totalPlansCount = products.reduce((acc, p) => acc + (p.plans?.length || 0), 0)
   const totalVariantsCount = products.reduce((acc, p) => acc + (p.variants?.length || 0), 0)
 
@@ -168,6 +172,7 @@ export default function AdminProductsPage() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((prod) => {
+        if (featuredOnly && !prod.isFeatured) return false
         // Search
         if (search.trim()) {
           const q = search.trim().toLowerCase()
@@ -224,6 +229,7 @@ export default function AdminProductsPage() {
     setStatusFilter('ALL')
     setFulfillmentFilter('ALL')
     setStockFilter('ALL')
+    setFeaturedOnly(false)
     setSortBy('DEFAULT')
   }
 
@@ -231,6 +237,7 @@ export default function AdminProductsPage() {
     statusFilter !== 'ALL',
     fulfillmentFilter !== 'ALL',
     stockFilter !== 'ALL',
+    featuredOnly,
     sortBy !== 'DEFAULT',
     search.trim().length > 0,
   ].filter(Boolean).length
@@ -285,13 +292,41 @@ export default function AdminProductsPage() {
       <Main className='p-3.5 sm:p-6 max-w-7xl mx-auto w-full'>
         <div className='flex flex-col gap-4 sm:gap-6 w-full min-w-0'>
           {/* Products KPI Overview Chips */}
-          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3'>
+            {/* Featured Landing Card */}
+            <button
+              type='button'
+              onClick={() => setFeaturedOnly((prev) => !prev)}
+              className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
+                featuredOnly
+                  ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 shadow-xs ring-1 ring-amber-500/30'
+                  : 'bg-card border-border/70 hover:border-amber-500/40 hover:bg-muted/30'
+              }`}
+              title='کلیک جهت فیلتر و مشاهده محصولات ویژه لندینگ'
+            >
+              <div className='flex items-center justify-between'>
+                <span className='text-[11px] text-muted-foreground font-medium'>ویژه قیمت‌گذاری</span>
+                <Star
+                  className={`size-4 ${
+                    featuredCount > 0 ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'
+                  }`}
+                />
+              </div>
+              <div className='mt-2 flex items-baseline gap-1.5'>
+                <span className='text-lg sm:text-xl font-bold font-sans text-amber-600 dark:text-amber-400'>
+                  {toPersianDigits(featuredCount)}
+                </span>
+                <span className='text-[10px] text-muted-foreground'>از ۳ محصول</span>
+              </div>
+            </button>
+
             {/* Total Products */}
             <button
               type='button'
               onClick={() => {
                 setStatusFilter('ALL')
                 setStockFilter('ALL')
+                setFeaturedOnly(false)
               }}
               className={`text-start p-3 sm:p-3.5 rounded-xl border transition-all duration-200 ${
                 statusFilter === 'ALL' && stockFilter === 'ALL'
@@ -582,6 +617,7 @@ export default function AdminProductsPage() {
               onEditProduct={openEditProductDialog}
               onDeleteProduct={promptDeleteProduct}
               onToggleStatus={handleToggleProductStatus}
+              onToggleFeatured={handleToggleFeatured}
               onAddPlan={openCreatePlanDialog}
               onEditPlan={openEditPlanDialog}
               onDeletePlan={handleDeletePlan}

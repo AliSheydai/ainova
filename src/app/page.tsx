@@ -94,6 +94,8 @@ async function getProductsData() {
         features: prod.features as string[] | null,
         stock,
         purchaseCount,
+        isFeatured: prod.isFeatured,
+        featuredOrder: prod.featuredOrder,
         fulfillmentType: firstPlan?.fulfillmentType || 'ACTIVATION_LINK',
         plans: activePlans.map((p) => ({
           id: p.id,
@@ -116,7 +118,17 @@ export default async function LandingPage() {
     getProductsData(),
     getTopReviewsData(),
   ])
-  const primaryProduct = products.find((p) => p.slug === 'google-ai-pro') || products[0]
+
+  // Filter products explicitly featured by admin for the pricing section (max 3), sorted by priority
+  const featuredPricingProducts = products
+    .filter((p) => p.isFeatured)
+    .sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0))
+    .slice(0, 3)
+
+  const primaryProduct =
+    featuredPricingProducts.find((p) => p.featuredOrder === 1) ||
+    products.find((p) => p.slug === 'google-ai-pro') ||
+    products[0]
   const formattedPrice = primaryProduct ? formatPrice(primaryProduct.price) : '۳۹۰،۰۰۰ تومان'
 
   return (
@@ -128,12 +140,15 @@ export default async function LandingPage() {
         <ProductsShowcaseSection products={products} />
         <FeaturesSection />
         <HowItWorksSection />
-        <PricingSection
-          products={products}
-          price={formattedPrice}
-          productTitle={primaryProduct?.title}
-          productSlug={primaryProduct?.slug}
-        />
+        {/* Pricing Section is rendered ONLY when at least 1 product is starred by admin */}
+        {featuredPricingProducts.length > 0 && (
+          <PricingSection
+            products={featuredPricingProducts}
+            price={formattedPrice}
+            productTitle={primaryProduct?.title}
+            productSlug={primaryProduct?.slug}
+          />
+        )}
         <SecuritySection />
         {/* Top featured customer reviews showcase */}
         <TopReviewsSection reviews={topReviews} />

@@ -188,11 +188,7 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
 
               <div className="flex flex-col min-w-0 text-start">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-foreground">تلگرام متصل</span>
-                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1 py-0 h-4 gap-0.5 font-medium">
-                    <CheckCircle2 className="size-2.5" />
-                    همگام
-                  </Badge>
+                  <span className="text-xs font-bold text-foreground">تلگرام</span>
                 </div>
                 <span
                   dir="ltr"
@@ -277,18 +273,18 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
       {/* Edit Form Card */}
       <motion.div variants={fadeUp}>
         <Card className="border-border/70 shadow-xs">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm font-bold">ویرایش نام و مشخصات</CardTitle>
-            <CardDescription className="text-xs">
+          <CardHeader className="p-4 sm:p-5 pb-2.5 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-bold text-foreground">ویرایش نام و مشخصات</CardTitle>
+            <CardDescription className="text-[11px] sm:text-xs leading-relaxed text-muted-foreground mt-0.5">
               نام شما در رسید فاکتورها و پنل کاربری نمایش داده می‌شود.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="px-5 pb-5 pt-0">
-            <form noValidate onSubmit={handleUpdateName} className="space-y-4">
-              <div className='flex flex-col md:flex-row md:items-center gap-3.5'>
+          <CardContent className="p-4 sm:p-5 pt-0">
+            <form noValidate onSubmit={handleUpdateName} className="space-y-3 sm:space-y-3.5">
+              <div className='flex flex-col md:flex-row md:items-center gap-3 sm:gap-3.5'>
                 <div className="space-y-1.5 flex-1">
-                  <Label htmlFor="profile-name" className="text-xs font-semibold">
+                  <Label htmlFor="profile-name" className="text-[11px] sm:text-xs font-medium text-foreground/90">
                     نام و نام خانوادگی
                   </Label>
                   <div className="relative group">
@@ -301,24 +297,24 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                       }}
                       placeholder="مثال: علی رضایی"
                       aria-invalid={!!nameError}
-                      className={`h-11 pr-10 rounded-xl border-border/80 focus-visible:ring-primary/40 font-sans text-xs sm:text-sm transition-colors ${
+                      className={`h-9.5 sm:h-10 pr-9 rounded-lg sm:rounded-xl border-border/80 focus-visible:ring-primary/40 text-xs sm:text-[13px] placeholder:text-[11px] sm:placeholder:text-xs transition-colors ${
                         nameError ? 'border-destructive focus-visible:ring-destructive/30' : ''
                       }`}
                     />
-                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                      <User className="h-4 w-4" />
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                      <User className="size-3.5 sm:size-4" />
                     </div>
                   </div>
                   {nameError && (
-                    <p className="text-[11px] sm:text-xs text-destructive font-medium flex items-center gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                      <AlertCircle className="size-3.5 shrink-0" />
+                    <p className="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="size-3 shrink-0" />
                       <span>{nameError}</span>
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5 flex-1">
-                  <Label htmlFor="profile-phone" className="text-xs font-semibold">
+                  <Label htmlFor="profile-phone" className="text-[11px] sm:text-xs font-medium text-foreground/90">
                     شماره موبایل (شناسه یکتا)
                   </Label>
                   <div className="relative">
@@ -327,43 +323,43 @@ export function ProfileTab({ user, onUserUpdate, onLogout }: ProfileTabProps) {
                       value={user.phone}
                       readOnly
                       dir="ltr"
-                      className="bg-muted/50 font-sans tabular-nums text-left h-11 pr-10 rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
+                      className="bg-muted/50 font-sans tabular-nums text-left h-9.5 sm:h-10 pr-9 rounded-lg sm:rounded-xl border-border/60 text-muted-foreground cursor-not-allowed text-xs sm:text-[13px]"
                     />
-                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      <Phone className="h-4 w-4" />
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <Phone className="size-3.5 sm:size-4" />
                     </div>
                   </div>
                 </div>
               </div>
 
               {user.createdAt && (
-                <div className="flex items-center gap-2 rounded-xl bg-muted/30 p-3 text-xs text-muted-foreground border border-border/40">
+                <div className="flex items-center gap-2 rounded-lg sm:rounded-xl bg-muted/30 px-3 py-2 text-[11px] sm:text-xs text-muted-foreground border border-border/40">
                   <Calendar className="size-3.5 shrink-0 text-primary" />
                   <span>
                     تاریخ عضویت:{' '}
-                    <strong className="text-foreground font-sans">
+                    <strong className="text-foreground font-medium">
                       {formatPersianDate(user.createdAt)}
                     </strong>
                   </span>
                 </div>
               )}
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-3 pt-1">
                 <Button
                   type="submit"
                   disabled={saving}
                   aria-busy={saving}
                   size="sm"
-                  className="text-xs font-semibold h-10 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md shadow-primary/20 transition-transform active:scale-[0.98] cursor-pointer"
+                  className="text-xs font-medium h-9 sm:h-9.5 px-4 sm:px-5 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-xs shadow-primary/20 transition-transform active:scale-[0.98] cursor-pointer"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="ml-2 size-3.5 animate-spin" aria-hidden="true" />
+                      <Loader2 className="ml-1.5 size-3.5 animate-spin" aria-hidden="true" />
                       در حال ذخیره...
                     </>
                   ) : (
                     <>
-                      <Check className="ml-2 size-3.5" aria-hidden="true" />
+                      <Check className="ml-1.5 size-3.5" aria-hidden="true" />
                       ذخیره تغییرات
                     </>
                   )}

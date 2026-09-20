@@ -121,13 +121,13 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
             enableScroll={false}
             speed={0.35}
             radius={isMobile ? 76 : 250}
-            cardWidth={isMobile ? 276 : 330}
-            cardHeight={isMobile ? 174 : 195}
+            cardWidth={isMobile ? 280 : 340}
+            cardHeight={isMobile ? 180 : 205}
             verticalSpacing={isMobile ? 64 : 75}
             perspective={isMobile ? 850 : 1100}
             cardRadius={16}
-            centerScale={isMobile ? 1.05 : 1.12}
-            edgeBlur={isMobile ? 2 : 2.5}
+            centerScale={1.0}
+            edgeBlur={0}
             cardsPerTurn={isMobile ? 6 : 7}
             pauseOnHover
             direction='up'
@@ -142,7 +142,7 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
               })
 
               return (
-                <div className='group relative h-full w-full flex flex-col justify-between p-3 sm:p-4 text-start select-none'>
+                <div className='group relative h-full w-full flex flex-col justify-between p-3.5 sm:p-4 text-start select-none'>
                   {/* Decorative Quote Mark Watermark */}
                   <Quote className='absolute end-3 top-1/2 -translate-y-1/2 size-7 sm:size-8 text-muted-foreground/5 group-hover:text-primary/10 transition-colors pointer-events-none' />
 
@@ -151,10 +151,10 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
                     <div className='flex items-start justify-between gap-2 mb-1.5 sm:mb-2'>
                       <div className='flex items-center gap-1.5 sm:gap-2 min-w-0'>
                         <div className='min-w-0'>
-                          <div className='font-bold text-[11px] sm:text-xs text-foreground truncate'>
+                          <div className='font-bold text-xs sm:text-sm text-foreground truncate'>
                             {item.userName}
                           </div>
-                          <div className='flex items-center gap-1 text-[8px] sm:text-[9px] text-emerald-600 dark:text-emerald-400 mt-0.5'>
+                          <div className='flex items-center gap-1 text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5'>
                             <ShieldCheck className='size-2.5 shrink-0' />
                             <span>خریدار تاییدشده</span>
                           </div>
@@ -162,7 +162,7 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
                       </div>
 
                       {/* Date */}
-                      <span className='text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap pt-0.5 font-sans'>
+                      <span className='text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap pt-0.5 font-sans'>
                         {toPersianDigits(formattedDate)}
                       </span>
                     </div>
@@ -181,13 +181,13 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
                           />
                         ))}
                       </div>
-                      <span className='text-[8px] sm:text-[9.5px] font-bold text-foreground font-sans ms-1'>
+                      <span className='text-[9px] sm:text-[10.5px] font-bold text-foreground font-sans ms-1'>
                         {toPersianDigits(item.rating)} از ۵
                       </span>
                     </div>
 
                     {/* Review Comment Text */}
-                    <p className='text-[10.5px] sm:text-xs text-foreground/90 leading-relaxed line-clamp-2 sm:line-clamp-3 font-medium break-words'>
+                    <p className='text-xs sm:text-[13px] text-foreground leading-relaxed line-clamp-3 font-normal break-words'>
                       «{item.comment}»
                     </p>
                   </div>
@@ -195,13 +195,13 @@ export function TopReviewsSection({ reviews }: TopReviewsSectionProps) {
                   {/* Bottom: Related Product Link Badge */}
                   {item.product && (
                     <div className='pt-2 mt-1.5 sm:mt-2 border-t border-border/60 flex items-center justify-between gap-2'>
-                      <span className='text-[8px] sm:text-[9px] text-muted-foreground truncate'>
+                      <span className='text-[9px] sm:text-[10px] text-muted-foreground truncate'>
                         محصول:
                       </span>
                       <Link
                         href={`/products/${item.product.slug}`}
                         onClick={(e) => e.stopPropagation()}
-                        className='group/link inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 hover:bg-primary/10 text-foreground hover:text-primary font-medium text-[8.5px] sm:text-[9.5px] transition-colors max-w-[140px] sm:max-w-[190px] truncate border border-border/40'
+                        className='group/link inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 hover:bg-primary/10 text-foreground hover:text-primary font-medium text-[9px] sm:text-[10px] transition-colors max-w-[140px] sm:max-w-[190px] truncate border border-border/40'
                       >
                         <span className='truncate'>{item.product.title}</span>
                         <ExternalLink className='size-2.5 shrink-0 opacity-60 group-hover/link:opacity-100 transition-opacity' />

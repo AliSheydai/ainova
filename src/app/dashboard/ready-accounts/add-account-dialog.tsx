@@ -492,13 +492,13 @@ export function AddAccountDialog({
                   onValueChange={handleProductChange}
                   disabled={submitting}
                 >
-                  <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
+                  <SelectTrigger className='w-full h-9 text-xs rounded-xl bg-background'>
                     <SelectValue placeholder='انتخاب محصول...' />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.title}
+                        <span className='truncate' title={p.title}>{p.title}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -520,16 +520,16 @@ export function AddAccountDialog({
                     onValueChange={setSelectedVariantId}
                     disabled={!selectedProductId || loadingVariants || submitting}
                   >
-                    <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
+                    <SelectTrigger className='w-full h-9 text-xs rounded-xl bg-background'>
                       <SelectValue
                         placeholder={loadingVariants ? 'در حال بارگذاری انواع...' : 'همه انواع (عمومی)'}
                       />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                       <SelectItem value='NONE'>همه انواع (عمومی / بدون نوع خاص)</SelectItem>
                       {variants.map((v) => (
                         <SelectItem key={v.id} value={v.id}>
-                          {v.name}
+                          <span className='truncate' title={v.name}>{v.name}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -551,16 +551,16 @@ export function AddAccountDialog({
                   onValueChange={setSelectedPlanId}
                   disabled={!selectedProductId || loadingPlans || submitting}
                 >
-                  <SelectTrigger className='h-9 text-xs rounded-xl bg-background'>
+                  <SelectTrigger className='w-full h-9 text-xs rounded-xl bg-background'>
                     <SelectValue
                       placeholder={loadingPlans ? 'در حال بارگذاری پلن‌ها...' : 'بدون پلن خاص'}
                     />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                     <SelectItem value='NONE'>بدون پلن خاص (سطح کل محصول)</SelectItem>
                     {plans.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.name}
+                        <span className='truncate' title={p.name}>{p.name}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -570,7 +570,7 @@ export function AddAccountDialog({
 
             {/* Selected Product/Variant/Plan stock badge */}
             {currentProduct && (
-              <div className='flex items-center justify-between gap-2 pt-2 border-t border-border/50 text-[11px] text-muted-foreground'>
+              <div className='flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-border/50 text-[10px] sm:text-[8px] text-muted-foreground'>
                 <span className='truncate'>
                   هدف انبار:{' '}
                   <span className='font-medium text-foreground'>
