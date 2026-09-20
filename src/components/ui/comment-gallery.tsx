@@ -339,9 +339,6 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
       ref={rootRef}
       className={`relative h-full min-h-80 w-full overflow-hidden select-none ${className}`}
       style={rootStyle}
-      onMouseEnter={() => {
-        hoveredRef.current = true;
-      }}
       onMouseLeave={() => {
         hoveredRef.current = false;
       }}
@@ -444,6 +441,20 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
                 style={cardStyle}
                 role="listitem"
                 aria-label={item.label || item.alt}
+                onMouseEnter={
+                  pauseOnHover
+                    ? () => {
+                        hoveredRef.current = true;
+                      }
+                    : undefined
+                }
+                onMouseLeave={
+                  pauseOnHover
+                    ? () => {
+                        hoveredRef.current = false;
+                      }
+                    : undefined
+                }
               >
                 {innerContent}
               </div>
@@ -461,6 +472,20 @@ export const InfiniteSpiral = forwardRef<InfiniteSpiralRef, InfiniteSpiralProps>
               rel={item.target === '_blank' ? 'noreferrer' : undefined}
               role="listitem"
               aria-label={item.label || item.alt}
+              onMouseEnter={
+                pauseOnHover
+                  ? () => {
+                      hoveredRef.current = true;
+                    }
+                  : undefined
+              }
+              onMouseLeave={
+                pauseOnHover
+                  ? () => {
+                      hoveredRef.current = false;
+                    }
+                  : undefined
+              }
             >
               {innerContent}
             </a>
