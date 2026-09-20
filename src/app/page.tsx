@@ -119,11 +119,10 @@ export default async function LandingPage() {
     getTopReviewsData(),
   ])
 
-  // Filter products explicitly featured by admin for the pricing section (max 3), sorted by priority
+  // Filter products explicitly featured by admin for the pricing section, sorted by priority
   const featuredPricingProducts = products
     .filter((p) => p.isFeatured)
     .sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0))
-    .slice(0, 3)
 
   const primaryProduct =
     featuredPricingProducts.find((p) => p.featuredOrder === 1) ||

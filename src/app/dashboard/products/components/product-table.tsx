@@ -252,8 +252,8 @@ export function ProductTable({
                   }`}
                   title={
                     prod.isFeatured
-                      ? `محصول ویژه قیمت‌گذاری (اولویت: ${prod.featuredOrder === 1 ? 'کارت اصلی - حاشیه آبی در وسط' : `کارت ${prod.featuredOrder}`}) - کلیک جهت حذف`
-                      : 'افزودن به کارت‌های ویژه قیمت‌گذاری در لندینگ پیج (حداکثر ۳ محصول)'
+                      ? `محصول ویژه قیمت‌گذاری (اولویت: ${prod.featuredOrder === 1 ? 'کارت اصلی' : `کارت ${prod.featuredOrder}`}) - کلیک جهت حذف`
+                      : 'افزودن به کارت‌های ویژه قیمت‌گذاری در لندینگ پیج'
                   }
                 >
                   <Star className={`size-3.5 ${prod.isFeatured ? 'fill-amber-500 text-amber-500' : ''}`} />

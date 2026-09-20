@@ -104,9 +104,9 @@ export function CheckoutDeliverySection({
           {!inventoryUnknown && hasInventory && (
             <Badge
               variant='outline'
-              className='text-[10.5px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 py-1 hidden sm:inline-flex'
+              className='text-[10.5px] sm:text-xs font-medium bg-primary/10 text-primary border-primary/20 py-1 hidden sm:inline-flex'
             >
-              <span className='size-1.5 rounded-full bg-emerald-500 animate-pulse me-1.5' />
+              <span className='size-1.5 rounded-full bg-primary animate-pulse me-1.5' />
               <Warehouse className='size-3.5 me-1' />
               <span>{availableCount} اکانت آماده</span>
             </Badge>

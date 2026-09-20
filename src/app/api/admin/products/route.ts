@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { requireAdminApi } from '@/lib/auth/admin'
 import { FulfillmentService } from '@/lib/fulfillment/order-fulfillment'
@@ -148,6 +149,13 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+    } catch {
+      // ignore
+    }
+
     return NextResponse.json({
       success: true,
       product,
@@ -244,24 +252,11 @@ export async function PATCH(req: NextRequest) {
           orderBy: { featuredOrder: 'asc' },
         })
 
-        if (currentFeatured.length >= 3) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'حداکثر ۳ محصول می‌توانند به عنوان محصول ویژه در بخش قیمت‌گذاری لندینگ انتخاب شوند. ابتدا یکی از موارد قبلی را لغو کنید.',
-            },
-            { status: 400 }
-          )
-        }
-
-        // Determine next featuredOrder: find smallest positive integer not taken from [1, 2, 3]
+        // Determine next featuredOrder: find smallest positive integer not taken
         const takenOrders = new Set(currentFeatured.map((p) => p.featuredOrder))
         let nextOrder = 1
-        for (let o = 1; o <= 3; o++) {
-          if (!takenOrders.has(o)) {
-            nextOrder = o
-            break
-          }
+        while (takenOrders.has(nextOrder)) {
+          nextOrder++
         }
 
         updateData.isFeatured = true
@@ -298,6 +293,16 @@ export async function PATCH(req: NextRequest) {
       where: { id: targetId },
       data: updateData,
     })
+
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+      if (updatedProduct.slug) {
+        revalidatePath(`/products/${updatedProduct.slug}`)
+      }
+    } catch {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,
@@ -359,6 +364,13 @@ export async function DELETE(req: NextRequest) {
     await prisma.productVariant.deleteMany({ where: { productId: id } })
     // 4. Delete product
     await prisma.product.delete({ where: { id } })
+
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+    } catch {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,

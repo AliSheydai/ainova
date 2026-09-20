@@ -216,7 +216,7 @@ export function ProductBuyCard({
                       role='radio'
                       aria-checked={isSelected}
                       onClick={() => setUserSelectedPlanId(p.id)}
-                      className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm transition-all cursor-pointer ${
+                      className={`flex flex-wrap items-center gap-2 rounded-xl border px-3.5 py-2 text-xs sm:text-sm transition-all cursor-pointer ${
                         isSelected
                           ? 'border-primary bg-primary/10 text-foreground font-semibold ring-2 ring-primary/30 shadow-2xs'
                           : 'border-border bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground'

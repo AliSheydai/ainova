@@ -183,14 +183,8 @@ export function useProducts() {
 
   const handleToggleFeatured = async (prod: ProductItem) => {
     const nextFeatured = !prod.isFeatured
-    if (nextFeatured) {
-      const currentFeaturedCount = products.filter((p) => p.isFeatured && p.id !== prod.id).length
-      if (currentFeaturedCount >= 3) {
-        toast.error(
-          'حداکثر ۳ محصول می‌توانند به عنوان محصول ویژه در بخش قیمت‌گذاری لندینگ انتخاب شوند. لطفاً ابتدا یکی را لغو کنید.'
-        )
-        return
-      }
+    if (nextFeatured && prod.status !== 'ACTIVE') {
+      toast.warning('توجه: این محصول غیرفعال است. برای نمایش عمومی در لندینگ، باید وضعیت آن را فعال کنید.')
     }
 
     try {

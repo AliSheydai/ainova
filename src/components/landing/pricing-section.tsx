@@ -56,7 +56,15 @@ export function PricingSection({
     return null
   }
 
-  const displayProducts = products.slice(0, 3)
+  const displayProducts = products
+
+  const getGridClass = (count: number) => {
+    if (count === 1) return 'max-w-md grid-cols-1'
+    if (count === 2) return 'max-w-3xl grid-cols-1 md:grid-cols-2'
+    if (count === 3) return 'max-w-6xl grid-cols-1 md:grid-cols-3'
+    if (count === 4) return 'max-w-6xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+    return 'max-w-6xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+  }
 
   return (
     <section id='pricing' className='py-20 md:py-24'>
@@ -81,13 +89,7 @@ export function PricingSection({
 
         {displayProducts && displayProducts.length > 0 ? (
           <motion.div
-            className={`grid gap-4 sm:gap-6 max-w-6xl mx-auto ${
-              displayProducts.length === 1
-                ? 'max-w-md grid-cols-1'
-                : displayProducts.length === 2
-                ? 'max-w-3xl grid-cols-1 md:grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-3'
-            }`}
+            className={`grid gap-4 sm:gap-6 mx-auto ${getGridClass(displayProducts.length)}`}
             initial='hidden'
             whileInView='visible'
             viewport={viewportOnce}
