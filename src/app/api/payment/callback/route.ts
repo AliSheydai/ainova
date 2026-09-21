@@ -15,11 +15,13 @@ import { sendOrderConfirmationSms } from '@/lib/auth/sms'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const authority =
+    searchParams.get('trackId') ||
     searchParams.get('purchaseId') ||
     searchParams.get('Authority') ||
     searchParams.get('authority') ||
     searchParams.get('transactionId')
   const status = searchParams.get('Status') || searchParams.get('status')
+  const successParam = searchParams.get('success')
   const querySource = searchParams.get('source')
   const orderIdParam = searchParams.get('orderId')
 
@@ -147,9 +149,13 @@ export async function GET(req: NextRequest) {
     'SUCCESS',
     'SUCCESSFUL',
     'READY_TO_VERIFY',
+    '1',
+    '2',
   ].includes(status || '')
 
-  if (status && !isSuccessStatus) {
+  const isFailed = (status && !isSuccessStatus) || successParam === '0'
+
+  if (isFailed) {
     if (payment.status === 'PENDING') {
       await prisma.$transaction(async (tx) => {
         await tx.payment.update({
@@ -211,7 +217,7 @@ export async function GET(req: NextRequest) {
 
       // 4. Verify payment via PaymentService
       const effectiveTransactionId =
-        authority || payment.authority || searchParams.get('purchaseId') || ''
+        authority || payment.authority || searchParams.get('trackId') || searchParams.get('purchaseId') || ''
 
       const verifyResult = await PaymentService.verifyPayment({
         transactionId: effectiveTransactionId,
@@ -221,6 +227,7 @@ export async function GET(req: NextRequest) {
           status: status || 'OK',
           Status: status || 'OK',
           purchaseId: searchParams.get('purchaseId') || effectiveTransactionId,
+          trackId: searchParams.get('trackId') || effectiveTransactionId,
         },
       })
 

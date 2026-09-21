@@ -455,7 +455,7 @@ export default function AdminPaymentsPage() {
                         <SelectItem value='ALL'>همه درگاه‌ها</SelectItem>
                         {availableGateways.map((gw) => (
                           <SelectItem key={gw} value={gw}>
-                            {gw === 'zarinpal' ? 'زرین‌پال' : gw === 'jibit' ? 'جیبیت' : gw === 'mock' ? 'درگاه تستی (Mock)' : gw}
+                            {gw === 'zibal' ? 'زیبال' : gw === 'zarinpal' ? 'زرین‌پال' : gw === 'jibit' ? 'جیبیت' : gw === 'mock' ? 'درگاه تستی (Mock)' : gw}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -732,7 +732,7 @@ export default function AdminPaymentsPage() {
                           <td className='py-3.5 px-4 whitespace-nowrap min-w-[110px]'>
                             <Badge variant='outline' className='text-[10px] font-medium gap-1 px-2 py-0.5 border-border'>
                               <Building2 className='size-2.5 text-muted-foreground' />
-                              <span>{p.gatewayName === 'zarinpal' ? 'زرین‌پال' : p.gatewayName === 'jibit' ? 'جیبیت' : p.gatewayName === 'mock' ? 'تستی (Mock)' : p.gatewayName}</span>
+                              <span>{p.gatewayName === 'zibal' ? 'زیبال' : p.gatewayName === 'zarinpal' ? 'زرین‌پال' : p.gatewayName === 'jibit' ? 'جیبیت' : p.gatewayName === 'mock' ? 'تستی (Mock)' : p.gatewayName}</span>
                             </Badge>
                           </td>
 
@@ -828,7 +828,7 @@ export default function AdminPaymentsPage() {
 
                       <div className='flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/40'>
                         <span>
-                          درگاه: {p.gatewayName === 'zarinpal' ? 'زرین‌پال' : p.gatewayName === 'jibit' ? 'جیبیت' : p.gatewayName === 'mock' ? 'تستی (Mock)' : p.gatewayName}
+                          درگاه: {p.gatewayName === 'zibal' ? 'زیبال' : p.gatewayName === 'zarinpal' ? 'زرین‌پال' : p.gatewayName === 'jibit' ? 'جیبیت' : p.gatewayName === 'mock' ? 'تستی (Mock)' : p.gatewayName}
                         </span>
                         <span className='font-sans'>{formatDate(p.createdAt)}</span>
                       </div>

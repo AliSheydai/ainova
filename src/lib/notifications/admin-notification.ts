@@ -114,13 +114,15 @@ export class AdminNotificationService {
           : '') +
         `• 👤 <b>خریدار:</b> <code>${escapeHtml(customerInfo)}</code>\n` +
         `• 💳 <b>درگاه:</b> ${escapeHtml(
-          order.payment?.gatewayName === 'jibit'
-            ? 'جیبیت'
-            : order.payment?.gatewayName === 'mock'
-              ? 'تستی (Mock)'
-              : order.payment?.gatewayName === 'zarinpal'
-                ? 'زرین‌پال'
-                : order.payment?.gatewayName || 'جیبیت'
+          order.payment?.gatewayName === 'zibal'
+            ? 'زیبال'
+            : order.payment?.gatewayName === 'jibit'
+              ? 'جیبیت'
+              : order.payment?.gatewayName === 'mock'
+                ? 'تستی (Mock)'
+                : order.payment?.gatewayName === 'zarinpal'
+                  ? 'زرین‌پال'
+                  : order.payment?.gatewayName || 'زیبال'
         )}\n\n` +
         `🔗 <a href="${appUrl}/dashboard/orders">مشاهده و بررسی در پنل مدیریت</a>`
 

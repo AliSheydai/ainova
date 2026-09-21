@@ -3,16 +3,19 @@ import { type PaymentProvider, type CreatePaymentOptions, type VerifyPaymentOpti
 import { MockPaymentProvider } from './providers/mock.provider'
 import { ZarinpalPaymentProvider } from './providers/zarinpal.provider'
 import { JibitPaymentProvider } from './providers/jibit.provider'
+import { ZibalPaymentProvider } from './providers/zibal.provider'
 
 export * from './types'
 export * from './providers/mock.provider'
 export * from './providers/zarinpal.provider'
 export * from './providers/jibit.provider'
+export * from './providers/zibal.provider'
 
 const providers: Record<string, PaymentProvider> = {
   mock: new MockPaymentProvider(),
   zarinpal: new ZarinpalPaymentProvider(),
   jibit: new JibitPaymentProvider(),
+  zibal: new ZibalPaymentProvider(),
 }
 
 /**
