@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
-import { PlayCircle, Film, Maximize2, Sparkles, Video, AlertCircle } from 'lucide-react'
+import React from 'react'
+import { Film } from 'lucide-react'
 import { parseVideoUrl } from '@/lib/video-utils'
 import { Badge } from '@/components/ui/badge'
+import { MinimalVideoPlayer } from '@/components/video/minimal-video-player'
 
 interface ProductVideoSectionProps {
   videoUrl: string | null | undefined
@@ -11,8 +12,6 @@ interface ProductVideoSectionProps {
 }
 
 export function ProductVideoSection({ videoUrl, productTitle }: ProductVideoSectionProps) {
-  const [loadError, setLoadError] = useState(false)
-
   if (!videoUrl || !videoUrl.trim()) {
     return null
   }
@@ -32,7 +31,7 @@ export function ProductVideoSection({ videoUrl, productTitle }: ProductVideoSect
       aria-label={`ویدئو معرفی ${productTitle}`}
       className='my-10 sm:my-14 scroll-mt-24'
     >
-      <div className='relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/80 via-card/50 to-muted/20 p-4 sm:p-7 md:p-8 backdrop-blur-xl shadow-xs'>
+      <div className='relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/90 via-card/60 to-muted/20 p-4 sm:p-7 md:p-8 backdrop-blur-xl shadow-xs'>
         {/* Subtle Ambient Glow Background */}
         <div
           className='pointer-events-none absolute -top-24 -start-24 size-72 rounded-full bg-primary/10 blur-3xl'
@@ -64,58 +63,17 @@ export function ProductVideoSection({ videoUrl, productTitle }: ProductVideoSect
           </p>
         </div>
 
-        {/* Video Player Container */}
-        <div className='relative z-10 w-full overflow-hidden rounded-2xl border border-border/80 bg-black/95 shadow-md'>
-          <div className='relative w-full aspect-video flex items-center justify-center'>
-            {loadError ? (
-              <div className='flex flex-col items-center justify-center p-6 text-center text-muted-foreground gap-2.5'>
-                <AlertCircle className='size-8 text-rose-500' />
-                <p className='text-xs sm:text-sm font-medium'>
-                  خطا در بارگذاری پلیر ویدئو.
-                </p>
-                <a
-                  href={videoUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-xs text-primary hover:underline font-mono'
-                  dir='ltr'
-                >
-                  مشاهده مستقیم ویدئو در برگه جدید
-                </a>
-              </div>
-            ) : videoType === 'aparat' ? (
-              <iframe
-                src={videoSrc}
-                title={`ویدئو معرفی ${productTitle} در آپارات`}
-                allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen'
-                allowFullScreen
-                className='size-full border-0'
-                onError={() => setLoadError(true)}
-              />
-            ) : videoType === 'youtube' ? (
-              <iframe
-                src={videoSrc}
-                title={`ویدئو معرفی ${productTitle} در یوتیوب`}
-                allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
-                allowFullScreen
-                className='size-full border-0'
-                onError={() => setLoadError(true)}
-              />
-            ) : (
-              <video
-                src={videoSrc}
-                controls
-                playsInline
-                preload='metadata'
-                className='size-full object-contain'
-                onError={() => setLoadError(true)}
-              >
-                مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
-              </video>
-            )}
-          </div>
+        {/* Modern Minimal Video Player Container */}
+        <div className='relative z-10 w-full overflow-hidden rounded-2xl border border-border/80 shadow-xl bg-black/95'>
+          <MinimalVideoPlayer
+            src={videoSrc}
+            title={`معرفی و آموزش ${productTitle}`}
+            type={videoType}
+          />
         </div>
       </div>
     </section>
   )
 }
+
+

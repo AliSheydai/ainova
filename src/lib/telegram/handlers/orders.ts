@@ -104,9 +104,9 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       }
 
       messageText += `🔹 <b>سفارش:</b> <code>#${orderCode}</code> — ${escapeHtml(fullTitle)}\n`
-      messageText += `📅 <b>تاریخ:</b> ${dateStr}\n`
-      messageText += `💰 <b>مبلغ:</b> <b>${order.amount.toLocaleString('fa-IR')} تومان</b>\n`
-      messageText += `📊 <b>وضعیت:</b> ${getStatusBadge(order.status)}\n`
+      messageText += `• 📅 <b>تاریخ:</b> ${dateStr}\n`
+      messageText += `• 💰 <b>مبلغ:</b> <b>${order.amount.toLocaleString('fa-IR')} تومان</b>\n`
+      messageText += `• 📊 <b>وضعیت:</b> ${getStatusBadge(order.status)}\n`
 
       const deliveryMessage = BotStoreService.formatDeliveryMessage(order)
       if (deliveryMessage) {
