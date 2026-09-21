@@ -212,6 +212,7 @@ function UserDropdown({
 }
 
 const navLinks = [
+  { label: 'خانه', href: '/' },
   { label: 'محصولات', href: '/products' },
   { label: 'امکانات و مزایا', href: '/#features' },
   { label: 'نحوه فعال‌سازی', href: '/#how-it-works' },
@@ -601,28 +602,36 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
 
                     {/* Mobile Links */}
                     <nav className='mt-6 flex flex-col gap-1'>
-                      {navLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setOpen(false)}
-                          className='rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                      {user && (
-                        <button
-                          onClick={() => {
+                      {navLinks.map((link) => {
+                        const isHomeLink = link.href === '/'
+                        const isHashLink = link.href.startsWith('/#')
+                        const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                          if (isHomeLink && pathname === '/') {
+                            e.preventDefault()
                             setOpen(false)
-                            openOrdersModal()
-                          }}
-                          className='rounded-lg px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-accent flex items-center gap-2 w-full text-start cursor-pointer'
-                        >
-                          <Package className='size-4' />
-                          <span>سفارش‌های من</span>
-                        </button>
-                      )}
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                          } else if (isHashLink && pathname === '/') {
+                            e.preventDefault()
+                            setOpen(false)
+                            const id = link.href.replace('/#', '')
+                            setTimeout(() => {
+                              document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                            }, 150)
+                          } else {
+                            setOpen(false)
+                          }
+                        }
+                        return (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={handleClick}
+                            className='rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+                          >
+                            {link.label}
+                          </Link>
+                        )
+                      })}
                     </nav>
                   </div>
 
@@ -638,7 +647,7 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
                       className='w-full justify-center gap-2 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium py-2.5 rounded-xl'
                     >
                       <TelegramIcon className='size-4.5 text-primary shrink-0' />
-                      <span>🤖 ورود به ربات تلگرام</span>
+                      <span>ورود به ربات تلگرام</span>
                     </Button>
 
                     {user ? (
