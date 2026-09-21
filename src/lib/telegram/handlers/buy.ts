@@ -8,6 +8,7 @@ import {
   orderSummaryKeyboard,
   orderPaymentKeyboard,
   orderCreatedKeyboard,
+  productsPaginationKeyboard,
 } from '../keyboards'
 import {
   setBotLoginSession,
@@ -33,36 +34,42 @@ export function getFulfillmentLabel(type?: string): string {
   }
 }
 
-export async function handleShowProducts(ctx: Context) {
-  try {
-    const products = await BotStoreService.getActiveProducts()
+const PRODUCTS_PAGE_SIZE = 4
 
-    if (!products || products.length === 0) {
+export async function handleShowProducts(ctx: Context, page: number = 1) {
+  try {
+    const allProducts = await BotStoreService.getActiveProducts()
+
+    if (!allProducts || allProducts.length === 0) {
       await ctx.reply('در حال حاضر محصول فعالی در فروشگاه موجود نیست. لطفاً بعداً مراجعه فرمایید.')
       return
     }
 
-    const text =
-      `🛍 <b>فروشگاه اشتراک‌های رسمی آریوچت</b>\n\n` +
+    const totalProducts = allProducts.length
+    const totalPages = Math.ceil(totalProducts / PRODUCTS_PAGE_SIZE) || 1
+    const validPage = Math.max(1, Math.min(page, totalPages))
+    const skip = (validPage - 1) * PRODUCTS_PAGE_SIZE
+    const pageProducts = allProducts.slice(skip, skip + PRODUCTS_PAGE_SIZE)
+
+    let text =
+      `🛍 <b>فروشگاه اشتراک‌های رسمی آریوچت</b> (${totalProducts.toLocaleString('fa-IR')} محصول)\n\n` +
       `مجموعه کامل سرویس‌ها و ابزارهای پریمیوم هوش مصنوعی:\n\n` +
       `• تحویل فوری و خودکار بلافاصله پس از پرداخت\n` +
       `• ضمانت سلامت و پایداری در طول دوره اشتراک\n` +
       `• پشتیبانی فنی و راهنمای مرحله‌به‌مرحله فعال‌سازی\n\n` +
       `جهت مشاهده مشخصات و پلن‌ها، محصول مورد نظر را انتخاب فرمایید:`
 
-    const keyboard = new InlineKeyboard()
-    for (const p of products) {
-      const stockBadge = p.stock > 0 ? `⚡ تحویل آنی` : '🕒 ارسال طی ۱ روز کاری'
-      keyboard
-        .text(`📦 ${p.title} — از ${p.price.toLocaleString('fa-IR')} ت (${stockBadge})`, `product:select:${p.id}`)
-        .row()
+    if (totalPages > 1) {
+      text += `\n\n📄 صفحه ${validPage.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`
     }
 
-    keyboard.text('🔙 منوی اصلی', 'nav:main')
+    const keyboard = productsPaginationKeyboard(pageProducts, validPage, totalPages)
 
     if (ctx.callbackQuery) {
-      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: keyboard }).catch(async () => {
-        await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard })
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: keyboard }).catch(async (err: any) => {
+        if (!err?.message?.includes('message is not modified')) {
+          await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard })
+        }
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {
@@ -74,7 +81,7 @@ export async function handleShowProducts(ctx: Context) {
   }
 }
 
-export async function handleSelectProduct(ctx: Context, productId: string) {
+export async function handleSelectProduct(ctx: Context, productId: string, fromPage: number = 1) {
   try {
     const data = await BotStoreService.getProductPlans(productId)
 
@@ -85,6 +92,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
 
     const { product, variants, plans } = data
     const title = product.title
+    const backToProductsData = fromPage > 1 ? `products:page:${fromPage}` : 'nav:products'
 
     // If product has active variants, show variant cards first
     if (variants && variants.length > 0) {
@@ -148,14 +156,14 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
         keyboard
           .text(
             `📦 انتخاب نوع ${variant.name} — ${formatPrice(effectivePrice)}${btnBadge}`,
-            `variant:select:${variant.id}`
+            `variant:select:${variant.id}:${fromPage}`
           )
           .row()
       }
 
       detailsText += `👇 جهت مشاهده جزئیات و ثبت سفارش، نوع مورد نظر خود را انتخاب فرمایید:`
 
-      keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
+      keyboard.text('🔙 بازگشت به لیست محصولات', backToProductsData).row()
       keyboard.text('🏠 منوی اصلی', 'nav:main')
 
       if (ctx.callbackQuery) {
@@ -229,7 +237,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
 
     detailsText += `👇 جهت سفارش، پلن مورد نظر خود را از دکمه‌های زیر انتخاب فرمایید:`
 
-    keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
+    keyboard.text('🔙 بازگشت به لیست محصولات', backToProductsData).row()
     keyboard.text('🏠 منوی اصلی', 'nav:main')
 
     if (ctx.callbackQuery) {
@@ -255,7 +263,7 @@ export async function handleSelectProduct(ctx: Context, productId: string) {
   }
 }
 
-export async function handleSelectVariant(ctx: Context, variantId: string) {
+export async function handleSelectVariant(ctx: Context, variantId: string, fromPage: number = 1) {
   try {
     const variant = await prisma.productVariant.findUnique({
       where: { id: variantId },
@@ -360,8 +368,9 @@ export async function handleSelectVariant(ctx: Context, variantId: string) {
 
     detailsText += `👇 جهت سفارش، پلن مورد نظر خود را از دکمه‌های زیر انتخاب فرمایید:`
 
-    keyboard.text('🔙 تغییر نوع محصول', `product:select:${variant.productId}`).row()
-    keyboard.text('🔙 بازگشت به لیست محصولات', 'nav:products').row()
+    const backToProductsData = fromPage > 1 ? `products:page:${fromPage}` : 'nav:products'
+    keyboard.text('🔙 تغییر نوع محصول', `product:select:${variant.productId}:${fromPage}`).row()
+    keyboard.text('🔙 بازگشت به لیست محصولات', backToProductsData).row()
     keyboard.text('🏠 منوی اصلی', 'nav:main')
 
     if (ctx.callbackQuery) {

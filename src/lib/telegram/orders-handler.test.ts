@@ -89,4 +89,57 @@ describe('Telegram Bot Orders Handling & Deeplink', () => {
     expect(message).toContain('اطلاعات ورود به اکانت اختصاصی')
     expect(message).toContain('در پنل کاربری سایت قابل مشاهده است')
   })
+
+  it('renders productsPaginationKeyboard correctly for multi-page products catalog', async () => {
+    const { productsPaginationKeyboard } = await import('./keyboards')
+
+    const mockProducts = [
+      { id: 'p1', title: 'گوگل وان ۲ ترابایت', price: 290000, stock: 5 },
+      { id: 'p2', title: 'جمینای ادونسد', price: 450000, stock: 0 },
+      { id: 'p3', title: 'چت‌جی‌پی‌تی پلاس', price: 1200000, stock: 3 },
+      { id: 'p4', title: 'کلود پرو', price: 1100000, stock: 2 },
+    ]
+
+    const keyboard = productsPaginationKeyboard(mockProducts, 1, 3)
+    const json = keyboard.inline_keyboard as any
+
+    // 4 product rows + 1 pagination row + 1 refresh row + 1 menu row = 7 rows
+    expect(json.length).toBe(7)
+
+    // Check product rows
+    expect(json[0][0].text).toContain('گوگل وان ۲ ترابایت')
+    expect(json[0][0].text).toContain('⚡ تحویل آنی')
+    expect(json[0][0].callback_data).toBe('product:select:p1:1')
+
+    expect(json[1][0].text).toContain('جمینای ادونسد')
+    expect(json[1][0].text).toContain('🕒 ارسال طی ۱ روز کاری')
+    expect(json[1][0].callback_data).toBe('product:select:p2:1')
+
+    // Check pagination row (page 1 of 3: has next page button, no prev button)
+    const paginationRow = json[4]
+    expect(paginationRow.length).toBe(2)
+    expect(paginationRow[0].text).toBe('صفحه بعدی ⬅️')
+    expect(paginationRow[0].callback_data).toBe('products:page:2')
+    expect(paginationRow[1].text).toContain('صفحه ۱ از ۳')
+    expect(paginationRow[1].callback_data).toBe('noop')
+
+    // Check middle page (page 2 of 3)
+    const page2Keyboard = productsPaginationKeyboard(mockProducts, 2, 3)
+    const page2PaginationRow = (page2Keyboard.inline_keyboard as any)[4]
+    expect(page2PaginationRow.length).toBe(3)
+    expect(page2PaginationRow[0].text).toBe('صفحه بعدی ⬅️')
+    expect(page2PaginationRow[0].callback_data).toBe('products:page:3')
+    expect(page2PaginationRow[1].text).toContain('صفحه ۲ از ۳')
+    expect(page2PaginationRow[2].text).toBe('➡️ صفحه قبلی')
+    expect(page2PaginationRow[2].callback_data).toBe('products:page:1')
+
+    // Check utility buttons rows
+    const refreshRow = json[5]
+    expect(refreshRow[0].text).toBe('🔄 به‌روزرسانی لیست')
+    expect(refreshRow[0].callback_data).toBe('products:page:1')
+
+    const menuRow = json[6]
+    expect(menuRow[0].text).toBe('🔙 بازگشت به منوی اصلی')
+    expect(menuRow[0].callback_data).toBe('nav:main')
+  })
 })

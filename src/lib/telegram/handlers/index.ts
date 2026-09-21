@@ -95,7 +95,7 @@ export function registerHandlers(bot: Bot) {
       'محصولات',
       'فروشگاه',
     ],
-    handleShowProducts
+    (ctx) => handleShowProducts(ctx, 1)
   )
   bot.hears(BUTTONS.ORDERS, (ctx) => handleOrders(ctx, 1))
   bot.hears(
@@ -197,15 +197,17 @@ export function registerHandlers(bot: Bot) {
   })
 
   // Callback Queries: Select product from catalog
-  bot.callbackQuery(/^product:select:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^product:select:([^:]+)(?::(\d+))?$/, async (ctx) => {
     const productId = ctx.match[1]
-    await handleSelectProduct(ctx, productId)
+    const fromPage = ctx.match[2] ? parseInt(ctx.match[2], 10) || 1 : 1
+    await handleSelectProduct(ctx, productId, fromPage)
   })
 
   // Callback Queries: Select product variant
-  bot.callbackQuery(/^variant:select:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^variant:select:([^:]+)(?::(\d+))?$/, async (ctx) => {
     const variantId = ctx.match[1]
-    await handleSelectVariant(ctx, variantId)
+    const fromPage = ctx.match[2] ? parseInt(ctx.match[2], 10) || 1 : 1
+    await handleSelectVariant(ctx, variantId, fromPage)
   })
 
   // Callback Queries: Buy specific plan
@@ -464,8 +466,15 @@ export function registerHandlers(bot: Bot) {
   })
 
   // Callback Queries: Navigation - Back to products list
-  bot.callbackQuery('nav:products', async (ctx) => {
-    await handleShowProducts(ctx)
+  bot.callbackQuery(/^nav:products(?::page:(\d+))?$/, async (ctx) => {
+    const page = ctx.match[1] ? parseInt(ctx.match[1], 10) || 1 : 1
+    await handleShowProducts(ctx, page)
+  })
+
+  // Callback Queries: Products pagination
+  bot.callbackQuery(/^products:page:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1
+    await handleShowProducts(ctx, page)
   })
 
   // Callback Queries: Legacy Buy action

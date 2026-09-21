@@ -197,6 +197,40 @@ export function orderSummaryKeyboard(
   return kb
 }
 
+export function productsPaginationKeyboard(
+  products: Array<{ id: string; title: string; price: number; stock: number }>,
+  page: number,
+  totalPages: number
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const p of products) {
+    const stockBadge = p.stock > 0 ? '⚡ تحویل آنی' : '🕒 ارسال طی ۱ روز کاری'
+    keyboard
+      .text(
+        `📦 ${p.title} — از ${p.price.toLocaleString('fa-IR')} ت (${stockBadge})`,
+        `product:select:${p.id}:${page}`
+      )
+      .row()
+  }
+
+  if (totalPages > 1) {
+    if (page < totalPages) {
+      keyboard.text('صفحه بعدی ⬅️', `products:page:${page + 1}`)
+    }
+    keyboard.text(`صفحه ${page.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`, 'noop')
+    if (page > 1) {
+      keyboard.text('➡️ صفحه قبلی', `products:page:${page - 1}`)
+    }
+    keyboard.row()
+  }
+
+  keyboard.text('🔄 به‌روزرسانی لیست', `products:page:${page}`).row()
+  keyboard.text('🔙 بازگشت به منوی اصلی', 'nav:main')
+
+  return keyboard
+}
+
 export function ordersPaginationKeyboard(
   page: number,
   totalPages: number,
