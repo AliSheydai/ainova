@@ -332,6 +332,7 @@ export async function POST(req: NextRequest) {
       order = await prisma.$transaction(async (tx) => {
         const targetPlanId = plan.id
         const targetProductId = product.id
+        const effectiveVariantId = variant?.id || plan.variantId || null
         let reservedInventoryItemId: string | null = null
 
         // Check if customer provided their own account for PRE_CREATED_ACCOUNT
@@ -354,11 +355,30 @@ export async function POST(req: NextRequest) {
           const invRows = await tx.$queryRaw<Array<{ id: string }>>`
             SELECT id FROM inventory_items
             WHERE type = ${invType}::"InventoryType"
-              AND (
-                ("planId" = ${targetPlanId} AND "planId" IS NOT NULL) OR
-                ("productId" = ${targetProductId} AND ("planId" IS NULL OR "planId" = ${targetPlanId}))
-              )
               AND status = 'AVAILABLE'::"LinkStatus"
+              AND (
+                (${effectiveVariantId}::text IS NOT NULL AND "variantId" = ${effectiveVariantId})
+                OR
+                (${effectiveVariantId}::text IS NULL AND "variantId" IS NULL)
+                OR
+                ("variantId" IS NULL AND "productId" = ${targetProductId})
+              )
+              AND (
+                "planId" = ${targetPlanId} OR "planId" IS NULL
+              )
+              AND (
+                "productId" = ${targetProductId}
+              )
+            ORDER BY
+              (CASE
+                WHEN "variantId" = ${effectiveVariantId} AND "planId" = ${targetPlanId} THEN 100
+                WHEN "variantId" = ${effectiveVariantId} AND "planId" IS NULL THEN 80
+                WHEN "variantId" = ${effectiveVariantId} THEN 70
+                WHEN "variantId" IS NULL AND "planId" = ${targetPlanId} THEN 50
+                WHEN "variantId" IS NULL AND "planId" IS NULL THEN 30
+                ELSE 10
+              END) DESC,
+              "createdAt" ASC
             LIMIT 1
             FOR UPDATE SKIP LOCKED
           `
@@ -413,7 +433,7 @@ export async function POST(req: NextRequest) {
             userId: session.userId,
             productId: product.id,
             planId: plan.id,
-            variantId: variant?.id || null,
+            variantId: effectiveVariantId,
             couponId: appliedCouponId,
             amount: payableAmount,
             discountAmount: appliedDiscountAmount,

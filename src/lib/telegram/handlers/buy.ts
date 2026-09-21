@@ -430,10 +430,21 @@ export async function handleBuyPlan(ctx: Context, planId: string) {
         where: {
           type: 'PRE_CREATED_ACCOUNT',
           status: 'AVAILABLE',
-          OR: [
-            { planId: plan.id },
-            { productId: plan.productId, planId: null },
-          ],
+          ...(effectiveVariantId
+            ? {
+                OR: [
+                  { variantId: effectiveVariantId, planId: plan.id },
+                  { variantId: effectiveVariantId, planId: null, productId: plan.productId },
+                  { variantId: null, planId: plan.id },
+                  { variantId: null, productId: plan.productId, planId: null },
+                ],
+              }
+            : {
+                OR: [
+                  { planId: plan.id },
+                  { productId: plan.productId, planId: null },
+                ],
+              }),
         },
       })
 
@@ -517,11 +528,14 @@ export async function handleSelectDeliveryPreference(
   })
   if (!plan) return
 
-  const session = (await getBotLoginSession(telegramId)) || {
-    step: 'AWAITING_CHECKOUT_FIELD',
+  const existingSession = await getBotLoginSession(telegramId)
+  const session = {
+    step: 'AWAITING_CHECKOUT_FIELD' as const,
     planId: plan.id,
     productId: plan.productId,
+    variantId: existingSession?.variantId || plan.variantId || undefined,
     checkoutData: {},
+    ...(existingSession || {}),
   }
 
   if (mode === 'ready') {

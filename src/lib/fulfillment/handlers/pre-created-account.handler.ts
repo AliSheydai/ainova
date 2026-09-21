@@ -86,13 +86,33 @@ export class PreCreatedAccountFulfillmentHandler implements IFulfillmentHandler 
     let chosenAccount: { id: string; data: Record<string, unknown> | string } | null = null
 
     // 1. Check if an account was already RESERVED for this order
-    const reservedAccount = await tx.inventoryItem.findFirst({
+    let reservedAccount = await tx.inventoryItem.findFirst({
       where: {
         orderId: order.id,
         status: 'RESERVED',
         type: 'PRE_CREATED_ACCOUNT',
       },
     })
+
+    // Safety Check: Verify reserved item belongs to the correct product/variant
+    if (reservedAccount) {
+      const matchesProduct = !productId || reservedAccount.productId === productId
+      const matchesVariant = variantId
+        ? (reservedAccount.variantId === variantId || !reservedAccount.variantId)
+        : !reservedAccount.variantId
+
+      if (!matchesProduct || !matchesVariant) {
+        console.warn(
+          `[FULFILLMENT] Mismatched reserved account ${reservedAccount.id} for order ${order.id} (product: ${productId}, variant: ${variantId}). Releasing back to inventory.`
+        )
+        // Release mismatched reserved item and fall through to dynamic allocation
+        await tx.inventoryItem.update({
+          where: { id: reservedAccount.id },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+        reservedAccount = null // Force fallback to correct allocation
+      }
+    }
 
     if (reservedAccount) {
       chosenAccount = {

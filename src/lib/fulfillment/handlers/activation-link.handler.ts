@@ -40,13 +40,33 @@ export class ActivationLinkFulfillmentHandler implements IFulfillmentHandler {
     let linkUrl: string | null = null
 
     // 1. Check if an inventory item was already RESERVED for this order
-    const reservedInventory = await tx.inventoryItem.findFirst({
+    let reservedInventory = await tx.inventoryItem.findFirst({
       where: {
         orderId: order.id,
         status: 'RESERVED',
         type: 'ACTIVATION_LINK',
       },
     })
+
+    // Safety Check: Verify reserved item belongs to the correct product/variant
+    if (reservedInventory) {
+      const matchesProduct = !productId || reservedInventory.productId === productId
+      const matchesVariant = variantId
+        ? (reservedInventory.variantId === variantId || !reservedInventory.variantId)
+        : !reservedInventory.variantId
+
+      if (!matchesProduct || !matchesVariant) {
+        console.warn(
+          `[FULFILLMENT] Mismatched reserved activation link ${reservedInventory.id} for order ${order.id} (product: ${productId}, variant: ${variantId}). Releasing back to inventory.`
+        )
+        // Release mismatched reserved item and fall through to dynamic allocation
+        await tx.inventoryItem.update({
+          where: { id: reservedInventory.id },
+          data: { status: 'AVAILABLE', orderId: null, assignedAt: null },
+        })
+        reservedInventory = null // Force fallback to correct allocation
+      }
+    }
 
     if (reservedInventory) {
       const dataObj =

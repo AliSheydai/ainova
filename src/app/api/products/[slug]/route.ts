@@ -47,16 +47,31 @@ export async function GET(
     ])
 
     // Enrich plans with available inventory count (for PRE_CREATED_ACCOUNT)
-    const enrichPlanWithStock = async <T extends { id: string; fulfillmentType: string }>(plan: T) => {
+    const enrichPlanWithStock = async <T extends { id: string; fulfillmentType: string; variantId?: string | null }>(
+      plan: T,
+      fallbackVariantId?: string | null
+    ) => {
       if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+        const planVariantId = plan.variantId || fallbackVariantId || null
         const availableCount = await prisma.inventoryItem.count({
           where: {
             type: 'PRE_CREATED_ACCOUNT',
             status: 'AVAILABLE',
-            OR: [
-              { planId: plan.id },
-              { productId: product.id, planId: null },
-            ],
+            ...(planVariantId
+              ? {
+                  OR: [
+                    { variantId: planVariantId, planId: plan.id },
+                    { variantId: planVariantId, planId: null, productId: product.id },
+                    { variantId: null, planId: plan.id },
+                    { variantId: null, productId: product.id, planId: null },
+                  ],
+                }
+              : {
+                  OR: [
+                    { planId: plan.id },
+                    { productId: product.id, planId: null },
+                  ],
+                }),
           },
         })
         return { ...plan, availableInventoryCount: availableCount }
@@ -65,11 +80,11 @@ export async function GET(
     }
 
     const [plansWithStock, variantsWithStock] = await Promise.all([
-      Promise.all(product.plans.map(enrichPlanWithStock)),
+      Promise.all(product.plans.map((p) => enrichPlanWithStock(p))),
       Promise.all(
         product.variants.map(async (variant) => {
           const variantPlans = await Promise.all(
-            (variant.plans || []).map(enrichPlanWithStock)
+            (variant.plans || []).map((p) => enrichPlanWithStock(p, variant.id))
           )
           return {
             ...variant,

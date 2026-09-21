@@ -44,8 +44,12 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       return
     }
 
+    const whereCondition = {
+      OR: [{ userId: user.id }, { telegramChatId: telegramId }],
+    }
+
     const totalOrders = await prisma.order.count({
-      where: { userId: user.id },
+      where: whereCondition,
     })
 
     if (totalOrders === 0) {
@@ -58,7 +62,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
     const skip = (validPage - 1) * PAGE_SIZE
 
     const orders = await prisma.order.findMany({
-      where: { userId: user.id },
+      where: whereCondition,
       include: {
         product: true,
         variant: true,
@@ -66,7 +70,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
           include: { product: true, variant: true },
         },
         payment: true,
-        activationLink: true,
+        inventoryItem: true,
         delivery: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -122,11 +126,13 @@ export async function handleOrders(ctx: Context, page: number = 1) {
       await ctx.editMessageText(messageText, {
         parse_mode: 'HTML',
         reply_markup: keyboard,
-      }).catch(async () => {
-        await ctx.reply(messageText, {
-          parse_mode: 'HTML',
-          reply_markup: keyboard,
-        })
+      }).catch(async (err: any) => {
+        if (!err?.message?.includes('message is not modified')) {
+          await ctx.reply(messageText, {
+            parse_mode: 'HTML',
+            reply_markup: keyboard,
+          })
+        }
       })
       await ctx.answerCallbackQuery().catch(() => {})
     } else {

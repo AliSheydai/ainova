@@ -36,14 +36,26 @@ export async function GET(req: NextRequest) {
           (prod.plans || []).map(async (plan) => {
             let availableCount: number | null = null
             if (plan.fulfillmentType === 'PRE_CREATED_ACCOUNT') {
+              const planVariantId = plan.variantId || null
               availableCount = await prisma.inventoryItem.count({
                 where: {
                   type: 'PRE_CREATED_ACCOUNT',
                   status: 'AVAILABLE',
-                  OR: [
-                    { planId: plan.id },
-                    { productId: prod.id, planId: null },
-                  ],
+                  ...(planVariantId
+                    ? {
+                        OR: [
+                          { variantId: planVariantId, planId: plan.id },
+                          { variantId: planVariantId, planId: null, productId: prod.id },
+                          { variantId: null, planId: plan.id },
+                          { variantId: null, productId: prod.id, planId: null },
+                        ],
+                      }
+                    : {
+                        OR: [
+                          { planId: plan.id },
+                          { productId: prod.id, planId: null },
+                        ],
+                      }),
                 },
               })
             }
