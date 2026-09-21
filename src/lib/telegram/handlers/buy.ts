@@ -17,7 +17,7 @@ import {
   type BotLoginSession,
 } from '../account-linking'
 import { formatPrice } from '@/lib/persian-utils'
-import { escapeHtml } from '../formatting'
+import { escapeHtml, mdToTgHtml, formatProductDescriptionPreview } from '../formatting'
 
 export function getFulfillmentLabel(type?: string): string {
   switch (type) {
@@ -51,17 +51,30 @@ export async function handleShowProducts(ctx: Context, page: number = 1) {
     const skip = (validPage - 1) * PRODUCTS_PAGE_SIZE
     const pageProducts = allProducts.slice(skip, skip + PRODUCTS_PAGE_SIZE)
 
+    const NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+
     let text =
       `🛍 <b>فروشگاه اشتراک‌های رسمی آریوچت</b> (${totalProducts.toLocaleString('fa-IR')} محصول)\n\n` +
-      `مجموعه کامل سرویس‌ها و ابزارهای پریمیوم هوش مصنوعی:\n\n` +
+      `مجموعه ابزارها و اشتراک‌های تخصصی هوش مصنوعی:\n` +
       `• تحویل فوری و خودکار بلافاصله پس از پرداخت\n` +
-      `• ضمانت سلامت و پایداری در طول دوره اشتراک\n` +
-      `• پشتیبانی فنی و راهنمای مرحله‌به‌مرحله فعال‌سازی\n\n` +
-      `جهت مشاهده مشخصات و پلن‌ها، محصول مورد نظر را انتخاب فرمایید:`
+      `• ضمانت سلامت و پایداری در طول دوره اشتراک\n\n` +
+      `────────────────────\n`
+
+    pageProducts.forEach((p, idx) => {
+      const numBadge = NUMBER_EMOJIS[idx] || `${(idx + 1).toLocaleString('fa-IR')}️⃣`
+      const stockBadge = p.stock > 0 ? '⚡ تحویل آنی' : '🕒 ارسال طی ۱ روز کاری'
+      text += `${numBadge} <b>${escapeHtml(p.title)}</b>\n`
+      text += `💵 <b>شروع قیمت از:</b> ${formatPrice(p.price)}\n`
+      text += `📦 <b>وضعیت تحویل:</b> <code>${stockBadge}</code>\n\n`
+    })
+
+    text += `────────────────────\n`
 
     if (totalPages > 1) {
-      text += `\n\n📄 صفحه ${validPage.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}`
+      text += `📄 صفحه ${validPage.toLocaleString('fa-IR')} از ${totalPages.toLocaleString('fa-IR')}\n\n`
     }
+
+    text += `👇 <i>جهت مشاهده مشخصات و خرید، دکمه محصول مورد نظر را انتخاب فرمایید:</i>`
 
     const keyboard = productsPaginationKeyboard(pageProducts, validPage, totalPages)
 
@@ -98,7 +111,7 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
     if (variants && variants.length > 0) {
       let detailsText = `✨ <b>${escapeHtml(title)}</b>\n\n`
       if (product.shortDescription) {
-        detailsText += `${escapeHtml(product.shortDescription)}\n\n`
+        detailsText += `${mdToTgHtml(product.shortDescription)}\n\n`
       }
 
       if (Array.isArray(product.features) && product.features.length > 0) {
@@ -112,7 +125,10 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
         }
         detailsText += `\n`
       } else if (product.description) {
-        detailsText += `📋 <b>توضیحات محصول:</b>\n${escapeHtml(product.description.slice(0, 250))}...\n\n`
+        const preview = formatProductDescriptionPreview(product.description, 250)
+        if (preview) {
+          detailsText += `📋 <b>توضیحات محصول:</b>\n${preview}\n\n`
+        }
       }
 
       detailsText += `🏷 <b>انواع موجود برای این محصول:</b>\n\n`
@@ -130,24 +146,24 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
         const badgeText = variant.badge ? ` [${escapeHtml(variant.badge)}]` : ''
         const discountLabel = variant.discountLabel ? ` (${escapeHtml(variant.discountLabel)})` : ''
 
-        detailsText += `🔸 <b>نوع «${escapeHtml(variant.name)}»</b>${badgeText}\n`
+        detailsText += `🔸 <b>${escapeHtml(variant.name)}</b>${badgeText}\n`
         if (hasDiscount) {
-          detailsText += `• 💵 <b>قیمت:</b> <s>${formatPrice(variant.price)}</s> <b>${formatPrice(effectivePrice)}</b>${discountLabel}\n`
+          detailsText += `💵 <b>قیمت:</b> <s>${formatPrice(variant.price)}</s> <b>${formatPrice(effectivePrice)}</b>${discountLabel}\n`
         } else {
-          detailsText += `• 💵 <b>قیمت:</b> <b>${formatPrice(effectivePrice)}</b>\n`
+          detailsText += `💵 <b>قیمت:</b> <b>${formatPrice(effectivePrice)}</b>\n`
         }
 
         if (variant.duration && variant.duration > 0) {
-          detailsText += `• ⏱ <b>مدت زمان:</b> ${variant.duration.toLocaleString('fa-IR')} ماهه\n`
+          detailsText += `⏱ <b>مدت زمان:</b> ${variant.duration.toLocaleString('fa-IR')} ماهه\n`
         }
 
         if (variant.description) {
-          detailsText += `• 📝 ${escapeHtml(variant.description)}\n`
+          detailsText += `📝 ${mdToTgHtml(variant.description)}\n`
         }
 
         if (variant.features && variant.features.length > 0) {
           for (const feat of variant.features.slice(0, 3)) {
-            detailsText += `  ▫️ ${escapeHtml(feat)}\n`
+            detailsText += `  • ${escapeHtml(feat)}\n`
           }
         }
         detailsText += `\n`
@@ -155,7 +171,7 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
         const btnBadge = variant.badge ? ` (${variant.badge})` : ''
         keyboard
           .text(
-            `📦 انتخاب نوع ${variant.name} — ${formatPrice(effectivePrice)}${btnBadge}`,
+            `🔹 ${variant.name} — ${formatPrice(effectivePrice)}${btnBadge}`,
             `variant:select:${variant.id}:${fromPage}`
           )
           .row()
@@ -188,7 +204,7 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
 
     let detailsText = `✨ <b>${escapeHtml(title)}</b>\n\n`
     if (product.shortDescription) {
-      detailsText += `${escapeHtml(product.shortDescription)}\n\n`
+      detailsText += `${mdToTgHtml(product.shortDescription)}\n\n`
     }
 
     // Highlight key features if available
@@ -203,7 +219,10 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
       }
       detailsText += `\n`
     } else if (product.description) {
-      detailsText += `📋 <b>توضیحات محصول:</b>\n${escapeHtml(product.description.slice(0, 250))}...\n\n`
+      const preview = formatProductDescriptionPreview(product.description, 250)
+      if (preview) {
+        detailsText += `📋 <b>توضیحات محصول:</b>\n${preview}\n\n`
+      }
     }
 
     detailsText += `📦 <b>پلن‌های فعال و قابل سفارش:</b>\n\n`
@@ -231,7 +250,7 @@ export async function handleSelectProduct(ctx: Context, productId: string, fromP
       }
 
       keyboard
-        .text(`🛒 سفارش پلن ${plan.name} — ${formatPrice(plan.price)}`, `plan:buy:${plan.id}`)
+        .text(`🛒 ${plan.name} — ${formatPrice(plan.price)}`, `plan:buy:${plan.id}`)
         .row()
     }
 
@@ -310,7 +329,7 @@ export async function handleSelectVariant(ctx: Context, variantId: string, fromP
     let detailsText = `✨ <b>${escapeHtml(product.title)} — نوع «${escapeHtml(variant.name)}»</b>${badgeText}\n\n`
 
     if (variant.description) {
-      detailsText += `${escapeHtml(variant.description)}\n\n`
+      detailsText += `${mdToTgHtml(variant.description)}\n\n`
     }
 
     if (hasDiscount) {
@@ -362,7 +381,7 @@ export async function handleSelectVariant(ctx: Context, variantId: string, fromP
       }
 
       keyboard
-        .text(`🛒 سفارش پلن ${plan.name} — ${formatPrice(effectivePrice)}`, `plan:buy:${plan.id}`)
+        .text(`🛒 ${plan.name} — ${formatPrice(effectivePrice)}`, `plan:buy:${plan.id}`)
         .row()
     }
 

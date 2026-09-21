@@ -74,6 +74,36 @@ export function link(label: string, url: string): string {
 }
 
 /**
+ * Closes any unclosed HTML tags in the provided string.
+ * Essential when slicing/truncating text to prevent Telegram HTML entity parsing errors.
+ */
+export function closeUnclosedHtmlTags(html: string): string {
+  const openTags: string[] = []
+  const tagRegex = /<\/?([a-zA-Z0-9_-]+)[^>]*>/g
+  let match: RegExpExecArray | null
+
+  while ((match = tagRegex.exec(html)) !== null) {
+    const fullTag = match[0]
+    const tagName = match[1].toLowerCase()
+    if (fullTag.startsWith('</')) {
+      const lastIndex = openTags.lastIndexOf(tagName)
+      if (lastIndex !== -1) {
+        openTags.splice(lastIndex, 1)
+      }
+    } else if (!fullTag.endsWith('/>')) {
+      openTags.push(tagName)
+    }
+  }
+
+  let fixedHtml = html
+  for (let i = openTags.length - 1; i >= 0; i--) {
+    fixedHtml += `</${openTags[i]}>`
+  }
+
+  return fixedHtml
+}
+
+/**
  * Helper to convert legacy markdown markers into valid Telegram HTML.
  * (Italics disabled per user design preference)
  */
@@ -86,23 +116,81 @@ export function mdToTgHtml(text: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 
-  // 2. Bold: **text** or *text*
+  // 2. Headings: # Heading 1..6 -> <b>Heading</b> (strip # and bold)
+  result = result.replace(/^#{1,6}\s*(.+?)\s*#*$/gm, '<b>$1</b>')
+
+  // 3. Unordered list items: - item or * item -> • item
+  result = result.replace(/^[\t ]*[-*]\s+(.+)$/gm, '• $1')
+
+  // 4. Bold: **text**
   result = result.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
 
-  // 3. Strikethrough: ~~text~~
+  // 5. Strikethrough: ~~text~~
   result = result.replace(/~~(.+?)~~/g, '<s>$1</s>')
 
-  // 4. Spoiler: ||text||
+  // 6. Spoiler: ||text||
   result = result.replace(/\|\|(.+?)\|\|/g, '<tg-spoiler>$1</tg-spoiler>')
 
-  // 5. Monospace: `code`
+  // 7. Monospace: `code`
   result = result.replace(/`([^`]+)`/g, '<code>$1</code>')
 
-  // 6. Links: [label](url)
+  // 8. Links: [label](url)
   result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
-  // 7. Blockquote: lines starting with &gt;
+  // 9. Blockquote: lines starting with &gt;
   result = result.replace(/^&gt;\s*(.+)$/gm, '<blockquote>$1</blockquote>')
 
   return result
 }
+
+/**
+ * Formats and truncates product description for Telegram message preview.
+ * Strips markdown heading markers (#), converts markdown (bold, links, etc.) to Telegram HTML,
+ * cleanly truncates text at word boundaries, and ensures all HTML tags are properly closed.
+ */
+export function formatProductDescriptionPreview(
+  description: string | null | undefined,
+  maxLength: number = 250
+): string {
+  if (!description) return ''
+
+  let text = description.trim()
+
+  let isTruncated = false
+  if (text.length > maxLength) {
+    // Cut cleanly at word boundary
+    const cutPos = text.lastIndexOf(' ', maxLength)
+    text = text.slice(0, cutPos > maxLength * 0.7 ? cutPos : maxLength).trim()
+    isTruncated = true
+
+    // Close unclosed markdown bold marker if truncated inside
+    const boldMatches = text.match(/\*\*/g)
+    if (boldMatches && boldMatches.length % 2 !== 0) {
+      text += '**'
+    }
+
+    // Close unclosed inline code marker if truncated inside
+    const codeMatches = text.match(/`/g)
+    if (codeMatches && codeMatches.length % 2 !== 0) {
+      text += '`'
+    }
+
+    // Close unclosed strikethrough marker if truncated inside
+    const strikeMatches = text.match(/~~/g)
+    if (strikeMatches && strikeMatches.length % 2 !== 0) {
+      text += '~~'
+    }
+  }
+
+  let html = mdToTgHtml(text)
+
+  // Extra safety net against unclosed HTML tags
+  html = closeUnclosedHtmlTags(html)
+
+  if (isTruncated) {
+    html += '...'
+  }
+
+  return html
+}
+

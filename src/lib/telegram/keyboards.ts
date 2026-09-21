@@ -68,11 +68,13 @@ export function accountLinkInlineKeyboard(webUrl: string) {
 export function productsListInlineKeyboard(
   products: Array<{ id: string; title: string; price: number; stock: number }>
 ) {
+  const NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
   const kb = new InlineKeyboard()
-  for (const prod of products) {
-    const stockStr = prod.stock > 0 ? '' : ' (ارسال طی ۱ روز کاری)'
+  for (let i = 0; i < products.length; i++) {
+    const prod = products[i]
+    const numBadge = NUMBER_EMOJIS[i] || `${(i + 1).toLocaleString('fa-IR')}️⃣`
     kb.text(
-      `🔹 ${prod.title} — ${prod.price.toLocaleString('fa-IR')} تومان${stockStr}`,
+      `${numBadge} ${prod.title}`,
       `product:select:${prod.id}`
     ).row()
   }
@@ -203,12 +205,14 @@ export function productsPaginationKeyboard(
   totalPages: number
 ) {
   const keyboard = new InlineKeyboard()
+  const NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-  for (const p of products) {
-    const stockBadge = p.stock > 0 ? '⚡ تحویل آنی' : '🕒 ارسال طی ۱ روز کاری'
+  for (let i = 0; i < products.length; i++) {
+    const p = products[i]
+    const numBadge = NUMBER_EMOJIS[i] || `${(i + 1).toLocaleString('fa-IR')}️⃣`
     keyboard
       .text(
-        `📦 ${p.title} — از ${p.price.toLocaleString('fa-IR')} ت (${stockBadge})`,
+        `${numBadge} ${p.title}`,
         `product:select:${p.id}:${page}`
       )
       .row()

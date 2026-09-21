@@ -110,11 +110,11 @@ describe('Telegram Bot Orders Handling & Deeplink', () => {
 
     // Check product rows
     expect(json[0][0].text).toContain('گوگل وان ۲ ترابایت')
-    expect(json[0][0].text).toContain('⚡ تحویل آنی')
+    expect(json[0][0].text).toContain('1️⃣')
     expect(json[0][0].callback_data).toBe('product:select:p1:1')
 
     expect(json[1][0].text).toContain('جمینای ادونسد')
-    expect(json[1][0].text).toContain('🕒 ارسال طی ۱ روز کاری')
+    expect(json[1][0].text).toContain('2️⃣')
     expect(json[1][0].callback_data).toBe('product:select:p2:1')
 
     // Check pagination row (page 1 of 3: has next page button, no prev button)
