@@ -10,6 +10,7 @@ import { NotificationType } from '@prisma/client'
 import { OrderExpirationService } from '@/lib/orders/order-expiration'
 import { sendTelegramNotification } from '@/lib/telegram/bot'
 import { CouponService } from '@/lib/discounts/coupon-service'
+import { escapeHtml } from '@/lib/telegram/formatting'
 
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdminApi()
@@ -394,12 +395,13 @@ export async function PATCH(req: NextRequest) {
           refundedOrder.product?.title || refundedOrder.plan?.product?.title || 'اشتراک'
         const refundFormatted = new Intl.NumberFormat('fa-IR').format(refundAmount)
 
+        const orderCode = refundedOrder.id.slice(-6).toUpperCase()
         const customerMsg =
-          `💸 **مشتری گرامی، مبلغ سفارش #${refundedOrder.id.slice(-6).toUpperCase()} استرداد شد.**\n\n` +
-          `📦 **محصول:** ${productTitle}\n` +
-          `💰 **مبلغ استرداد یافته:** ${refundFormatted} تومان\n` +
-          (refundRefId ? `🧾 **کد رهگیری شبا / بانکی:** \`${refundRefId}\`\n` : '') +
-          (refundReason ? `📝 **علت:** ${refundReason}\n` : '') +
+          `💸 <b>مشتری گرامی، مبلغ سفارش <code>${orderCode}</code> استرداد شد.</b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n` +
+          `💰 <b>مبلغ استرداد یافته:</b> <b>${refundFormatted} تومان</b>\n` +
+          (refundRefId ? `🧾 <b>کد رهگیری شبا / بانکی:</b> <code>${escapeHtml(refundRefId)}</code>\n` : '') +
+          (refundReason ? `📝 <b>علت:</b> ${escapeHtml(refundReason)}\n` : '') +
           `\nباتشکر از شکیبایی و همراهی شما.`
 
         sendTelegramNotification(customerTelegram, customerMsg).catch(() => {})
@@ -457,19 +459,20 @@ export async function PATCH(req: NextRequest) {
             fulfillResult.order.product?.title ||
             fulfillResult.order.plan?.product?.title ||
             'اشتراک'
+          const orderCode = fulfillResult.order.id.slice(-6).toUpperCase()
           let deliveryDetails = ''
           if (linkUrl) {
-            deliveryDetails = `🔗 **لینک فعال‌سازی:**\n\`${linkUrl}\`\n\n`
+            deliveryDetails = `🔗 <b>لینک فعال‌سازی:</b>\n<code>${escapeHtml(linkUrl)}</code>\n\n`
           } else if (accountEmail) {
-            deliveryDetails = `📧 **ایمیل:** \`${accountEmail}\`\n🔑 **رمز عبور:** \`${accountPassword}\`\n\n`
+            deliveryDetails = `📧 <b>ایمیل:</b> <code>${escapeHtml(accountEmail)}</code>\n🔑 <b>رمز عبور:</b> <code>${escapeHtml(accountPassword)}</code>\n\n`
           } else if (manualNote?.trim()) {
-            deliveryDetails = `📝 **یادداشت تحویل:**\n${manualNote.trim()}\n\n`
+            deliveryDetails = `📝 <b>یادداشت تحویل:</b>\n${escapeHtml(manualNote.trim())}\n\n`
           }
 
           const msg =
-            `🎉 **سفارش شما تحویل داده شد!**\n\n` +
-            `📦 **محصول:** ${productTitle}\n` +
-            `🔢 **شماره سفارش:** #${fulfillResult.order.id.slice(-6).toUpperCase()}\n\n` +
+            `🎉 <b>سفارش شما تحویل داده شد!</b>\n\n` +
+            `📦 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n` +
+            `🔢 <b>شماره سفارش:</b> <code>${orderCode}</code>\n\n` +
             deliveryDetails +
             `همچنین می‌توانید با مراجعه به وب‌سایت در تب «سفارش‌های من»، مشخصات کامل محصول خود را دریافت فرمایید.`
 
@@ -567,10 +570,10 @@ export async function PATCH(req: NextRequest) {
       const customerTelegram = targetOrder.telegramChatId || targetOrder.user?.telegramId
       if (customerTelegram) {
         const msg =
-          `✅ **اشتراک شما فعال شد!**\n\n` +
-          `📦 **محصول:** ${serviceName}\n` +
-          `📧 **اکانت فعال‌شده:** ${customerEmail}\n` +
-          (adminNote ? `📝 **یادداشت مدیر:** ${adminNote}\n` : '') +
+          `✅ <b>اشتراک شما فعال شد!</b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(serviceName)}</b>\n` +
+          `📧 <b>اکانت فعال‌شده:</b> <code>${escapeHtml(customerEmail)}</code>\n` +
+          (adminNote ? `📝 <b>یادداشت مدیر:</b> ${escapeHtml(adminNote)}\n` : '') +
           `\nبا تشکر از خرید شما!`
 
         sendTelegramNotification(customerTelegram, msg).catch(() => {})
@@ -646,10 +649,11 @@ export async function PATCH(req: NextRequest) {
       // Send Telegram notification if available
       const customerTelegram = targetOrder.telegramChatId || targetOrder.user?.telegramId
       if (customerTelegram) {
+        const orderCode = targetOrder.id.slice(-6).toUpperCase()
         const msg =
-          `⚠️ **نیاز به بررسی و اصلاح اطلاعات سفارش #${targetOrder.id.slice(-6).toUpperCase()}**\n\n` +
-          `📦 **محصول:** ${serviceName}\n` +
-          `📝 **پیام مدیر:** ${adminNote}\n\n` +
+          `⚠️ <b>نیاز به بررسی و اصلاح اطلاعات سفارش <code>${orderCode}</code></b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(serviceName)}</b>\n` +
+          `📝 <b>پیام مدیر:</b> ${escapeHtml(adminNote)}\n\n` +
           `👇 لطفاً با کلیک روی دکمه زیر، اطلاعات اکانت (جیمیل، رمز عبور یا یادداشت) خود را ویرایش و ارسال فرمایید:`
 
         const inlineKeyboard = {
@@ -717,9 +721,9 @@ export async function PATCH(req: NextRequest) {
       const customerTelegram = updatedOrder.telegramChatId || updatedOrder.user?.telegramId
       if (customerTelegram) {
         const msg =
-          `❌ **${title}**\n\n` +
-          `سفارش: #${updatedOrder.id.slice(-6).toUpperCase()}\n` +
-          (adminNote ? `📝 **توضیحات مدیر:** ${adminNote}\n` : '')
+          `❌ <b>${escapeHtml(title)}</b>\n\n` +
+          `سفارش: <code>${updatedOrder.id.slice(-6).toUpperCase()}</code>\n` +
+          (adminNote ? `📝 <b>توضیحات مدیر:</b> ${escapeHtml(adminNote)}\n` : '')
         sendTelegramNotification(customerTelegram, msg).catch(() => {})
       }
     }

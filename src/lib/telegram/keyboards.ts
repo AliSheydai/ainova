@@ -241,7 +241,7 @@ export function ordersPaginationKeyboard(
   // If there are orders waiting for user credential fix, show action buttons on top
   if (actionRequiredOrders && actionRequiredOrders.length > 0) {
     for (const item of actionRequiredOrders) {
-      keyboard.text(`✏️ ویرایش اطلاعات اکانت #${item.code}`, `fix_cred:${item.id}`).row()
+      keyboard.text(`✏️ ویرایش اطلاعات اکانت '${item.code}'`, `fix_cred:${item.id}`).row()
     }
   }
 

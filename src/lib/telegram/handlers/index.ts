@@ -440,8 +440,9 @@ export function registerHandlers(bot: Bot) {
         }
       })
       await ctx.answerCallbackQuery({ text: 'سفارش لغو شد.' }).catch(() => {})
-      const { toPersianDigits } = await import('@/lib/persian-utils')
-      await ctx.reply(`❌ سفارش #${toPersianDigits(order.id.slice(-6).toUpperCase())} با موفقیت لغو شد.`)
+      await ctx.reply(`❌ سفارش <code>${order.id.slice(-6).toUpperCase()}</code> با موفقیت لغو شد.`, {
+        parse_mode: 'HTML',
+      })
       const { handleShowProducts } = await import('./buy')
       await handleShowProducts(ctx)
       return

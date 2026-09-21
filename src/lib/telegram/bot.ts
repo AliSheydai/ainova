@@ -91,7 +91,12 @@ export async function sendTelegramNotification(
     }
 
     const bot = getBot()
-    await bot.api.sendMessage(chatId, text, {
+    // Defensive formatting: convert legacy markdown bold (**text**) and code (`text`) to HTML if present
+    const sanitizedText = (text || '')
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+
+    await bot.api.sendMessage(chatId, sanitizedText, {
       parse_mode: 'HTML',
       reply_markup: replyMarkup,
     })

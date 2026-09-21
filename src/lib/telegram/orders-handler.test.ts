@@ -87,7 +87,9 @@ describe('Telegram Bot Orders Handling & Deeplink', () => {
     const message = BotStoreService.formatDeliveryMessage(order)
     expect(message).toContain('user@gmail.com')
     expect(message).toContain('اطلاعات ورود به اکانت اختصاصی')
-    expect(message).toContain('در پنل کاربری سایت قابل مشاهده است')
+    expect(message).toContain('پنل کاربری سایت')
+    expect(message).toContain('قابل مشاهده است')
+    expect(message).toContain('?dashboard=orders')
   })
 
   it('renders productsPaginationKeyboard correctly for multi-page products catalog', async () => {

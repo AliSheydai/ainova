@@ -28,12 +28,12 @@ export class MultiBotController {
       }
     }
 
-    let text = '🛍 **فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی**\n\nلطفاً محصول مورد نظر خود را انتخاب کنید:\n\n'
+    let text = '🛍 <b>فروشگاه اشتراک‌های دیجیتال و هوش مصنوعی</b>\n\nلطفاً محصول مورد نظر خود را انتخاب کنید:\n\n'
     const inlineKeyboard: Array<Array<{ text: string; callbackData?: string }>> = []
 
     for (const p of products) {
       const stockBadge = p.stock > 0 ? `⚡ تحویل آنی (${p.stock} عدد)` : '🕒 ارسال طی یک روز کاری'
-      text += `📦 **${p.title}**\n💰 قیمت از: ${p.price.toLocaleString('fa-IR')} تومان — ${stockBadge}\n\n`
+      text += `📦 <b>${p.title}</b>\n💰 قیمت از: ${p.price.toLocaleString('fa-IR')} تومان — ${stockBadge}\n\n`
 
       inlineKeyboard.push([
         {
@@ -55,15 +55,15 @@ export class MultiBotController {
     const { product, plans } = data
     const title = product.title
 
-    let text = `✨ **${title}** ✨\n\n`
+    let text = `✨ <b>${title}</b> ✨\n\n`
     if (product.shortDescription) text += `${product.shortDescription}\n\n`
-    text += `📋 **پلن‌های قابل انتخاب:**\n\n`
+    text += `📋 <b>پلن‌های قابل انتخاب:</b>\n\n`
 
     const inlineKeyboard: Array<Array<{ text: string; callbackData?: string }>> = []
 
     for (const plan of plans) {
       const isAvailable = plan.stock > 0
-      text += `🔹 **${plan.name}**\n`
+      text += `🔹 <b>${plan.name}</b>\n`
       text += `   💵 قیمت: ${plan.price.toLocaleString('fa-IR')} تومان\n`
       text += `   📦 وضعیت: ${isAvailable ? `تحویل آنی (${plan.stock} عدد)` : 'ارسال طی یک روز کاری'}\n\n`
 

@@ -98,7 +98,7 @@ export const MESSAGES = {
     }
   ) => {
     let text = `🧾 <b>سفارش شما ایجاد شد</b>\n\n`
-    text += `• 🔢 <b>شناسه سفارش:</b> <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code>\n`
+    text += `• 🔢 <b>شناسه سفارش:</b> <code>${orderId.slice(-6).toUpperCase()}</code>\n`
     text += `• 🛍 <b>محصول:</b> <b>${escapeHtml(planName)}</b>\n`
     if (options?.variantName) {
       text += `• 📦 <b>نوع محصول:</b> <b>${escapeHtml(options.variantName)}</b>\n`
@@ -122,7 +122,7 @@ export const MESSAGES = {
   paymentSuccess: (orderId: string, planName: string, activationUrl: string) =>
     `🎉 <b>پرداخت با موفقیت تأیید شد</b>\n\n` +
     `سفارش شما با موفقیت ثبت گردید:\n` +
-    `• 🔢 <b>شناسه سفارش:</b> <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code>\n` +
+    `• 🔢 <b>شناسه سفارش:</b> <code>${orderId.slice(-6).toUpperCase()}</code>\n` +
     `• 🛍 <b>محصول:</b> <b>${escapeHtml(planName)}</b>\n\n` +
     `🔗 <b>لینک فعال‌سازی اختصاصی شما:</b>\n` +
     `<code>${activationUrl}</code>\n\n` +
@@ -132,7 +132,7 @@ export const MESSAGES = {
 
   paymentSuccessStockWaiting: (orderId: string, planName: string) =>
     `🎉 <b>پرداخت با موفقیت تأیید شد</b>\n\n` +
-    `سفارش <b>${escapeHtml(planName)}</b> با شناسه <code>#${toPersianDigits(orderId.slice(-6).toUpperCase())}</code> ثبت گردید.\n\n` +
+    `سفارش <b>${escapeHtml(planName)}</b> با شناسه <code>${orderId.slice(-6).toUpperCase()}</code> ثبت گردید.\n\n` +
     `<blockquote>⏳ <b>در صف آماده‌سازی:</b>\n` +
     `به دلیل اتمام موجودی تحویل فوری انبار، اکانت شما در صف آماده‌سازی اختصاصی قرار گرفت و مشخصات ظرف حداکثر ۱ روز کاری توسط کارشناسان پشتیبانی ارسال خواهد شد.</blockquote>\n\n` +
     `وضعیت سفارش در بخش «سفارش‌های من» قابل پیگیری است.`,

@@ -634,10 +634,19 @@ export class BotStoreService {
         }
 
         const email = deliveryData.email || deliveryData.username || ''
+        const candidateUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+        const isInvalid =
+          !candidateUrl ||
+          candidateUrl.startsWith('/') ||
+          candidateUrl.includes('localhost') ||
+          candidateUrl.includes('127.0.0.1')
+        const baseUrl = isInvalid ? 'https://ariachat.org' : candidateUrl.replace(/\/$/, '')
+        const ordersUrl = `${baseUrl}/?dashboard=orders`
+
         return (
           `📦 <b>اطلاعات ورود به اکانت اختصاصی:</b>\n` +
           `• 📧 <b>ایمیل:</b> <code>${email}</code>\n` +
-          `• 🔑 <b>رمز عبور:</b> در پنل کاربری سایت قابل مشاهده است.`
+          `• 🔑 <b>رمز عبور:</b> در <a href="${ordersUrl}">پنل کاربری سایت</a> قابل مشاهده است.`
         )
       }
 

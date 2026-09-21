@@ -11,6 +11,7 @@ import { NotificationType } from '@prisma/client'
 import { CouponService } from '@/lib/discounts/coupon-service'
 import { getCurrentUser } from '@/lib/auth/jwt'
 import { sendOrderConfirmationSms } from '@/lib/auth/sms'
+import { escapeHtml } from '@/lib/telegram/formatting'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -440,10 +441,11 @@ export async function GET(req: NextRequest) {
       ).catch((err) => console.error('Admin manual delivery alert error:', err))
 
       if (targetChatId) {
+        const orderCode = payment.orderId.slice(-6).toUpperCase()
         const manualMsg =
-          `🎉 **پرداخت سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت انجام شد!**\n\n` +
-          `📦 **محصول:** ${productTitle}\n\n` +
-          `⏳ این محصول نیازمند تحویل دستی توسط پشتیبانی است. به زودی اطلاعات دسترسی برای شما ارسال و در پنل کاربری درج خواهد شد.`
+          `🎉 <b>پرداخت سفارش <code>${orderCode}</code> با موفقیت انجام شد!</b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n\n` +
+          `⏳ این محصول نیازمند تحویل دستی توسط پشتیبانی است. به زودی اطلاعات دسترسی برای شما ارسال و در <a href="${appUrl}/orders?orderId=${payment.orderId}">پنل کاربری سایت</a> درج خواهد شد.`
 
         await sendTelegramNotification(targetChatId, manualMsg).catch((err) =>
           console.error('Telegram notification error:', err)
@@ -536,12 +538,13 @@ export async function GET(req: NextRequest) {
             ? deliveryData.note
             : 'لطفاً بلافاصله پس از ورود، کلمه عبور را تغییر دهید.'
 
+        const orderCode = payment.orderId.slice(-6).toUpperCase()
         const accountMsg =
-          `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
-          `📦 **محصول:** ${productTitle}\n` +
-          `👤 **نام کاربری / ایمیل:** \`${accountUsername}\`\n` +
-          `🔑 **رمز عبور:** برای مشاهده رمز، به پنل کاربری مراجعه فرمایید.\n\n` +
-          `⚠️ ${accountNote}`
+          `🎉 <b>سفارش <code>${orderCode}</code> با موفقیت تکمیل شد!</b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n` +
+          `👤 <b>نام کاربری / ایمیل:</b> <code>${escapeHtml(accountUsername)}</code>\n` +
+          `🔑 <b>رمز عبور:</b> در <a href="${orderUrl}">پنل کاربری سایت</a> قابل مشاهده است.\n\n` +
+          `⚠️ ${escapeHtml(accountNote)}`
 
         await sendTelegramNotification(
           targetChatId,
@@ -551,10 +554,11 @@ export async function GET(req: NextRequest) {
           console.error('Telegram notification error:', err)
         )
       } else {
+        const orderCode = payment.orderId.slice(-6).toUpperCase()
         const successMsg =
-          `🎉 **سفارش #${payment.orderId.slice(-6).toUpperCase()} با موفقیت تکمیل شد!**\n\n` +
-          `📦 **محصول:** ${productTitle}\n` +
-          `✅ اشتراک شما آماده است و جزئیات آن در پنل کاربری در دسترس می‌باشد.`
+          `🎉 <b>سفارش <code>${orderCode}</code> با موفقیت تکمیل شد!</b>\n\n` +
+          `📦 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n` +
+          `✅ اشتراک شما آماده است و جزئیات آن در <a href="${appUrl}/orders?orderId=${payment.orderId}">پنل کاربری سایت</a> در دسترس می‌باشد.`
 
         await sendTelegramNotification(targetChatId, successMsg).catch((err) =>
           console.error('Telegram notification error:', err)

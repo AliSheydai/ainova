@@ -281,6 +281,18 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
               setDashboardModalOpen(true)
             }
           }
+        } else if (isMounted) {
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (
+              params.get('payment') ||
+              params.get('orderId') ||
+              params.get('dashboard') === 'orders' ||
+              params.get('tab') === 'orders'
+            ) {
+              setAuthModalOpen(true)
+            }
+          }
         }
       })
       .catch(() => null)
@@ -709,6 +721,18 @@ export function LandingHeader({ showBottomNav }: LandingHeaderProps = {}) {
         onOpenChange={setAuthModalOpen}
         onSuccess={(newUser) => {
           setUser(newUser)
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (
+              params.get('payment') ||
+              params.get('orderId') ||
+              params.get('dashboard') === 'orders' ||
+              params.get('tab') === 'orders'
+            ) {
+              setDashboardTab('orders')
+              setDashboardModalOpen(true)
+            }
+          }
         }}
       />
 

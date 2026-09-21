@@ -103,7 +103,7 @@ export async function handleOrders(ctx: Context, page: number = 1) {
         actionOrders.push({ id: order.id, code: orderCode })
       }
 
-      messageText += `🔹 <b>سفارش <code>#${orderCode}</code></b> — ${escapeHtml(fullTitle)}\n`
+      messageText += `🔹 <b>سفارش:</b> <code>#${orderCode}</code> — ${escapeHtml(fullTitle)}\n`
       messageText += `• 📅 <b>تاریخ:</b> ${dateStr}\n`
       messageText += `• 💰 <b>مبلغ:</b> <b>${order.amount.toLocaleString('fa-IR')} تومان</b>\n`
       messageText += `• 📊 <b>وضعیت:</b> ${getStatusBadge(order.status)}\n`
@@ -218,7 +218,7 @@ export async function handleFixCredentialsPrompt(ctx: Context, orderId: string) 
 
     const adminMsg = order.adminNote || 'اطلاعات ورود نیازمند بررسی و اصلاح است.'
 
-    let promptText = `🛠 <b>ویرایش اطلاعات ورود اکانت #${orderCode}</b>\n\n`
+    let promptText = `🛠 <b>ویرایش اطلاعات ورود اکانت</b> <code>${orderCode}</code>\n\n`
     promptText += `• 🛍 <b>محصول:</b> <b>${escapeHtml(productTitle)}</b>\n`
     promptText += `• 💬 <b>پیام مدیر:</b> ${escapeHtml(adminMsg)}\n\n`
     promptText += `📌 <b>مرحله ۱ از ۳: آدرس جیمیل</b>\n\n`
@@ -297,7 +297,7 @@ export async function promptStepConfirm(ctx: Context, telegramId: string, sessio
 
   const { fixCredentialsConfirmKeyboard } = await import('../keyboards')
 
-  let msg = `📋 <b>پیش‌نمایش اطلاعات سفارش #${orderCode}</b>\n\n`
+  let msg = `📋 <b>پیش‌نمایش اطلاعات سفارش</b> <code>${orderCode}</code>\n\n`
   msg += `• 🛍 <b>محصول:</b> ${escapeHtml(productTitle)}\n`
   msg += `• 📧 <b>جیمیل:</b> <code>${escapeHtml(session.fixData?.email || 'ثبت نشده')}</code>\n`
   msg += `• 🔑 <b>رمز عبور:</b> <code>••••••••</code>\n`
@@ -412,7 +412,7 @@ export async function handleSubmitCredentials(ctx: Context) {
     (order.plan ? `${order.plan.product.title} (${order.plan.name})` : 'اکانت')
 
   let confirmMsg = `🎉 <b>اطلاعات اکانت با موفقیت ثبت و برای بررسی ارسال گردید</b>\n\n`
-  confirmMsg += `• 🔢 <b>شناسه سفارش:</b> <code>#${orderCode}</code>\n`
+  confirmMsg += `• 🔢 <b>شناسه سفارش:</b> <code>${orderCode}</code>\n`
   confirmMsg += `• 🛍 <b>محصول:</b> <b>${escapeHtml(serviceName)}</b>\n`
   if (fixData.email) {
     confirmMsg += `• 📧 <b>جیمیل:</b> <code>${escapeHtml(fixData.email)}</code>\n`
